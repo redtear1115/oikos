@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-21
 ---
 
 # Specs — Index & Writing Guide
@@ -122,6 +122,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
 - [trip-multi-currency](trip-multi-currency-design.md) — 「邊界複雜」：旅行子帳本（TripExpense sandbox）+ 多幣別 record + 心理匯率 snapshot；建立時鎖匯率、結束時 fold 為 2 筆 summary 回主帳本
+- [group-outing](group-outing-design.md) — 出遊：N 人分帳本（類 Splitwise），參與者與 Profile 解耦；平分挑人＋最少筆數轉帳建議；結束時只折夫妻相互欠額回主帳本 balance。v1.6.0 由帳本成員代記（朋友是名字），v1.7.0 開放連結加入與認領；對外與旅行合一個入口（#943，取代 #870）
 
 ### 體驗
 
@@ -130,7 +131,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [ia-unified-header](ia-unified-header-design.md) — 四大入口三層標頭統一（L1/L2/L3）+ ContextStrip 取代分散 banner
 - [onboarding](onboarding-design.md) — 新人 onboarding flow（sign-in → 建群組 → 邀請對方／稍後再說）
 - [solo-mode](solo-mode-design.md) — 單人帳本模式：分攤鎖 all_mine、balance hero 隱藏、邀請 banner、升雙人不 retroactive
-- [solo-trip](solo-trip-design.md) — Solo × 旅行：共旅者兩階段（v1.6 名字 / v1.7 使用者）、共旅者的債不進 GroupBalance、`member_b IS NULL` 雙重語意拆分、epoch 範圍先於拿掉 solo 短路
+- [solo-trip](solo-trip-design.md) — Solo × 多人出行：共旅者兩階段（v1.6 名字 / v1.7 使用者，entity 落在出遊的 `OutingParticipant`，不在 Trips——2026-09-21 修正，#870）、共旅者的債不進 GroupBalance、`member_b IS NULL` 雙重語意拆分、epoch 範圍先於拿掉 solo 短路
 - [invite-existing-group](invite-existing-group-design.md) — 接受邀請時依接受者既有 group 狀態分流：單人＝接受前溫和告知（舊帳本變過去章節）、雙人＝擋下（固定兩人不可同時兩本）、無＝照舊；preview + accept 兩層（#912）
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆
 - [monthly-review](monthly-review-design.md) — 雙人月度回顧儀式

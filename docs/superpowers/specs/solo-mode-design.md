@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-14
+last_updated: 2026-09-21
 status: shipped
 first_shipped_in: v0.2.0
 updates:
@@ -14,7 +14,7 @@ related_issues: ["#1118", "#1119"]
 > 不是「閹割版」，是完整的單人使用體驗。
 >
 > 這份 spec 成文於 v0.2.0，當時旅行還不存在，所以只涵蓋「我 vs 對方」兩種人。
-> 帳本裡出現第三種人（出團共旅者）之後的行為見 [solo-trip](solo-trip-design.md)。
+> 帳本裡出現第三種人（多人出行的共旅者，見 [group-outing](group-outing-design.md)）之後的行為見 [solo-trip](solo-trip-design.md)。
 
 ---
 

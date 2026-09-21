@@ -30,7 +30,7 @@ The job to be done: log a shared expense in under a minute, see at a glance who 
 
 **One person is a complete state, not a waiting room.** Solo mode (`member_b IS NULL`) is a first-class way to use Futari, whether the partner has not joined yet, has left, or was never coming. Never style, word, or lay out solo mode as a deficiency or an incomplete setup.
 
-**Two is the core; more is an extension.** Group trips (v1.6.0) and multi-way splitting (v1.7.0) let this couple pull other people into one bounded stretch of spending. Those guests are visitors to the pair's ledger, not co-owners of it. When a design decision trades intimacy of the two for generality across N, the two win. The main ledger, the balance hero, the monthly review, and the partner quiz are all two-person surfaces and stay that way.
+**Two is the core; more is an extension.** Group outings let this couple pull other people into one bounded stretch of spending: in v1.6.0 the couple records it for everyone; from v1.7.0 friends can join by link. Those guests are visitors to the pair's ledger, not co-owners of it. When a design decision trades intimacy of the two for generality across N, the two win. The main ledger, the balance hero, the monthly review, and the partner quiz are all two-person surfaces and stay that way.
 
 **Delivery reaches three platforms from one web codebase.** Mobile-first PWA, plus iOS and Android Capacitor shells whose `server.url` points at production, so a web deploy lands on every installed shell immediately. `lib/platform.ts` distinguishes five contexts: `ios_native`, `android_native`, `ios_pwa`, `android_pwa`, `web`. Design for the narrowest of them, not for the browser you are previewing in. See **Platform Constraints** below.
 
