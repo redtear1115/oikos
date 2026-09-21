@@ -6,7 +6,8 @@ import {
   validateInvoiceCarrierInput,
   type InvoiceCarrierInput,
 } from '@/lib/validators'
-import { encrypt } from '@/lib/crypto'
+import { randomUUID } from 'crypto'
+import { encrypt, aadFor } from '@/lib/crypto'
 import { fetchInvoicesByCarrier } from '@/lib/invoice/api'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
@@ -93,13 +94,17 @@ export const createInvoiceCredential = action(async (
 
   await verifyCarrierAgainstApi(validated.barcode, validated.verificationCode)
 
+  // #1287 — id generated here so the AAD binds to the row's primary key; the
+  // same value goes to `.values({ id })` and to aadFor.
+  const id = randomUUID()
   const [created] = await db
     .insert(invoiceCredentials)
     .values({
+      id,
       groupId: group.id,
       userId: user.id,
       barcode: validated.barcode,
-      verificationCodeEncrypted: encrypt(validated.verificationCode),
+      verificationCodeEncrypted: encrypt(validated.verificationCode, aadFor('InvoiceCredentials', 'verification_code_encrypted', id)),
       nickname: validated.nickname,
       status: 'active',
     })
@@ -195,13 +200,17 @@ export const refreshInvoiceCredential = action(async (
       .returning({ id: invoiceCredentials.id })
     if (deleted.length === 0) throw actionError('invoice_carrier_not_found')
 
+    // #1287 — new row, new app-generated id; the AAD binds to it (never to
+    // the soft-deleted row's id).
+    const newId = randomUUID()
     return await tx
       .insert(invoiceCredentials)
       .values({
+        id: newId,
         groupId: group.id,
         userId: user.id,
         barcode: validated.barcode,
-        verificationCodeEncrypted: encrypt(validated.verificationCode),
+        verificationCodeEncrypted: encrypt(validated.verificationCode, aadFor('InvoiceCredentials', 'verification_code_encrypted', newId)),
         nickname: validated.nickname,
         status: 'active',
         lastSyncedAt: existing.lastSyncedAt,
