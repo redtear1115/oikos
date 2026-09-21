@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-19
+last_updated: 2026-09-21
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -8,8 +8,9 @@ updates:
   - v1.5.15: 補「autocapture 不帶文字」這條邊界（#1267）
   - v1.5.17: 補「catch 住的錯誤只進 Sentry Logs」這條邊界（#1314）
   - v1.5.18: 補「Sentry 看不到原始網址、cookie、請求 body」這條邊界（#1274，v1.5.16 起生效）
+  - v1.6.0: 補「GA 收得到邀請 token 與帳務篩選值」這條已接受的風險（#1300）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1314"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -38,6 +39,14 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1314"]
 - **Session Replay 在前端鎖死（`disable_session_recording: true`）。** PostHog 專案後台那個開關現在是無效的；要開必須先連同 replay 自己的遮罩（`session_recording.maskAllInputs` + `maskTextSelector: '*'`）一起改 code，因為上面那兩個選項管不到 recorder。
 - **Sentry 的 request、breadcrumb、span、log 裡看不到原始網址、cookie、header、請求 body 與 client IP——但 exception 的訊息內容不經清洗。** 自 v1.5.16 起（#1274），client / server / edge 三份 Sentry config 的 `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` / `beforeBreadcrumb` / `beforeSendLog` 全部走 `lib/observability/sentryScrub.ts`：網址套用與 PostHog 共用的 `lib/analytics/urlSanitizer.ts` 規則（路徑與 query key 保留，邀請 token 變 `:token`，非白名單 query 值變 `<masked>`），header / cookie / `request.data` 整段拿掉。所以「重現某個錯誤時的完整網址或 server action 參數」在 Sentry 上查不到，要從 issue 的路徑形狀與 stack 回推。錯誤訊息（`exception.values[].value`）不在清洗範圍內：丟出含 URL 的 `Error` 前要自己處理（同「catch 住的錯誤只進 Logs」那條的做法）。
   - **失效的樣子是沒有任何錯誤。** 某份 config 漏接一個 hook，原始網址與 cookie 會安靜地重新出現在 Sentry，而沒人會去那裡看；hook 自己 throw 時，`beforeSend*` 那幾個會讓 SDK 丟掉整筆事件，breadcrumb／log 的則漏給呼叫端。唯一會變紅的是 `tests/sentry-scrub-wiring.test.ts`。
+- **GA 會收到原始網址，包括邀請 token 和帳務篩選值。這是已接受的風險，不是漏掉的洞（#1300，使用者 2026-09-21 決定）。** #1274 的清洗只涵蓋 PostHog、Sentry、Vercel Analytics／Speed Insights。`app/layout.tsx:130` 的 `<GoogleAnalytics>`（`@next/third-parties`）只跑 `gtag('js')` 和不帶參數的 `gtag('config', id)`，沒有地方傳 config 參數。所以 GA 收到的是 `document.location` 的原文：
+  - **`dl` 帶邀請 token**：已登入的人整頁打開 `/invite/<token>`，第一個 page view 就帶著 token。
+  - **`dr` 帶邀請 token**：`app/[locale]/sign-in/SignInButton.tsx:157` 從 `/sign-in?next=/invite/<token>` 整頁跳轉，同源 referrer 是完整網址。
+  - **`dl` 帶 `/records` 的篩選值**：`RecordsList.tsx:202` 等處的 `router.replace` 觸發換頁 page view，`fAmtMin`、`fAmtMax` 這類值（`lib/filter.ts:397`）原樣送出。
+  - 同一頁的其他 GA 事件（`user_engagement`、`scroll`、外連點擊、`kofi_widget_click`）也都用原始的 `document.location` 當 `dl`。
+  - **為什麼不改程式**：換頁的 page view 由 GA 後台的「依瀏覽器歷史記錄計算網頁變化」送出，在 `pushState` 當下觸發，比任何 React effect 都早，`send_page_view:false` 擋不住。事後 `gtag('set', {page_location})` 不是來不及，就是把上一頁的網址套到這一頁，讓歸因錯開一格。那個開關又不能直接關：G-YHXFBMRQ3S 是 Futari、Wildcard、blog 共用的同一條資料串流，也是 Ko-fi 收益歸因的來源（見 [ops-runbook](../ops-runbook.md)「GA / Ko-fi 收益歸因」）。在這條串流上關掉，另外兩站的站內換頁 page view 會一起消失。
+  - **失效的樣子是沒有任何錯誤。** token 和篩選值安靜地出現在 GA 的頁面報表與探索裡，只有打開 GA 後台看網址的人才會發現。這條寫在這裡，就是為了讓下一個在 GA 報表裡看到 `/invite/…` 的人知道：這是當初知情接受的，不是新的外洩。
+  - **什麼會改變這個決定**：(1) 替 Futari 開專用的資料串流（同一個 property、新的 G- ID），只在那條串流上關掉歷史記錄設定，再自己送清洗過的 page view（#1300 的方案 1）；或 (2) Futari 完全不載入 client GA，Ko-fi 點擊改由 server 用 Measurement Protocol 送（#1300 留言裡的 plan v2）。任一方案實作之前，這條都成立。邀請 token 本身 7 天過期、接受後失效，限縮了外洩後可被利用的時間窗，但 GA 保留的網址不會跟著失效。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
 - **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
   - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。
