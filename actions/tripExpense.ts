@@ -3,7 +3,8 @@
 import { db } from '@/lib/db/client'
 import { tripExpenses, trips } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
+import { openEpochClause } from '@/lib/db/queries/_predicates'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
 import { convertAmount } from '@/lib/currency'
@@ -37,6 +38,11 @@ export interface EditTripExpenseInput extends CreateTripExpenseInput {
   id: string
 }
 
+/**
+ * The trip every sub-ledger write targets: in the viewer's group, not deleted,
+ * and in the chapter that is open now (`openEpochClause`). A trip whose
+ * chapter has closed is read-only and reads as `trip_not_found`.
+ */
 async function loadActiveTripForViewer(tripId: string, groupId: string) {
   const [trip] = await db
     .select()
@@ -45,6 +51,7 @@ async function loadActiveTripForViewer(tripId: string, groupId: string) {
       eq(trips.id, tripId),
       eq(trips.groupId, groupId),
       isNull(trips.deletedAt),
+      openEpochClause(trips.epochId, groupId),
     ))
     .limit(1)
   if (!trip) throw actionError('trip_not_found')
@@ -134,7 +141,7 @@ function validateCommon(input: CreateTripExpenseInput, group: { memberA: string;
 }
 
 export const createTripExpense = action(async (input: CreateTripExpenseInput) => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
   validateCommon(input, group)
 
@@ -166,7 +173,7 @@ export const createTripExpense = action(async (input: CreateTripExpenseInput) =>
 })
 
 export const editTripExpense = action(async (input: EditTripExpenseInput) => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
   validateCommon(input, group)
 
@@ -214,7 +221,7 @@ export const editTripExpense = action(async (input: EditTripExpenseInput) => {
 })
 
 export const softDeleteTripExpense = action(async (input: { id: string; tripId: string }) => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
 
   const deleted = await db

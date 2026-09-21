@@ -42,6 +42,19 @@ vi.mock('next/cache', () => ({
   revalidateTag: () => {},
 }))
 
+// Trip writes resolve the viewer through getViewerWriteContext, which reads
+// the past-chapter pin cookie via next/headers. No pin in these tests.
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: () => undefined,
+    getAll: () => [],
+    has: () => false,
+    set: () => {},
+    delete: () => {},
+  }),
+  headers: async () => new Headers(),
+}))
+
 const { db } = await import('@/lib/db/client')
 const {
   profiles,

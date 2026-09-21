@@ -21,6 +21,7 @@ import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { listIncomesMonthSummaries } from '@/lib/db/queries/incomes'
 import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { openEpochClause } from '@/lib/db/queries/_predicates'
 import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
@@ -52,6 +53,26 @@ export interface CreateTransactionInput {
   currency?: CurrencyCode
   /** Trip to tag this transaction under. NULL = no trip. */
   tripId?: string | null
+}
+
+/**
+ * A record can only be tagged with a trip that is in the viewer's group, not
+ * soft-deleted, and in the chapter that is open now (`openEpochClause`). A
+ * trip of a closed chapter is read-only; tagging a current record with it
+ * would list that record under a past trip. Any miss is `trip_missing`.
+ */
+async function assertTaggableTrip(tripId: string, groupId: string): Promise<void> {
+  const [t] = await db
+    .select({ id: trips.id })
+    .from(trips)
+    .where(and(
+      eq(trips.id, tripId),
+      eq(trips.groupId, groupId),
+      isNull(trips.deletedAt),
+      openEpochClause(trips.epochId, groupId),
+    ))
+    .limit(1)
+  if (!t) throw actionError('trip_missing')
 }
 
 export const createTransaction = action(async (
@@ -100,14 +121,7 @@ export const createTransaction = action(async (
   }
 
   // Trip ownership check (#42)
-  if (input.tripId) {
-    const [t] = await db
-      .select({ id: trips.id, groupId: trips.groupId })
-      .from(trips)
-      .where(eq(trips.id, input.tripId))
-      .limit(1)
-    if (!t || t.groupId !== group.id) throw actionError('trip_missing')
-  }
+  if (input.tripId) await assertTaggableTrip(input.tripId, group.id)
 
   const result = await db.transaction(async (tx) => {
     const [inserted] = await tx
@@ -257,14 +271,7 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
   }
 
   // Trip ownership check for edit (#42)
-  if (input.tripId) {
-    const [t] = await db
-      .select({ id: trips.id, groupId: trips.groupId })
-      .from(trips)
-      .where(eq(trips.id, input.tripId))
-      .limit(1)
-    if (!t || t.groupId !== group.id) throw actionError('trip_missing')
-  }
+  if (input.tripId) await assertTaggableTrip(input.tripId, group.id)
 
   // 3. Soft-delete old + insert new in one tx. Keep .returning() on the soft-delete
   //    as a race guard: if a partner soft-deleted the row between step 1 and now,
