@@ -144,9 +144,12 @@ export function AssetHero({
           </div>
         </div>
 
-        {/* TODO(v0.17 currency): 'twd' hard-coded — AssetHero has no base-currency
-             prop (unlike BalanceHero/SoloMonthHero/MonthlyStatsView, #1358).
-             Wiring it needs a new query at the asset-detail page; deferred. */}
+        {/* TODO(v0.17 currency): 'twd' hard-coded. #1399 blocks wiring a real
+             baseCurrency: the main ledger stores whole units as typed, but
+             formatAmountParts divides USD by 100 (cents semantics), so a
+             USD-base group would render this at 1/100th its actual size
+             until that's fixed — on top of AssetHero having no
+             base-currency prop path today either. */}
         <div
           className="mt-5 flex rounded-2xl px-4 py-3 gap-2 border border-hairline"
           style={{ background: 'rgba(58,36,25,0.04)' }}
@@ -166,7 +169,7 @@ export function AssetHero({
 
 function Stat({ label, amount, accent }: { label: string; amount: number; accent: boolean }) {
   const dim = amount === 0
-  // TODO(v0.17 currency): 'twd' hard-coded — see the MiniStat block above for why.
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399, see the MiniStat block above for why.
   const { symbol, digits } = formatAmountParts(amount, 'twd')
   return (
     <div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from '@/lib/i18n/client'
-import { formatAmountParts, type CurrencyCode } from '@/lib/currency'
+import { formatAmountParts } from '@/lib/currency'
 
 interface Props {
   /** 'YYYY-MM' — the same month key the total and count were summed over, so
@@ -11,8 +11,6 @@ interface Props {
   total: number
   /** How many rows that sum came from. */
   count: number
-  /** Group's base currency (default 'twd'). */
-  baseCurrency?: CurrencyCode
 }
 
 /**
@@ -29,7 +27,7 @@ interface Props {
  * Duo mode keeps `BalanceHero`; income mode uses `BalanceHero`'s income branch
  * in both, since that branch never depended on there being a partner.
  */
-export function SoloMonthHero({ monthKey, total, count, baseCurrency = 'twd' }: Props) {
+export function SoloMonthHero({ monthKey, total, count }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -38,7 +36,11 @@ export function SoloMonthHero({ monthKey, total, count, baseCurrency = 'twd' }: 
   const [year, month] = monthKey.split('-').map(Number)
   const monthName = new Intl.DateTimeFormat(locale, { month: 'long' })
     .format(new Date(year, month - 1, 1))
-  const totalParts = formatAmountParts(total, baseCurrency)
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
+  // baseCurrency here: the main ledger stores whole units as typed, but
+  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
+  // group would render this at 1/100th its actual size until that's fixed.
+  const totalParts = formatAmountParts(total, 'twd')
 
   return (
     <div className="px-5 pt-6 pb-5">

@@ -13,13 +13,10 @@ import { cookies } from 'next/headers'
 import { MonthlyStatsView } from './MonthlyStatsView'
 import type { BreakdownView } from './StatsBreakdownToggle'
 import { statsCollapsedCookieName, parseBoolCookie } from '@/lib/uiPrefsCookie'
-import type { CurrencyCode } from '@/lib/currency'
 
 interface Props {
   userId: string
   groupId: string
-  /** Group's base currency (default 'twd'). */
-  baseCurrency?: CurrencyCode
   /** Pre-resolved by the page so stats scope to the same epoch (possibly
    *  cross-group, see #141) as the records feed alongside us. */
   epochWindow: EpochWindow
@@ -56,7 +53,6 @@ interface Props {
 export async function MonthlyStatsSection({
   userId,
   groupId,
-  baseCurrency = 'twd',
   epochWindow,
   monthKey,
   view,
@@ -117,7 +113,6 @@ export async function MonthlyStatsSection({
       dailyTrend={dailyTrend}
       forceCompact={forceCompact}
       assetToggleHidden={assetFilterActive}
-      baseCurrency={baseCurrency}
     />
   )
 }

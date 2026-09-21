@@ -10,7 +10,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
-import { formatAmount, formatAmountParts, type CurrencyCode } from '@/lib/currency'
+import { formatAmount, formatAmountParts } from '@/lib/currency'
 import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
 
@@ -67,8 +67,6 @@ interface Props {
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null  // e.g. "5/1 · 五月薪水" or null if no incomes
-  /** Group's base currency (default 'twd'). */
-  baseCurrency?: CurrencyCode
 }
 
 export function BalanceHero({
@@ -81,7 +79,6 @@ export function BalanceHero({
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
-  baseCurrency = 'twd',
 }: Props) {
   const { viewer, partner, viewerIsA, isPast } = useMember()
   const t = useTranslations()
@@ -168,7 +165,11 @@ export function BalanceHero({
   }
 
   const amount = Math.abs(balance)
-  const amountParts = formatAmountParts(amount, baseCurrency)
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
+  // baseCurrency here: the main ledger stores whole units as typed, but
+  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
+  // group would render this at 1/100th its actual size until that's fixed.
+  const amountParts = formatAmountParts(amount, 'twd')
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const owedByRole = whoToMemberRole(owedByWho, viewerIsA)
@@ -218,7 +219,7 @@ export function BalanceHero({
                     fontFeatureSettings: '"tnum"',
                   }}
                 >
-                  {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, baseCurrency)}` : formatAmount(0, baseCurrency)}
+                  {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
                 </span>
               )}
             </div>
@@ -240,7 +241,7 @@ export function BalanceHero({
                 letterSpacing: -1.2, marginTop: 4,
                 fontFeatureSettings: '"tnum"',
               }}>
-                {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, baseCurrency)}` : formatAmount(0, baseCurrency)}
+                {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
               </div>
               <div style={{
                 marginTop: 12, paddingTop: 12,
@@ -299,7 +300,7 @@ export function BalanceHero({
                     letterSpacing: '-0.6px',
                   }}
                 >
-                  {formatAmount(amount, baseCurrency)}
+                  {formatAmount(amount, 'twd')}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
