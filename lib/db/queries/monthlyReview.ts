@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/client'
 import { monthlyReviewMessages, monthlyReviewSnapshots } from '@/lib/db/schema'
 import { and, asc, desc, eq } from 'drizzle-orm'
+import { isMonthInChapter } from '@/lib/monthlyReview'
 
 export interface RecurringEvent {
   name: string
@@ -114,27 +115,19 @@ export async function loadMonthlyReviewMessages(
 }
 
 /**
- * Months that have a review, newest first (#1364). Feeds the /review index —
- * the destination that makes the dashboard's 月回顧 cell always go somewhere.
- * Only (year, month): the index lists months; each month's page loads its own
- * snapshot.
+ * Months with a review that belong to `chapter`, newest first (#1364, #1380).
+ * Feeds the /review index and the dashboard 月回顧 cell. Reviews follow the
+ * chapter, not the group — see isMonthInChapter for the rule, including why a
+ * month straddling a chapter boundary belongs to neither side.
  */
 export async function listMonthlyReviewMonths(
   groupId: string,
+  chapter: { startedAt: Date; endedAt: Date | null },
 ): Promise<{ year: number; month: number }[]> {
-  return db
+  const rows = await db
     .select({ year: monthlyReviewSnapshots.year, month: monthlyReviewSnapshots.month })
     .from(monthlyReviewSnapshots)
     .where(eq(monthlyReviewSnapshots.groupId, groupId))
     .orderBy(desc(monthlyReviewSnapshots.year), desc(monthlyReviewSnapshots.month))
-}
-
-/** Whether the group has any monthly review yet (#1364, dashboard 月回顧 cell). */
-export async function hasAnyMonthlyReview(groupId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ id: monthlyReviewSnapshots.id })
-    .from(monthlyReviewSnapshots)
-    .where(eq(monthlyReviewSnapshots.groupId, groupId))
-    .limit(1)
-  return !!row
+  return rows.filter((ym) => isMonthInChapter(ym, chapter))
 }

@@ -10,8 +10,8 @@ import { ReviewIndex } from './_components/ReviewIndex'
  *
  * Exists so the dashboard's 月回顧 cell always has somewhere to go, including
  * before the first review (a gentle empty state) and after the latest one has
- * been seen. Pin-aware like /review/[month]: it lists the reviews of the group
- * whose chapter the viewer is looking at.
+ * been seen. Pin-aware like /review/[month], and chapter-scoped (#1380): it
+ * lists only the months that lie wholly inside the chapter being viewed.
  */
 export default async function ReviewIndexPage() {
   const user = await getCurrentUser()
@@ -19,6 +19,6 @@ export default async function ReviewIndexPage() {
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
 
-  const months = await listMonthlyReviewMonths(context.group.id)
+  const months = await listMonthlyReviewMonths(context.group.id, context.window)
   return <ReviewIndex monthKeys={months.map(formatYearMonth)} />
 }

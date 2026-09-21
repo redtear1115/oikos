@@ -24,12 +24,13 @@ import type { RateEntry } from './_components/AddSheet'
 import { parseCurrencyCode } from '@/lib/currency'
 import {
   loadMonthlyReviewSnapshot,
-  hasAnyMonthlyReview,
+  listMonthlyReviewMonths,
   loadMonthlyReviewMessages,
 } from '@/lib/db/queries/monthlyReview'
 import {
   currentYearMonthInTaipei,
   formatYearMonth,
+  isMonthInChapter,
   previousMonth,
   truncateCodepoints,
 } from '@/lib/monthlyReview'
@@ -109,8 +110,8 @@ export default async function DashboardPage() {
     soloExpenseStats,
     t,
     locale,
-    reviewSnapshot,
-    hasAnyReview,
+    rawReviewSnapshot,
+    chapterReviewMonths,
     currentMonthMessages,
     priorClosedEpoch,
     rawActiveTrips,
@@ -132,7 +133,7 @@ export default async function DashboardPage() {
     getTranslations(),
     getLocale(),
     loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
-    hasAnyMonthlyReview(group.id),
+    listMonthlyReviewMonths(group.id, epochWindow),
     loadMonthlyReviewMessages(group.id, todayYM.year, todayYM.month),
     shouldCheckPriorLeaver ? getLatestPriorClosedEpoch(group.id) : Promise.resolve(null),
     epochWindow.epochId
@@ -209,6 +210,15 @@ export default async function DashboardPage() {
   } | null = null
 
   // ContinuityRow's 月回顧 cell (#1364) — see lib/reviewCell.ts.
+  // Reviews follow the chapter (#1380): last month's snapshot counts — for the
+  // 月回顧 cell AND the banner — only if that month lies wholly inside the
+  // chapter being viewed. Otherwise a new partner would be shown (and linked
+  // to) a month the previous partner shared; /review/[month] 404s it anyway.
+  const reviewSnapshot = rawReviewSnapshot && isMonthInChapter(reviewedYM, epochWindow)
+    ? rawReviewSnapshot
+    : null
+  const hasAnyReview = chapterReviewMonths.length > 0
+
   const reviewCell = deriveReviewCell({
     previousMonth: reviewedYM,
     previousSnapshot: reviewSnapshot,
