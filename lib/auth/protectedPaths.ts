@@ -16,6 +16,7 @@ export const PROTECTED_ROOT_SEGMENTS = [
   'dashboard',
   'records',
   'trips',
+  'outings',
   'assets',
   'review',
   'settings',

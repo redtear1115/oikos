@@ -18,9 +18,8 @@ export function Chip({ selected, onClick, children }: { selected: boolean; onCli
     <button
       type="button"
       onClick={onClick}
-      className="rounded-chip px-3.5 text-sm"
+      className="h-chip rounded-chip px-3.5 text-sm"
       style={{
-        height: 'var(--chip-h, 34px)',
         background: selected ? 'var(--ink)' : 'var(--surface)',
         color: selected ? 'var(--surface)' : 'var(--ink-2)',
         border: selected ? '1px solid var(--ink)' : '1px solid var(--hairline)',
