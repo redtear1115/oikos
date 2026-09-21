@@ -172,8 +172,12 @@ migrate 流程 → `app/[locale]/migrate/_components/MigrateTool.tsx` + `Migrate
 | `invite_created` | member_a 產生邀請連結 | server | `group_id` |
 | `invite_link_opened` | 被邀請者抵達 accept 畫面 | client | — |
 | `partner_joined` | member_b 接受、加入 group | server | `group_id`、`inviter_id` |
+| `invite_superseded` | 重新產生連結，取代了仍開著的舊連結（#1288） | server | `group_id`、`count` |
+| `invite_preview_failed` | 被邀請者打開的連結無法使用（#1288） | server | `code`（`revoked` / `expired` / `already_used`…） |
 
-實作落地點：`invite_created` / `partner_joined` → `actions/invite.ts`（`createInvite` / `acceptInvite`）；
+`invite_superseded` 與 `invite_preview_failed` 只帶上列屬性，**永遠不帶 token**——token 在失效前是一把能進帳本的鑰匙。
+
+實作落地點：`invite_created` / `invite_superseded` / `partner_joined` / `invite_preview_failed` → `actions/invite.ts`（`createInvite` / `acceptInvite` / `previewInvite`）；
 `invite_link_opened` → `app/invite/[token]/InviteConfirm.tsx`；邀請頁匿名導向 sign-in
 夾帶 `from=invite` → `app/invite/[token]/page.tsx`。
 

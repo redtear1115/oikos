@@ -37,8 +37,12 @@ export function validateInviteAcceptance(
 ): AcceptResult {
   if (!invite) return { ok: false, error: 'invalid_or_expired' }
   if (invite.acceptedAt) return { ok: false, error: 'already_used' }
-  if (invite.revokedAt) return { ok: false, error: 'revoked' }
+  // #1288 — expired is reported before revoked. Minting a new link supersedes
+  // (revokes) every earlier open invite, expired ones included, so an old link
+  // that simply ran out would otherwise read as "revoked". Both messages are
+  // neutral; this only keeps the more truthful one in front.
   if (invite.expiresAt < now) return { ok: false, error: 'expired' }
+  if (invite.revokedAt) return { ok: false, error: 'revoked' }
   if (!group) return { ok: false, error: 'group_not_found' }
   if (group.memberB !== null) return { ok: false, error: 'group_full' }
   if (group.memberA === userId || group.memberB === userId) return { ok: false, error: 'already_member' }
@@ -64,4 +68,46 @@ export function validateInviteAcceptance(
     return { ok: false, error: 'already_in_duo' }
   }
   return { ok: true }
+}
+
+/**
+ * #1288 — why an atomic claim found nothing to claim.
+ *
+ * `acceptInvite` claims the invite with one conditional UPDATE (not accepted,
+ * not revoked, not expired by the DB clock). When that UPDATE touches zero
+ * rows, something changed after the up-front validation passed: a second
+ * accept won, a new link superseded this one, the partner was removed, or the
+ * link ran out. This re-reads the row (inside the same transaction) and names
+ * the specific reason; anything it cannot name falls back to
+ * `invalid_or_expired`. `expiredByDbClock` must come from Postgres
+ * (`expires_at <= now()`), not from the app server's clock, so the reason
+ * agrees with the predicate that just refused the claim.
+ *
+ * Same precedence as {@link validateInviteAcceptance}: used, then expired,
+ * then revoked.
+ */
+export function classifyUnclaimableInvite(
+  row: { acceptedAt: Date | null; revokedAt: Date | null; expiredByDbClock: boolean } | null,
+): InviteAcceptError {
+  if (!row) return 'invalid_or_expired'
+  if (row.acceptedAt) return 'already_used'
+  if (row.expiredByDbClock) return 'expired'
+  if (row.revokedAt) return 'revoked'
+  return 'invalid_or_expired'
+}
+
+/**
+ * #1288 — why the guarded group update (`member_b IS NULL AND member_a =
+ * invited_by`) matched no row, given the group as re-read inside the
+ * transaction. A full group wins over a changed issuer, matching the order in
+ * {@link validateInviteAcceptance}.
+ */
+export function classifyGroupClaimMiss(
+  group: { memberA: string; memberB: string | null } | null,
+  invitedBy: string,
+): InviteAcceptError {
+  if (!group) return 'group_not_found'
+  if (group.memberB !== null) return 'group_full'
+  if (group.memberA !== invitedBy) return 'inviter_not_member'
+  return 'group_full'
 }

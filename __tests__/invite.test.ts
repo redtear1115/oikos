@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateInviteAcceptance } from '@/lib/invite'
+import { classifyGroupClaimMiss, classifyUnclaimableInvite, validateInviteAcceptance } from '@/lib/invite'
 
 const baseInvite = {
   id: 'inv-1',
@@ -53,6 +53,15 @@ describe('validateInviteAcceptance', () => {
     const invite = { ...baseInvite, expiresAt: new Date('2000-01-01') }
     const result = validateInviteAcceptance(invite, baseGroup, 'user-b', null, new Date('2025-01-01'))
     expect(result).toMatchObject({ ok: false, error: 'expired' })
+  })
+
+  // #1288 — minting supersedes every open invite, expired ones included, so a
+  // link that simply ran out is usually also revoked. It must still read as
+  // expired, not as revoked.
+  it('reports expired before revoked when an invite is both', () => {
+    const invite = { ...baseInvite, expiresAt: new Date('2000-01-01'), revokedAt: new Date('2025-01-01') }
+    const result = validateInviteAcceptance(invite, baseGroup, 'user-b', null, new Date('2025-01-01'))
+    expect(result).toEqual({ ok: false, error: 'expired' })
   })
 
   it('rejects when group is full', () => {
@@ -128,5 +137,46 @@ describe('validateInviteAcceptance', () => {
     const victimMinted = { ...baseInvite, invitedBy: 'victim' }
     const result = validateInviteAcceptance(victimMinted, groupAfterPartnerLeft, 'newcomer', null)
     expect(result).toEqual({ ok: true })
+  })
+})
+
+// #1288 — acceptInvite's atomic claim matched no row; name the reason from the
+// row as re-read inside the transaction.
+describe('classifyUnclaimableInvite', () => {
+  const open = { acceptedAt: null, revokedAt: null, expiredByDbClock: false }
+
+  it('a vanished row is invalid_or_expired', () => {
+    expect(classifyUnclaimableInvite(null)).toBe('invalid_or_expired')
+  })
+
+  it('a row a concurrent accept claimed first is already_used', () => {
+    expect(classifyUnclaimableInvite({ ...open, acceptedAt: new Date() })).toBe('already_used')
+  })
+
+  it('a row revoked after validation is revoked', () => {
+    expect(classifyUnclaimableInvite({ ...open, revokedAt: new Date() })).toBe('revoked')
+  })
+
+  it('a row that expired by the DB clock is expired, even if also revoked', () => {
+    expect(classifyUnclaimableInvite({ ...open, expiredByDbClock: true })).toBe('expired')
+    expect(classifyUnclaimableInvite({ ...open, expiredByDbClock: true, revokedAt: new Date() })).toBe('expired')
+  })
+
+  it('falls back to invalid_or_expired when nothing explains the miss', () => {
+    expect(classifyUnclaimableInvite(open)).toBe('invalid_or_expired')
+  })
+})
+
+describe('classifyGroupClaimMiss', () => {
+  it('a vanished group is group_not_found', () => {
+    expect(classifyGroupClaimMiss(null, 'user-a')).toBe('group_not_found')
+  })
+
+  it('a group that filled up is group_full', () => {
+    expect(classifyGroupClaimMiss({ memberA: 'user-a', memberB: 'user-c' }, 'user-a')).toBe('group_full')
+  })
+
+  it('a solo group whose member_a is no longer the issuer is inviter_not_member', () => {
+    expect(classifyGroupClaimMiss({ memberA: 'someone-else', memberB: null }, 'user-a')).toBe('inviter_not_member')
   })
 })
