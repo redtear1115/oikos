@@ -5,7 +5,7 @@
   <title>Futari · OG render</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" />
   <style>
     /* All sizes scale via --s (CSS scale factor). The render script sets
      * --w / --h / --s and chooses layout via the body class. */
@@ -19,6 +19,9 @@
       position: relative;
       overflow: hidden;
       box-sizing: border-box;
+    }
+    body[data-lang="zh-CN"] {
+      font-family: 'Noto Sans SC', -apple-system, system-ui, sans-serif;
     }
     *::-webkit-scrollbar { display: none; }
     .fr { font-family: 'Fraunces', Georgia, serif; }
@@ -73,6 +76,9 @@
       letter-spacing: calc(-2px * var(--s));
       line-height: 1.0;
     }
+    body.wide[data-lang="zh-CN"] .headline {
+      font-family: 'Fraunces', 'Noto Sans SC', serif;
+    }
     body.wide .headline .accent { color: #E08856; font-style: italic; }
     body.wide .sub {
       display: flex; align-items: center;
@@ -88,6 +94,9 @@
       font-size: calc(22px * var(--s));
       color: #7A5848;
       letter-spacing: calc(1px * var(--s));
+    }
+    body.wide[data-lang="zh-CN"] .sub-text {
+      font-family: 'Fraunces', 'Noto Sans SC', serif;
     }
 
     /* —— Square layout (1200×1200) —— */
@@ -172,6 +181,12 @@
     const scale = parseFloat(params.get('s') || '1');
     const layout = params.get('layout') || 'wide';
     const lang = params.get('lang') || 'zh';
+
+    // BCP-47 tag for <html lang>, so Simplified text gets SC glyph shapes
+    // via :lang()-aware font matching instead of inheriting the file's
+    // hard-coded zh-TW default.
+    const HTML_LANG = { zh: 'zh-TW', 'zh-CN': 'zh-CN', en: 'en', ja: 'ja' };
+    document.documentElement.lang = HTML_LANG[lang] || 'zh-TW';
 
     document.body.style.setProperty('--w', w + 'px');
     document.body.style.setProperty('--h', h + 'px');

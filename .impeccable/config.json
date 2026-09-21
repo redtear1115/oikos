@@ -8,6 +8,15 @@
         "value": "noto sans jp",
         "createdAt": "2026-09-19T17:01:42.597Z",
         "reason": "existing precedent: scripts/og/store-graphic.html already loads Noto Sans JP for the ja store locale; store assets need a JP glyph font"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "noto sans sc",
+        "files": [
+          "scripts/og/template.html"
+        ],
+        "createdAt": "2026-09-21T17:27:37.141Z",
+        "reason": "scripts/og/template.html is a standalone Puppeteer OG-image renderer, not app UI — Noto Sans JP/TC are already used here for the same non-DESIGN.md reason; adding Noto Sans SC to fix a Simplified-glyph fallback bug (issue #1367 verifier finding)"
       }
     ]
   }
