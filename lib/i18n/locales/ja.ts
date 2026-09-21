@@ -296,11 +296,11 @@ export const ja: Translations = {
       reviewTitle: '月の振り返り',
       reviewLatest: '{month}の振り返り · 見てみる',
       reviewReturn: '振り返りに戻る',
-      reviewEmpty: 'ひと月分たまるとここに届きます',
+      reviewEmpty: 'ひと月たつと届きます',
       reviewAriaLatest: '月の振り返り：{month}の振り返りを開く',
       reviewAriaIndex: '月の振り返り：一覧を開く',
       tripTitle: '旅',
-      tripEmpty: '旅の記録をはじめる',
+      tripEmpty: '旅を記録する',
       tripAria: '旅：旅の一覧へ',
     },
     soloHero: {

@@ -74,7 +74,6 @@ export function currentYearMonthInTaipei(now: Date = new Date()): YearMonth {
   return { year: y, month: m }
 }
 
-/** True if `a` is strictly after `b` (later year, or same year & later month). */
 /** First instant of a calendar month in Asia/Taipei (UTC+8, no DST). */
 export function taipeiMonthStart({ year, month }: YearMonth): Date {
   return new Date(Date.UTC(year, month - 1, 1) - 8 * 60 * 60 * 1000)
@@ -105,6 +104,7 @@ export function isMonthInChapter(ym: YearMonth, chapter: { startedAt: Date; ende
     && (chapter.endedAt === null || end <= chapter.endedAt.getTime())
 }
 
+/** True if `a` is strictly after `b` (later year, or same year & later month). */
 export function isAfter(a: YearMonth, b: YearMonth): boolean {
   if (a.year !== b.year) return a.year > b.year
   return a.month > b.month

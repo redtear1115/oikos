@@ -294,12 +294,12 @@ export const en: Translations = {
     continuity: {
       reviewTitle: 'Monthly review',
       reviewLatest: '{month} review · take a look',
-      reviewReturn: 'Back to your reviews',
-      reviewEmpty: 'Shows up after a full month',
+      reviewReturn: 'Past reviews',
+      reviewEmpty: 'After your first month',
       reviewAriaLatest: 'Monthly review: open the {month} review',
       reviewAriaIndex: 'Monthly review: open all reviews',
       tripTitle: 'Trips',
-      tripEmpty: 'Start a trip ledger',
+      tripEmpty: 'Start a trip',
       tripAria: 'Trips: go to your trips',
     },
     soloHero: {
