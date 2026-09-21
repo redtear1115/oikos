@@ -259,11 +259,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                   <>
                     <span
                       aria-hidden="true"
-                      className="rounded-xs bg-ink-3 shrink-0"
-                      style={{
-                        width: 3,
-                        height: 3,
-                      }}
+                      className="rounded-xs bg-ink-3 shrink-0 w-0.75 h-0.75"
                     />
                     <span>{i.insuredShort.replace('{name}', insuredName)}</span>
                   </>

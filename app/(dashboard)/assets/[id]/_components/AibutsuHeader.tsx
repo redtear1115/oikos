@@ -45,9 +45,8 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
     <div
       role="tablist"
       aria-label={t.assetDetail.siblingRailAriaLabel}
-      className="flex gap-2 pb-0.5 mt-3.5 -mx-4 px-4 overflow-x-auto"
+      className="flex gap-2 pb-0.5 mt-3.5 -mx-4 px-4 overflow-x-auto snap-x"
       style={{
-        scrollSnapType: 'x proximity',
         msOverflowStyle: 'none',
         scrollbarWidth: 'none',
       }}
@@ -62,11 +61,10 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             role="tab"
             aria-selected={isCurrent}
             onClick={() => router.push(`/assets/${s.id}`)}
-            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full h-9"
+            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full h-9 snap-start"
             style={{
               background: isCurrent ? 'var(--ink)' : 'rgba(255,255,255,0.55)',
               border: isCurrent ? 'none' : '1px solid rgba(58,36,25,0.08)',
-              scrollSnapAlign: 'start',
             }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight') {

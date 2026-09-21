@@ -53,11 +53,7 @@ function Dot() {
   return (
     <span
       aria-hidden="true"
-      className="rounded-xs inline-block bg-ink-3 shrink-0"
-      style={{
-        width: 3,
-        height: 3,
-      }}
+      className="rounded-xs inline-block bg-ink-3 shrink-0 w-0.75 h-0.75"
     />
   )
 }
