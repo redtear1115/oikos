@@ -8,8 +8,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="px-5 pt-[18px] pb-2">
       <div
-        className="text-xs tracking-[1.5px] uppercase"
-        style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+        className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric"
       >{children}</div>
     </div>
   )
@@ -18,8 +17,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
 export function InfoCard({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="mx-4 rounded-2xl overflow-hidden"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      className="mx-4 rounded-2xl overflow-hidden bg-surface border border-hairline"
     >{children}</div>
   )
 }
@@ -33,13 +31,11 @@ export function InfoRow({ label, value, mono = false, last = false }: {
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div
-        className="text-xs shrink-0 tracking-[0.4px]"
-        style={{ color: 'var(--ink-3)', width: 76 }}
+        className="text-xs shrink-0 tracking-[0.4px] text-ink-3 w-19"
       >{label}</div>
       <div
-        className="flex-1 text-sm font-medium truncate"
+        className="flex-1 text-sm font-medium truncate text-ink"
         style={{
-          color: 'var(--ink)',
           fontFamily: mono ? 'var(--font-numeric)' : 'inherit',
         }}
       >{value || '—'}</div>
@@ -81,15 +77,15 @@ export function AgeDisplay({ age, accent }: { age: Age; accent: string }) {
   const { years: yrs, months: mos } = age
   return (
     <div className="text-center">
-      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>
+      <div className="text-xs tracking-[1.5px] uppercase font-numeric" style={{ color: accent }}>{t.assetDetail.age.label}</div>
       <div className="inline-flex items-baseline gap-1 mt-1">
-        <span className="tabular-nums leading-none text-amount-md" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -1 }}>
+        <span className="tabular-nums leading-none text-amount-md font-numeric font-medium text-ink" style={{ letterSpacing: -1 }}>
           {yrs}
         </span>
         <span className="text-xs font-medium" style={{ color: accent }}>{t.assetDetail.age.yearsSuffix}</span>
         {mos > 0 && (
           <>
-            <span className="tabular-nums leading-none ml-1 text-title" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)' }}>
+            <span className="tabular-nums leading-none ml-1 text-title font-numeric font-medium text-ink">
               {mos}
             </span>
             <span className="text-xs font-medium" style={{ color: accent }}>{t.assetDetail.age.monthsSuffix}</span>

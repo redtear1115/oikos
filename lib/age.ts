@@ -1,4 +1,4 @@
-import { todayLocalDate } from './local-date'
+import { daysBetween, parseLocalDate } from './local-date'
 
 export interface Age {
   years: number
@@ -6,8 +6,13 @@ export interface Age {
 }
 
 /**
- * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null, invalid, or after today.
+ * Compute age in years + remaining months from a 'YYYY-MM-DD' string to
+ * `today` ('YYYY-MM-DD'). Returns null if birthday is null, invalid, or after
+ * today.
+ *
+ * `today` is required, and comes from `useToday()` in a component: reading
+ * the clock in here made the UTC server and the device disagree after Taipei
+ * midnight, and hydration failed (#1360).
  *
  * Lives here rather than next to one component because two surfaces show the
  * same age: the 愛物 list cards and the 愛物 detail pages (#1339). They used to
@@ -19,9 +24,10 @@ export interface Age {
  * and on the days around a month boundary the two surfaces quietly disagree by
  * one month.
  */
-export function computeAge(birthday: string | null | undefined): Age | null {
+export function computeAge(birthday: string | null | undefined, todayYMD: string): Age | null {
   if (!birthday) return null
-  const today = todayLocalDate()
+  const today = parseLocalDate(todayYMD)
+  if (!today) return null
   const [y, m, d] = birthday.split('-').map(Number)
   if (!y || !m || !d || m > 12 || d > 31) return null
   let years = today.getFullYear() - y
@@ -40,4 +46,27 @@ export function computeAge(birthday: string | null | undefined): Age | null {
   // to 0 used to keep the leftover month count, so 2027-01-01 read as 8 個月.
   if (years < 0) return null
   return { years, months }
+}
+
+/**
+ * Whole days from a 'YYYY-MM-DD' start date to `today` ('YYYY-MM-DD', from
+ * `useToday()` — see computeAge), in calendar days.
+ * Returns null if the date is null, invalid, or after today — the day-count
+ * counterpart of `computeAge`, with the same future-date guard (#1347).
+ *
+ * Serves the plant 陪伴天數 and the house 住了幾天 heroes, and the plant list
+ * card. The detail heroes used to parse `new Date(ymd)` (UTC) against
+ * `Date.now()` and clamp with `Math.max(0, …)`.
+ *
+ * **失效的樣子**: nothing throws and nothing goes negative. A sprout date or
+ * move-in date typed in ahead of time reads as 「0 天」 on the first screen —
+ * a plausible-looking number for something that hasn't started yet — and in
+ * UTC+8 a date entered as today counts from 08:00, not midnight.
+ */
+export function daysSince(ymd: string | null | undefined, todayYMD: string): number | null {
+  const start = parseLocalDate(ymd)
+  const today = parseLocalDate(todayYMD)
+  if (!start || !today) return null
+  const days = daysBetween(start, today)
+  return days < 0 ? null : days
 }

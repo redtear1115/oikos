@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { RuleListItem } from './RuleListItem'
+import { RuleListItem } from '@/app/(dashboard)/settings/recurring/_components/RuleListItem'
 import { useTranslations } from '@/lib/i18n/client'
 
 // Sheet only mounts when the user taps to add / edit a rule — lazy-load to
@@ -47,6 +47,7 @@ export function RecurringExpenseContent({ rules, groupDefaultRatioA }: Props) {
             {rules.map((r) => (
               <RuleListItem
                 key={r.id}
+                type="expense"
                 rule={r}
                 onEdit={(rule) => setSheetState(rule)}
               />

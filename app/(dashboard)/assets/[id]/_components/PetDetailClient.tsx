@@ -13,6 +13,7 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { computeAge } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -42,7 +43,8 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   // #1339 — null for a missing, malformed, or future birthday (a due date
   // typed in early); the age block is then skipped entirely rather than
   // rendering 「-1 歲」.
-  const age = computeAge(details?.birthDate)
+  const today = useToday()
+  const age = computeAge(details?.birthDate, today)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -90,7 +92,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="pet"
         name={name}
@@ -127,7 +129,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -143,7 +145,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="pet" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

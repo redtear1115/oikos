@@ -8,6 +8,7 @@ import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -29,7 +30,10 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   const locale = useLocale()
   // Default to the full outstanding amount.
   const [amount, setAmount] = useState(String(debtAmount))
-  const [date, setDate] = useState(localTodayISO())
+  // Seeded from useToday(), not the clock: this closed sheet is in the
+  // server HTML, and the clock disagrees with it after Taipei midnight (#1360).
+  const today = useToday()
+  const [date, setDate] = useState(today)
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -167,7 +171,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
                 {formatDateAbsolute(date, locale)}
               </div>
               <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                {formatPickerSubtitle(date, locale)}
+                {formatPickerSubtitle(date, locale, today)}
               </div>
             </div>
             <Chevron />

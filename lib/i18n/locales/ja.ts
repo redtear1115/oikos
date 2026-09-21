@@ -88,7 +88,7 @@ export const ja: Translations = {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
     bodyHtml: '夫婦・カップルのための共有家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
-    cta: 'ふたりではじめる',
+    cta: 'ふたりで記録する',
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
@@ -380,7 +380,7 @@ export const ja: Translations = {
       amountRequired: '金額を入力してください',
       amountTooLarge: '金額は {max} 以下にしてください',
       descriptionRequired: '内容を入力してください',
-      noPartner: 'パートナーがまだ参加していません',
+      noPartner: '相手がまだ参加していません',
     },
   },
 
@@ -472,7 +472,7 @@ export const ja: Translations = {
     label: 'ログアウト',
     pending: 'ログアウト中…',
     title: 'Futari からログアウト？',
-    description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
+    description: '次回は Google でサインインする必要があります。相手を招待していなくても、記録は失われません。',
   },
 
   deleteAccountButton: {
@@ -649,7 +649,7 @@ export const ja: Translations = {
     errors: {
       exceedsDebt: '金額が借入額を超えています',
       amountRequired: '金額を入力してください',
-      noPartner: 'パートナーがまだ参加していません',
+      noPartner: '相手がまだ参加していません',
     },
   },
 
@@ -2949,9 +2949,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ｜Excel 変換',
-        description: 'CWMoney からの引っ越し手順。Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦の共同家計簿）にアップロードするだけ。',
-        ogDescription: 'CWMoney の引っ越し手順。変換テンプレートで Excel を CSV にして Futari へ。',
+        title: 'CWMoney から Futari へ｜無料の割り勘機能',
+        description: 'CWMoney ユーザーの新しい選択肢。CWMoney では共有家計簿に VIP が必要で、割り勘機能もありません。Futari はどちらも無料。変換テンプレートで CSV に整えてアップロードするだけ。',
+        ogDescription: 'CWMoney ユーザーの乗り換え先。無料の割り勘機能、Excel を CSV に変換して Futari へ。',
       },
       // TODO(#839): ja copy below pending native review
       moneybook: {

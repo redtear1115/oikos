@@ -8,7 +8,8 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
-import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
+import { daysBetween, parseLocalDate } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
@@ -63,7 +64,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const [lapseError, setLapseError] = useState('')
 
   const framing = getFramingGroup(data.insuranceType)
-  const today = todayLocalDate()
+  // #1360 — from useToday(), not the clock, so SSR and hydration agree.
+  const today = parseLocalDate(useToday())!
   const startsAt = parseLocalDate(data.startsAt)
   const expiryDate = parseLocalDate(data.expiryDate)
   const annualPremium = data.annualPremium ?? 0
@@ -201,37 +203,23 @@ export function InsuranceListItem({ id, name, data }: Props) {
   return (
     <>
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: `1px solid color-mix(in srgb, ${stripeColor} 35%, transparent)`,
-          overflow: 'hidden',
         }}
       >
         {/* Header — Link wraps only the header area (not the action row) */}
         <Link
           href={`/assets/${id}`}
-          className="no-underline"
-          style={{ color: 'var(--ink)', display: 'block' }}
+          className="no-underline text-ink block"
         >
           {/* Header row */}
           <div
-            className="px-4 py-3"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 12,
-            }}
+            className="px-4 py-3 flex items-start gap-3"
           >
             {/* Policy holder icon */}
             <div
-              className="rounded-chip"
-              style={{
-                width: 36, height: 36,
-                background: 'var(--asset-tint-insurance)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, overflow: 'hidden',
-              }}
+              className="rounded-chip w-9 h-9 bg-[var(--asset-tint-insurance)] flex items-center justify-center shrink-0 overflow-hidden"
             >
               {data.policyHolderAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -241,16 +229,11 @@ export function InsuranceListItem({ id, name, data }: Props) {
                   width={36}
                   height={36}
                   referrerPolicy="no-referrer"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  className="w-full h-full object-cover"
                 />
               ) : policyHolderInitial ? (
                 <span
-                  className="text-base"
-                  style={{
-                    fontWeight: 500,
-                    color: 'var(--ink)',
-                    fontFamily: 'var(--font-serif)',
-                  }}
+                  className="text-base font-medium text-ink font-serif"
                 >
                   {policyHolderInitial}
                 </span>
@@ -260,37 +243,23 @@ export function InsuranceListItem({ id, name, data }: Props) {
             </div>
 
             {/* Name + insured */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex-1 min-w-0">
               <div
-                className="text-sm"
-                style={{
-                  fontWeight: 500, color: 'var(--ink)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}
+                className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {name}
               </div>
               <div
-                className="text-xs mt-1"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  color: 'var(--ink-3)',
-                }}
+                className="text-xs mt-1 flex items-center gap-1.5 text-ink-3"
               >
                 {data.insurer && (
-                  <span style={{ color: 'var(--ink-2)' }}>{data.insurer}</span>
+                  <span className="text-ink-2">{data.insurer}</span>
                 )}
                 {insuredName && (
                   <>
                     <span
                       aria-hidden="true"
-                      className="rounded-xs"
-                      style={{
-                        width: 3, height: 3,
-                        background: 'var(--ink-3)', flexShrink: 0,
-                      }}
+                      className="rounded-xs bg-ink-3 shrink-0 w-0.75 h-0.75"
                     />
                     <span>{i.insuredShort.replace('{name}', insuredName)}</span>
                   </>
@@ -299,18 +268,17 @@ export function InsuranceListItem({ id, name, data }: Props) {
             </div>
 
             {/* Badge + annual premium */}
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div className="text-right shrink-0">
               {renderBadge()}
               <div className="mt-1.5">
                 <div
-                  className="font-mono text-mini"
-                  style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
+                  className="font-mono text-mini text-ink-3"
+                  style={{ letterSpacing: 1 }}
                 >
                   {i.annualLabel}
                 </div>
                 <div
-                  className="tnum mt-px text-sm"
-                  style={{ fontWeight: 500, color: 'var(--ink)' }}
+                  className="tnum mt-px text-sm font-medium text-ink"
                 >
                   {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
                 </div>
@@ -355,19 +323,15 @@ export function InsuranceListItem({ id, name, data }: Props) {
 
         {/* Action row for expired single-year — outside Link so buttons don't navigate */}
         {showActionRow && (
-          <div className="px-4 pb-3.5" style={{ display: 'flex', gap: 8 }}>
+          <div className="px-4 pb-3.5 flex gap-2">
             <button
               type="button"
               onClick={() => { setRenewError(''); setRenewOpen(true) }}
               disabled={pending}
               style={{
-                flex: 1, height: 36,
-                background: 'var(--accent-soft)', color: 'var(--ink)',
-                border: '1px solid var(--hairline)',
-                fontWeight: 500,
-                fontFamily: 'inherit', cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
-              className="disabled:opacity-50 rounded-chip text-xs"
+              className="disabled:opacity-50 rounded-chip text-xs flex-1 h-9 bg-accent-soft text-ink border border-hairline font-medium cursor-pointer"
             >
               {i.renewAction}
             </button>
@@ -376,12 +340,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
               onClick={() => { setLapseError(''); setLapseOpen(true) }}
               disabled={pending}
               style={{
-                flex: 1, height: 36,
-                background: 'transparent', color: 'var(--ink-2)',
-                border: '1px solid var(--hairline)',
-                fontFamily: 'inherit', cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
-              className="disabled:opacity-50 rounded-chip text-xs"
+              className="disabled:opacity-50 rounded-chip text-xs flex-1 h-9 bg-transparent text-ink-2 border border-hairline cursor-pointer"
             >
               {i.lapseAction}
             </button>
@@ -405,7 +366,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
         onCancel={() => { setRenewOpen(false); setRenewError('') }}
         onConfirm={handleRenew}
       >
-        <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>
+        <label className="block text-xs mb-1.5 text-ink-3">
           {i.renewPolicyNoLabel}
         </label>
         <TextInput
@@ -416,7 +377,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           disabled={pending}
         />
         {renewError && (
-          <div className="mt-3 text-sm" style={{ color: 'var(--destructive)' }} role="alert">
+          <div className="mt-3 text-sm text-destructive" role="alert">
             {renewError}
           </div>
         )}
@@ -434,7 +395,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
         onConfirm={handleLapse}
       >
         {lapseError && (
-          <div className="text-sm" style={{ color: 'var(--destructive)' }} role="alert">
+          <div className="text-sm text-destructive" role="alert">
             {lapseError}
           </div>
         )}
@@ -466,54 +427,44 @@ function TimelineBar({
           clamps it straight back to 3px (4+4 > 6 → all radii × 6/8). Identical
           render, one fewer off-scale literal. */}
       <div
-        className="rounded-sm"
+        className="rounded-sm h-1.5 relative overflow-hidden"
         style={{
-          height: 6,
           background: 'rgba(58,36,25,0.08)',
-          position: 'relative', overflow: 'hidden',
         }}
       >
         <div
-          className="rounded-sm"
+          className="rounded-sm absolute left-0 top-0 bottom-0"
           style={{
-            position: 'absolute', left: 0, top: 0, bottom: 0,
             width: `${Math.max(0, Math.min(100, pct))}%`,
             background: fillColor,
           }}
         />
       </div>
       <div
-        className="mt-1.5"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline', gap: 8,
-        }}
+        className="mt-1.5 flex justify-between items-baseline gap-2"
       >
         <div>
           <div
-            className="font-mono text-mini"
-            style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
+            className="font-mono text-mini text-ink-3"
+            style={{ letterSpacing: 1 }}
           >
             {leftLabel}
           </div>
           <div
-            className="font-mono tnum mt-px text-xs"
-            style={{ color: 'var(--ink-2)' }}
+            className="font-mono tnum mt-px text-xs text-ink-2"
           >
             {leftValue}
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
+        <div className="text-right">
           <div
-            className="font-mono text-mini"
-            style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
+            className="font-mono text-mini text-ink-3"
+            style={{ letterSpacing: 1 }}
           >
             {rightLabel}
           </div>
           <div
-            className="font-mono tnum mt-px text-xs"
-            style={{ color: 'var(--ink-2)' }}
+            className="font-mono tnum mt-px text-xs text-ink-2"
           >
             {rightValue}
           </div>

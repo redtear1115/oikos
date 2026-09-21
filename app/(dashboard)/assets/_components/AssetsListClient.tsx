@@ -15,7 +15,8 @@ import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { getFramingGroup } from '@/lib/insurance'
-import { parseLocalDate, todayLocalDate, daysBetween } from '@/lib/local-date'
+import { parseLocalDate, daysBetween } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { AssetType } from '@/lib/assets'
 
 type AssetsTab = 'aibutsu' | 'guardian'
@@ -98,15 +99,12 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
     <div className="flex items-center gap-2 px-1 pb-1">
       <span
         aria-hidden="true"
-        className="inline-block rounded-full shrink-0"
-        style={{ width: 8, height: 8, background: dotColor }}
+        className="inline-block rounded-full shrink-0 w-2 h-2"
+        style={{ background: dotColor }}
       />
       <div
-        className="text-base"
+        className="text-base font-serif font-medium text-ink"
         style={{
-          fontFamily: 'var(--font-serif)',
-          fontWeight: 500,
-          color: 'var(--ink)',
           letterSpacing: '-0.2px',
         }}
       >
@@ -120,7 +118,8 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
 function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
   const t = useTranslations()
   const i = t.assets.insuranceList
-  const today = todayLocalDate()
+  // #1360 — from useToday(), not the clock, so SSR and hydration agree.
+  const today = parseLocalDate(useToday())!
   const totalAnnual = insurances.reduce((sum, a) => sum + (a.insurance?.annualPremium ?? 0), 0)
   const count = insurances.length
   // `{count}` is rendered emphasised, so split the template around it rather
@@ -143,59 +142,50 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
 
   return (
     <div
-      className="px-4.5 py-4 rounded-2xl"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-      }}
+      className="px-4.5 py-4 rounded-2xl bg-surface border border-hairline flex items-center gap-4"
     >
-      <div style={{ flex: 1 }}>
+      <div className="flex-1">
         <div
-          className="font-mono text-mini"
-          style={{ letterSpacing: 1.2, color: 'var(--ink-3)' }}
+          className="font-mono text-mini text-ink-3"
+          style={{ letterSpacing: 1.2 }}
         >
           {i.summaryAnnualPremium}
         </div>
         <div
-          className="tnum mt-1 text-title"
-          style={{ fontWeight: 500, color: 'var(--ink)' }}
+          className="tnum mt-1 text-title font-medium text-ink"
         >
           NT$ {totalAnnual.toLocaleString('en-US')}
         </div>
-        <div className="mt-1.5 text-xs" style={{ color: 'var(--ink-3)' }}>
+        <div className="mt-1.5 text-xs text-ink-3">
           {countBefore}
-          <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{count}</span>
+          <span className="text-ink-2 font-medium">{count}</span>
           {countAfter}
         </div>
       </div>
       <div
         aria-hidden="true"
-        style={{ width: 1, alignSelf: 'stretch', background: 'var(--hairline)' }}
+        className="w-px self-stretch bg-hairline"
       />
-      <div style={{ flex: 1 }}>
+      <div className="flex-1">
         <div
-          className="font-mono text-mini"
-          style={{ letterSpacing: 1.2, color: 'var(--ink-3)' }}
+          className="font-mono text-mini text-ink-3"
+          style={{ letterSpacing: 1.2 }}
         >
           {i.summaryNextRenewal}
         </div>
         {upcoming ? (
           <>
             <div
-              className="font-mono tnum mt-1 text-base"
-              style={{ fontWeight: 500, color: 'var(--ink)' }}
+              className="font-mono tnum mt-1 text-base font-medium text-ink"
             >
               {upcoming.a.insurance?.expiryDate ?? '—'}
             </div>
-            <div className="mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
+            <div className="mt-1 text-xs text-ink-3">
               {upcoming.a.name} · {i.summaryDaysUntil.replace('{days}', String(upcoming.days))}
             </div>
           </>
         ) : (
-          <div className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>—</div>
+          <div className="mt-1 text-sm text-ink-3">—</div>
         )}
       </div>
     </div>
@@ -304,23 +294,6 @@ export function AssetsListClient({ items, isPast }: Props) {
     { key: 'item', color: 'var(--asset-color-item, var(--ink-3))', tint: 'var(--asset-tint-item)', label: t.assetSheet.type.item },
   ]
 
-  const chipBaseStyle = (
-    active: boolean,
-    activeBg: string,
-    inactiveBg: string,
-    inactiveBorder: string | null,
-  ): React.CSSProperties => ({
-    width: 40,
-    height: 40,
-    background: active ? activeBg : inactiveBg,
-    border: active || !inactiveBorder ? 'none' : inactiveBorder,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    cursor: 'pointer',
-  })
-
   const TypeFilterStrip = (
     <div className="px-4 pb-3 overflow-x-auto">
       <div className="flex gap-2">
@@ -334,19 +307,11 @@ export function AssetsListClient({ items, isPast }: Props) {
           aria-label={t.assets.typeFilterAll}
           aria-pressed={typeFilter === 'all'}
           onClick={() => setTypeFilter('all')}
-          className="rounded-chip p-0"
+          className="rounded-chip p-0 w-10 h-10 bg-surface inline-flex items-center justify-center shrink-0 cursor-pointer"
           style={{
-            width: 40,
-            height: 40,
-            background: 'var(--surface)',
             border: typeFilter === 'all'
               ? '1.5px solid var(--ink)'
               : '1px solid var(--hairline)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            cursor: 'pointer',
           }}
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -365,9 +330,9 @@ export function AssetsListClient({ items, isPast }: Props) {
               aria-label={label}
               aria-pressed={active}
               onClick={() => setTypeFilter(key)}
-              className="rounded-chip p-0"
+              className="rounded-chip p-0 w-10 h-10 border-none inline-flex items-center justify-center shrink-0 cursor-pointer"
               style={{
-                ...chipBaseStyle(active, color, tint, null),
+                background: active ? color : tint,
                 color: active ? 'var(--on-fill)' : 'var(--ink)',
               }}
             >
@@ -398,18 +363,9 @@ export function AssetsListClient({ items, isPast }: Props) {
     <button
       type="button"
       onClick={() => setSheetOpen(true)}
-      className="px-3.5 py-3 rounded-bubble text-sm"
+      className="px-3.5 py-3 rounded-bubble text-sm w-full border border-dashed border-ink-3 bg-transparent flex items-center justify-center gap-2 text-ink-2 cursor-pointer"
       style={{
-        width: '100%',
-        border: '1px dashed var(--ink-3)',
-        background: 'transparent',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        color: 'var(--ink-2)',
         fontFamily: 'inherit',
-        cursor: 'pointer',
       }}
     >
       <PlusIcon size={12} color="var(--ink-2)" /> {EMPTY_STATE_LABEL[type]}
@@ -448,11 +404,9 @@ export function AssetsListClient({ items, isPast }: Props) {
     >
       {/* L2 — same spec as Records dual-toggle pill (#548 review #4). */}
       <div
-        className="inline-flex items-center rounded-full p-1"
+        className="inline-flex items-center rounded-full p-1 bg-surface gap-0.5"
         style={{
-          background: 'var(--surface)',
           border: '0.5px solid var(--hairline)',
-          gap: 2,
         }}
       >
         {(['aibutsu', 'guardian'] as const).map((id) => {
@@ -464,11 +418,10 @@ export function AssetsListClient({ items, isPast }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="relative h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm rounded-full transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
+              className="relative h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm rounded-full transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
               style={{
                 background: active ? 'var(--ink)' : 'transparent',
                 color: active ? 'var(--on-fill)' : 'var(--ink-3)',
-                fontWeight: 500,
               }}
             >
               {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}
@@ -589,8 +542,7 @@ export function AssetsListClient({ items, isPast }: Props) {
           renderFilteredEmptyButton(typeFilter)
         ) : (
           <div
-            className="text-sm leading-relaxed py-10 text-center"
-            style={{ color: 'var(--ink-3)' }}
+            className="text-sm leading-relaxed py-10 text-center text-ink-3"
           >
             {t.assets.tabEmpty.aibutsuHint}
           </div>
@@ -655,8 +607,7 @@ export function AssetsListClient({ items, isPast }: Props) {
         </>
       ) : (
         <div
-          className="text-sm leading-relaxed py-10 text-center"
-          style={{ color: 'var(--ink-3)' }}
+          className="text-sm leading-relaxed py-10 text-center text-ink-3"
         >
           {t.assets.tabEmpty.guardianHint}
         </div>
@@ -669,8 +620,7 @@ export function AssetsListClient({ items, isPast }: Props) {
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
         <h1
-          className="text-page font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+          className="text-page font-medium tracking-tight font-serif text-ink"
         >
           {t.assets.title}
         </h1>

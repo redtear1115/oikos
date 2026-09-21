@@ -4261,9 +4261,9 @@ export const zhTW: Translations = {
       brandPlaceholder: '例：Toyota',
       model: '型號',
       modelPlaceholder: '例：Altis',
-      purchasedAt: '購入日期（選填）',
+      purchasedAt: '購買日期（選填）',
       pickDate: '選擇日期',
-      purchasePrice: '購入價格（選填）',
+      purchasePrice: '買入價格（選填）',
       initialOdometer: '目前里程（選填）',
       initialOdometerPlaceholder: '例：50000',
       fuelType: '油種',
@@ -4338,9 +4338,9 @@ export const zhTW: Translations = {
     house: {
       address: '地址',
       addressPlaceholder: '例：台北市大安區某路1號',
-      purchasedAt: '購入日期',
+      purchasedAt: '購買日期',
       pickDate: '選擇日期',
-      purchasePrice: '購入金額',
+      purchasePrice: '買入金額',
       purchasePricePlaceholder: '例：15000000',
     },
     insurance: {
@@ -4521,8 +4521,8 @@ export const zhTW: Translations = {
     house: {
       sectionInfo: '房子資訊',
       address: '地址',
-      purchasedAt: '購入日',
-      purchasePrice: '購入金額',
+      purchasedAt: '購買日期',
+      purchasePrice: '買入金額',
       livingDays: '入住天數',
       daysSuffix: '天',
       livingSuffix: ' 入住',
@@ -5794,9 +5794,9 @@ export const zhTW: Translations = {
         ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
       },
       cwmoney: {
-        title: '從 CWMoney 搬家到 Futari｜Excel 匯入',
-        description: 'CWMoney 資料匯出後怎麼匯入新工具？用我們提供的 Excel 轉換模板整理成 CSV，再上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，完成搬家。',
-        ogDescription: 'CWMoney 用戶搬家指南：Excel 轉 CSV，搬進 Futari 雙人記帳。',
+        title: '從 CWMoney 搬家到 Futari｜免費雙人分帳',
+        description: 'CWMoney 用戶的雙人記帳新選擇。CWMoney 的共同帳本要解 VIP，也沒有費用分攤；Futari 兩樣都免費內建。用 Excel 轉換模板把 CWMoney 資料整理成 CSV 就能搬家，和對方一起接著記。',
+        ogDescription: 'CWMoney 用戶的下一站：免費分帳，Excel 轉 CSV 搬進 Futari。',
       },
       moneybook: {
         title: '從麻布記帳搬家到 Futari｜CSV 匯入',

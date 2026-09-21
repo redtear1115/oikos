@@ -97,7 +97,7 @@ export function SheetShell({
         <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
           {t.common.cancel}
         </Button>
-        <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
+        <div className="text-base font-medium tracking-wide text-ink">
           {title}
         </div>
         <div className="flex items-center gap-1">
@@ -125,8 +125,7 @@ export function SheetShell({
 
         {error && (
           <div
-            className="mt-3 text-sm"
-            style={{ color: 'var(--debit-text)' }}
+            className="mt-3 text-sm text-[var(--debit-text)]"
             role="alert"
           >
             {error}
@@ -143,7 +142,7 @@ export function SheetShell({
           className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
-            color: 'var(--btn-primary-text)',
+            color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
             opacity: canSave ? 1 : 0.55,
           }}
         >

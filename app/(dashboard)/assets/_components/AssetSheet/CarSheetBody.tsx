@@ -191,11 +191,9 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
           <button
             type="button"
             onClick={() => setColor(null)}
-            className="relative w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs before:absolute before:-inset-1 before:content-['']"
+            className="relative w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs before:absolute before:-inset-1 before:content-[''] bg-transparent text-ink-3"
             style={{
               border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
-              background: 'transparent',
-              color: 'var(--ink-3)',
               boxShadow: color === null ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
             }}
             aria-label={ts.car.colorNoneAriaLabel}
@@ -230,8 +228,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
               <button
                 type="button"
                 onClick={() => setWantClearPlate(true)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-destructive"
               >
                 {ts.child.clear}
               </button>
@@ -240,8 +237,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
               <button
                 type="button"
                 onClick={() => setWantClearPlate(false)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
               >
                 {ts.child.cancelClear}
               </button>

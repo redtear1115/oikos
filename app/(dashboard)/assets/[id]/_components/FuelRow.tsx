@@ -2,6 +2,7 @@
 
 import { singleEcon } from '@/lib/fuelEcon'
 import { formatDateRelative } from '@/lib/format-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatAmount } from '@/lib/currency'
 
@@ -24,6 +25,7 @@ function fmt(n: number): string {
 
 export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
   const locale = useLocale()
+  const today = useToday()
   const t = useTranslations()
   // singleEcon(curr, prev): only prev.odometer matters; liters/loggedAt in prev are unused
   const econ = singleEcon(
@@ -53,7 +55,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
         <div className="flex items-baseline gap-1.5">
           <span className="text-sm text-[var(--ink)] font-medium">{t.assetDetail.refuel}</span>
           {econ !== null ? (
-            <span className="text-micro text-[var(--ink-3)] font-mono bg-[var(--bg-page)] px-1.5 py-px rounded">
+            <span className="text-xs text-[var(--ink-3)] font-mono bg-[var(--bg-page)] px-1.5 py-px rounded">
               {econ.toFixed(1)} km/L
             </span>
           ) : (
@@ -63,7 +65,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
           )}
         </div>
         <div className="text-xs text-[var(--ink-3)] font-mono mt-1">
-          {formatDateRelative(fuelLog.loggedAt, locale)} · {parseFloat(fuelLog.liters).toFixed(1)}L · {fmt(fuelLog.odometer)} km · {fuelLog.station ?? '—'}
+          {formatDateRelative(fuelLog.loggedAt, locale, today)} · {parseFloat(fuelLog.liters).toFixed(1)}L · {fmt(fuelLog.odometer)} km · {fuelLog.station ?? '—'}
         </div>
       </div>
 

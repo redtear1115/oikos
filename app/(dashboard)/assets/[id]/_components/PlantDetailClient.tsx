@@ -13,6 +13,8 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
+import { daysSince } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -34,19 +36,15 @@ interface Props {
   siblings?: SiblingChip[]
 }
 
-function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: string; waterEvery: number | null; accent: string; td: Translations['assetDetail']['plant'] }) {
-  // Snapshot "now" at mount so re-renders don't bump the day count unexpectedly
-  // (react-hooks/purity); the display only needs day-resolution accuracy.
-  const [nowMs] = useState(() => Date.now())
-  const days = Math.max(0, Math.floor((nowMs - new Date(sproutedAt).getTime()) / 86400000))
+function CompanionDays({ days, sproutedAt, waterEvery, accent, td }: { days: number; sproutedAt: string; waterEvery: number | null; accent: string; td: Translations['assetDetail']['plant'] }) {
   return (
     <div className="text-center py-2">
-      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>
+      <div className="text-xs tracking-[1.5px] uppercase font-numeric" style={{ color: accent }}>{td.companionDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none text-amount-lg font-numeric font-medium text-ink" style={{ letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
-      <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: accent }}>
         {sproutedAt}{td.sproutedSuffix}{waterEvery ? td.waterEveryFooter.replace('{n}', String(waterEvery)) : ''}
       </div>
     </div>
@@ -62,6 +60,8 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('plant')
+  const today = useToday()
+  const companionDays = daysSince(details?.sproutedAt, today)
   const subtitle = details
     ? [details.species, details.location].filter(Boolean).join(' · ')
     : null
@@ -90,7 +90,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="plant"
         name={name}
@@ -100,9 +100,10 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         currentAssetId={assetId}
       />
 
-      {details?.sproutedAt && (
+      {/* #1347 — null for a future sprout date; the hero is skipped, as with #1339's age. */}
+      {details?.sproutedAt && companionDays !== null && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <CompanionDays sproutedAt={details.sproutedAt} waterEvery={details.waterEvery} accent={tint.accent} td={td} />
+          <CompanionDays days={companionDays} sproutedAt={details.sproutedAt} waterEvery={details.waterEvery} accent={tint.accent} td={td} />
         </div>
       )}
 
@@ -121,7 +122,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -137,7 +138,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="plant" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

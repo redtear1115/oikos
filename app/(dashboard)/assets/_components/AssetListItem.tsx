@@ -30,9 +30,8 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
   return (
     <Link
       href={`/assets/${id}`}
-      className="flex items-center gap-3 px-3.5 py-3 no-underline"
+      className="flex items-center gap-3 px-3.5 py-3 no-underline text-ink"
       style={{
-        color: 'var(--ink)',
         borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
       }}
     >
@@ -40,8 +39,8 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
           asset rows read at the same density as transaction rows. The earlier
           40×40 made /assets feel ~16px taller than every other list. */}
       <div
-        className="w-8 h-8 rounded-chip flex items-center justify-center shrink-0"
-        style={{ background: tint, color: 'var(--ink-2)' }}
+        className="w-8 h-8 rounded-chip flex items-center justify-center shrink-0 text-ink-2"
+        style={{ background: tint }}
       >
         <AssetIcon type={type} size={18} />
       </div>
@@ -50,8 +49,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
           <div className="text-sm font-medium truncate">{display.primary}</div>
           {display.secondary && (
             <div
-              className="text-xs truncate"
-              style={{ color: 'var(--ink-3)' }}
+              className="text-xs truncate text-ink-3"
             >
               {display.secondary}
             </div>
@@ -60,23 +58,19 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
         <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
           {isSavings && (
             <span
-              className="font-mono shrink-0 px-1.5 py-px rounded leading-none text-xs"
-              style={{
-                background: 'var(--saving-soft)',
-                color: 'var(--saving)',
-              }}
+              className="font-mono shrink-0 px-1.5 py-px rounded leading-none text-xs bg-[var(--saving-soft)] text-[var(--saving)]"
             >
               {t.assetListItem.savingsBadge}
             </span>
           )}
-          <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
+          <span className="text-xs truncate text-ink-3">
             {subtitle}
           </span>
         </div>
       </div>
       <div className="text-right shrink-0 ml-2">
-        <div className="text-xs tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
-        <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
+        <div className="text-xs tracking-[0.4px] text-ink-3">{t.assetListItem.thisMonth}</div>
+        <div className="tnum text-sm font-medium text-ink">
           {formatAmount(monthAmount, 'twd')}
         </div>
       </div>

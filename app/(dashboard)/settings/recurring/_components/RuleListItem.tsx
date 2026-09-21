@@ -1,18 +1,22 @@
 'use client'
 
 import { getCategory } from '@/lib/categories'
+import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import type { SplitType } from '@/lib/balance'
 import { formatAmount } from '@/lib/currency'
 
-interface Props {
-  rule: RecurringExpenseRuleRow
-  onEdit: (rule: RecurringExpenseRuleRow) => void
-}
+// One list row for both rule lists. The two used to be separate copies, and
+// the income one drifted (raw zh-TW category label, #1189). Income has no
+// split pill on purpose — a recipient is a single choice, not a split (#1187).
+type Props =
+  | { type: 'expense'; rule: RecurringExpenseRuleRow; onEdit: (rule: RecurringExpenseRuleRow) => void }
+  | { type: 'income'; rule: RecurringRuleRow; onEdit: (rule: RecurringRuleRow) => void }
 
 function splitLabel(
   split: SplitType,
@@ -27,37 +31,63 @@ function splitLabel(
   }
 }
 
-export function RuleListItem({ rule, onEdit }: Props) {
+export function RuleListItem(props: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const { viewer, partner, viewerIsA, isSolo } = useMember()
-  const cat = getCategory(rule.category)
+  const { rule } = props
+
+  let cat: { tint: string; ink: string; mono: string }
+  let title: string
+  let personId: string
+  let tRule: typeof t.recurringExpense.rule | typeof t.recurringIncome.rule
+  let handleClick: () => void
+  let splitText: string | null = null
+
+  if (props.type === 'expense') {
+    cat = getCategory(props.rule.category)
+    title = props.rule.description
+    personId = props.rule.paidBy
+    tRule = t.recurringExpense.rule
+    handleClick = () => props.onEdit(props.rule)
+    splitText = splitLabel(props.rule.splitType, personId === viewer.id, t)
+  } else {
+    const incomeCat = getIncomeCategory(props.rule.category)
+    cat = incomeCat
+    // `incomeCat.label` is the zh-TW source string; the display name comes
+    // from the locale table like every other income-category surface (#1189).
+    title = props.rule.source ?? t.incomeCategory[incomeCat.id] ?? incomeCat.label
+    personId = props.rule.recipientId
+    tRule = t.recurringIncome.rule
+    handleClick = () => props.onEdit(props.rule)
+  }
+
   const isPaused = !!rule.pausedAt
 
-  const payerIsViewer = rule.paidBy === viewer.id
-  const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
-  const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
-  const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
-  const payerName = payerIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
-  const splitText = splitLabel(rule.splitType, payerIsViewer, t)
+  // Payer for expense, recipient for income.
+  const personIsViewer = personId === viewer.id
+  const personRole = whoToMemberRole(personIsViewer ? 'M' : 'T', viewerIsA)
+  const personInitial = personIsViewer ? viewer.initial : (partner?.initial ?? '?')
+  const personAvatar = personIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
+  const personName = personIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
 
   const intervalLabel: Record<number, string> = {
-    1: t.recurringExpense.rule.intervalEveryMonth,
-    3: t.recurringExpense.rule.intervalEveryQuarter,
-    6: t.recurringExpense.rule.intervalEveryHalfYear,
-    12: t.recurringExpense.rule.intervalEveryYear,
+    1: tRule.intervalEveryMonth,
+    3: tRule.intervalEveryQuarter,
+    6: tRule.intervalEveryHalfYear,
+    12: tRule.intervalEveryYear,
   }
   const intervalText =
     intervalLabel[rule.intervalMonths] ??
-    t.recurringExpense.rule.intervalEveryNMonths.replace('{n}', String(rule.intervalMonths))
-  const dayText = t.recurringExpense.rule.dayLabel.replace('{day}', String(rule.dayOfMonth))
-  const nextDateText = ruleNextDateText(rule, t.recurringExpense.rule.nextDate, locale)
+    tRule.intervalEveryNMonths.replace('{n}', String(rule.intervalMonths))
+  const dayText = tRule.dayLabel.replace('{day}', String(rule.dayOfMonth))
+  const nextDateText = ruleNextDateText(rule, tRule.nextDate, locale)
 
   return (
     <li>
       <button
         type="button"
-        onClick={() => onEdit(rule)}
+        onClick={handleClick}
         className="w-full text-left relative overflow-hidden rounded-2xl p-4 cursor-pointer"
         style={{
           background: 'var(--surface)',
@@ -66,6 +96,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
           fontFamily: 'inherit',
         }}
       >
+        {/* Paused indicator bar */}
         {isPaused && (
           <span
             aria-hidden="true"
@@ -84,14 +115,14 @@ export function RuleListItem({ rule, onEdit }: Props) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
               <div className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-                {rule.description}
+                {title}
               </div>
               {isPaused && (
                 <span
                   className="shrink-0 inline-flex items-center px-2 py-[1px] rounded-full text-xs font-medium leading-none"
                   style={{ background: 'var(--warning-soft)', color: 'var(--warning)' }}
                 >
-                  {t.recurringExpense.rule.pausedHint}
+                  {tRule.pausedHint}
                 </span>
               )}
             </div>
@@ -110,14 +141,16 @@ export function RuleListItem({ rule, onEdit }: Props) {
                 className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"
                 style={{ color: 'var(--ink-3)' }}
               >
-                <Avatar memberRole={payerRole} initial={payerInitial} src={payerAvatar} size={16} />
-                <span className="truncate">{payerName}</span>
-                <span
-                  className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-mini font-medium leading-none"
-                  style={{ background: 'var(--hairline)', color: 'var(--ink-2)' }}
-                >
-                  {splitText}
-                </span>
+                <Avatar memberRole={personRole} initial={personInitial} src={personAvatar} size={16} />
+                <span className="truncate">{personName}</span>
+                {splitText && (
+                  <span
+                    className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-mini font-medium leading-none"
+                    style={{ background: 'var(--hairline)', color: 'var(--ink-2)' }}
+                  >
+                    {splitText}
+                  </span>
+                )}
               </div>
             )}
           </div>

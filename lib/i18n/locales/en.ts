@@ -87,7 +87,7 @@ export const en: Translations = {
     heroKicker: "A COUPLE'S LEDGER",
     taglineHtml: 'Two of you,<br />one ledger.',
     bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
-    cta: 'Begin together',
+    cta: 'Record together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
@@ -117,7 +117,7 @@ export const en: Translations = {
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'One ledger, four kinds of light',
     featuresSubtitleHtml: 'From the first shared receipt to the house, car, and yearly policies you look after together,<br />all in one place.',
-    f1Title: 'Track together',
+    f1Title: 'Keep the books together',
     f1Body: 'Log every expense together. Auto-split 50/50 or by ratio. Settle monthly without ever doing the math.',
     f2Title: 'Loved things',
     f2Body: 'House, car, kids, pets, plants: anything you care for together belongs in the same ledger.',
@@ -349,8 +349,7 @@ export const en: Translations = {
     generating: 'Generating…',
     sharedAndCopied: 'Shared. Link also copied.',
     copied: 'Link copied',
-    // TODO(i18n): native review pending (#1016) — MT-quality draft.
-    shareTitle: 'Track finances together on Futari',
+    shareTitle: 'Keep the books together on Futari',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     shareText: 'A shared ledger for two. Open the link to join.',
   },
@@ -1257,7 +1256,7 @@ export const en: Translations = {
     },
     invite: {
       heading: 'Your ledger is ready — bring your partner in',
-      subtitle: 'Once they join, you can track "{name}" together.',
+      subtitle: '"{name}" is ready to use now. When they join, you\'ll keep it together.',
       qrHint: 'If they are with you, have them scan this',
       qrReveal: 'Show QR code',
       qrHide: 'Hide',
@@ -2951,9 +2950,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Import from CWMoney to Futari · Excel guide',
-        description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari, the shared ledger built for couples. Free, ad-free.',
-        ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
+        title: 'Import from CWMoney to Futari · Free expense splitting',
+        description: 'Moving from CWMoney? Its shared ledger needs VIP and it has no expense splitting. Futari gives couples both, free. Import with our Excel template.',
+        ogDescription: 'Where CWMoney users go next: free expense splitting, Excel-to-CSV import into Futari.',
       },
       // TODO(#839): en copy below pending native review
       moneybook: {

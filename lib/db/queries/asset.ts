@@ -213,7 +213,9 @@ export interface AssetSummary {
 /**
  * Aggregate active CashTransactions for an asset:
  *   monthAmount: sum of transactions in the current LOCAL month (UTC+8 — TW only)
- *   totalAmount: sum of all-time active transactions
+ *   totalAmount: sum of active transactions in the given epoch (chapter) — not
+ *                all-time. Scoped by `created_at` through `epochWindow`, like
+ *                monthAmount; the UI labels it 「這個章節」 (#1338, #1347).
  *
  * Both are coerced to 0 when null (asset with no transactions).
  */
