@@ -3138,7 +3138,7 @@ export const zhTW: Translations = {
     edit: '編輯',
     shared: '共用',
     none: '無',
-    deleteSoftDescription: '這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。',
+    deleteSoftDescription: '這個動作無法復原，紀錄會立即從帳本移除，並於約 1 年後由系統永久清除。',
     toast: {
       recorded: '已記錄 NT${amount}',
       updated: '已更新 NT${amount}',

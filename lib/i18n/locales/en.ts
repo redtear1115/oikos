@@ -209,7 +209,7 @@ export const en: Translations = {
     edit: 'Edit',
     shared: 'Shared',
     none: 'None',
-    deleteSoftDescription: "This can't be undone, but the ledger keeps a 30-day history a developer can restore.",
+    deleteSoftDescription: "This can't be undone. The record is removed from the ledger now and permanently purged after about a year.",
     toast: {
       recorded: 'Recorded NT${amount}',
       updated: 'Updated NT${amount}',
