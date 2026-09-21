@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
-import { localTodayISO } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -39,7 +39,10 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   const t = useTranslations()
   const [amount, setAmount] = useState('')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
-  const [date, setDate] = useState(localTodayISO())
+  // Seeded from useToday(), not the clock: this closed sheet is in the
+  // server HTML, and the clock disagrees with it after Taipei midnight (#1360).
+  const today = useToday()
+  const [date, setDate] = useState(today)
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -162,7 +165,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                   {formatDateAbsolute(date, locale)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                  {formatPickerSubtitle(date, locale)}
+                  {formatPickerSubtitle(date, locale, today)}
                 </div>
               </div>
               <Chevron />

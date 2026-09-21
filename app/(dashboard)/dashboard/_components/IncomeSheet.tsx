@@ -22,6 +22,7 @@ import type { IncomeCategoryId } from '@/lib/incomeCategories'
 import { MAX_AMOUNT } from '@/lib/validators'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useTranslations } from '@/lib/i18n/client'
 import { isActionError, unwrapAction } from '@/lib/action-errors'
 
@@ -87,7 +88,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<IncomeCategoryId>('salary')
   const [recipientWho, setRecipientWho] = useState<'M' | 'T'>('M')
-  const [date, setDate] = useState(localTodayISO())
+  // Seeded from useToday(), not the clock: this closed sheet is in the
+  // server HTML, and the clock disagrees with it after Taipei midnight
+  // (#1360). Opening for a new record still resets to the device's today.
+  const today = useToday()
+  const [date, setDate] = useState(today)
   const [note, setNote] = useState('')
   const [assetId, setAssetId] = useState<string | null>(null)
   const {

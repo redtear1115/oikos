@@ -16,6 +16,7 @@ import { revealHouseAddress } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import { daysSince } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -67,7 +68,8 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('house')
-  const livingDays = daysSince(details?.purchasedAt)
+  const today = useToday()
+  const livingDays = daysSince(details?.purchasedAt, today)
 
   // #826 — never include the raw address in subtitle; show the mask when
   // there's a stored address, otherwise leave null so the header collapses.

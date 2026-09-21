@@ -27,37 +27,37 @@ afterEach(() => {
 
 describe('computeAge (#1339)', () => {
   it('returns null for a birthday in the future — a due date has no age yet', () => {
-    expect(computeAge('2027-01-01')).toBeNull()
+    expect(computeAge('2027-01-01', '2026-09-20')).toBeNull()
   })
 
   it('returns null for the day after today, not a negative year', () => {
-    expect(computeAge('2026-09-21')).toBeNull()
+    expect(computeAge('2026-09-21', '2026-09-20')).toBeNull()
   })
 
   it('returns 0 years 0 months on the birthday itself', () => {
-    expect(computeAge('2026-09-20')).toEqual({ years: 0, months: 0 })
+    expect(computeAge('2026-09-20', '2026-09-20')).toEqual({ years: 0, months: 0 })
   })
 
   it('counts a pet born 2025-09-25 as 11 months on 2026-09-20 — not 1 year', () => {
     // The month boundary from the issue: day-of-month 25 has not come round
     // yet this month, so the 12th month is still incomplete.
-    expect(computeAge('2025-09-25')).toEqual({ years: 0, months: 11 })
+    expect(computeAge('2025-09-25', '2026-09-20')).toEqual({ years: 0, months: 11 })
   })
 
   it('counts a child born 2024-03-15 as 2 years 6 months', () => {
-    expect(computeAge('2024-03-15')).toEqual({ years: 2, months: 6 })
+    expect(computeAge('2024-03-15', '2026-09-20')).toEqual({ years: 2, months: 6 })
   })
 
   it('borrows a year when the anniversary month has not been reached', () => {
-    expect(computeAge('2024-12-01')).toEqual({ years: 1, months: 9 })
+    expect(computeAge('2024-12-01', '2026-09-20')).toEqual({ years: 1, months: 9 })
   })
 
   it('returns null for missing or malformed input', () => {
-    expect(computeAge(null)).toBeNull()
-    expect(computeAge(undefined)).toBeNull()
-    expect(computeAge('')).toBeNull()
-    expect(computeAge('2024-13-01')).toBeNull()
-    expect(computeAge('2024-01-99')).toBeNull()
+    expect(computeAge(null, '2026-09-20')).toBeNull()
+    expect(computeAge(undefined, '2026-09-20')).toBeNull()
+    expect(computeAge('', '2026-09-20')).toBeNull()
+    expect(computeAge('2024-13-01', '2026-09-20')).toBeNull()
+    expect(computeAge('2024-01-99', '2026-09-20')).toBeNull()
   })
 
   it('reads the birthday as a LOCAL calendar date, not UTC', () => {
@@ -65,7 +65,7 @@ describe('computeAge (#1339)', () => {
     // parses as UTC midnight — 2026-08-31 in any timezone west of UTC, and an
     // hour into the previous day for anyone east of it at the wrong moment.
     // Local parsing keeps the answer the same as the list card's.
-    expect(computeAge('2026-09-01')).toEqual({ years: 0, months: 0 })
-    expect(computeAge('2025-09-01')).toEqual({ years: 1, months: 0 })
+    expect(computeAge('2026-09-01', '2026-09-20')).toEqual({ years: 0, months: 0 })
+    expect(computeAge('2025-09-01', '2026-09-20')).toEqual({ years: 1, months: 0 })
   })
 })

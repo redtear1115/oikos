@@ -8,7 +8,8 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
-import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
+import { daysBetween, parseLocalDate } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
@@ -63,7 +64,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const [lapseError, setLapseError] = useState('')
 
   const framing = getFramingGroup(data.insuranceType)
-  const today = todayLocalDate()
+  // #1360 — from useToday(), not the clock, so SSR and hydration agree.
+  const today = parseLocalDate(useToday())!
   const startsAt = parseLocalDate(data.startsAt)
   const expiryDate = parseLocalDate(data.expiryDate)
   const annualPremium = data.annualPremium ?? 0

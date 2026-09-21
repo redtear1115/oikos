@@ -1,4 +1,4 @@
-import { daysBetween, parseLocalDate, todayLocalDate } from './local-date'
+import { daysBetween, parseLocalDate } from './local-date'
 
 export interface Age {
   years: number
@@ -6,8 +6,13 @@ export interface Age {
 }
 
 /**
- * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null, invalid, or after today.
+ * Compute age in years + remaining months from a 'YYYY-MM-DD' string to
+ * `today` ('YYYY-MM-DD'). Returns null if birthday is null, invalid, or after
+ * today.
+ *
+ * `today` is required, and comes from `useToday()` in a component: reading
+ * the clock in here made the UTC server and the device disagree after Taipei
+ * midnight, and hydration failed (#1360).
  *
  * Lives here rather than next to one component because two surfaces show the
  * same age: the 愛物 list cards and the 愛物 detail pages (#1339). They used to
@@ -19,9 +24,10 @@ export interface Age {
  * and on the days around a month boundary the two surfaces quietly disagree by
  * one month.
  */
-export function computeAge(birthday: string | null | undefined): Age | null {
+export function computeAge(birthday: string | null | undefined, todayYMD: string): Age | null {
   if (!birthday) return null
-  const today = todayLocalDate()
+  const today = parseLocalDate(todayYMD)
+  if (!today) return null
   const [y, m, d] = birthday.split('-').map(Number)
   if (!y || !m || !d || m > 12 || d > 31) return null
   let years = today.getFullYear() - y
@@ -43,7 +49,8 @@ export function computeAge(birthday: string | null | undefined): Age | null {
 }
 
 /**
- * Whole days from a 'YYYY-MM-DD' start date to today, in local calendar days.
+ * Whole days from a 'YYYY-MM-DD' start date to `today` ('YYYY-MM-DD', from
+ * `useToday()` — see computeAge), in calendar days.
  * Returns null if the date is null, invalid, or after today — the day-count
  * counterpart of `computeAge`, with the same future-date guard (#1347).
  *
@@ -56,9 +63,10 @@ export function computeAge(birthday: string | null | undefined): Age | null {
  * a plausible-looking number for something that hasn't started yet — and in
  * UTC+8 a date entered as today counts from 08:00, not midnight.
  */
-export function daysSince(ymd: string | null | undefined): number | null {
+export function daysSince(ymd: string | null | undefined, todayYMD: string): number | null {
   const start = parseLocalDate(ymd)
-  if (!start) return null
-  const days = daysBetween(start, todayLocalDate())
+  const today = parseLocalDate(todayYMD)
+  if (!start || !today) return null
+  const days = daysBetween(start, today)
   return days < 0 ? null : days
 }

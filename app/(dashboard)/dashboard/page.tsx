@@ -39,6 +39,7 @@ import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { formatDateRelative } from '@/lib/format-date'
+import { localTodayISO } from '@/lib/local-date'
 
 const BANNER_QUOTE_MAX_CODEPOINTS = 60
 
@@ -185,7 +186,11 @@ export default async function DashboardPage() {
   const recentIncomeLabel = latestIncomes.length > 0
     ? (() => {
         const r = latestIncomes[0]
-        const dateStr = formatDateRelative(r.occurredAt, locale)
+        // Deliberately the server clock (UTC on Vercel) — unchanged behaviour,
+        // and wrong between 00:00 and 08:00 Taipei: today's income reads as a
+        // date, yesterday's as 「今天」. The fix (`await getTodayYMD()`) changes
+        // visible text, so it waits for the polish pass: #1362.
+        const dateStr = formatDateRelative(r.occurredAt, locale, localTodayISO())
         const catKey = r.category as keyof Translations['incomeCategory']
         const catLabel = t.incomeCategory[catKey] ?? t.incomeCategory.other
         return `${dateStr} · ${r.source ?? catLabel}`

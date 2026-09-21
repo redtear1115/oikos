@@ -18,6 +18,8 @@ import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
 import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 import { ShellTopStack } from './_components/ShellTopStack'
+import { TodayProvider } from './_components/TodayProvider'
+import { getTodayYMD } from '@/lib/today-server'
 import { PastChapterBar } from './_components/PastChapterBar'
 import { maskAvatarUrl } from '@/lib/avatar'
 
@@ -69,10 +71,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { group, window: epochWindow } = context
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t, locale] = await Promise.all([
+  const [profilesRows, t, locale, todayYMD] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
+    // Today in the device's zone, so client components hydrate against the
+    // same calendar day the browser will compute (#1360, lib/today.ts).
+    getTodayYMD(),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
@@ -121,37 +126,39 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <TranslationsProvider value={t} locale={locale}>
-      {SUPABASE_ORIGIN && (
-        <>
-          <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
-          <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
-        </>
-      )}
-      <ViewerProvider value={value}>
-        <RealtimeProvider groupId={group.id}>
-          <PushTokenRegistrar userId={user.id} groupId={group.id} />
-          <OfflineLifecycle />
-          <ReconnectRefresh />
-          <PartnerActivityToast />
-          <AvatarMenuProvider data={avatarMenuData}>
-            <div className="relative max-w-md mx-auto min-h-dvh font-noto-tc" style={{ background: 'var(--bg)' }}>
-              {/* Every band that pins to the top of the viewport goes in here,
-                  in priority order, so they stack instead of colliding (#1037).
-                  A page's own sticky header stays in `{children}` and pins at
-                  `top: var(--top-stack-h)` — see ShellTopStack for why it is
-                  the height that travels and not the element. */}
-              <ShellTopStack>
-                <ShellUpdateNotice />
-                {deletionRequestedAt && (
-                  <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
-                )}
-                <PastChapterBar />
-              </ShellTopStack>
-              {children}
-            </div>
-          </AvatarMenuProvider>
-        </RealtimeProvider>
-      </ViewerProvider>
+      <TodayProvider todayYMD={todayYMD}>
+        {SUPABASE_ORIGIN && (
+          <>
+            <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
+          </>
+        )}
+        <ViewerProvider value={value}>
+          <RealtimeProvider groupId={group.id}>
+            <PushTokenRegistrar userId={user.id} groupId={group.id} />
+            <OfflineLifecycle />
+            <ReconnectRefresh />
+            <PartnerActivityToast />
+            <AvatarMenuProvider data={avatarMenuData}>
+              <div className="relative max-w-md mx-auto min-h-dvh font-noto-tc" style={{ background: 'var(--bg)' }}>
+                {/* Every band that pins to the top of the viewport goes in here,
+                    in priority order, so they stack instead of colliding (#1037).
+                    A page's own sticky header stays in `{children}` and pins at
+                    `top: var(--top-stack-h)` — see ShellTopStack for why it is
+                    the height that travels and not the element. */}
+                <ShellTopStack>
+                  <ShellUpdateNotice />
+                  {deletionRequestedAt && (
+                    <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
+                  )}
+                  <PastChapterBar />
+                </ShellTopStack>
+                {children}
+              </div>
+            </AvatarMenuProvider>
+          </RealtimeProvider>
+        </ViewerProvider>
+      </TodayProvider>
     </TranslationsProvider>
   )
 }

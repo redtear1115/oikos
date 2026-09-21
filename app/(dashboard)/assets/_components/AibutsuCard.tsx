@@ -5,7 +5,8 @@ import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeAge, daysSince } from '@/lib/age'
-import { todayLocalDate } from '@/lib/local-date'
+import { parseLocalDate } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 
 // ─── Shared chassis helpers ───────────────────────────────────────────────────
 
@@ -63,11 +64,12 @@ function Dot() {
 
 // ─── Age computation helpers ──────────────────────────────────────────────────
 
-function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
+function isBirthdayThisMonth(birthday: string | null | undefined, todayYMD: string): boolean {
   if (!birthday) return false
-  const today = todayLocalDate()
+  const today = parseLocalDate(todayYMD)
+  if (!today) return false
   // Not born yet (a due date) has no birthday to mark, even in its own month.
-  if (computeAge(birthday) === null) return false
+  if (computeAge(birthday, todayYMD) === null) return false
   const [, m] = birthday.split('-').map(Number)
   return m === today.getMonth() + 1
 }
@@ -98,8 +100,9 @@ export function ChildCard({
   childWeightG,
 }: ChildCardProps) {
   const t = useTranslations()
-  const age = computeAge(childBirthday)
-  const birthdayThisMonth = isBirthdayThisMonth(childBirthday)
+  const today = useToday()
+  const age = computeAge(childBirthday, today)
+  const birthdayThisMonth = isBirthdayThisMonth(childBirthday, today)
   const displayName = nickname || name
   const secondaryName = nickname ? name : null
   const heightKg = childHeightCm != null ? `${childHeightCm} cm` : null
@@ -192,7 +195,8 @@ export function PetCard({
   petWeightG,
 }: PetCardProps) {
   const t = useTranslations()
-  const age = computeAge(petBirthDate)
+  const today = useToday()
+  const age = computeAge(petBirthDate, today)
   const speciesBreed = [petSpecies, petBreed].filter(Boolean).join('·')
   const weightKg = petWeightG != null ? `${(petWeightG / 1000).toFixed(1)} kg` : null
 
@@ -267,7 +271,8 @@ export function PlantCard({
   plantSproutedAt,
 }: PlantCardProps) {
   const t = useTranslations()
-  const days = daysSince(plantSproutedAt)
+  const today = useToday()
+  const days = daysSince(plantSproutedAt, today)
   // `{days}` is rendered emphasised — split the template around it.
   const [daysBefore, daysAfter = ''] = t.assetListItem.plantCompanionDays.split('{days}')
 

@@ -6,6 +6,7 @@ import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateRelative } from '@/lib/format-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
 import { toViewerShare } from '@/lib/splitRatio'
 
@@ -51,6 +52,7 @@ export interface CompactRowProps {
 export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: CompactRowProps) {
   const t = useTranslations()
   const locale = useLocale()
+  const today = useToday()
   const { viewer, partner, viewerIsA } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
@@ -93,7 +95,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
     ? (tx.description || getIncomeCategory(tx.category).label)
     : tx.description
 
-  const dateLabel = formatDateRelative(tx.transactedAt, locale)
+  const dateLabel = formatDateRelative(tx.transactedAt, locale, today)
 
   const noteText = tx.notes?.trim() || null
   const isPending = tx.kind === 'transaction' && tx.status === 'pending'
