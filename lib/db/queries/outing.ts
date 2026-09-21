@@ -47,7 +47,12 @@ export async function listOutings(groupId: string, epochId: string): Promise<Out
       status: outings.status,
       currency: outings.currency,
       createdAt: outings.createdAt,
-      participantCount: sql<number>`(select count(*)::int from "OutingParticipants" p where p.outing_id = ${outings.id})`,
+      // Qualify the outer column by hand. In a single-table select Drizzle
+      // renders ${outings.id} as a bare "id", and inside this subquery a bare
+      // "id" binds to OutingParticipants.id — so the filter compared the
+      // participant's own id to its outing_id and every count came back 0,
+      // no error. Any correlated subquery in a single-table select has this.
+      participantCount: sql<number>`(select count(*)::int from "OutingParticipants" p where p.outing_id = "Outings"."id")`,
     })
     .from(outings)
     .where(and(
