@@ -15,6 +15,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealHouseAddress } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
+import { daysSince } from '@/lib/age'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -25,11 +26,7 @@ import { unwrapAction } from '@/lib/action-errors'
 // glancing at the screen (a friend / a passer-by, etc.).
 const ADDRESS_SUBTITLE_MASK = '●●●●●●●●'
 
-function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
-  // Snapshot "now" at mount so re-renders don't bump the day count unexpectedly
-  // (react-hooks/purity); the display only needs day-resolution accuracy.
-  const [nowMs] = useState(() => Date.now())
-  const days = Math.max(0, Math.floor((nowMs - new Date(purchasedAt).getTime()) / 86400000))
+function HomeStat({ days, purchasedAt, accent, td }: { days: number; purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
   return (
     <div className="text-center py-2">
       <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
@@ -70,6 +67,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('house')
+  const livingDays = daysSince(details?.purchasedAt)
 
   // #826 — never include the raw address in subtitle; show the mask when
   // there's a stored address, otherwise leave null so the header collapses.
@@ -110,9 +108,10 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         currentAssetId={assetId}
       />
 
-      {details?.purchasedAt && (
+      {/* #1347 — null for a future purchase date; the hero is skipped, as with #1339's age. */}
+      {details?.purchasedAt && livingDays !== null && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <HomeStat purchasedAt={details.purchasedAt} accent={tint.accent} td={td} />
+          <HomeStat days={livingDays} purchasedAt={details.purchasedAt} accent={tint.accent} td={td} />
         </div>
       )}
 

@@ -18,7 +18,9 @@ interface Props {
   /** Confirm-button styled with destructive color (red). Defaults true since this
    *  modal exists primarily for destructive flows. */
   destructive?: boolean
-  /** Disable the confirm button while a parent transition is pending. */
+  /** While a parent transition is pending: both buttons are disabled and the
+   *  dialog ignores backdrop tap / Escape / Back, so it stays up to show the
+   *  outcome (#1347). */
   pending?: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -107,7 +109,11 @@ export function ConfirmModal({
 
   return createPortal(
     <>
-      <SheetBackdrop open={shown} onClick={onCancel} />
+      {/* Not dismissible while `pending` (#1347): the buttons are already
+          disabled, but a backdrop tap / Escape / Back still closed the
+          dialog mid-action, so a failure's error had nowhere to show.
+          Returning false tells useEscapeToClose the close was declined. */}
+      <SheetBackdrop open={shown} onClick={() => (pending ? false : onCancel())} />
       {shown && (
         <div
           ref={panelRef}
