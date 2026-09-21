@@ -2949,9 +2949,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ｜Excel 変換',
-        description: 'CWMoney からの引っ越し手順。Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦の共同家計簿）にアップロードするだけ。',
-        ogDescription: 'CWMoney の引っ越し手順。変換テンプレートで Excel を CSV にして Futari へ。',
+        title: 'CWMoney から Futari へ｜無料の割り勘機能',
+        description: 'CWMoney ユーザーの新しい選択肢。CWMoney では共有家計簿に VIP が必要で、割り勘機能もありません。Futari はどちらも無料。変換テンプレートで CSV に整えてアップロードするだけ。',
+        ogDescription: 'CWMoney ユーザーの乗り換え先。無料の割り勘機能、Excel を CSV に変換して Futari へ。',
       },
       // TODO(#839): ja copy below pending native review
       moneybook: {

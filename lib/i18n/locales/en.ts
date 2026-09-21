@@ -2950,9 +2950,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Import from CWMoney to Futari · Excel guide',
-        description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari, the shared ledger built for couples. Free, ad-free.',
-        ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
+        title: 'Import from CWMoney to Futari · Free expense splitting',
+        description: 'Moving from CWMoney? Its shared ledger needs VIP and it has no expense splitting. Futari gives couples both, free. Import with our Excel template.',
+        ogDescription: 'Where CWMoney users go next: free expense splitting, Excel-to-CSV import into Futari.',
       },
       // TODO(#839): en copy below pending native review
       moneybook: {
