@@ -46,7 +46,7 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314"]
   - 同一頁的其他 GA 事件（`user_engagement`、`scroll`、外連點擊、`kofi_widget_click`）也都用原始的 `document.location` 當 `dl`。
   - **為什麼不改程式**：換頁的 page view 由 GA 後台的「依瀏覽器歷史記錄計算網頁變化」送出，在 `pushState` 當下觸發，比任何 React effect 都早，`send_page_view:false` 擋不住。事後 `gtag('set', {page_location})` 不是來不及，就是把上一頁的網址套到這一頁，讓歸因錯開一格。那個開關又不能直接關：G-YHXFBMRQ3S 是 Futari、Wildcard、blog 共用的同一條資料串流，也是 Ko-fi 收益歸因的來源（見 [ops-runbook](../ops-runbook.md)「GA / Ko-fi 收益歸因」）。在這條串流上關掉，另外兩站的站內換頁 page view 會一起消失。
   - **失效的樣子是沒有任何錯誤。** token 和篩選值安靜地出現在 GA 的頁面報表與探索裡，只有打開 GA 後台看網址的人才會發現。這條寫在這裡，就是為了讓下一個在 GA 報表裡看到 `/invite/…` 的人知道：這是當初知情接受的，不是新的外洩。
-  - **什麼會改變這個決定**：(1) 替 Futari 開專用的資料串流（同一個 property、新的 G- ID），只在那條串流上關掉歷史記錄設定，再自己送清洗過的 page view（#1300 的方案 1）；或 (2) Futari 完全不載入 client GA，Ko-fi 點擊改由 server 用 Measurement Protocol 送（#1300 留言裡的 plan v2）。任一方案實作之前，這條都成立。邀請 token 本身 7 天過期、接受後失效，限縮了外洩後可被利用的時間窗，但 GA 保留的網址不會跟著失效。
+  - **什麼會改變這個決定**：(1) 替 Futari 開專用的資料串流（同一個 property、新的 G- ID），只在那條串流上關掉歷史記錄設定，再自己送清洗過的 page view（#1300 的方案 1）；或 (2) Futari 完全不載入 client GA，Ko-fi 點擊改由 server 用 Measurement Protocol 送（#1300 留言裡的 plan v2）。任一方案實作之前，這條都成立。邀請 token 本身 24 小時過期（#1288；原為 7 天）、接受後或被新連結取代後失效，限縮了外洩後可被利用的時間窗，但 GA 保留的網址不會跟著失效。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
 - **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
   - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。

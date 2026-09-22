@@ -586,7 +586,7 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
     // Revoke any unaccepted invites on this group. Without this, an invite
     // minted by member_a before the removal still passes #1031's "issuer is
     // still a member" check after the removal (member_a stays a member) —
-    // leaving a 7-day-valid key to whoever holds the link.
+    // leaving a live key (valid until it expires) to whoever holds the link.
     await tx
       .update(groupInvites)
       .set({ revokedAt: now })

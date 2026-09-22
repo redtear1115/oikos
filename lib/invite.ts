@@ -1,6 +1,23 @@
 import { randomBytes } from 'crypto'
 import type { groupInvites, oikosGroups } from '@/lib/db/schema'
 
+/**
+ * #1288 — how long a freshly minted invite link stays usable: 24 hours.
+ *
+ * Every copy of a link outlives its usefulness only by this long: GA, auth
+ * logs, browser history, the clipboard and chat servers all keep the URL, and
+ * none of those copies can be recalled. In prod every accepted invite so far
+ * was accepted within 5 hours, so 24 h leaves a wide margin. A partner who
+ * opens the link later sees the existing "link expired" message and the
+ * inviter mints a new one; nothing in the UI promises a duration.
+ *
+ * The expiry is stamped with the DB clock (`now() + TTL`), the same clock
+ * `created_at` and the accept-time claim use, so `expires_at - created_at` is
+ * exactly this TTL. Existing rows were clamped by
+ * `drizzle/0067_invite_ttl_24h_clamp.sql`.
+ */
+export const INVITE_TTL_MS = 24 * 60 * 60 * 1000
+
 export function generateToken(): string {
   return randomBytes(32).toString('base64url')
 }

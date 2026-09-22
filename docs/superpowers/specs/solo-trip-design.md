@@ -164,7 +164,7 @@ balance 回答的是「我們**現在**之間怎麼樣」，而章節的定義�
 | solo 期間開 trip，中途伴侶加入 | trip 留在舊 epoch，維持 solo 語意直到結束；新伴侶看得到但不被自動算入分攤 | 與 [solo-mode](solo-mode-design.md)「升雙人不 retroactive」一致 |
 | duo 期間開 trip，伴侶想離開 | 維持現行 reject。訊息要說明「結束旅行」是什麼意思，不只是擋下 | 孤兒 trip 的柵欄 |
 | 移除伴侶（#1033）時有 active trip | 同樣 reject。移除與離開在這件事上對稱 | 兩者都會關閉 epoch |
-| 移除伴侶後回到 solo | 關舊開新 epoch，與 `leaveGroup` 對稱；門自動關上（Locked decision 4）；**並撤銷該 group 所有未接受的邀請** | #1033 明寫等這份 spec 定案。撤銷邀請不是額外要求：`leaveGroup` 已經這樣做（`actions/membership.ts`），而 #1031 的修補讓「鑄造者必須仍是成員」成為接受條件——移除伴侶若不撤銷，留守者自己鑄的舊邀請仍通過該條件，等於留一把七天有效的鑰匙 |
+| 移除伴侶後回到 solo | 關舊開新 epoch，與 `leaveGroup` 對稱；門自動關上（Locked decision 4）；**並撤銷該 group 所有未接受的邀請** | #1033 明寫等這份 spec 定案。撤銷邀請不是額外要求：`leaveGroup` 已經這樣做（`actions/membership.ts`），而 #1031 的修補讓「鑄造者必須仍是成員」成為接受條件——移除伴侶若不撤銷，留守者自己鑄的舊邀請仍通過該條件，等於留一把到期前都有效的鑰匙（當時 7 天，#1288 起 24 小時） |
 | 共旅者在出遊結束後 | 保留在該出遊的歷史裡，不進入任何 group-level 清單 | 出遊範圍內，見 Locked decision 1 |
 | duo group 的出遊只有一位成員參加 | 允許。出遊的參與者與 group 的成員是兩個獨立概念 | 多人出行不是 solo 專屬情境 |
 | 當前章節有進行中的出遊，伴侶想離開或被移除 | 與 active trip 相同：reject，訊息說明下一步 | 出遊也綁 `epoch_id`，同樣需要孤兒柵欄 |
