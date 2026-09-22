@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { formatAmountParts } from '@/lib/currency'
 
 interface Props {
   /** 'YYYY-MM' — the same month key the total and count were summed over, so
@@ -35,6 +36,11 @@ export function SoloMonthHero({ monthKey, total, count }: Props) {
   const [year, month] = monthKey.split('-').map(Number)
   const monthName = new Intl.DateTimeFormat(locale, { month: 'long' })
     .format(new Date(year, month - 1, 1))
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
+  // baseCurrency here: the main ledger stores whole units as typed, but
+  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
+  // group would render this at 1/100th its actual size until that's fixed.
+  const totalParts = formatAmountParts(total, 'twd')
 
   return (
     <div className="px-5 pt-6 pb-5">
@@ -54,11 +60,8 @@ export function SoloMonthHero({ monthKey, total, count }: Props) {
           fontFamily: 'var(--font-numeric)',
         }}
       >
-        {/* TODO(v0.17 currency): NT$ is hard-coded here exactly as in
-             BalanceHero; both need `formatAmount`'s digits-only mode before
-             a non-TWD base currency renders correctly. */}
-        <span className="text-title font-medium mr-1 text-ink-2">NT$</span>
-        {total.toLocaleString('en-US')}
+        <span className="text-title font-medium mr-1 text-ink-2">{totalParts.symbol}</span>
+        {totalParts.digits}
       </div>
 
       <div className="text-xs text-ink-3 text-center mt-2">

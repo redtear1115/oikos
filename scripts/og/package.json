@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "puppeteer": "^23.5.0"
+  },
+  "allowScripts": {
+    "puppeteer@23.11.1": true
   }
 }

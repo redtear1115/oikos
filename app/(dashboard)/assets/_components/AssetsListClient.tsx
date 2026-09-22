@@ -620,7 +620,7 @@ export function AssetsListClient({ items, isPast }: Props) {
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
         <h1
-          className="text-page font-medium tracking-tight font-serif text-ink"
+          className="text-page font-medium tracking-tight text-ink"
         >
           {t.assets.title}
         </h1>

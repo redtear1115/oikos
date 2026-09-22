@@ -199,7 +199,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
               type="button"
               onClick={handleRemove}
               disabled={!matched || pending}
-              className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-40"
+              className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
             >
               {pending ? flow.removing : flow.removeButton}

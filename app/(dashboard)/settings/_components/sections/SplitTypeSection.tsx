@@ -103,7 +103,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               // off the radio the user just moved to — the next arrow press
               // then goes nowhere. handleChange ignores presses while saving.
               aria-disabled={saving || undefined}
-              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-60"
+              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-50"
               style={{
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
                 background: 'transparent',

@@ -86,7 +86,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 主要 tables 概略：
 - `Profiles`（FK → auth.users）
 - `OikosGroups`（含 member_a / member_b、`guardian_beta_enabled` 守護模組 beta flag）
-- `GroupInvites`（token-based 7 天 expire）
+- `GroupInvites`（token-based 24 小時 expire）
 - `GroupBalance`（derived cache，每次寫入重算）
 - `CashTransactions`（核心，nullable `asset_id` 關聯愛物）
 - `Settlements`

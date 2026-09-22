@@ -463,6 +463,13 @@
       "when": 1782400000000,
       "tag": "0066_outing_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1782500000000,
+      "tag": "0067_invite_ttl_24h_clamp",
+      "breakpoints": true
     }
   ]
 }

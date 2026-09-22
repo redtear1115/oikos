@@ -43,7 +43,7 @@ export function TrustContent() {
       <div className="px-5 pt-6 pb-8">
         <h1
           className="text-page leading-tight"
-          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
+          style={{ color: 'var(--ink)', fontWeight: 500 }}
         >
           {t.trust.pageHeading}
         </h1>
@@ -57,7 +57,7 @@ export function TrustContent() {
           type="button"
           onClick={handleExport}
           disabled={exportPending}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
+          className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-50"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>

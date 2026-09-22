@@ -41,16 +41,36 @@ export function currencySymbol(c: string): string {
   return SYMBOL[c.toLowerCase()] ?? `${c.toUpperCase()} `
 }
 
-export function formatAmount(amount: number, currency: string): string {
+export interface AmountParts {
+  /** '-' for negative amounts, '' otherwise. */
+  sign: string
+  /** Currency symbol, e.g. 'NT$'. */
+  symbol: string
+  /** Formatted magnitude, e.g. '1,234'. */
+  digits: string
+}
+
+/**
+ * Splits an amount into sign / symbol / digits so layouts that render the
+ * symbol and digits at different sizes (hero stats, split amount tiles)
+ * don't each re-derive this from scratch. `formatAmount` composes its
+ * single-string output from these same parts (#1358).
+ */
+export function formatAmountParts(amount: number, currency: string): AmountParts {
   const negative = amount < 0
   const abs = Math.abs(amount)
   const precision = currencyPrecision(currency)
   const display = precision === 2 ? abs / 100 : abs
-  const formatted = display.toLocaleString('en-US', {
+  const digits = display.toLocaleString('en-US', {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
   })
-  return `${negative ? '-' : ''}${currencySymbol(currency)}${formatted}`
+  return { sign: negative ? '-' : '', symbol: currencySymbol(currency), digits }
+}
+
+export function formatAmount(amount: number, currency: string): string {
+  const { sign, symbol, digits } = formatAmountParts(amount, currency)
+  return `${sign}${symbol}${digits}`
 }
 
 /**

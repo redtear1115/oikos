@@ -158,7 +158,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
             if (!yearPrevDisabled) setPickerYear((y) => y - 1)
           }}
           disabled={yearPrevDisabled}
-          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
+          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-50 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
           style={{ color: 'var(--ink-2)' }}
           aria-label={t.records.monthPicker.prevYear}
         >
@@ -176,7 +176,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
             if (!yearNextDisabled) setPickerYear((y) => y + 1)
           }}
           disabled={yearNextDisabled}
-          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
+          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-50 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
           style={{ color: 'var(--ink-2)' }}
           aria-label={t.records.monthPicker.nextYear}
         >
@@ -194,7 +194,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
               type="button"
               onClick={() => go(`${pickerYear}-${String(m).padStart(2, '0')}`)}
               disabled={disabled}
-              className="h-9 rounded-lg text-sm cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="h-9 rounded-lg text-sm cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               style={{
                 background: sel ? 'var(--ink)' : 'transparent',
                 color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
@@ -221,7 +221,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={isPending}
-        className="relative h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-60 before:absolute before:-inset-y-[6px] before:-inset-x-1 before:content-['']"
+        className="relative h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50 before:absolute before:-inset-y-[6px] before:-inset-x-1 before:content-['']"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

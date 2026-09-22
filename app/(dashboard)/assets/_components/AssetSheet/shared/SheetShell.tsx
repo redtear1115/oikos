@@ -5,7 +5,7 @@ import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
-import { HeaderOverflowMenu } from './HeaderOverflowMenu'
+import { HeaderOverflowMenu } from '@/app/(dashboard)/assets/_components/shared/HeaderOverflowMenu'
 
 interface Props {
   open: boolean
@@ -23,6 +23,13 @@ interface Props {
    * or deleting an asset.
    */
   destructive?: boolean
+  /**
+   * False drops the top-right save, leaving the bottom button as the only
+   * commit — for one-action confirms where two buttons read as two steps
+   * (end outing, #1396). The slot stays as an invisible placeholder so the
+   * title keeps its centre.
+   */
+  headerSave?: boolean
   /** Unsaved-input check (see SheetFrame `isDirty`, #1183). */
   isDirty?: () => boolean
   /**
@@ -66,6 +73,7 @@ export function SheetShell({
   onSave,
   children,
   destructive = false,
+  headerSave = true,
   isDirty,
   onDelete,
   deletePending = false,
@@ -107,16 +115,24 @@ export function SheetShell({
               items={[{ label: t.common.delete, onSelect: () => setConfirmingDelete(true) }]}
             />
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSave}
-            disabled={!canSave}
-            className="px-2 font-medium"
-            style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
-          >
-            {pending ? t.common.saving : t.common.save}
-          </Button>
+          {headerSave ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSave}
+              disabled={!canSave}
+              className="px-2 font-medium"
+              style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
+            >
+              {pending ? t.common.saving : t.common.save}
+            </Button>
+          ) : (
+            <span aria-hidden className="invisible">
+              <Button variant="ghost" size="sm" tabIndex={-1} className="px-2 font-medium">
+                {t.common.save}
+              </Button>
+            </span>
+          )}
         </div>
       </div>
 
@@ -139,11 +155,10 @@ export function SheetShell({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
+          className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default disabled:opacity-50"
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
             color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
-            opacity: canSave ? 1 : 0.55,
           }}
         >
           {pending ? t.common.saving : bottomSaveLabel}

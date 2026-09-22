@@ -168,8 +168,10 @@ export function MonthlyStatsPieChart<R extends { total: number }>({
 
 /**
  * Two-line text block centered inside the donut. The amount uses the serif
- * face (matches the page title family) so the number reads as a "headline,"
- * while the label below sits in the muted secondary color. Kept as plain
+ * face so the number reads as a "headline," while the label below sits in
+ * the muted secondary color. (The Records L1 title itself moved to sans in
+ * #1269; this donut center wasn't part of that decision and keeps its
+ * serif.) Kept as plain
  * SVG `<text>` (not foreignObject) so font sizing remains predictable across
  * mobile WebKit / Android Chrome.
  */

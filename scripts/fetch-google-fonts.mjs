@@ -49,6 +49,19 @@ const FONTS = [
     slug: 'fraunces',
     cssVar: '--font-fraunces',
     className: 'font-fraunces',
+    // Root-level, not scoped: app/layout.tsx puts .font-fraunces on <html>,
+    // so it loads on every route. Do not reuse the generic "layouts opt
+    // subtrees in by class" wording below for this font — that claim was
+    // wrong for Fraunces specifically and fed a P1 that stripped serif from
+    // intentional emotional moments (#1162, DESIGN.md §3 Serif-Speaks Rule).
+    scopeNote:
+      `Root-level, not route-scoped: app/layout.tsx puts .font-fraunces on\n` +
+      ` * <html>, so this loads on every route including the dashboard. The\n` +
+      ` * dashboard layout only swaps the *default* family to Noto Sans TC\n` +
+      ` * (font-noto-tc on its wrapper) — it does not unload Fraunces. An earlier\n` +
+      ` * version of this comment said the opposite ("layouts opt subtrees in by\n` +
+      ` * class"); that was false and fed a P1 that stripped serif from intentional\n` +
+      ` * emotional moments (#1162). See DESIGN.md §3, The Serif-Speaks Rule.`,
   },
   {
     family: 'Noto Sans TC',
@@ -56,6 +69,11 @@ const FONTS = [
     slug: 'noto-sans-tc',
     cssVar: '--font-noto-tc',
     className: 'font-noto-tc',
+    // Unlike Fraunces above, this one genuinely is scoped by class — only
+    // the dashboard layout's wrapper carries .font-noto-tc.
+    scopeNote:
+      `Scoped, not on :root — the layouts opt subtrees in by class, which is how\n` +
+      ` * Noto Sans TC stays off the routes that don't need it. (#572)`,
   },
 ]
 
@@ -172,8 +190,7 @@ async function mirrorFont(font) {
     ` * the ranges a page actually uses. (#978) */\n\n`
 
   const varBlock =
-    `\n/* Scoped, not on :root — the layouts opt subtrees in by class, which is how\n` +
-    ` * ${font.family} stays off the routes that don't need it. (#572) */\n` +
+    `\n/* ${font.scopeNote} */\n` +
     `.${font.className} {\n  ${font.cssVar}: ${stack};\n}\n`
 
   const cssPath = path.join(ROOT, 'app', 'fonts', `${font.slug}.css`)

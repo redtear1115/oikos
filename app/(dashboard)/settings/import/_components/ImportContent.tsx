@@ -237,7 +237,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
       <div className="px-5 pt-6 pb-2">
         <h1
           className="text-page leading-tight"
-          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
+          style={{ color: 'var(--ink)', fontWeight: 500 }}
         >
           {t.settings.import.pageTitle}
         </h1>

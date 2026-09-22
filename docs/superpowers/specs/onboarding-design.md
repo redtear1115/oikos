@@ -42,7 +42,7 @@ Phase 1 假設使用者一定是雙人組合。但在友人測試階段，部分
 
 ### Step 3 — 邀請對方（`/setup` Step 2）
 
-- 邀請連結（token-based 7 天 expire，存 `GroupInvites`）
+- 邀請連結（token-based 24 小時 expire，存 `GroupInvites`）
 - 複製按鈕
 - Web Share API（LINE / 訊息 / 更多）
 - 底部「稍後再邀請 →」進入 [solo-mode](solo-mode-design.md)
@@ -55,7 +55,7 @@ Phase 1 假設使用者一定是雙人組合。但在友人測試階段，部分
 |---|---|---|
 | 強制流程 | 三步必填；不能跳過建立帳本（但可跳邀請） | 帳本是 group 的容器，沒它後面什麼都 wire 不起來 |
 | 帳本命名最大長度 | 20 字 | 避免 hero card 排版破版；20 字夠中文 / 短英文 |
-| 邀請 token 期限 | 7 天 | 平衡安全 vs 實際分享節奏（朋友常常隔幾天才看到訊息） |
+| 邀請 token 期限 | 24 小時（#1288；原為 7 天） | 連結的副本（GA、瀏覽紀錄、剪貼簿、聊天伺服器）收不回來，只能縮短它還能用的時間。prod 已接受的邀請全部在 5 小時內接受，24 小時留足餘裕；過期後對方看到「邀請已過期」，邀請方再產一條即可。常數是 `lib/invite.ts` 的 `INVITE_TTL_MS` |
 | 「稍後再邀請」出口 | 永遠提供 | 沒有對象的人也能用；不要在第三步擋人 |
 | 第二步建議 chips | 5 個固定選項 | 不暴露所有可能，給人「立刻可選」的快感；不喜歡的人 input 自由打 |
 | Onboarding 完成後 redirect | `/dashboard` | 直接進主畫面開始記帳 |
@@ -91,7 +91,7 @@ Phase 1 假設使用者一定是雙人組合。但在友人測試階段，部分
 - 新使用者登入後若沒 group → redirect 到 `/setup`，不會進 dashboard 看到 broken state
 - 建立帳本名稱輸入 20 字達上限 → 鎖輸入
 - 邀請步驟「稍後再邀請」→ 進入 [solo-mode](solo-mode-design.md)（`member_b = NULL`）
-- 邀請連結 7 天後 expire → 點開顯示「邀請已過期」+ 重新產生新連結
+- 邀請連結 24 小時後 expire → 點開顯示「邀請已過期」+ 重新產生新連結
 - 對方接受邀請 → A 端 realtime 即時升雙人（無須刷新）
 
 ---

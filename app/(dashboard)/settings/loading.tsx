@@ -1,12 +1,12 @@
 // Skeleton mirrors the real /settings page (SettingsContent.tsx + page.tsx):
-// serif title row → QuickAccessRow → 應用 section (install + offline) → 資料
-// section (5 link rows) → bottom-nav placeholder. The old skeleton drew a
+// title row (sans, #1269) → QuickAccessRow → 應用 section (install + offline)
+// → 資料 section (5 link rows) → bottom-nav placeholder. The old skeleton drew a
 // single rounded-tile list with 5 inset rows, which didn't match the actual
 // layout (separate rounded-card per row) and caused visible jump on hand-off.
 export default function Loading() {
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
-      {/* Header: serif title + subtitle (matches SettingsContent header block). */}
+      {/* Header: title + subtitle (matches SettingsContent header block; sans since #1269). */}
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-4">
         <Bar className="h-7 w-20" tone="strong" />
         <Bar className="h-3 w-44 mt-2" tone="soft" />

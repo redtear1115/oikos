@@ -291,10 +291,16 @@ export function RecurringRuleSheet(props: Props) {
 
         <SheetBody noPadding>
           {error && (
+            // #1269 — no shadow: sticky here means "pinned while scrolling
+            // past", not "left the page plane" (DESIGN.md's Flat-By-Default
+            // Rule exempts sheets/modals/popovers/toasts/the FAB, not sticky
+            // in-flow banners). A hairline would separate it from the content
+            // scrolling underneath instead, but this alert is already the
+            // only element in its row, so no change needed there either.
             <div
               role="alert"
               className="sticky top-0 z-10 mx-5 mt-2 px-4 py-3 rounded-xl text-sm text-white"
-              style={{ background: 'var(--debit)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+              style={{ background: 'var(--debit)' }}
             >
               {error}
             </div>

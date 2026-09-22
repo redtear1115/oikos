@@ -10,7 +10,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
-import { formatAmount } from '@/lib/currency'
+import { formatAmount, formatAmountParts } from '@/lib/currency'
 import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
 
@@ -165,6 +165,11 @@ export function BalanceHero({
   }
 
   const amount = Math.abs(balance)
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
+  // baseCurrency here: the main ledger stores whole units as typed, but
+  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
+  // group would render this at 1/100th its actual size until that's fixed.
+  const amountParts = formatAmountParts(amount, 'twd')
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const owedByRole = whoToMemberRole(owedByWho, viewerIsA)
@@ -330,10 +335,8 @@ export function BalanceHero({
                   opacity: fading ? 0 : 1,
                 }}
               >
-                {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
-                     needs `formatAmount` digits-only mode (or symbol/digits split). */}
-                <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
-                {amount.toLocaleString('en-US')}
+                <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>{amountParts.symbol}</span>
+                {amountParts.digits}
               </div>
 
               {(hasPending || canSettle) && (

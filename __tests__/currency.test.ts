@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, convertAmount, parseCurrencyCode } from '@/lib/currency'
+import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, formatAmountParts, convertAmount, parseCurrencyCode } from '@/lib/currency'
 
 describe('CURRENCIES constant', () => {
   it('contains the four MVP currencies in canonical order', () => {
@@ -49,6 +49,32 @@ describe('formatAmount', () => {
   })
   it('formats negative amounts with minus before symbol', () => {
     expect(formatAmount(-500, 'twd')).toBe('-NT$500')
+  })
+})
+
+describe('formatAmountParts', () => {
+  it('splits TWD into sign/symbol/digits', () => {
+    expect(formatAmountParts(12345, 'twd')).toEqual({ sign: '', symbol: 'NT$', digits: '12,345' })
+  })
+  it('splits negative amounts with a sign part', () => {
+    expect(formatAmountParts(-500, 'twd')).toEqual({ sign: '-', symbol: 'NT$', digits: '500' })
+  })
+  it('splits USD cents to dollars with 2 decimals', () => {
+    expect(formatAmountParts(1250, 'usd')).toEqual({ sign: '', symbol: '$', digits: '12.50' })
+  })
+  it('formatAmount composes byte-identically from the same parts', () => {
+    for (const [amount, currency] of [
+      [12345, 'twd'],
+      [0, 'twd'],
+      [1250, 'usd'],
+      [123456, 'usd'],
+      [50000, 'jpy'],
+      [1000, 'cny'],
+      [-500, 'twd'],
+    ] as const) {
+      const { sign, symbol, digits } = formatAmountParts(amount, currency)
+      expect(formatAmount(amount, currency)).toBe(`${sign}${symbol}${digits}`)
+    }
   })
 })
 

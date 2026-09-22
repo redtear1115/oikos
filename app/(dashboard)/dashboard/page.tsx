@@ -40,9 +40,8 @@ import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
 import { deriveReviewCell } from '@/lib/reviewCell'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
-import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import { formatDateRelative } from '@/lib/format-date'
-import { localTodayISO } from '@/lib/local-date'
+import { recentIncomeLabel } from '@/lib/recentIncomeLabel'
+import { getTodayYMD } from '@/lib/today-server'
 
 const BANNER_QUOTE_MAX_CODEPOINTS = 60
 
@@ -188,18 +187,11 @@ export default async function DashboardPage() {
     { total: 0, count: 0 },
   )
 
-  const recentIncomeLabel = latestIncomes.length > 0
-    ? (() => {
-        const r = latestIncomes[0]
-        // Deliberately the server clock (UTC on Vercel) — unchanged behaviour,
-        // and wrong between 00:00 and 08:00 Taipei: today's income reads as a
-        // date, yesterday's as 「今天」. The fix (`await getTodayYMD()`) changes
-        // visible text, so it waits for the polish pass: #1362.
-        const dateStr = formatDateRelative(r.occurredAt, locale, localTodayISO())
-        const catKey = r.category as keyof Translations['incomeCategory']
-        const catLabel = t.incomeCategory[catKey] ?? t.incomeCategory.other
-        return `${dateStr} · ${r.source ?? catLabel}`
-      })()
+  // The viewer's today (device zone via the futari_tz cookie), not the server
+  // clock — see lib/recentIncomeLabel.ts (#1362).
+  const recentIncome = latestIncomes[0]
+  const recentIncomeLabelText = recentIncome
+    ? recentIncomeLabel(recentIncome, locale, await getTodayYMD(), t.incomeCategory)
     : null
 
   let bannerProps: {
@@ -321,7 +313,7 @@ export default async function DashboardPage() {
         pageSize={PAGE_SIZE}
         incomeMonthTotal={incomeSummary.total}
         incomeMonthCount={incomeSummary.count}
-        recentIncomeLabel={recentIncomeLabel}
+        recentIncomeLabel={recentIncomeLabelText}
         expenseMonthTotal={expenseMonth.total}
         expenseMonthCount={expenseMonth.count}
         expenseMonthKey={yyyymm}

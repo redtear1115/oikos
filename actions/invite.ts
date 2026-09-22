@@ -7,6 +7,7 @@ import {
   classifyUnclaimableInvite,
   generateToken,
   getInviteUrl,
+  INVITE_TTL_MS,
   validateInviteAcceptance,
   type InviteAcceptError,
 } from '@/lib/invite'
@@ -21,7 +22,8 @@ export type InvitePreview =
   | { ok: false; error: InviteAcceptError; partnerName?: string }
 
 /**
- * Mint a 7-day invite link for the viewer's own ledger.
+ * Mint an invite link, valid for {@link INVITE_TTL_MS} (24 h), for the
+ * viewer's own ledger.
  *
  * #1031 — we do NOT accept a `groupId` arg: the group is resolved from the
  * viewer, so a caller-supplied id is structurally unrepresentable. Same
@@ -43,7 +45,9 @@ export const createInvite = action(async (): Promise<string> => {
   const { user, group } = await requireViewerGroup()
 
   const token = generateToken()
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  // DB clock, like `created_at` and the claim in acceptInvite: the expiry is
+  // exactly `created_at + TTL`, whatever the app server's clock says.
+  const expiresAt = sql`now() + make_interval(secs => ${INVITE_TTL_MS / 1000})`
 
   let superseded: number
   try {
@@ -52,6 +56,9 @@ export const createInvite = action(async (): Promise<string> => {
       // the second waits, then supersedes the first one's invite. Without the
       // lock nothing errors — two links are simply left live, and once the
       // one-open-invite unique index exists the loser fails with 23505.
+      //
+      // Lock order: group row, then invite rows. acceptInvite takes them in
+      // the same order; see the note there.
       const [locked] = await tx
         .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
         .from(oikosGroups)
@@ -193,7 +200,23 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
   if (!result.ok) throw new Error(result.error)
 
   await db.transaction(async (tx) => {
-    // #1288 — the claim. It is the first statement of the transaction and it
+    // #1288 — lock order. Take the group row before the invite row, the same
+    // order as createInvite (group FOR UPDATE, then supersede the invites).
+    // Claiming the invite first and updating the group second is the opposite
+    // order: a mint and an accept on the same solo group could each hold one
+    // lock and wait for the other, Postgres aborts one with 40P01 (deadlock),
+    // and the loser only sees the generic error. With one order, whichever
+    // takes the group row first finishes; the other then sees its result:
+    // a later mint reads `group_full`, a later accept finds the invite
+    // superseded (`revoked`). The locked row itself is not used — the guarded
+    // UPDATE below still re-checks the group.
+    await tx
+      .select({ id: oikosGroups.id })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, invite.groupId))
+      .for('update')
+
+    // #1288 — the claim. It runs right after the group lock and it
     // is atomic: one conditional UPDATE that only matches while the invite is
     // still unaccepted, unrevoked and unexpired by the DB clock. The checks
     // above ran on a row read earlier; a revoke (supersede, partner removal,
