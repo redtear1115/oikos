@@ -43,6 +43,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.1] - 2026-09-22
+
+主題：**設計審查的統一優化**——標題字體、按鈕狀態與金額格式收斂成同一套；邀請連結改為 24 小時內有效。
+完整 diff：[v1.6.0...v1.6.1](https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1)
+
+### 使用者可見變化
+
+- **頁面標題與月份標題改用黑體（#1269、#1279）**
+  使用者：首頁、紀錄、愛物、設定的頁面標題（首頁是帳本名稱），信任、幣別、匯入的子頁標題，以及紀錄頁的月份標題，改用與內文一致的黑體；月回顧、測驗等需要停下來看的時刻仍保留襯線字。
+  技術：這些標題拿掉 `font-fraunces`；DESIGN.md 記下決定的範圍與 `--font-serif` 刻意不補 fallback 的原因；RecurringRuleSheet 的 sticky 錯誤提示拿掉陰影。
+- **停用中的按鈕透明度一致、油耗的「⋯」改成選單（#1358）**
+  使用者：無法按的按鈕一律以同樣的淡度顯示；油耗紀錄頁右上角的「⋯」改成和其他頁一樣的下拉選單，點擊範圍也放大。
+  技術：disabled 統一用 `disabled:opacity-50`；油耗改用 `HeaderOverflowMenu`；新增 `formatAmountParts`，`formatAmount` 改由它組出，輸出不變。
+- **首頁最近收入的「今天／昨天」以你的時區判斷（#1362）**
+  使用者：深夜到清晨記的收入，不會再被標成錯的一天。
+  技術：改用 `getTodayYMD()`（`futari_tz` cookie，預設 Asia/Taipei），不再用伺服器時區。
+- **出遊的四個小調整（#1396）**
+  使用者：折回主帳本的那筆紀錄副標顯示「出遊結算」；新增支出時預設勾選所有參與者；結束出遊的確認只留一個按鈕；沒有支出時的空狀態文案更簡潔。
+- **邀請連結改為 24 小時內有效（#1288）**
+  使用者：產生的邀請連結在 24 小時後失效，需要時再產生一次；原本還有效的邀請也會縮短到最多 24 小時。
+  技術：`expires_at` 以 DB 時鐘計算 `now() + 24h`；acceptInvite 與 createInvite 的鎖順序統一，避免死結；`0067` 把既有邀請縮短到最多 24 小時（須在程式上線後執行，不可逆）。
+
+### 技術變更
+
+- **簡體中文專用的分享預覽圖（#1367）**
+  技術：新增 `public/og-image-zh-CN.png`，`/zh-CN` 的 og:image 改指向它；`scripts/og/` 支援 zh-CN，字體使用 Noto Sans SC。
+
 ## [1.6.0] - 2026-09-22
 
 主題：**出遊**——和朋友出去玩時，由你們兩人代記一本多人分帳；結束時只把你們倆之間的帳折回主帳本。
@@ -1297,7 +1324,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0
 [1.5.21]: https://github.com/redtear1115/oikos/compare/v1.5.20...v1.5.21
 [1.5.20]: https://github.com/redtear1115/oikos/compare/v1.5.19...v1.5.20
