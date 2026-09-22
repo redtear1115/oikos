@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 import { randomUUID } from 'node:crypto'
-import { loadEnvLocal, seedGroup } from '../outing/_setup'
+import { loadEnvLocal, seedGroup as seedGroupRow } from '../outing/_setup'
 
 // ─── 出遊 v1.6.0 against the real dev database (#943, plan v2.1 S-C / S-D / S-E) ──
 //
@@ -46,7 +46,7 @@ const {
   outings, outingParticipants, outingExpenses, outingExpenseShares, outingSettlements,
   settlements, groupBalance, groupEpochs, oikosGroups, profiles, cashTransactions,
 } = await import('@/lib/db/schema')
-const { and, eq, isNull, sql } = await import('drizzle-orm')
+const { and, eq, inArray, isNull, sql } = await import('drizzle-orm')
 const {
   createOuting, addOutingParticipant, addOutingExpense, recordOutingSettlement,
   endOuting, softDeleteOuting,
@@ -58,6 +58,31 @@ const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
 const { listOutings } = await import('@/lib/db/queries/outing')
 
 beforeEach(() => cookieJar.clear())
+
+// Every group this file seeds, so afterAll can remove the outing rows it
+// wrote. Without it each run left ~80 Outings on the shared dev project.
+// Only outing tables: the groups, profiles and main-ledger rows stay, like
+// every other integration suite's seed.
+const seededGroups = new Set<string>()
+async function seedGroup(opts?: Parameters<typeof seedGroupRow>[0]) {
+  const seed = await seedGroupRow(opts)
+  seededGroups.add(seed.groupId)
+  return seed
+}
+
+afterAll(async () => {
+  const ids = [...seededGroups]
+  if (ids.length === 0) return
+  await db.transaction(async (tx) => {
+    const own = sql`(SELECT id FROM "Outings" WHERE group_id IN ${ids})`
+    await tx.delete(outingExpenseShares).where(sql`${outingExpenseShares.expenseId} IN (
+      SELECT id FROM "OutingExpenses" WHERE outing_id IN ${own})`)
+    await tx.delete(outingExpenses).where(sql`${outingExpenses.outingId} IN ${own}`)
+    await tx.delete(outingSettlements).where(sql`${outingSettlements.outingId} IN ${own}`)
+    await tx.delete(outingParticipants).where(sql`${outingParticipants.outingId} IN ${own}`)
+    await tx.delete(outings).where(inArray(outings.groupId, ids))
+  })
+})
 
 // ─── helpers ───
 
