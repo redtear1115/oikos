@@ -9,10 +9,11 @@ import {
   StatsGlyph,
   ShieldOutlineGlyph,
 } from './FutariMark'
-import { AppStoreNote } from './AppStoreNote'
 import { IllustrationSlot } from './IllustrationSlot'
+import { LandingCtaHint } from './LandingCtaHint'
 import { LandingCtaLink } from './LandingCtaLink'
 import { LandingPrimaryCta } from './LandingPrimaryCta'
+import { LandingSecondaryCta } from './LandingSecondaryCta'
 import { LandingStandaloneRedirect } from './LandingStandaloneRedirect'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
@@ -119,6 +120,8 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
             letterSpacing: '1.2px',
             textDecoration: 'none',
           }}
+          appStoreLabel={t.appStoreCta}
+          androidBetaLabel={t.androidBetaCta}
         >
           {t.cta}
         </LandingPrimaryCta>
@@ -215,45 +218,50 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                   letterSpacing: '1.8px',
                   textDecoration: 'none',
                 }}
+                appStoreLabel={t.appStoreCta}
+                androidBetaLabel={t.androidBetaCta}
               >
                 {t.cta}
               </LandingPrimaryCta>
-              <LandingCtaLink
-                href={signInHref}
-                ctaLocation="secondary"
-                target="sign_in"
+              <LandingSecondaryCta
+                signInHref={signInHref}
                 className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-sm cursor-pointer transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
                   textDecoration: 'none',
                 }}
+                androidLabel={t.useWebVersion}
               >
                 {t.alreadyHaveAccount}
-              </LandingCtaLink>
+              </LandingSecondaryCta>
             </div>
 
-            {/* Mobile sub-CTA hint */}
-            <p
+            {/* Mobile sub-CTA hint (#1413: text depends on the resolved CTA variant) */}
+            <LandingCtaHint
               className="md:hidden m-0 mt-3 text-center text-xs"
               style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
+              appStoreHint={t.appStoreCtaHint}
+              androidBetaHint={t.androidBetaCtaHint}
             >
               {t.ctaHint}
-            </p>
+            </LandingCtaHint>
 
             {/* Mobile-only secondary entry (#1277): desktop already has the
                 sign-in link inline in the CTA row above; on mobile there was
                 no way for a returning user to reach it without retracing the
-                Google/Apple OAuth flow behind the primary CTA. */}
+                Google/Apple OAuth flow behind the primary CTA. Swaps to "先用
+                網頁版" when the primary CTA above is the Android beta form
+                (#1413) — that CTA isn't a returning-user sign-in, so the
+                default label would be wrong. */}
             <div className="md:hidden mt-1 flex justify-center">
-              <LandingCtaLink
-                href={signInHref}
-                ctaLocation="secondary"
-                target="sign_in"
+              <LandingSecondaryCta
+                signInHref={signInHref}
                 className="min-h-11 inline-flex items-center justify-center px-3 text-sm text-ink-2 cursor-pointer transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+                androidLabel={t.useWebVersion}
               >
                 {t.alreadyHaveAccount}
-              </LandingCtaLink>
+              </LandingSecondaryCta>
             </div>
 
             {/* Trust row — desktop only; full version lives below the
@@ -261,15 +269,6 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
             <div className="hidden md:block mt-7">
               <TrustSection t={t} variant="compact" />
             </div>
-
-            {/* App Store note (#1333) — quiet, secondary; hidden inside the
-                iOS shell itself (see AppStoreNote). Sits last in the copy
-                column so it reads as a footnote, not competing with the
-                primary web CTA above. */}
-            <AppStoreNote
-              linkText={t.appStoreNote.linkText}
-              androidNote={t.appStoreNote.androidNote}
-            />
           </div>
 
           {/* Illustration + demoted phone — desktop only */}
