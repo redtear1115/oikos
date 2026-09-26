@@ -25,11 +25,15 @@ export type MigrateBasePageCopy = {
   /** cwmoney only — Excel template download rendered inside step 2 */
   templateDownloadLabel?: string
   templateNote?: string
+  /** At least 4 — every source has that many; a source can carry a 5th
+   *  (e.g. simple-daily-money's "原本買的 VIP 怎麼辦" #1414) without the
+   *  other sources needing one too. */
   faq: readonly [
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
+    ...{ question: string; answer: string }[],
   ]
 }
 
@@ -5686,6 +5690,10 @@ export const zhTW: Translations = {
             question: 'ChatGPT 整理的分類會不會跑掉？',
             answer: '分類文字會原樣保留，上傳後先預覽，正式匯入時可以對照調整成 Futari 的分類。',
           },
+          {
+            question: '我在簡單記帳買的（永久）VIP，搬過來會浪費嗎？',
+            answer: '那筆 VIP 是在簡單記帳裡買的，不會、也不能轉移到其他 App，換去哪一家都一樣。Futari 目前完全免費，記帳、雙人分攤、雲端同步、CSV 匯出匯入都不需要另外解鎖，搬過來不會遇到功能被鎖住的狀況。',
+          },
         ],
       },
       'fortune-city': {
@@ -6006,9 +6014,9 @@ export const zhTW: Translations = {
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
-        title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
-        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
-        ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+        title: '從記帳城市搬家到 Futari｜不用訂閱也能把記錄搬出來',
+        description: '記帳城市的 CSV 匯出要訂閱，匯出檔還可能要自己轉編碼？截圖請 ChatGPT 整理成 CSV，搬到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起記帳。免費、無廣告、只開放給你們倆。',
+        ogDescription: '記帳城市要訂閱才能匯出？截圖→ChatGPT→CSV，免費搬進 Futari 雙人記帳。',
       },
       cashman: {
         title: '從 CashMan 搬家到 Futari｜截圖轉 CSV',
