@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveVisitorPlatform, ANDROID_BETA_FORM_URL, type ResolveVisitorPlatformInput } from '@/lib/visitorPlatform'
+import { resolveVisitorPlatform, type ResolveVisitorPlatformInput } from '@/lib/visitorPlatform'
 
 const IPHONE_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
@@ -59,19 +59,12 @@ describe('resolveVisitorPlatform (#1413)', () => {
     expect(resolveVisitorPlatform(input({ userAgent: REAL_MAC_UA, maxTouchPoints: 0 }))).toBe('sign_in')
   })
 
-  it('Android Chrome gets the beta signup — when a form URL is configured', () => {
-    const target = resolveVisitorPlatform(input({ userAgent: ANDROID_UA }))
-    // Guards against shipping with the placeholder empty URL (see the constant's
-    // own comment): once a real form URL is set this becomes 'android_beta'.
-    expect(target).toBe(ANDROID_BETA_FORM_URL ? 'android_beta' : 'sign_in')
+  it('Android Chrome gets the beta signup (shipped form URL)', () => {
+    expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA }))).toBe('android_beta')
   })
 
   it('Android falls back to sign-in when the beta form URL is empty (never a dead link)', () => {
-    // Exercises the fallback branch directly regardless of the constant's
-    // current value, since #1413 requires ANDROID_BETA_FORM_URL to ship empty
-    // until the real Google Form URL is filled in.
-    expect(ANDROID_BETA_FORM_URL).toBe('')
-    expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA }))).toBe('sign_in')
+    expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA, betaFormUrl: '' }))).toBe('sign_in')
   })
 
   it('sign-in for desktop / everything else', () => {

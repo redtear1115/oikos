@@ -95,7 +95,7 @@ export const ja: Translations = {
     appStoreCta: 'App Store でダウンロード',
     appStoreCtaHint: 'iPhone・iPad どちらでも使えます',
     androidBetaCta: 'Android版テストに申し込む',
-    androidBetaCtaHint: 'Play ストアで使っている Google アカウントをご記入ください。テスト招待の送付にのみ使用し、リストに追加後は削除します。',
+    androidBetaCtaHint: 'Play ストアで使っている Google アカウントで申し込んでください。テスト招待の送付にのみ使い、リストに追加したあとは削除します。',
     useWebVersion: 'まずはウェブ版を使う',
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',

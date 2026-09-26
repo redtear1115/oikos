@@ -156,7 +156,7 @@ export type Translations = {
     /** Primary-CTA label for an Android browser visitor (#1413): links out to
      *  the closed-testing signup form (a Google Form — see
      *  `lib/visitorPlatform.ts#ANDROID_BETA_FORM_URL`). Falls back to the
-     *  default sign-in CTA if that URL is still empty. */
+     *  default sign-in CTA if that URL is ever emptied. */
     androidBetaCta: string
     /** Mobile hint under `androidBetaCta` — must say what the form asks for
      *  and why (issue #1413): the Google account used on Play, used only to
@@ -3114,7 +3114,7 @@ export const zhTW: Translations = {
     appStoreCta: '在 App Store 下載',
     appStoreCtaHint: 'iPhone 與 iPad 都能用',
     androidBetaCta: '報名 Android 測試版',
-    androidBetaCtaHint: '請填 Play 商店用的 Google 帳號。只用來寄測試邀請，加入名單後就刪除。',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 帳號報名。只用來寄測試邀請，加入名單後就刪除。',
     useWebVersion: '先用網頁版',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',

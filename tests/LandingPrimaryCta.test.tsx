@@ -122,12 +122,11 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
     getSession.mockResolvedValue({ data: { session: null } })
     stubUserAgent(ANDROID_UA)
     renderCta()
-    // ANDROID_BETA_FORM_URL ships empty until the real form URL is filled in
-    // (#1413), so this currently falls back to the sign-in default — assert
-    // whichever branch is live rather than hard-coding one.
     await waitFor(() => {
-      const anchor = screen.getByText(/開始|報名 Android 測試版/).closest('a')!
+      const anchor = screen.getByText('報名 Android 測試版').closest('a')!
       expect(anchor).not.toHaveAttribute('aria-hidden')
+      expect(anchor.getAttribute('href')).toBe('https://forms.gle/MriV1rL3upL4SgVt5')
     })
+    expect(screen.queryByText('開始')).not.toBeInTheDocument()
   })
 })

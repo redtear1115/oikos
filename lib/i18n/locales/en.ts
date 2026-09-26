@@ -94,7 +94,7 @@ export const en: Translations = {
     appStoreCta: 'Get it on the App Store',
     appStoreCtaHint: 'Works on iPhone and iPad',
     androidBetaCta: 'Join the Android beta',
-    androidBetaCtaHint: 'Use the Google account you use on Google Play. Only used to send the test invite, deleted once you’re added to the list.',
+    androidBetaCtaHint: 'Sign up with the Google account you use on Google Play. It’s only used to send the test invite and is deleted once you’re added.',
     useWebVersion: 'Use the web version',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',

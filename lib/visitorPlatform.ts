@@ -23,6 +23,9 @@ export interface ResolveVisitorPlatformInput {
   isStandalone: boolean
   /** A local Supabase session already exists. */
   hasSession: boolean
+  /** Android beta signup URL; defaults to {@link ANDROID_BETA_FORM_URL}.
+   *  Injectable so the empty-URL fallback can be tested for real. */
+  betaFormUrl?: string
 }
 
 // #1413 — region-neutral: Apple redirects `/app/id...` to the visitor's own
@@ -35,10 +38,11 @@ export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784'
 // form afterward — the email address never enters our DB and isn't kept in the
 // form long-term either (see issue #1413 comment).
 //
-// MUST be filled in with the real form URL before merge. Left empty,
-// `resolveVisitorPlatform` below falls back to 'sign_in' for Android visitors
-// instead of ever pointing the CTA at a dead link.
-export const ANDROID_BETA_FORM_URL = ''
+// The form collects the respondent's *verified* Google account (sign-in
+// required), which is exactly what the Play tester list needs. If this is ever
+// emptied, `resolveVisitorPlatform` below falls back to 'sign_in' for Android
+// visitors instead of pointing the CTA at a dead link.
+export const ANDROID_BETA_FORM_URL = 'https://forms.gle/MriV1rL3upL4SgVt5'
 
 /**
  * Which primary-CTA variant a visitor should see. Precedence:
@@ -57,6 +61,7 @@ export function resolveVisitorPlatform({
   isCapacitor,
   isStandalone,
   hasSession,
+  betaFormUrl = ANDROID_BETA_FORM_URL,
 }: ResolveVisitorPlatformInput): VisitorPlatformTarget {
   if (hasSession) return 'dashboard'
   if (isCapacitor || isStandalone) return 'sign_in'
@@ -68,7 +73,7 @@ export function resolveVisitorPlatform({
   if (isIos) return 'app_store'
 
   if (/android/.test(ua)) {
-    return ANDROID_BETA_FORM_URL ? 'android_beta' : 'sign_in'
+    return betaFormUrl ? 'android_beta' : 'sign_in'
   }
 
   return 'sign_in'

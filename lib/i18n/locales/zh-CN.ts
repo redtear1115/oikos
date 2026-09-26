@@ -93,7 +93,7 @@ export const zhCN: Translations = {
     appStoreCta: '在 App Store 下载',
     appStoreCtaHint: 'iPhone 与 iPad 都能用',
     androidBetaCta: '报名 Android 测试版',
-    androidBetaCtaHint: '请填 Play 商店用的 Google 账号，仅用于寄送测试邀请，加入名单后即删除。',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 账号报名。仅用于寄送测试邀请，加入名单后即删除。',
     useWebVersion: '先用网页版',
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
