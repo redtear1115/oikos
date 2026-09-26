@@ -37,6 +37,7 @@ const SECRETS = [BARCODE, CIPHERTEXT, BAD_UUID]
 describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client — local throwaway DB', () => {
   let harness: SentryHarness
   const realConsoleError = console.error
+  const realConsoleWarn = console.warn
   const made = { profile: '', group: '' }
 
   beforeAll(async () => {
@@ -51,12 +52,14 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     // The SDK wraps whatever console.error is at init; keep the values out of
     // the test output.
     console.error = () => {}
+    console.warn = () => {}
     harness = startSentryHarness()
   })
 
   afterAll(async () => {
     await harness?.close()
     console.error = realConsoleError
+    console.warn = realConsoleWarn
     const { db } = await import('@/lib/db/client')
     const { profiles, oikosGroups, invoiceCredentials } = await import('@/lib/db/schema')
     const { eq } = await import('drizzle-orm')
@@ -178,5 +181,54 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     expect(all).toContain('invalid input syntax for type uuid')
     expect(MARKERS.filter((m) => all.includes(m))).toEqual([])
     expect(MARKERS.filter((m) => sanitized.join('\n').includes(m))).toEqual([])
+  })
+
+  // #1439 round 3: when the text is cut (32 KiB head, or > 256 KiB pre-cut)
+  // the quote found in it may be the input's own — the real closing quote was
+  // cut off. The input is masked to the end of the head instead.
+  it('a long 22P02 input with an inner quote leaks nothing through any hook', async () => {
+    const { db } = await import('@/lib/db/client')
+    const { invoiceCredentials } = await import('@/lib/db/schema')
+    const { sanitizeDbError } = await import('@/lib/db/sanitizeError')
+    const Sentry = await import('@sentry/node')
+    const SECRET = 'ZSECRET1439Z'
+    const values = [
+      `x"${SECRET}${'A'.repeat(40_000)}`,
+      `x"${SECRET}${'A'.repeat(100_000)}`,
+      `${'A'.repeat(20_000)}"${SECRET}${'A'.repeat(40_000)}`,
+      `x\n"${SECRET}${'A'.repeat(40_000)}`,
+      `x"${SECRET}${'😀'.repeat(20_000)}`,
+    ]
+
+    await harness.drain()
+    harness.envelopes.length = 0
+    const sanitized: string[] = []
+    for (const groupId of values) {
+      const e = await Promise.resolve(db.insert(invoiceCredentials).values({
+        groupId, userId: made.profile, barcode: '/Q1439', verificationCodeEncrypted: 'v1:k1:q',
+      })).then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+      const cause = e.cause as Error & { code?: string }
+      // Control: the real 22P02 quotes the whole input.
+      expect(cause.code).toBe('22P02')
+      expect(cause.message).toBe(`invalid input syntax for type uuid: "${groupId}"`)
+
+      console.error(e)
+      console.error('x', e)
+      console.error(cause)
+      console.warn('x', cause)
+      console.error(cause.message)
+      Sentry.captureException(e)
+      Sentry.captureException(cause)
+      Sentry.captureMessage(cause.message)
+      const clean = sanitizeDbError(e) as Error & { cause: Error }
+      sanitized.push(clean.message, clean.stack ?? '', clean.cause.message, clean.cause.stack ?? '')
+    }
+    const all = (await harness.drain()).join('\n')
+
+    expect(all).toContain('"type":"log"')
+    expect(all).toContain('"type":"event"')
+    expect(all).toContain('invalid input syntax for type uuid')
+    expect(all).not.toContain(SECRET)
+    expect(sanitized.join('\n')).not.toContain(SECRET)
   })
 })

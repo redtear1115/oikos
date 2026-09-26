@@ -274,15 +274,19 @@ const TRUNCATED_SUFFIX = ` ${TOO_LONG}`
 /** Plain text: `params:` must start a line, so "bad params: x" mid-sentence stays. */
 const DB_PARAMS_TAIL_RE = /(^|\n)params: [\s\S]*$/
 /**
- * JSON-escaped text that could not be parsed (truncated, malformed): `\nparams: `
- * up to the end of the JSON string. It no longer stops at a stack frame —
- * without the structure nothing tells a real frame from a value that looks
- * like one, so the frames go too.
+ * JSON-escaped text that could not be parsed (truncated, malformed): from
+ * `\nparams: ` to the end of the piece (see `scrubDbPlain`).
  */
-const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: (?:[^"\\]|\\[\s\S])*/g
-/** The column list is bounded so repeated `Key (` without `)` stays linear. */
-const PG_KEY_DETAIL_RE = /Key \(([^)\n]{0,256})\)=\([^\n]*/g
-const PG_FAILING_ROW_RE = /Failing row contains \([^\n]*/g
+const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: /
+/**
+ * Postgres row detail: `Key (<columns>)=(<values>) already exists.` and
+ * `Failing row contains (<values>).` The values are verbatim — they may hold
+ * newlines, parentheses and quotes — so the mask runs to the END of the piece,
+ * not to the end of the line (#1439 round 3). A `Key (` whose column list is
+ * not closed within 256 characters is masked from `Key (` on.
+ */
+const PG_KEY_DETAIL_RE = /Key \((?:([^)\n]{0,256})\)=\()?[\s\S]*/
+const PG_FAILING_ROW_RE = /Failing row contains \([\s\S]*/
 /**
  * 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input:
  * `invalid input syntax for type uuid: "<value>"` (also `… for enum "Foo": …`).
@@ -326,87 +330,69 @@ function jsonValueEnd(text: string, start: number): number {
 }
 
 /**
- * `"params":[…]`, `"detail":"…"`, … → `"params":"[Filtered]"`, over text
- * that did not parse. `open` = a value ran off the end and was masked to it.
+ * `"params":[…]`, `"detail":"…"`, … in text that did not parse as JSON: from
+ * the first such key to the end → `"params":"[Filtered]"`. Text that did not
+ * parse is truncated or malformed, so the end of the value cannot be trusted
+ * (a value's own quote may look like its end).
  */
-function maskJsonValueKeys(text: string): { text: string; open: boolean } {
+function maskJsonValueKeys(text: string): Plain {
   if (!text.includes('":')) return { text, open: false }
   const re = /"(\w+)"\s*:/g
-  let out = ''
-  let last = 0
-  let open = false
   for (let m = re.exec(text); m; m = re.exec(text)) {
     if (!DB_VALUE_KEYS.has(m[1])) continue
-    const valueStart = m.index + m[0].length
-    const end = jsonValueEnd(text, valueStart)
-    // Unterminated (truncated) value: mask to the end.
-    const stop = end === -1 ? text.length : end
-    if (end === -1) open = true
-    out += `${text.slice(last, valueStart)}"${FILTERED}"`
-    last = stop
-    re.lastIndex = stop
+    return { text: `${text.slice(0, m.index + m[0].length)}"${FILTERED}"`, open: true }
   }
-  return { text: out + text.slice(last), open }
+  return { text, open: false }
 }
 
 /**
- * How far past the end of a plain piece a mask reaches: `NONE`; `LINE` — a
- * "to the end of the line" rule reached the end of the piece, so whatever
- * follows on that line (the next console argument) is part of the value;
- * `ALL` — everything after it may be.
+ * A scrubbed plain piece. `open` = some rule masked to the end of the piece,
+ * so whatever follows (the next console arguments) may be part of that value
+ * and is dropped.
  */
-const OPEN_NONE = 0
-const OPEN_LINE = 1
-const OPEN_ALL = 2
-type Open = typeof OPEN_NONE | typeof OPEN_LINE | typeof OPEN_ALL
+type Plain = { text: string; open: boolean }
 
 /**
  * The rejected input of a 22P02-style message, verbatim — it may contain
- * newlines and quotes (#1439 round 2: `"/x\n<secret>"` and `"x"<secret>"`
- * used to stop the mask at the newline / the inner quote). Postgres puts the
- * closing quote last, so the value runs from the opening quote to the LAST
- * quote of the text; no closing quote (a truncated or split text) masks to
- * the end. Anything between is lost with it — over-masking, never a leak.
- * Masking reaches past the end of the text (`OPEN_ALL`): when the value
- * itself held something that split it into several console arguments, its
- * real closing quote is in a later one.
+ * newlines and quotes (`"/x\n<secret>"`, `"x"<secret>"`). Masked from the
+ * opening quote to the END of the piece: the closing quote is never searched
+ * for, because the text may have been cut (our 32 KiB head, the SDK's
+ * `maxValueLength`, a truncated JSON body) and then the last quote in it is
+ * one of the value's own (#1439 round 3).
  */
-function maskInvalidInput(text: string): { text: string; open: Open } {
+function maskInvalidInput(text: string): Plain {
   const m = PG_INVALID_INPUT_HEAD_RE.exec(text)
-  if (!m) return { text, open: OPEN_NONE }
-  const esc = m[1]
-  const valueStart = m.index + m[0].length
-  const close = `${esc}"`
-  const last = text.lastIndexOf(close)
-  const rest = last >= valueStart ? text.slice(last + close.length) : ''
-  return { text: `${text.slice(0, valueStart)}${MASKED_VALUE}${close}${rest}`, open: OPEN_ALL }
+  if (!m) return { text, open: false }
+  return { text: `${text.slice(0, m.index + m[0].length)}${MASKED_VALUE}${m[1]}"`, open: true }
+}
+
+/** Apply `re` once: from its first match to the end becomes `replace(match)`. */
+function maskToEnd(piece: Plain, re: RegExp, replace: (m: RegExpExecArray) => string): Plain {
+  const m = re.exec(piece.text)
+  if (!m) return piece
+  return { text: `${piece.text.slice(0, m.index)}${replace(m)}`, open: true }
 }
 
 /**
- * The regex rules, for text outside any parsed JSON argument, and for every
- * string inside one. See `Open` for what `open` says about the text after it.
+ * The regex rules, for text outside any parsed JSON argument and for every
+ * string inside one. A plain piece is untrusted about where a value ends: it
+ * may have been cut anywhere, and a value may contain newlines, quotes,
+ * parentheses or something that looks like a stack frame or a JSON argument.
+ * So every rule masks from its marker to the END of the piece, and the pieces
+ * after it are dropped (`open`). Precise masking — keeping the frames after
+ * a message, the fields after `params` — only happens on parsed JSON
+ * (`scrubDbJson`, `scrubDbStack`), where the structure is known to be
+ * complete.
  */
-function scrubDbPlain(text: string): { text: string; open: Open } {
-  const invalid = maskInvalidInput(text)
-  const masked = maskJsonValueKeys(invalid.text)
-  let open: Open = invalid.open === OPEN_ALL ? OPEN_ALL : masked.open ? OPEN_LINE : OPEN_NONE
-  const toEnd = (match: string, offset: number, whole: string) => {
-    if (offset + match.length === whole.length && open === OPEN_NONE) open = OPEN_LINE
-  }
-  const out = masked.text
-    .replace(DB_PARAMS_TAIL_ESCAPED_RE, (match: string, offset: number, whole: string) => {
-      toEnd(match, offset, whole)
-      return `\\nparams: ${FILTERED}`
-    })
-    .replace(PG_KEY_DETAIL_RE, (match: string, columns: string, offset: number, whole: string) => {
-      toEnd(match, offset, whole)
-      return `Key (${columns})=(${MASKED_VALUE})`
-    })
-    .replace(PG_FAILING_ROW_RE, (match: string, offset: number, whole: string) => {
-      toEnd(match, offset, whole)
-      return `Failing row contains (${MASKED_VALUE})`
-    })
-  return { text: out, open }
+function scrubDbPlain(text: string): Plain {
+  let piece = maskInvalidInput(text)
+  const keys = maskJsonValueKeys(piece.text)
+  piece = { text: keys.text, open: piece.open || keys.open }
+  piece = maskToEnd(piece, DB_PARAMS_TAIL_ESCAPED_RE, () => `\\nparams: ${FILTERED}`)
+  piece = maskToEnd(piece, PG_KEY_DETAIL_RE, m =>
+    m[1] === undefined ? `Key (${MASKED_VALUE})` : `Key (${m[1]})=(${MASKED_VALUE})`)
+  piece = maskToEnd(piece, PG_FAILING_ROW_RE, () => `Failing row contains (${MASKED_VALUE})`)
+  return piece
 }
 
 type Piece = { text: string; json?: unknown }
@@ -506,31 +492,24 @@ function scrubDbText(value: string, depth = 0): string {
   if (text === '') return text
   const pieces = depth <= 2 && /[{[]/.test(text) ? splitJsonArguments(text) : [{ text }]
   let out = ''
-  let open: Open = OPEN_NONE
   for (const piece of pieces) {
-    if (open === OPEN_ALL) break
-    let plain = piece.text
-    if (open === OPEN_LINE) {
-      // Still on the line a plain rule masked to its end: drop to the next
-      // real newline (JSON arguments have none).
-      if (piece.json !== undefined) continue
-      const nl = plain.indexOf('\n')
-      if (nl === -1) continue
-      plain = plain.slice(nl)
-      open = OPEN_NONE
-    } else if (piece.json !== undefined) {
+    if (piece.json !== undefined) {
       const cleaned = scrubDbJson(piece.json, depth)
       out += cleaned === piece.json ? piece.text : JSON.stringify(cleaned)
       continue
     }
-    // Bounded regex work: scrub only the head of a long piece. Safe because
-    // every rule's values come after its marker and an unterminated value is
-    // masked to the end, so a cut can only remove values, never unmask them.
-    // What follows the cut is dropped with it (`OPEN_ALL`).
-    const truncated = plain.length > MAX_TEXT_LENGTH
-    const scrubbed = scrubDbPlain(truncated ? plain.slice(0, MAX_TEXT_LENGTH) : plain)
-    out += truncated ? `${scrubbed.text}${TRUNCATED_SUFFIX}` : scrubbed.text
-    open = truncated ? OPEN_ALL : scrubbed.open
+    // Bounded regex work: scrub only the head of a long piece and drop the
+    // rest. A cut can only remove values, never unmask them, because every
+    // plain rule masks to the end of the piece.
+    const truncated = piece.text.length > MAX_TEXT_LENGTH
+    const scrubbed = scrubDbPlain(truncated ? piece.text.slice(0, MAX_TEXT_LENGTH) : piece.text)
+    out += scrubbed.text
+    if (truncated) {
+      out += TRUNCATED_SUFFIX
+      break
+    }
+    // A mask ran to the end of this piece: the rest may belong to its value.
+    if (scrubbed.open) break
   }
   return out
 }

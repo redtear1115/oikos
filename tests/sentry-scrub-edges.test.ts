@@ -189,15 +189,128 @@ describe('#1439 round 2: a 22P02 input with a newline or an inner quote is maske
     expect(MARKERS.filter((m) => all.includes(m))).toEqual([])
   })
 
-  it('plain text: the value runs to the last quote; the frames after it stay', () => {
+  it('plain text masks to the end; the JSON form keeps the frames after the message', () => {
     for (const value of VALUES) {
       const e = invalidInputError(value).cause as Error
       const out = scrubSentryEvent({ exception: { values: [{ type: 'PostgresError', value: e.message }] } })
       expect(out.exception!.values![0].value).toBe('invalid input syntax for type uuid: "<masked>"')
-      const log = scrubSentryLog({ level: 'error', message: e.stack! } as Log)
-      expect(MARKERS.filter((m) => (log.message as string).includes(m))).toEqual([])
-      expect(log.message).toContain('sentry-scrub-edges.test.ts')
+      // A raw stack as plain text: nothing tells where the input ends, so
+      // everything after the opening quote goes, frames included.
+      const plain = scrubSentryLog({ level: 'error', message: e.stack! } as Log).message as string
+      expect(plain).toBe(`${e.name}: invalid input syntax for type uuid: "<masked>"`)
+      // The JSON form (what console.error(err) produces): the stack header is
+      // swapped for the masked message, the real frames stay.
+      const json = scrubSentryLog({ level: 'error', message: JSON.stringify({ message: e.message, stack: e.stack }) } as Log)
+      expect(MARKERS.filter((m) => (json.message as string).includes(m))).toEqual([])
+      expect(json.message).toContain('sentry-scrub-edges.test.ts')
     }
+  })
+})
+
+describe('#1439 round 3: no rule trusts a terminator in text that is cut or continues', () => {
+  // A value's real terminator (closing quote, end of line) may be missing
+  // from the text a rule sees: the text was cut to its 32 KiB head, or the
+  // value itself split the log line into several console arguments. Any
+  // quote / newline found there may be the VALUE's own.
+  const SECRET = 'ZSECRET1439Z'
+  const HEAD = 32_768
+  const OPENERS: Array<[string, string]> = [
+    ['plain', 'invalid input syntax for type uuid: "x"'],
+    ['escaped', 'invalid input syntax for type uuid: \\"x\\"'],
+    ['enum', 'invalid input value for enum "Status": "x"'],
+    ['newline+quote', 'invalid input syntax for type uuid: "x\n"'],
+  ]
+  const logText = (message: string) => scrubSentryLog({ level: 'error', message } as Log).message as string
+
+  for (const [form, opener] of OPENERS) {
+    it(`22P02 cut in its value (${form}): every offset, under and over 256 KiB`, () => {
+      const leaks: string[] = []
+      for (let k = 0; k <= 2_000; k++) {
+        const prefix = 'p'.repeat(HEAD - opener.length - k)
+        for (const filler of [5_000, 300_000]) {
+          const out = logText(prefix + opener + SECRET + 'A'.repeat(filler))
+          // Whatever part of the secret fell inside the head must not survive.
+          const inHead = SECRET.slice(0, Math.max(0, k))
+          if ((inHead.length >= 4 && out.includes(inHead)) || out.includes(SECRET)) leaks.push(`${form} k=${k} filler=${filler}`)
+        }
+      }
+      expect(leaks).toEqual([])
+    })
+  }
+
+  // The verifier's recheck, through a real Sentry client. The real-driver
+  // version is in __tests__/actions/sentryDbErrorEnvelope.test.ts.
+  it('long 22P02 inputs with an inner quote leak nothing through any hook', async () => {
+    const Sentry = await import('@sentry/node')
+    const values = [
+      `x"${SECRET}${'A'.repeat(40_000)}`,
+      `x"${SECRET}${'A'.repeat(100_000)}`,
+      `x"${SECRET}${'A'.repeat(300_000)}`,
+      `${'A'.repeat(20_000)}"${SECRET}${'A'.repeat(40_000)}`,
+      `x\n"${SECRET}${'A'.repeat(40_000)}`,
+      `x"${SECRET}${'😀'.repeat(20_000)}`,
+    ]
+    await drainFresh()
+    for (const value of values) {
+      const pg = new postgres.PostgresError({
+        severity: 'ERROR', code: '22P02', message: `invalid input syntax for type uuid: "${value}"`,
+      } as never)
+      const e = new DrizzleQueryError(SQL_TEXT, [value], pg)
+      console.error(e)
+      console.error('x', e)
+      console.error(e.cause)
+      console.warn('x', e.cause)
+      console.error((e.cause as Error).message)
+      Sentry.captureException(e)
+      Sentry.captureException(e.cause)
+      Sentry.captureMessage((e.cause as Error).message)
+    }
+    const all = await drainFresh()
+    expect(all).toContain('"type":"log"')
+    expect(all).toContain('"type":"event"')
+    expect(all).not.toContain(SECRET)
+  })
+
+  it('22P02 whose value splits the line into console arguments (no truncation)', () => {
+    for (const value of [`x"${SECRET} {"a":1} tail`, `x" {"a":1} "${SECRET}`, `x"\n${SECRET} [1] y`]) {
+      const pg = `invalid input syntax for type uuid: "${value}"`
+      for (const message of [pg, `failed: ${pg}`, `${pg} {"code":"22P02"}`]) {
+        expect(logText(message)).not.toContain(SECRET)
+        const ev = scrubSentryEvent({ exception: { values: [{ type: 'PostgresError', value: message }] } })
+        expect(JSON.stringify(ev)).not.toContain(SECRET)
+        const crumb = scrubSentryBreadcrumb({ category: 'console', message, data: { arguments: [message] } })
+        expect(JSON.stringify(crumb)).not.toContain(SECRET)
+      }
+    }
+  })
+
+  it('Key / Failing row detail whose value holds a newline or splits the line', () => {
+    const details = [
+      `Key (barcode)=(/a\n${SECRET}) already exists.`,
+      `Key (barcode)=(/a {"x":1} ${SECRET}) already exists.`,
+      `Failing row contains (1, /a\n${SECRET}, null).`,
+      `Key (${'c'.repeat(300)})=(${SECRET}) already exists.`,
+    ]
+    for (const d of details) {
+      expect(logText(`failed: ${d}`)).not.toContain(SECRET)
+      const ev = scrubSentryEvent({ exception: { values: [{ type: 'PostgresError', value: `dup\n${d}` }] } })
+      expect(JSON.stringify(ev)).not.toContain(SECRET)
+    }
+  })
+
+  it('the same rules in a long piece cut at every offset around the value', () => {
+    const openers = ['Key (barcode)=(', 'Failing row contains (', '\\nparams: ', '"params":"', '"detail":"Key (a)=(']
+    const leaks: string[] = []
+    for (const opener of openers) {
+      for (let k = 0; k <= 400; k++) {
+        // JSON-shaped openers get a JSON-escaped value (real JSON never has a
+        // raw quote inside a string); the plain ones a raw quote + newline.
+        const value = opener.startsWith('"') || opener.startsWith('\\') ? 'x\\"\\n)' : 'x"\n)'
+        const out = logText('p'.repeat(HEAD - opener.length - k) + opener + value + SECRET + 'A'.repeat(5_000))
+        if (out.includes(SECRET.slice(0, 6)) && k >= 10) leaks.push(`${opener} k=${k}`)
+      }
+    }
+    expect(leaks).toEqual([])
   })
 })
 
@@ -337,6 +450,59 @@ describe('#1439 (2): the linear URL pattern finds exactly what the old one found
     expect(tagNew('/https://x?y')).toBe(tagOld('/https://x?y'))
     expect(tagNew('/https://x?y')).toBe('[P:/https://x?y]')
   })
+})
+
+describe('#1439 round 3: leak fuzz — a secret after any rule marker never survives', () => {
+  // Hostile values (quotes, escaped quotes, newlines, fake JSON arguments,
+  // fake frames, backslashes, emoji) after every rule's marker; plain, JSON,
+  // cause-JSON and truncated-JSON forms; extra console arguments around it;
+  // cut at random offsets of the 32 KiB head, under and over 256 KiB.
+  // Deterministic. Against the round-2 scrubber this finds ~200 leaks per
+  // 5000 cases; against a "trust the last quote when the piece is final"
+  // variant, ~10.
+  const SECRET = 'QZSECRETZQ'
+  let seed = 1439
+  const r = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+  const pick = <T,>(xs: readonly T[]) => xs[Math.floor(r() * xs.length)]
+  const RAW_OPENERS = ['invalid input syntax for type uuid: "', 'invalid input value for enum "St": "', 'Key (a, b)=(', 'Failing row contains (', 'Failed query: select 1\nparams: ']
+  const VAL = ['"', '\n', ' {"a":1} ', ' [1] ', ')', 'A', '😀', '\\', '\n    at x (y.js:1:1)', ' ', 'Key (', '"params":', '<masked>', '[Filtered]']
+  function value(): string { let v = ''; const n = Math.floor(r() * 8); for (let i = 0; i < n; i++) v += pick(VAL); const at = Math.floor(r() * 3); return at === 0 ? SECRET + v : at === 1 ? v + SECRET : v + SECRET + pick(VAL) }
+  function make(): string {
+    const raw = pick(RAW_OPENERS)
+    const v = value() + (raw.endsWith('"') ? '"' : raw.endsWith('(') ? ') tail' : '')
+    const form = Math.floor(r() * 4)
+    let core: string
+    if (form === 0) core = raw + v // plain
+    else if (form === 1) core = JSON.stringify({ message: raw + v, stack: `Error: ${raw + v}\n    at z (q.js:1:1)` }) // JSON arg
+    else if (form === 2) core = JSON.stringify({ cause: { message: raw + v, detail: v, code: 'X' } })
+    else core = JSON.stringify({ message: raw + v }).slice(0, -Math.floor(1 + r() * 20)) // truncated JSON
+    const lead = pick(['', 'failed: ', 'x ', '{"a":1} '])
+    const trail = pick(['', ' {"b":2}', ' more text', ' [3]'])
+    let text = lead + core + trail
+    const mode = Math.floor(r() * 4)
+    if (mode === 1) { // cut near the 32 KiB head boundary
+      const pad = Math.max(0, 32_768 - lead.length - Math.floor(r() * (core.length + 50)))
+      text = 'p'.repeat(pad) + text + 'A'.repeat(5_000)
+    } else if (mode === 2) {
+      const pad = Math.max(0, 32_768 - Math.floor(r() * (core.length + 50)))
+      text = 'p'.repeat(pad) + text + 'A'.repeat(300_000)
+    } else if (mode === 3) text = text + ' ' + 'B'.repeat(40_000)
+    return text
+  }
+
+  it('1500 cases through log, event and breadcrumb', () => {
+    const leaks: string[] = []
+    for (let i = 0; i < 1_500; i++) {
+      const t = make()
+      const outs = [
+        scrubSentryLog({ level: 'error', message: t } as Log).message as string,
+        JSON.stringify(scrubSentryEvent({ exception: { values: [{ type: 'E', value: t }] }, message: t })),
+        JSON.stringify(scrubSentryBreadcrumb({ category: 'console', message: t, data: { arguments: [t] } })),
+      ]
+      if (outs.some((o) => o.includes(SECRET))) leaks.push(t.slice(Math.max(0, t.indexOf(SECRET) - 120), t.indexOf(SECRET) + 20))
+    }
+    expect(leaks).toEqual([])
+  }, 60_000)
 })
 
 describe('#1439: fuzz — DB-error-shaped strings never make a hook throw', () => {
