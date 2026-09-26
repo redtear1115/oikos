@@ -85,6 +85,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
+const { openTx, waitBlockedBy, describeSettled } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -438,75 +439,11 @@ describe.skipIf(!isLocalDb)('money-row edits and deletes are limited to the curr
 })
 
 // ─── an edit racing a chapter closer ─────────────────────────────────────
-
-type Step = { fn: (t: Sql) => Promise<unknown>; resolve: (v: unknown) => void; reject: (e: unknown) => void }
-
-async function openTx(conn: Sql) {
-  const queue: Step[] = []
-  let wake: (() => void) | null = null
-  let finished = false
-  let setPid!: (pid: number) => void
-  const pidP = new Promise<number>((r) => { setPid = r })
-  const done = conn.begin(async (t) => {
-    const [{ pid }] = await t`SELECT pg_backend_pid() AS pid`
-    setPid(pid as number)
-    for (;;) {
-      while (queue.length === 0 && !finished) await new Promise<void>((r) => { wake = r })
-      const step = queue.shift()
-      if (!step) return
-      try {
-        step.resolve(await step.fn(t as unknown as Sql))
-      } catch (e) {
-        step.reject(e)
-        throw e
-      }
-    }
-  })
-  done.catch(() => {})
-  const pid = await pidP
-  const poke = () => { const w = wake; wake = null; w?.() }
-  return {
-    pid,
-    run<T>(fn: (t: Sql) => Promise<T>): Promise<T> {
-      const p = new Promise<T>((resolve, reject) => {
-        queue.push({ fn, resolve: resolve as (v: unknown) => void, reject })
-      })
-      poke()
-      return p
-    },
-    async commit() {
-      finished = true
-      poke()
-      await done
-    },
-  }
-}
-
-async function waitBlockedBy(blockerPid: number, n = 1): Promise<number[]> {
-  const deadline = Date.now() + 10_000
-  while (Date.now() < deadline) {
-    const rows = await monitor`
-      SELECT pid FROM pg_stat_activity
-      WHERE datname = current_database() AND ${blockerPid} = ANY(pg_blocking_pids(pid))`
-    if (rows.length >= n) return rows.map((r) => r.pid as number)
-    await new Promise((r) => setTimeout(r, 20))
-  }
-  throw new Error(`timed out waiting for ${n} backend(s) blocked by ${blockerPid}`)
-}
-
-function sqlstate(e: unknown): string | undefined {
-  let cur: unknown = e
-  for (let d = 0; cur && d < 4; d++) {
-    const code = (cur as { code?: unknown }).code
-    if (typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code)) return code
-    cur = (cur as { cause?: unknown }).cause
-  }
-  return undefined
-}
-
-function describeSettled(r: PromiseSettledResult<unknown>): unknown {
-  return r.status === 'fulfilled' ? r.value : { rejected: sqlstate(r.reason) ?? String(r.reason) }
-}
+//
+// openTx / waitBlockedBy / sqlstate / describeSettled live in ./_lockHarness
+// (shared with epochCloser.lockOrder.test.ts and trip.epochLock.test.ts) —
+// see that file for why the waits check pg_locks and pg_blocking_pids
+// together, not just wait_event_type.
 
 /**
  * 1. A holder locks the row being edited, so the edit — once it holds the
@@ -531,12 +468,12 @@ async function editAgainstCloser<T>(
     const edit = as(editor, () => editTransaction(cashInput(oldCashId, editor)))
     edit.catch(() => {})
     inFlight.push(edit)
-    const [editPid] = await waitBlockedBy(holder.pid)
+    const [editPid] = await waitBlockedBy(monitor, holder.pid)
 
     const closer = startCloser()
     closer.catch(() => {})
     inFlight.push(closer)
-    await waitBlockedBy(editPid)
+    await waitBlockedBy(monitor, editPid)
 
     await holder.commit()
     released = true
@@ -551,6 +488,13 @@ async function editAgainstCloser<T>(
   }
 }
 
+/**
+ * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
+ * `started_at` are wall-clock reads from different backends. On a Docker
+ * Desktop VM whose clock steps backwards, `before` can read `false` here even
+ * though the lock order was correct — the failure looks like `expected false
+ * to be true` on the assertions built on this, and a rerun passes.
+ */
 async function editedRowBeforeOpenChapter(edit: PromiseSettledResult<unknown>, groupId: string) {
   const newId = (edit as PromiseFulfilledResult<{ ok: true; data: { id: string } }>).value.data.id
   const [r] = await monitor`

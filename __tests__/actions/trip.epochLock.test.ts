@@ -76,6 +76,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or, and, isNull } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
+const { openTx, waitBlockedBy, waitLockWaitersOr } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -202,85 +203,22 @@ async function seedTrip(
 }
 
 // ─── scripted transactions ────────────────────────────────────────────────
-
-type Step = { fn: (t: Sql) => Promise<unknown>; resolve: (v: unknown) => void; reject: (e: unknown) => void }
-
-/** One transaction on `conn`, driven statement by statement. */
-async function openTx(conn: Sql) {
-  const queue: Step[] = []
-  let wake: (() => void) | null = null
-  let finished = false
-  let setPid!: (pid: number) => void
-  const pidP = new Promise<number>((r) => { setPid = r })
-  const done = conn.begin(async (t) => {
-    const [{ pid }] = await t`SELECT pg_backend_pid() AS pid`
-    setPid(pid as number)
-    for (;;) {
-      while (queue.length === 0 && !finished) await new Promise<void>((r) => { wake = r })
-      const step = queue.shift()
-      if (!step) return
-      try {
-        step.resolve(await step.fn(t as unknown as Sql))
-      } catch (e) {
-        step.reject(e)
-        throw e
-      }
-    }
-  })
-  done.catch(() => {})
-  const pid = await pidP
-  const poke = () => { const w = wake; wake = null; w?.() }
-  return {
-    pid,
-    run<T>(fn: (t: Sql) => Promise<T>): Promise<T> {
-      const p = new Promise<T>((resolve, reject) => {
-        queue.push({ fn, resolve: resolve as (v: unknown) => void, reject })
-      })
-      poke()
-      return p
-    },
-    async commit() {
-      finished = true
-      poke()
-      await done
-    },
-  }
-}
-
-/** Resolve once `n` backends are blocked (directly) by `blockerPid`. */
-async function waitBlockedBy(blockerPid: number, n = 1): Promise<void> {
-  const deadline = Date.now() + 10_000
-  while (Date.now() < deadline) {
-    const rows = await monitor`
-      SELECT pid FROM pg_stat_activity
-      WHERE datname = current_database() AND ${blockerPid} = ANY(pg_blocking_pids(pid))`
-    if (rows.length >= n) return
-    await new Promise((r) => setTimeout(r, 20))
-  }
-  throw new Error(`timed out waiting for ${n} backend(s) blocked by ${blockerPid}`)
-}
+//
+// openTx / waitBlockedBy / waitLockWaitersOr live in ./_lockHarness (shared
+// with epochCloser.lockOrder.test.ts and moneyRowChapterScope.test.ts) — see
+// that file for why the waits check pg_locks and pg_blocking_pids together,
+// not just wait_event_type.
 
 /**
- * Resolve once `n` backends of this database wait on a heavyweight lock, or
- * once `settled` resolves (the action under test did not wait at all).
- * Returns which of the two happened.
+ * Summary rows of a trip and whether each is before the group's open chapter start (µs, in SQL).
+ *
+ * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
+ * `started_at` are wall-clock reads from different backends. On a Docker
+ * Desktop VM whose clock steps backwards, `before_open_chapter` can read
+ * `false` here even though the lock order was correct — the failure looks
+ * like `expected false to be true` on the `before_open_chapter` check, and a
+ * rerun passes.
  */
-async function waitLockWaitersOr(n: number, settled: Promise<unknown>): Promise<'waiting' | 'settled'> {
-  let isSettled = false
-  settled.then(() => { isSettled = true }, () => { isSettled = true })
-  const deadline = Date.now() + 10_000
-  while (Date.now() < deadline) {
-    if (isSettled) return 'settled'
-    const [r] = await monitor`
-      SELECT count(*)::int AS n FROM pg_stat_activity
-      WHERE datname = current_database() AND wait_event_type = 'Lock'`
-    if ((r.n as number) >= n) return 'waiting'
-    await new Promise((r) => setTimeout(r, 20))
-  }
-  throw new Error(`timed out waiting for ${n} lock waiter(s)`)
-}
-
-/** Summary rows of a trip and whether each is before the group's open chapter start (µs, in SQL). */
 async function summariesVsOpenChapter(groupId: string, tripId: string) {
   return await monitor`
     SELECT c.created_at < e.started_at AS before_open_chapter
@@ -299,7 +237,7 @@ async function acceptPausedAfterLocks(joiner: string, invite: { id: string; toke
   await holder.run((t) => t`SELECT id FROM "GroupInvites" WHERE id = ${invite.id} FOR SHARE`)
   const accept = as(joiner, () => acceptInvite(invite.token))
   accept.catch(() => {})
-  await waitBlockedBy(holder.pid)
+  await waitBlockedBy(monitor, holder.pid)
   return { accept, release: () => holder.commit() }
 }
 
@@ -319,12 +257,12 @@ describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
     await holder.run((t) => t`SELECT group_id FROM "GroupBalance" WHERE group_id = ${g.id} FOR UPDATE`)
     const ending = as(inviter, () => endTrip({ tripId, endDate: today() }))
     ending.catch(() => {})
-    await waitBlockedBy(holder.pid)
+    await waitBlockedBy(monitor, holder.pid)
 
     // accept starts while endTrip is open; with the lock it queues behind endTrip.
     const accept = as(joiner, () => acceptInvite(invite.token))
     accept.catch(() => {})
-    await waitLockWaitersOr(2, accept)
+    await waitLockWaitersOr(monitor, 2, accept)
     await holder.commit()
 
     expect(await ending).toMatchObject({ ok: true })
@@ -346,7 +284,7 @@ describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
     // endTrip begins after accept read its boundary.
     const ending = as(inviter, () => endTrip({ tripId, endDate: today() }))
     ending.catch(() => {})
-    await waitLockWaitersOr(2, ending)
+    await waitLockWaitersOr(monitor, 2, ending)
     await release()
 
     expect(await accept).toEqual({ ok: true, data: g.id })
@@ -379,7 +317,7 @@ describe.skipIf(!isLocalDb)('trip edits vs a chapter close (#1290)', () => {
     const { accept, release } = await acceptPausedAfterLocks(s.joiner, s.invite)
     const w = as(s.inviter, write)
     w.catch(() => {})
-    await waitLockWaitersOr(2, w)
+    await waitLockWaitersOr(monitor, 2, w)
     await release()
     expect(await accept).toEqual({ ok: true, data: s.g.id })
     return await w
@@ -481,7 +419,7 @@ describe.skipIf(!isLocalDb)('acceptInvite refuses while the accepter has an acti
     await holder.run((t) => t`SELECT id FROM "OikosGroups" WHERE id = ${solo.id} FOR SHARE`)
     const accept = as(joiner, () => acceptInvite(invite.token))
     accept.catch(() => {})
-    await waitBlockedBy(holder.pid)
+    await waitBlockedBy(monitor, holder.pid)
 
     // A trip starts in the accepter's ledger meanwhile.
     await seedTrip(solo, joiner)
