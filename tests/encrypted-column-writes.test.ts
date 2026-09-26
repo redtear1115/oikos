@@ -60,8 +60,12 @@ const isTypeAnnotation = (rhs: string) => /^string\b/.test(rhs)
 // ciphertext and binds no AAD, so neither thing this guard protects is at
 // stake; requiring `deletedAt` on the same line keeps it to the soft-delete
 // shape the CHECK invoice_credentials_secret_iff_live (0069) expects.
+// The retire must be the only `*Encrypted` on its line: the scan records one
+// hit per line, so a second write sharing the line would otherwise ride on
+// the exemption unchecked.
 const isCredentialRetire = (h: Hit) =>
-  h.prop === 'verificationCodeEncrypted' && /^null\s*}/.test(h.rhs) && /\bdeletedAt:/.test(h.text)
+  h.prop === 'verificationCodeEncrypted' && /^null\s*}/.test(h.rhs) && /\bdeletedAt:/.test(h.text) &&
+  (h.text.match(/\w+Encrypted\b/g) ?? []).length === 1
 // Reads: `.select({ plateEncrypted: carDetails.plateEncrypted, … })`
 const isSelectProjection = (h: Hit) => new RegExp(`^\\w+\\.${h.prop},?$`).test(h.rhs)
 
@@ -69,6 +73,14 @@ describe('encrypted-column writes in actions/', () => {
   const hits = encryptedAssignments()
   const retires = hits.filter(isCredentialRetire)
   const writes = hits.filter((h) => !isTypeAnnotation(h.rhs) && !isSelectProjection(h) && !isCredentialRetire(h))
+
+  it('the retire exemption does not cover a second encrypted write on the same line', () => {
+    const line = '      .set({ deletedAt: now, verificationCodeEncrypted: null }); const zz = { verificationCodeEncrypted: row.verificationCodeEncrypted }'
+    const hit: Hit = { file: 'x.ts', line: 1, prop: 'verificationCodeEncrypted', rhs: 'null }); const zz = { verificationCodeEncrypted: row.verificationCodeEncrypted }', text: line }
+    expect(isCredentialRetire(hit)).toBe(false)
+    const alone = '      .set({ deletedAt: now, verificationCodeEncrypted: null })'
+    expect(isCredentialRetire({ ...hit, rhs: 'null })', text: alone })).toBe(true)
+  })
 
   it('finds the invoice credential retire sites (delete, refresh, removePartner)', () => {
     expect(retires.map((h) => h.file).sort())
