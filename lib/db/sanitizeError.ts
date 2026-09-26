@@ -16,7 +16,9 @@
  * covers the Vercel log line, which no Sentry hook ever sees.
  *
  * The SQL text stays: Drizzle binds values as `$1`, `$2`, … so the statement
- * itself carries none, and it is what makes the issue debuggable.
+ * itself carries none, and it is what makes the issue debuggable. The Postgres
+ * message stays too, except the quoted input of an "invalid input syntax"
+ * error (22P02), which is masked.
  *
  * ## Contract
  *
@@ -73,15 +75,25 @@ function isPostgresError(e: unknown): e is AnyError {
   )
 }
 
+/**
+ * 22P02-style messages quote the rejected input
+ * (`invalid input syntax for type uuid: "…"`); the quoted part is masked.
+ */
+const INVALID_INPUT_RE = /(invalid input (?:syntax|value) for [^:"\n]*: )"[^"\n]*"/g
+
+function maskInvalidInput(text: string): string {
+  return text.replace(INVALID_INPUT_RE, '$1"<masked>"')
+}
+
 /** A copy that keeps the SQLSTATE, the names and the message — no values. */
 function clonePostgresError(e: AnyError): Error {
-  const out = new Error(e.message) as AnyError
+  const out = new Error(maskInvalidInput(e.message)) as AnyError
   out.name = e.name
   for (const key of SAFE_PG_FIELDS) {
     const value = e[key]
     if (typeof value === 'string') out[key] = value
   }
-  if (typeof e.stack === 'string') out.stack = e.stack
+  if (typeof e.stack === 'string') out.stack = maskInvalidInput(e.stack)
   return out
 }
 

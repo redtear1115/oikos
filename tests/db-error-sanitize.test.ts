@@ -89,6 +89,19 @@ describe('runAction sanitises driver errors at the source', () => {
     expect(leaks(out)).toEqual([])
   })
 
+  it('masks the quoted input of a 22P02 message, in message and stack', () => {
+    const pg = new postgres.PostgresError({
+      message: `invalid input syntax for type uuid: "${DESCRIPTION}"`,
+      severity: 'ERROR',
+      code: '22P02',
+      where: `unnamed portal parameter $2 = '${DESCRIPTION}'`,
+    } as never)
+    const out = sanitizeDbError(new DrizzleQueryError(SQL_TEXT, [DESCRIPTION], pg)) as Error & { cause: Error }
+    expect(out.cause.message).toBe('invalid input syntax for type uuid: "<masked>"')
+    expect(leaks(out)).toEqual([])
+    expect(leaks(out.cause.stack)).toEqual([])
+  })
+
   it('leaves non-database errors alone', async () => {
     const plain = new Error('something else broke')
     await expect(runAction(async () => { throw plain })).rejects.toBe(plain)

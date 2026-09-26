@@ -199,15 +199,86 @@ function scrubText(value: unknown): unknown {
   })
 }
 
-// Database error text (#1289). `params:` must start a line — Drizzle's format —
-// so an unrelated "params: " mid-sentence is left alone.
+// Database error text (#1289). Two shapes reach the hooks:
+//
+// - plain text (`String(err)`, `err.message`): Drizzle's `\nparams: …` tail
+//   with a real newline, Postgres' `Key (…)=(…)` / `Failing row contains (…)`;
+// - JSON (`console.error(err)` in a Node process: consoleLoggingIntegration
+//   formats it as `JSON.stringify(normalize(err))`, because `util` is not on
+//   globalThis): the tail's newline is the escaped `\n`, and the values also
+//   sit in `"params":[…]`, the cause's `"detail"` / `"where"`, and the
+//   cause's message (`invalid input syntax for type uuid: \"…\"`).
+//
+// Failure looks like nothing: the values just sit in the Sentry log body.
+// tests/sentry-db-error-envelope.test.ts drives a real client to catch it.
+
+/** Plain text: `params:` must start a line, so "bad params: x" mid-sentence stays. */
 const DB_PARAMS_TAIL_RE = /(^|\n)params: [\s\S]*$/
+/**
+ * JSON-escaped text: `\nparams: ` up to the end of the JSON string, stopping
+ * before a stack frame (`\n    at `) so a serialised stack keeps its frames.
+ */
+const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: (?:[^"\\]|\\(?!n\s+at\s)[\s\S])*/g
 const PG_KEY_DETAIL_RE = /Key \(([^)\n]*)\)=\([^\n]*/g
 const PG_FAILING_ROW_RE = /Failing row contains \([^\n]*/g
+/** 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input. */
+const PG_INVALID_INPUT_RE = /(invalid input (?:syntax|value) for [^:"\\\n]*: )(\\?)"(?:(?!\2")[^\n])*\2"/g
+
+/** JSON keys whose value is bound parameters or row context. */
+const DB_VALUE_KEYS = new Set(['params', 'parameters', 'args', 'detail', 'where'])
+
+/** End index (exclusive) of the JSON value starting at `start`, or -1. */
+function jsonValueEnd(text: string, start: number): number {
+  let i = start
+  while (i < text.length && /\s/.test(text[i])) i++
+  if (text[i] === '"') {
+    for (i++; i < text.length; i++) {
+      if (text[i] === '\\') i++
+      else if (text[i] === '"') return i + 1
+    }
+    return -1
+  }
+  if (text[i] === '[' || text[i] === '{') {
+    let depth = 0
+    for (; i < text.length; i++) {
+      const c = text[i]
+      if (c === '"') {
+        for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === '\\') i++
+      } else if (c === '[' || c === '{') depth++
+      else if (c === ']' || c === '}') {
+        if (--depth === 0) return i + 1
+      }
+    }
+    return -1
+  }
+  const m = /^[^,}\]]*/.exec(text.slice(i))
+  return m ? i + m[0].length : -1
+}
+
+/** `"params":[…]`, `"detail":"…"`, … → `"params":"[Filtered]"`. */
+function maskJsonValueKeys(text: string): string {
+  if (!text.includes('":')) return text
+  const re = /"(\w+)"\s*:/g
+  let out = ''
+  let last = 0
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    if (!DB_VALUE_KEYS.has(m[1])) continue
+    const valueStart = m.index + m[0].length
+    const end = jsonValueEnd(text, valueStart)
+    // Unterminated (truncated) value: mask to the end.
+    const stop = end === -1 ? text.length : end
+    out += `${text.slice(last, valueStart)}"${FILTERED}"`
+    last = stop
+    re.lastIndex = stop
+  }
+  return out + text.slice(last)
+}
 
 function scrubDbText(value: string): string {
-  return value
+  return maskJsonValueKeys(value)
+    .replace(DB_PARAMS_TAIL_ESCAPED_RE, `\\nparams: ${FILTERED}`)
     .replace(DB_PARAMS_TAIL_RE, `$1params: ${FILTERED}`)
+    .replace(PG_INVALID_INPUT_RE, `$1$2"${MASKED_VALUE}$2"`)
     .replace(PG_KEY_DETAIL_RE, `Key ($1)=(${MASKED_VALUE})`)
     .replace(PG_FAILING_ROW_RE, `Failing row contains (${MASKED_VALUE})`)
 }
