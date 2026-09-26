@@ -628,7 +628,7 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
     // drop the ciphertext in one UPDATE. Their runs stay as group history.
     await tx
       .update(invoiceCredentials)
-      .set({ deletedAt: now, verificationCodeEncrypted: null })
+      .set({ deletedAt: boundary, verificationCodeEncrypted: null })
       .where(and(
         eq(invoiceCredentials.groupId, groupId),
         eq(invoiceCredentials.userId, removedUserId),
