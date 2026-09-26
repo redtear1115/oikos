@@ -91,11 +91,12 @@ export const ja: Translations = {
     cta: 'ふたりで記録する',
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
-    // TODO(i18n): native review pending (#1333) — MT-quality draft.
-    appStoreNote: {
-      linkText: 'iPhone 版は App Store で公開中',
-      androidNote: 'Android 版は近日公開',
-    },
+    // TODO(i18n): native review pending (#1413) — MT-quality draft.
+    appStoreCta: 'App Store でダウンロード',
+    appStoreCtaHint: 'iPhone・iPad どちらでも使えます',
+    androidBetaCta: 'Android版テストに申し込む',
+    androidBetaCtaHint: 'Play ストアで使っている Google アカウントをご記入ください。テスト招待の送付にのみ使用し、リストに追加後は削除します。',
+    useWebVersion: 'まずはウェブ版を使う',
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.

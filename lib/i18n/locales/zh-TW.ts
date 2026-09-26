@@ -141,21 +141,31 @@ export type Translations = {
     cta: string
     /** Caption under mobile CTA, e.g. 「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」 */
     ctaHint: string
-    /** Secondary desktop CTA — sign-in link for returning users. */
+    /** Secondary desktop CTA — sign-in link for returning users. Swaps to
+     *  `useWebVersion` when the primary CTA is the Android beta form (#1413). */
     alreadyHaveAccount: string
-    /** Quiet note under the hero CTA area (#1333): the iPhone app is live on
-     *  the App Store; Android isn't yet, so this only ever claims "on the
-     *  way" — never a download link or a waitlist. Rendered by `AppStoreNote`,
-     *  which hides it inside the iOS native shell (same runtime gate as
-     *  `components/KofiWidget.tsx` — "download the app" from inside the app
-     *  itself is nonsensical and an App Store review risk); web, PWA and
-     *  Android all see it. */
-    appStoreNote: {
-      /** The anchor's visible label, linking out to the App Store listing. */
-      linkText: string
-      /** Trailing plain-text note after the link. */
-      androidNote: string
-    }
+    /** Primary-CTA label for an iPhone/iPad browser visitor (#1413), replacing
+     *  #1333's `appStoreNote`: the CTA itself now links out to the App Store,
+     *  rather than a secondary footnote beside a web-first CTA. Never shown
+     *  inside the iOS native shell (Apple Guideline 3.1.1 — same runtime gate
+     *  as `components/KofiWidget.tsx`). */
+    appStoreCta: string
+    /** Mobile hint under `appStoreCta` — the default `ctaHint` describes the
+     *  sign-in flow, which is wrong once the CTA points at the App Store. */
+    appStoreCtaHint: string
+    /** Primary-CTA label for an Android browser visitor (#1413): links out to
+     *  the closed-testing signup form (a Google Form — see
+     *  `lib/visitorPlatform.ts#ANDROID_BETA_FORM_URL`). Falls back to the
+     *  default sign-in CTA if that URL is still empty. */
+    androidBetaCta: string
+    /** Mobile hint under `androidBetaCta` — must say what the form asks for
+     *  and why (issue #1413): the Google account used on Play, used only to
+     *  send the test invite, deleted once added to the closed-testing list. */
+    androidBetaCtaHint: string
+    /** Secondary link shown instead of `alreadyHaveAccount` when the primary
+     *  CTA is `androidBetaCta` (#1413) — that CTA isn't a returning-user
+     *  sign-in, so this offers the web app as the alternative instead. */
+    useWebVersion: string
     /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
@@ -3101,10 +3111,11 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
-    appStoreNote: {
-      linkText: 'iPhone 版已在 App Store',
-      androidNote: 'Android 版正在路上',
-    },
+    appStoreCta: '在 App Store 下載',
+    appStoreCtaHint: 'iPhone 與 iPad 都能用',
+    androidBetaCta: '報名 Android 測試版',
+    androidBetaCtaHint: '請填 Play 商店用的 Google 帳號。只用來寄測試邀請，加入名單後就刪除。',
+    useWebVersion: '先用網頁版',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
     trustPwa: 'iPhone App · 網頁版',

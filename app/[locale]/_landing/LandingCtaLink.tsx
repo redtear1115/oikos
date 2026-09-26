@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { track } from '@/lib/analytics/track'
 import { appendQueryParam } from '@/lib/analytics/attribution'
 
-type Target =
+export type Target =
   | 'sign_in'
   | 'migrate_honeydue'
   | 'migrate_spendee'
@@ -13,6 +13,10 @@ type Target =
   | 'use_case_cohabitation'
   | 'use_case_newlyweds'
   | 'use_case_pet_owners'
+  /** iPhone/iPad browser primary CTA → App Store (#1413). */
+  | 'app_store'
+  /** Android browser primary CTA → beta signup form (#1413). */
+  | 'android_beta'
 
 interface Props {
   href: string
@@ -32,6 +36,12 @@ interface Props {
   className?: string
   style?: CSSProperties
   ariaLabel?: string
+  /** Renders hidden and non-interactive (#1413): used by `LandingPrimaryCta`
+   *  while the visitor's platform is still resolving. The SSR markup still
+   *  exists — crawlers and no-JS readers see it — but a real visitor must not
+   *  be able to see or tap it before we know which variant they should get.
+   *  Same hide-first pattern as `AppStoreNote` (#1333). */
+  inert?: boolean
   children: ReactNode
 }
 
@@ -41,7 +51,7 @@ interface Props {
  * The tag keys off the resolved href (a logged-in viewer's CTA points at
  * /dashboard and is left untouched); migrate destinations set their own `from`.
  */
-export function LandingCtaLink({ href, ctaLocation, target, fromParam, className, style, ariaLabel, children }: Props) {
+export function LandingCtaLink({ href, ctaLocation, target, fromParam, className, style, ariaLabel, inert, children }: Props) {
   const finalHref = href.includes('/sign-in')
     ? appendQueryParam(href, 'from', fromParam ?? 'landing')
     : href
@@ -54,7 +64,14 @@ export function LandingCtaLink({ href, ctaLocation, target, fromParam, className
       className={cls}
       style={style}
       aria-label={ariaLabel}
-      onClick={() => track('landing_cta_clicked', { cta_location: ctaLocation, target })}
+      aria-hidden={inert || undefined}
+      tabIndex={inert ? -1 : undefined}
+      onClick={(e) => {
+        // Still resolving (#1413): the platform is unknown, so a tap here
+        // could be, say, the iOS shell's — don't navigate or track it.
+        if (inert) { e.preventDefault(); return }
+        track('landing_cta_clicked', { cta_location: ctaLocation, target })
+      }}
     >
       {children}
     </Link>

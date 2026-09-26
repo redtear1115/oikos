@@ -90,11 +90,12 @@ export const en: Translations = {
     cta: 'Record together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
-    // TODO(i18n): native review pending (#1333) — MT-quality draft.
-    appStoreNote: {
-      linkText: 'The iPhone app is on the App Store',
-      androidNote: 'Android is on the way',
-    },
+    // TODO(i18n): native review pending (#1413) — MT-quality draft.
+    appStoreCta: 'Get it on the App Store',
+    appStoreCtaHint: 'Works on iPhone and iPad',
+    androidBetaCta: 'Join the Android beta',
+    androidBetaCtaHint: 'Use the Google account you use on Google Play. Only used to send the test invite, deleted once you’re added to the list.',
+    useWebVersion: 'Use the web version',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
