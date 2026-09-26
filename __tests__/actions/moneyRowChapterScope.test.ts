@@ -488,6 +488,13 @@ async function editAgainstCloser<T>(
   }
 }
 
+/**
+ * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
+ * `started_at` are wall-clock reads from different backends. On a Docker
+ * Desktop VM whose clock steps backwards, `before` can read `false` here even
+ * though the lock order was correct — the failure looks like `expected false
+ * to be true` on the assertions built on this, and a rerun passes.
+ */
 async function editedRowBeforeOpenChapter(edit: PromiseSettledResult<unknown>, groupId: string) {
   const newId = (edit as PromiseFulfilledResult<{ ok: true; data: { id: string } }>).value.data.id
   const [r] = await monitor`

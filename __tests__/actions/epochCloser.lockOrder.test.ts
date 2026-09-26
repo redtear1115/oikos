@@ -205,7 +205,15 @@ async function writerInsertAndCommit(
   return row.id as string
 }
 
-/** created_at of the writer's row < the given timestamp column, compared in SQL (µs). */
+/**
+ * created_at of the writer's row < the given timestamp column, compared in SQL (µs).
+ *
+ * Clock-step sensitivity (see _lockHarness.ts header): this compares two
+ * wall-clock reads from different backends. On a Docker Desktop VM whose
+ * clock steps backwards, this can read `false` even though the lock order
+ * was correct — the failure looks like `expected false to be true` here, and
+ * a rerun passes.
+ */
 async function writerRowBefore(cashId: string, boundaryText: string): Promise<boolean> {
   const [r] = await monitor`
     SELECT created_at < ${boundaryText}::timestamptz AS before
@@ -376,6 +384,12 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
     await writer.commit()
 
     const res = await closer
+    // Clock-step sensitivity (see _lockHarness.ts header): `now` and
+    // `started_at` are two wall-clock reads from different backends. On a
+    // Docker Desktop VM whose clock steps backwards, `before` can read
+    // `false` here even though the lock order was correct — the failure
+    // looks like `expected false to be true` on this check, and a rerun
+    // passes.
     const [r] = await monitor`
       SELECT ${now as string}::timestamptz < started_at AS before, started_at::text AS started
       FROM "GroupEpochs" WHERE group_id = ${groupId} AND ended_at IS NULL`

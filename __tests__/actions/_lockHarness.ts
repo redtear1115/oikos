@@ -5,32 +5,44 @@
 // between real Postgres connections and drive it forward statement by
 // statement. This file is the one copy of that machinery.
 //
-// Why the waits need three signals, not one:
+// What the flake actually is (found in PR #1448 review, superseding the
+// theory this file shipped with first): it is not the wait detection below.
+// A verifier ran a plpgsql loop comparing consecutive `clock_timestamp()`
+// reads on the same Docker Desktop VM these tests run against, and found the
+// VM's wall clock steps *backwards* by ~0.4–0.5s roughly every 10s (15
+// backward steps observed in 150s) — a known Docker Desktop / host
+// sleep-wake clock-drift correction, not anything these tests or the product
+// code control. Every observed failure fell inside a test run whose window
+// overlapped one of those steps; runs whose window was clear of a step were
+// clean. The three suites' "boundary vs. row timestamp" assertions
+// (`writerRowBefore`, `editedRowBeforeOpenChapter`, `before` in
+// `writerNowVsBoundary`) compare a `now()`/`created_at` read from one backend
+// against a `clock_timestamp()` boundary read from another — two independent
+// reads of the *same* wall clock, taken moments apart. If that clock steps
+// backwards in between, the comparison can come out false even though every
+// lock actually serialized exactly as designed: the failure reads as
+// `expected false to be true` on the `now < started_at`-shaped check, and a
+// rerun (which won't hit the same clock step) passes. This is a property of
+// the host running Postgres, not of the interleaving or the product code.
 //
-// The old per-file `waitBlockedBy` polled only
-// `${blockerPid} = ANY(pg_blocking_pids(pid))`, and `waitLockWaiters(Or)`
-// polled only `pg_stat_activity.wait_event_type = 'Lock'`. Each of those
-// updates a beat before or after the backend is actually parked waiting for
-// the lock table entry the test's next step depends on — `pg_blocking_pids()`
-// walks the lock manager's wait queue, which is populated slightly after
-// `wait_event_type` flips to `'Lock'`, and a `pg_locks` row for the waiter can
-// itself lag one poll tick behind either. Any single one of these three views
-// can say "blocked" a poll cycle before the other two agree. #1444: the
-// interleaving script trusted the first "yes" it saw and moved on to the next
-// step — commit the holder, insert the writer's row — while the backend the
-// step depended on being blocked had not yet actually queued behind the lock.
-// About 1-2% of runs, that step ran early, and the assertion a few lines later
-// (built on "the writer's row is in the old chapter", "no 40P01") failed on a
-// precondition that quietly wasn't true, not on the product code under test.
-//
-// The fix requires all three signals to agree before treating "blocked" as
-// proven: `pg_stat_activity.wait_event_type = 'Lock'`, `blockerPid` present in
-// `pg_blocking_pids(pid)`, and a `granted = false` row for that pid in
-// `pg_locks`. If they don't converge inside the deadline, this throws with a
-// full `pg_stat_activity` / `pg_locks` dump instead of letting the caller
-// proceed on an unproven precondition — a hang here should look like a loud,
-// diagnosable failure, not a silent `expected false to be true` three steps
-// later.
+// Why this file still checks three signals instead of one (still worth
+// having, just not what fixes the above): the old per-file `waitBlockedBy`
+// polled only `${blockerPid} = ANY(pg_blocking_pids(pid))`, and
+// `waitLockWaiters(Or)` polled only `pg_stat_activity.wait_event_type =
+// 'Lock'`. Each of those can update a beat before or after the backend is
+// actually parked waiting for the lock table entry the test's next step
+// depends on — `pg_blocking_pids()` walks the lock manager's wait queue,
+// which is populated slightly after `wait_event_type` flips to `'Lock'`, and
+// a `pg_locks` row for the waiter can itself lag one poll tick behind either.
+// Requiring `pg_stat_activity.wait_event_type = 'Lock'`, `blockerPid` present
+// in `pg_blocking_pids(pid)`, and a `granted = false` row for that pid in
+// `pg_locks` to all agree makes the *lock-wait* precondition itself more
+// trustworthy, and turns a timeout into a loud `pg_stat_activity` /
+// `pg_locks` dump instead of a silent `false`-when-it-should-be-blocked. It
+// is a real robustness improvement on its own terms — it just isn't the
+// mechanism behind the clock-step flake above, which no amount of more
+// careful lock-wait polling can fix: both reads it's comparing already
+// happened after their respective locks were correctly held and released.
 
 import type postgres from 'postgres'
 type Sql = ReturnType<typeof postgres>

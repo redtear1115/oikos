@@ -209,7 +209,16 @@ async function seedTrip(
 // that file for why the waits check pg_locks and pg_blocking_pids together,
 // not just wait_event_type.
 
-/** Summary rows of a trip and whether each is before the group's open chapter start (µs, in SQL). */
+/**
+ * Summary rows of a trip and whether each is before the group's open chapter start (µs, in SQL).
+ *
+ * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
+ * `started_at` are wall-clock reads from different backends. On a Docker
+ * Desktop VM whose clock steps backwards, `before_open_chapter` can read
+ * `false` here even though the lock order was correct — the failure looks
+ * like `expected false to be true` on the `before_open_chapter` check, and a
+ * rerun passes.
+ */
 async function summariesVsOpenChapter(groupId: string, tripId: string) {
   return await monitor`
     SELECT c.created_at < e.started_at AS before_open_chapter
