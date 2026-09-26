@@ -18,7 +18,7 @@ import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { action } from '@/lib/action-errors'
 
 export type InvitePreview =
-  | { ok: true; groupName: string; inviterName: string; hasSoloLedger: boolean }
+  | { ok: true; groupName: string; inviterName: string; hasSoloLedger: boolean; groupId: string }
   | { ok: false; error: InviteAcceptError; partnerName?: string }
 
 /**
@@ -179,6 +179,10 @@ export const previewInvite = action(async (token: string): Promise<InvitePreview
     groupName: group.name,
     inviterName: inviter?.displayName ?? '',
     hasSoloLedger,
+    // #1415 — lets the client pair `invite_link_opened` with the server-side
+    // `invite_created` / `partner_joined` events on the same business key.
+    // This row is already loaded for the preview above; no extra query.
+    groupId: group.id,
   }
 })
 
