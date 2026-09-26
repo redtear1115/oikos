@@ -21,10 +21,13 @@ const QR_VISIBLE_MS = 60_000
 export default function InviteQr({
   url,
   t,
+  groupId,
   onReveal,
 }: {
   url: string
   t: Translations['setup']['invite']
+  /** #1415 — join key so this pairs with server-side invite events. */
+  groupId?: string
   /** Called after the QR is successfully rendered (not on failure). */
   onReveal?: () => void
 }) {
@@ -55,7 +58,7 @@ export default function InviteQr({
       const markup = renderSVG(url, { ecc: 'M', border: 2 })
       setSvg(markup)
       scheduleAutoHide()
-      track('invite_qr_revealed')
+      track('invite_qr_revealed', { group_id: groupId })
       onReveal?.()
     } finally {
       setLoading(false)

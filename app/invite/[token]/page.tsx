@@ -67,6 +67,7 @@ export default async function InvitePage({ params }: Props) {
         groupName={preview.groupName}
         inviterName={preview.inviterName}
         hasSoloLedger={preview.hasSoloLedger}
+        groupId={preview.groupId}
         trust={t.trust}
         invite={t.invite}
       />

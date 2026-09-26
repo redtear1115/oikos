@@ -98,14 +98,14 @@ export default function SetupForm({ t }: { t: Translations }) {
     try {
       await navigator.clipboard.writeText(inviteUrl)
       attemptedRef.current = 'sent'
-      track('invite_link_copied', { via: 'copy_button' })
+      track('invite_link_copied', { via: 'copy_button', group_id: group?.id })
       flashToast(invite.copied)
     } catch {
       // Clipboard API can reject in a non-secure context or when permission
       // is denied — surface it instead of leaving an unhandled rejection with
       // no user-visible feedback (see #1015).
       if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
-      track('invite_copy_failed', { via: 'copy_button' })
+      track('invite_copy_failed', { via: 'copy_button', group_id: group?.id })
       flashToast(invite.shareFailed)
     }
   }
@@ -116,14 +116,14 @@ export default function SetupForm({ t }: { t: Translations }) {
       const result = await shareInviteLink(inviteUrl)
       attemptedRef.current = 'sent'
       if (result === 'copied') {
-        track('invite_link_copied', { via: 'share_button' })
+        track('invite_link_copied', { via: 'share_button', group_id: group?.id })
         flashToast(invite.copied)
       } else {
-        track('invite_link_shared')
+        track('invite_link_shared', { group_id: group?.id })
       }
     } catch {
       if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
-      track('invite_copy_failed', { via: 'share_button' })
+      track('invite_copy_failed', { via: 'share_button', group_id: group?.id })
       flashToast(invite.shareFailed)
     }
   }
@@ -153,7 +153,7 @@ export default function SetupForm({ t }: { t: Translations }) {
   }
 
   const handleSkip = () => {
-    track('invite_skipped', { attempted: attemptedRef.current })
+    track('invite_skipped', { attempted: attemptedRef.current, group_id: group?.id })
     goToDashboard()
   }
 
@@ -239,6 +239,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             <InviteQr
               url={inviteUrl}
               t={invite}
+              groupId={group.id}
               onReveal={() => { attemptedRef.current = 'sent' }}
             />
             <p className="text-xs" style={{ color: 'var(--ink-3)' }}>

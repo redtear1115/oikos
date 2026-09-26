@@ -17,6 +17,7 @@ interface Props {
   groupName: string
   inviterName: string
   hasSoloLedger: boolean
+  groupId: string
   trust: TrustStrings
   invite: InviteStrings
 }
@@ -25,7 +26,7 @@ interface Props {
  * Bilateral trust confirmation step shown to the invitee (member B) before
  * acceptInvite() commits group membership.
  */
-export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, trust, invite }: Props) {
+export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, groupId, trust, invite }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +34,12 @@ export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, tr
   // Invite-funnel step (#734): the invitee reached the accept screen. Fires
   // once per mount (the page server-redirects anonymous invitees to sign-in
   // first, so reaching here means they are authenticated).
+  // `group_id` (#1415) lets this pair with server-side `invite_created` /
+  // `partner_joined` on the same key — client/server events can't person-join
+  // (see observability-design.md). Never the token itself.
   useEffect(() => {
-    track('invite_link_opened')
-  }, [])
+    track('invite_link_opened', { group_id: groupId })
+  }, [groupId])
 
   const heading = trust.bilateral.invitee.heading.replace(
     '{name}',

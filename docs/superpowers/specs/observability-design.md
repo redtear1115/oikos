@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-21
+last_updated: 2026-09-26
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -9,8 +9,9 @@ updates:
   - v1.5.17: 補「catch 住的錯誤只進 Sentry Logs」這條邊界（#1314）
   - v1.5.18: 補「Sentry 看不到原始網址、cookie、請求 body」這條邊界（#1274，v1.5.16 起生效）
   - v1.6.0: 補「GA 收得到邀請 token 與帳務篩選值」這條已接受的風險（#1300）
+  - v1.6.2: 補「`invite_created` 的真正語意」與「client 邀請事件補 group_id」兩條邊界（#1415）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -27,6 +28,9 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314"]
 
 - **server 與 client 事件不 join**：`captureServer`（`lib/analytics/server.ts`）用 userId 當 distinct_id；client 在 `person_profiles: 'identified_only'` + `persistence: 'memory'`（cookieless）下是匿名 id。跨兩邊的漏斗**算不出來**，單邊分析才成立。**症狀是查詢靜默回 0 筆、沒有任何錯誤**——那是結構限制，不是你 SQL 寫錯，也不是資料不足。
   - **例外：若兩邊事件都帶同一個業務 key，用那個 key 配對就能繞過 person 斷裂。** person 不通不代表事件無法關聯。實例：`invite_created` 與 `partner_joined` 都帶 `group_id`，藉此算出「建立群組 → 夥伴加入」的時間差（#1017），那是純 person join 拿不到的。**放棄之前先找有沒有共同的業務 key。**
+  - **`invite_created` 是「建了帳本並產生連結」，不是「使用者送出邀請」。** 它在 `/setup` 建立帳本時由 `createInvite()`（`actions/invite.ts`）**自動**觸發，不是「按下送出」才觸發——`SetupForm.handleTrustConfirm`（`app/setup/SetupForm.tsx`）一建完群組就呼叫它，使用者到那一步都還沒選 copy／share／QR 或 skip。真正的「使用者做了什麼」在 client 端的 `invite_link_copied` / `invite_link_shared` / `invite_qr_revealed` / `invite_skipped`。
+    - **讀錯過一次（2026-09-26）**：把「`invite_created` 9 vs `partner_joined` 2」讀成「建了 9 個邀請卻只送出兩個」，暗示使用者建立邀請後大量放棄送出。錯誤在於 `invite_created` 的分母本來就含「使用者根本沒點過任何送出動作、甚至還沒看到邀請畫面」的情況——它量的是帳本數，不是送出意圖。要問「送出後對方打不打開」，要看 client 端的 copied/shared/qr_revealed 對 `invite_link_opened`，不是拿 `invite_created` 當送出的分子。
+  - **client 端邀請事件自 v1.6.2 起帶 `group_id`（#1415），不回填。** `invite_link_copied` / `invite_link_shared` / `invite_qr_revealed` / `invite_skipped` / `invite_copy_failed`（`app/setup/SetupForm.tsx`、`InviteQr.tsx`）與 `invite_link_opened`（`app/invite/[token]/InviteConfirm.tsx`）現在都帶 `group_id`，可以跟 server 端的 `invite_created` / `partner_joined` 用同一個 key 配對，量出「連結送出 → 對方打開 → 加入」這段——在此之前這幾個 client 事件是匿名 id，無法跟 server 事件關聯（見上面的 person join 例外那條）。**跨這個部署日的比較無效**：v1.6.2 之前的這幾個 client 事件沒有 `group_id`，query 只能配對 v1.6.2 之後才發生的事件，不能拿舊資料去補齊舊的漏斗。
 - **`platform` 只在 client 事件上**：`detectPlatform()`（`lib/platform.ts`）在 SSR 回 `null`（server render 沒有平台可言）。server 端的 `signed_in` / `signed_up` 要改用 `path`（`web_oauth` / `ios_native`）分辨。所以「iOS 殼使用者的登入成功率」這類跨維度問題無解。
 - **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
 - **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
