@@ -224,11 +224,14 @@ describe('editFuelLog', () => {
     queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // incoming asset ownership
     queueDbResult([{ id: 'old-txn-id' }])                                           // linked txn lookup
     // Inside the transaction:
-    //   tx.update(fuelLogs)... (no .returning, await on chain) → consumes via .then
+    //   chapter lock (open GroupEpochs FOR SHARE) + members read under it
+    //   tx.update(fuelLogs)... (with .returning — guarded)
     //   tx.update(cashTransactions)... (with .returning)
     //   tx.insert(cashTransactions)... (with .returning)
     //   tx.execute(sql`...`) for recalc
-    queueDbResult([])                                  // UPDATE fuelLogs (await on chain)
+    queueDbResult([{ id: 'epoch-current' }])           // chapter lock
+    queueDbResult([GROUP])                             // members read under the lock
+    queueDbResult([{ id: 'fuel-log-id' }])             // UPDATE fuelLogs .returning
     queueDbResult([{ id: 'old-txn-id' }])              // UPDATE old txn .returning
     queueDbResult([{ id: 'new-txn-id' }])              // INSERT new txn .returning
     queueDbResult([])                                  // recalc UPDATE
@@ -368,7 +371,9 @@ describe('editFuelLog', () => {
     queueDbResult([{ id: 'asset-1' }])                    // edited row's asset — in group
     queueDbResult([{ id: 'asset-2', deletedAt: null }])   // incoming (reassigned) asset — in group
     queueDbResult([{ id: 'old-txn-id' }])                 // linked txn lookup
-    queueDbResult([])                                     // UPDATE fuelLogs
+    queueDbResult([{ id: 'epoch-current' }])              // chapter lock
+    queueDbResult([GROUP])                                // members read under the lock
+    queueDbResult([{ id: 'fuel-log-id' }])                // UPDATE fuelLogs .returning
     queueDbResult([{ id: 'old-txn-id' }])                 // UPDATE old txn .returning
     queueDbResult([{ id: 'new-txn-id' }])                 // INSERT new txn .returning
     queueDbResult([])                                     // recalc
@@ -436,6 +441,8 @@ describe('softDeleteFuelLog', () => {
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])     // fuel log lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // asset ownership
     // Inside the transaction:
+    queueDbResult([{ id: 'epoch-current' }])           // chapter lock
+    queueDbResult([GROUP])                             // members read under the lock
     queueDbResult([{ id: 'fuel-log-id' }])             // UPDATE fuelLogs .returning
     queueDbResult([{ id: 'old-txn-id' }])              // UPDATE cashTransactions .returning
     queueDbResult([])                                  // recalc UPDATE
@@ -498,5 +505,78 @@ describe('softDeleteFuelLog', () => {
     queueDbResult([GROUP])
 
     await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('過去章節不可編輯')
+  })
+})
+
+// #1290 — per-row edits and deletes are limited to the current chapter, under
+// the chapter lock, and a fuel log's linked expense is only ever looked up and
+// written within the viewer's group (DB-level coverage, including a car that
+// changed groups: __tests__/actions/moneyRowChapterScope.test.ts).
+describe('fuel log writes under the chapter lock (#1290)', () => {
+  const input = {
+    id: 'fuel-log-id', assetId: 'asset-1', liters: 40, odometer: 87000, cost: 1500,
+    fuelType: '95', loggedAt: '2026-05-06', station: null, paidBy: 'user-b', splitType: 'all_mine' as const,
+  }
+  function queueEditPreamble() {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])
+  }
+
+  it('editFuelLog refuses with fuel_transaction_not_found when there is no linked expense in the viewer\'s group, and writes nothing', async () => {
+    queueEditPreamble()
+    queueDbResult([])  // linked expense lookup (viewer's group only) is empty
+
+    expect(await editFuelLog(input)).toEqual({ ok: false, code: 'fuel_transaction_not_found' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('editFuelLog refuses with fuel_log_deleted_or_missing when its guarded FuelLogs update matches nothing, and inserts nothing', async () => {
+    queueEditPreamble()
+    queueDbResult([{ id: 'old-txn-id' }])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([GROUP])
+    queueDbResult([])  // FuelLogs UPDATE .returning: not live, or not in the open chapter
+
+    expect(await editFuelLog(input)).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
+    expect(mockDb.update).toHaveBeenCalledOnce()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('editFuelLog fails closed without an open chapter', async () => {
+    queueEditPreamble()
+    queueDbResult([{ id: 'old-txn-id' }])
+    queueDbResult([])  // no open chapter row
+
+    expect(await editFuelLog(input)).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
+    expect(mockBuilder.for).toHaveBeenCalledWith('share')
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('editFuelLog re-checks the payer against the members read under the lock', async () => {
+    queueEditPreamble()
+    queueDbResult([{ id: 'old-txn-id' }])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([{ memberA: 'user-a', memberB: null }])  // user-b is no longer a member
+
+    expect(await editFuelLog(input)).toEqual({ ok: false, code: 'payer_not_in_group' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('softDeleteFuelLog fails closed without an open chapter', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])
+    queueDbResult([])  // no open chapter row
+
+    expect(await softDeleteFuelLog('fuel-log-id')).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
+    expect(mockBuilder.for).toHaveBeenCalledWith('share')
+    expect(mockDb.update).not.toHaveBeenCalled()
   })
 })

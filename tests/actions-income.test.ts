@@ -112,6 +112,8 @@ describe('editIncome', () => {
   it('soft-deletes the old row + inserts a new one in a single transaction', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'old-1' }])  // in-tx soft-delete .returning()
     queueDbResult([{ id: 'new-1' }])  // new row insert
 
@@ -131,7 +133,9 @@ describe('editIncome', () => {
   it('returns income_not_found when oldId not found or already deleted', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([])  // soft-delete returning is empty (row gone or wrong group)
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
+    queueDbResult([])  // soft-delete returning is empty (row gone, wrong group or closed chapter)
     expect(await editIncome({
       oldId: 'gone',
       amount: 1,
@@ -160,7 +164,9 @@ describe('softDeleteIncome', () => {
   it('sets deleted_at on the row', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([{ id: 'inc-1' }])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
+    queueDbResult([{ id: 'inc-1' }])  // guarded UPDATE .returning()
 
     await softDeleteIncome('inc-1')
 
@@ -175,5 +181,45 @@ describe('softDeleteIncome', () => {
     queueDbResult([GROUP])
 
     await expect(softDeleteIncome('inc-1')).rejects.toThrow('過去章節不可編輯')
+  })
+})
+
+// #1290 — per-row edits and deletes are limited to the current chapter, under
+// the chapter lock (DB-level coverage: __tests__/actions/moneyRowChapterScope.test.ts).
+describe('income writes under the chapter lock (#1290)', () => {
+  it('softDeleteIncome is one guarded UPDATE: no separate existence read, and a miss is income_not_found', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([GROUP])
+    queueDbResult([])  // guarded UPDATE matched nothing
+
+    expect(await softDeleteIncome('inc-1')).toEqual({ ok: false, code: 'income_not_found' })
+    expect(mockDb.update).toHaveBeenCalledOnce()
+    expect(mockBuilder.returning).toHaveBeenCalledOnce()
+    expect(mockBuilder.limit).toHaveBeenCalledTimes(2) // group + chapter for the write context only
+  })
+
+  it('softDeleteIncome takes the open chapter row FOR SHARE and fails closed without one', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([])  // no open chapter row
+
+    expect(await softDeleteIncome('inc-1')).toEqual({ ok: false, code: 'income_not_found' })
+    expect(mockBuilder.for).toHaveBeenCalledWith('share')
+    expect(mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('editIncome re-checks the recipient against the members read under the lock', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([{ memberA: 'user-a', memberB: null }])  // user-b is no longer a member
+
+    expect(await editIncome({
+      oldId: 'old-1', amount: 1, category: 'salary', recipientId: 'user-b', occurredAt: '2026-05-01',
+    })).toEqual({ ok: false, code: 'recipient_not_in_group' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 })

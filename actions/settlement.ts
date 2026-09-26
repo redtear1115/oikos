@@ -3,6 +3,8 @@
 import { db } from '@/lib/db/client'
 import { settlements } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { lockOpenChapterForWrite } from '@/lib/db/queries/epoch'
+import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { eq, and, isNull } from 'drizzle-orm'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { assertMemberInGroup } from '@/lib/auth/member'
@@ -69,7 +71,10 @@ export const createSettlement = action(async (input: CreateSettlementInput): Pro
 export const softDeleteSettlement = action(async (settlementId: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
+  // Only a row of the open chapter, under the chapter lock (see
+  // softDeleteTransaction).
   await db.transaction(async (tx) => {
+    if (!await lockOpenChapterForWrite(tx, group.id)) throw actionError('record_not_found')
     const updated = await tx
       .update(settlements)
       .set({ deletedAt: new Date() })
@@ -77,6 +82,7 @@ export const softDeleteSettlement = action(async (settlementId: string): Promise
         eq(settlements.id, settlementId),
         eq(settlements.groupId, group.id),
         isNull(settlements.deletedAt),
+        openChapterCreatedClause('"Settlements"."created_at"', group.id),
       ))
       .returning({ id: settlements.id })
     if (updated.length === 0) throw actionError('record_not_found')
@@ -98,7 +104,13 @@ export const editSettlement = action(async (input: EditSettlementInput): Promise
 
   assertMemberInGroup(input.payerId, group, 'payer_not_in_group')
 
+  // Chapter lock first, payer re-checked against the members read under it,
+  // and only a row of the open chapter (see editTransaction).
   const [created] = await db.transaction(async (tx) => {
+    const lock = await lockOpenChapterForWrite(tx, group.id)
+    if (!lock) throw actionError('record_not_found')
+    assertMemberInGroup(validated.payerId, lock.group, 'payer_not_in_group')
+
     const deleted = await tx
       .update(settlements)
       .set({ deletedAt: new Date() })
@@ -106,6 +118,7 @@ export const editSettlement = action(async (input: EditSettlementInput): Promise
         eq(settlements.id, input.oldId),
         eq(settlements.groupId, group.id),
         isNull(settlements.deletedAt),
+        openChapterCreatedClause('"Settlements"."created_at"', group.id),
       ))
       .returning({ id: settlements.id })
     if (deleted.length === 0) throw actionError('record_not_found')

@@ -465,7 +465,84 @@ export async function lockForEpochClose(
   return { groups, openEpochs, boundary }
 }
 
+/**
+ * The first statement of a transaction that edits or deletes an existing money
+ * row (expense, income, settlement, fuel log): take the group's open chapter
+ * row `FOR SHARE`, then re-read the group's two members. Returns `null` when
+ * the group has no open chapter; callers fail closed with their own not-found
+ * code.
+ *
+ * Why FOR SHARE on the chapter row: every closer ({@link lockForEpochClose})
+ * must take that same row FOR NO KEY UPDATE, which conflicts with FOR SHARE.
+ * So a closer either
+ *   - finished first: the row read here is the new chapter, and the target
+ *     row's `created_at` check (`openChapterCreatedClause`) sees the new start; or
+ *   - waits for this transaction: it reads its boundary after this commit, so
+ *     the row an edit re-inserts (`created_at` = this transaction's `now()`)
+ *     stays in the chapter it was edited in.
+ * Without the lock, an edit committing while a closer runs can re-insert its
+ * row after the boundary was fixed, and the row silently moves to the next
+ * chapter's balance.
+ *
+ * Lock order: this chapter row, then the money rows the caller updates and
+ * inserts. The inserts take FOR KEY SHARE on OikosGroups for their foreign key;
+ * closers hold that row FOR NO KEY UPDATE, which does not conflict, so the two
+ * cannot deadlock. Do not add a lock on OikosGroups here: FOR SHARE or
+ * stronger would wait on a closer that is itself waiting on this chapter row,
+ * and Postgres aborts one side with 40P01.
+ *
+ * The members are read in the same transaction, after the lock, so an edit's
+ * payer / recipient check sees the membership of the chapter it writes into,
+ * not the one resolved before the transaction began.
+ */
+export async function lockOpenChapterForWrite(
+  tx: DbTransaction,
+  groupId: string,
+): Promise<{ epochId: string; group: { memberA: string; memberB: string | null } } | null> {
+  const epoch = await lockOpenEpochForWrite(tx, groupId)
+  if (!epoch) return null
+
+  const [group] = await tx
+    .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+    .from(oikosGroups)
+    .where(eq(oikosGroups.id, groupId))
+  if (!group) return null
+
+  return { epochId: epoch.id, group }
+}
+
 /** A boundary from {@link lockForEpochClose}, as a timestamptz value for a write. */
 export function boundarySql(boundary: string) {
   return sql`${boundary}::timestamptz`
+}
+
+/**
+ * The writer side of {@link lockForEpochClose}: take the group's open chapter
+ * row `FOR SHARE` and return its id, or `null` when no chapter is open.
+ *
+ * Used by writes that must land in the chapter they checked (ending a trip and
+ * writing its summary rows, editing a trip or its expenses). Call it after any
+ * lock on the entity row itself (entity row → chapter row, never the reverse),
+ * then compare the returned id with the entity's chapter and fail closed when
+ * they differ or the result is `null`.
+ *
+ * - While this lock is held, a closer cannot take the chapter row (its FOR NO
+ *   KEY UPDATE waits), so it reads its boundary only after this transaction
+ *   commits: every row written here has `created_at` < that boundary.
+ * - If a closer holds the row first, this waits; once the closer commits, the
+ *   row no longer matches `ended_at IS NULL` and the next chapter's row is not
+ *   visible to this statement, so the result is `null`. Without this lock
+ *   nothing errors: the write commits after the close, and rows written by it
+ *   silently show up in the next chapter.
+ */
+export async function lockOpenEpochForWrite(
+  tx: DbTransaction,
+  groupId: string,
+): Promise<{ id: string } | null> {
+  const [row] = await tx
+    .select({ id: groupEpochs.id })
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
+    .for('share')
+  return row ?? null
 }
