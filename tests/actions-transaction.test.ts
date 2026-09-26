@@ -176,6 +176,8 @@ describe('editTransaction', () => {
     queueDbResult([OPEN_EPOCH])               // current epoch lookup (.limit)
     queueDbResult([{ assetId: null }])        // oldRow lookup (.limit)
     // no asset re-check (assetId is null)
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'tx-old' }])         // soft-delete UPDATE .returning (race-guard)
     queueDbResult([{ id: 'tx-new' }])         // insert returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
@@ -218,6 +220,8 @@ describe('editTransaction', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ assetId: null }])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'tx-old' }])
     queueDbResult([{ id: 'tx-new' }])
 
@@ -297,6 +301,8 @@ describe('editTransaction with assetId', () => {
     queueDbResult([OPEN_EPOCH])                         // current epoch lookup
     queueDbResult([{ assetId: 'asset-zombie' }])        // oldRow .limit — asset matches
     // No asset re-check because assetId === oldRow.assetId
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'tx-old' }])                   // soft-delete UPDATE .returning (race-guard)
     queueDbResult([{ id: 'tx-new' }])                   // insert .returning
     // recalc execute pulls from empty queue (default [])
@@ -328,6 +334,8 @@ describe('softDeleteTransaction', () => {
   it('happy path: marks deleted_at, recalcs', async () => {
     queueDbResult([GROUP])              // group lookup (.limit)
     queueDbResult([OPEN_EPOCH])         // current epoch lookup (.limit)
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])              // members read under the lock
     queueDbResult([{ id: 'tx-1' }])     // update returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
 
@@ -338,6 +346,8 @@ describe('softDeleteTransaction', () => {
   it('returns record_not_found if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])
     queueDbResult([])  // update returning empty → returns record_not_found
     expect(await softDeleteTransaction('tx-missing')).toEqual({ ok: false, code: 'record_not_found' })
   })
@@ -353,5 +363,62 @@ describe('softDeleteTransaction', () => {
     queueDbResult([GROUP])
 
     await expect(softDeleteTransaction('old-tx')).rejects.toThrow('過去章節不可編輯')
+  })
+})
+
+// #1290 — per-row edits and deletes are limited to the current chapter, under
+// the chapter lock. The chapter check itself is a SQL predicate and is covered
+// against a real database in __tests__/actions/moneyRowChapterScope.test.ts;
+// these pin the in-transaction order and the fail-closed codes.
+describe('money-row writes under the chapter lock (#1290)', () => {
+  const editInput = {
+    oldId: 'tx-old', amount: 200, description: 'x', category: 'dining',
+    splitType: 'half' as const, payerId: 'user-b', transactedAt: '2026-05-16',
+  }
+
+  it('softDeleteTransaction takes the open chapter row FOR SHARE before its update', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'tx-1' }])
+
+    expect(await softDeleteTransaction('tx-1')).toEqual({ ok: true, data: undefined })
+    expect(mockBuilder.for).toHaveBeenCalledWith('share')
+    const forOrder = mockBuilder.for.mock.invocationCallOrder[0]
+    const updateOrder = mockDb.update.mock.invocationCallOrder[0]
+    expect(forOrder).toBeLessThan(updateOrder)
+  })
+
+  it('softDeleteTransaction fails closed with record_not_found when the group has no open chapter', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([])  // no open chapter row
+
+    expect(await softDeleteTransaction('tx-1')).toEqual({ ok: false, code: 'record_not_found' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('editTransaction fails closed with record_not_found when the group has no open chapter, and writes nothing', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ assetId: null }])
+    queueDbResult([])  // no open chapter row
+
+    expect(await editTransaction(editInput)).toEqual({ ok: false, code: 'record_not_found' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('editTransaction re-checks the payer against the members read under the lock', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ assetId: null }])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([{ memberA: 'user-a', memberB: null }])  // user-b is no longer a member
+
+    expect(await editTransaction(editInput)).toEqual({ ok: false, code: 'payer_not_in_group' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 })

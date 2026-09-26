@@ -4,7 +4,8 @@ import { db } from '@/lib/db/client'
 import { assets, incomeTransactions } from '@/lib/db/schema'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { lockOpenChapterForWrite, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
@@ -70,7 +71,13 @@ export const editIncome = action(async (input: EditIncomeInput): Promise<{ id: s
   assertMemberInGroup(validated.recipientId, group, 'recipient_not_in_group')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
+  // Chapter lock first, recipient re-checked against the members read under
+  // it, and only a row of the open chapter (see editTransaction).
   const [created] = await db.transaction(async (tx) => {
+    const lock = await lockOpenChapterForWrite(tx, group.id)
+    if (!lock) throw actionError('income_not_found')
+    assertMemberInGroup(validated.recipientId, lock.group, 'recipient_not_in_group')
+
     const deleted = await tx
       .update(incomeTransactions)
       .set({ deletedAt: new Date() })
@@ -78,6 +85,7 @@ export const editIncome = action(async (input: EditIncomeInput): Promise<{ id: s
         eq(incomeTransactions.id, input.oldId),
         eq(incomeTransactions.groupId, group.id),
         isNull(incomeTransactions.deletedAt),
+        openChapterCreatedClause('"IncomeTransactions"."created_at"', group.id),
       ))
       .returning({ id: incomeTransactions.id })
     if (deleted.length === 0) throw actionError('income_not_found')
@@ -103,21 +111,22 @@ export const editIncome = action(async (input: EditIncomeInput): Promise<{ id: s
 export const softDeleteIncome = action(async (id: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
-  const [row] = await db
-    .select({ id: incomeTransactions.id })
-    .from(incomeTransactions)
-    .where(and(
-      eq(incomeTransactions.id, id),
-      eq(incomeTransactions.groupId, group.id),
-      isNull(incomeTransactions.deletedAt),
-    ))
-    .limit(1)
-  if (!row) throw actionError('income_not_found')
-
-  await db
-    .update(incomeTransactions)
-    .set({ deletedAt: new Date() })
-    .where(eq(incomeTransactions.id, id))
+  // One guarded UPDATE: the existence, group and chapter checks are the
+  // UPDATE's own WHERE, so nothing can change between a check and the write.
+  await db.transaction(async (tx) => {
+    if (!await lockOpenChapterForWrite(tx, group.id)) throw actionError('income_not_found')
+    const deleted = await tx
+      .update(incomeTransactions)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(incomeTransactions.id, id),
+        eq(incomeTransactions.groupId, group.id),
+        isNull(incomeTransactions.deletedAt),
+        openChapterCreatedClause('"IncomeTransactions"."created_at"', group.id),
+      ))
+      .returning({ id: incomeTransactions.id })
+    if (deleted.length === 0) throw actionError('income_not_found')
+  })
 
   revalidateAfterIncomeMutation()
 })

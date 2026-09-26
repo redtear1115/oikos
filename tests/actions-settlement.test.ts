@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
-import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
+import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 
 // next/headers cookies() — controlled per test via setCookie below. Needed
 // because resolveViewerEpochContext (called from getViewerWriteContext) reads
@@ -115,6 +115,8 @@ describe('softDeleteSettlement', () => {
   it('happy path', async () => {
     queueDbResult([GROUP])              // group lookup (.limit)
     queueDbResult([OPEN_EPOCH])         // current-epoch lookup
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'set-1' }])    // update returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
 
@@ -125,6 +127,8 @@ describe('softDeleteSettlement', () => {
   it('returns record_not_found if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([])  // update returning empty → returns record_not_found
     expect(await softDeleteSettlement('missing')).toEqual({ ok: false, code: 'record_not_found' })
   })
@@ -147,6 +151,8 @@ describe('editSettlement', () => {
   it('happy path: soft-deletes old + inserts new atomically', async () => {
     queueDbResult([GROUP])               // group lookup (.limit)
     queueDbResult([OPEN_EPOCH])          // current-epoch lookup
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([{ id: 'set-old' }])   // update returning — delete old (.returning)
     queueDbResult([{ id: 'set-new' }])   // insert returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
@@ -164,6 +170,8 @@ describe('editSettlement', () => {
   it('returns record_not_found if old row not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])  // chapter lock (open GroupEpochs FOR SHARE)
+    queueDbResult([GROUP])                    // members read under the lock
     queueDbResult([])  // update returning empty → returns record_not_found
     expect(await editSettlement({
       oldId: 'set-missing', amount: 75, payerId: 'user-a', settledAt: '2026-05-16',
@@ -196,5 +204,44 @@ describe('editSettlement', () => {
       payerId: 'user-a',
       settledAt: '2026-05-03',
     })).rejects.toThrow('過去章節不可編輯')
+  })
+})
+
+// #1290 — per-row edits and deletes are limited to the current chapter, under
+// the chapter lock (DB-level coverage: __tests__/actions/moneyRowChapterScope.test.ts).
+describe('settlement writes under the chapter lock (#1290)', () => {
+  it('softDeleteSettlement takes the open chapter row FOR SHARE and fails closed without one', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([])  // no open chapter row
+
+    expect(await softDeleteSettlement('set-1')).toEqual({ ok: false, code: 'record_not_found' })
+    expect(mockBuilder.for).toHaveBeenCalledWith('share')
+    expect(mockDb.update).not.toHaveBeenCalled()
+  })
+
+  it('editSettlement fails closed with record_not_found without an open chapter, and writes nothing', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([])  // no open chapter row
+
+    expect(await editSettlement({
+      oldId: 'set-old', amount: 75, payerId: 'user-a', settledAt: '2026-05-03',
+    })).toEqual({ ok: false, code: 'record_not_found' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it('editSettlement re-checks the payer against the members read under the lock', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'epoch-current' }])
+    queueDbResult([{ memberA: 'user-a', memberB: null }])  // user-b is no longer a member
+
+    expect(await editSettlement({
+      oldId: 'set-old', amount: 75, payerId: 'user-b', settledAt: '2026-05-03',
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 })
