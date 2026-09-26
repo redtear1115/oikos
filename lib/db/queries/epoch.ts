@@ -432,10 +432,21 @@ export interface EpochCloseLock {
  *   `created_at` in the same millisecond, with nothing erroring.
  *
  * The same lock order is used by the account-deletion processor.
+ *
+ * `opts.profileId` (acceptInvite, #1432): also take that user's `Profiles`
+ * row FOR NO KEY UPDATE, after the chapter rows and before the boundary. It
+ * is the lock {@link lockProfileForGroupCreate} takes, so a createGroup by
+ * the same user either committed before this returns (and the caller's
+ * re-read of that user's ledgers sees the new one) or waits until the caller
+ * commits. Why last, not first: the account-deletion processor locks the
+ * user's groups and then deletes / updates their Profiles row, so a closer
+ * that held the profile and then waited on a group would close a cycle with
+ * it (40P01). Groups → chapters → profile keeps one order everywhere.
  */
 export async function lockForEpochClose(
   tx: DbTransaction,
   groupIds: string[],
+  opts: { profileId?: string } = {},
 ): Promise<EpochCloseLock> {
   const ordered = Array.from(new Set(groupIds.map((id) => id.toLowerCase()))).sort()
 
@@ -459,10 +470,64 @@ export async function lockForEpochClose(
     if (row) openEpochs.set(id, row)
   }
 
+  if (opts.profileId) await lockProfileRow(tx, opts.profileId)
+
   const [{ boundary }] = await tx.execute<{ boundary: string }>(
     sql`SELECT clock_timestamp()::text AS boundary`,
   )
   return { groups, openEpochs, boundary }
+}
+
+/**
+ * `Profiles … FOR NO KEY UPDATE` on one user's row: the per-user lock that
+ * serialises the actions which give a user a new ledger or end their solo
+ * chapters (createGroup, acceptInvite — #1432).
+ *
+ * NO KEY UPDATE, not FOR UPDATE: every insert that references the user
+ * (paid_by, member_a, created_by, …) takes FOR KEY SHARE on this row for its
+ * foreign-key check, and only FOR UPDATE conflicts with that. With FOR UPDATE,
+ * the partner's ordinary expense insert would queue behind an accept.
+ */
+async function lockProfileRow(tx: DbTransaction, userId: string): Promise<void> {
+  await tx
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .for('no key update')
+}
+
+/**
+ * The first statement of createGroup's transaction: take the creator's
+ * `Profiles` row (see {@link lockProfileRow}), then re-read whether they
+ * already have a ledger. Returns that ledger, or `null` when the caller may
+ * create one.
+ *
+ * acceptInvite takes the same row inside {@link lockForEpochClose}. So a
+ * createGroup racing an accept by the same person (two tabs) either
+ *   - commits first: the accept's re-read under the lock sees the new solo
+ *     ledger and ends its chapter; or
+ *   - waits for the accept: the re-read here sees the ledger the person just
+ *     joined, and createGroup returns it instead of opening a second chapter.
+ * Without the lock nothing errors: the person ends up with two open chapters
+ * (the duo one and the new solo one), and a later leave or account deletion
+ * computes its boundaries from the wrong one (#1432).
+ *
+ * Lock order: this profile row, then only rows this transaction inserts. It
+ * never waits on a group or chapter row, so it cannot close a cycle with a
+ * closer (groups → chapters → profile).
+ */
+export async function lockProfileForGroupCreate(
+  tx: DbTransaction,
+  userId: string,
+): Promise<typeof oikosGroups.$inferSelect | null> {
+  await lockProfileRow(tx, userId)
+  const [existing] = await tx
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, userId), eq(oikosGroups.memberB, userId)))
+    .orderBy(desc(oikosGroups.currentEpochStartedAt))
+    .limit(1)
+  return existing ?? null
 }
 
 /**

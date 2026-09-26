@@ -5,6 +5,7 @@ import { oikosGroups, groupBalance, groupEpochs } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { eq } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { lockProfileForGroupCreate } from '@/lib/db/queries/epoch'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateSettings } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
@@ -37,7 +38,14 @@ export const createGroup = action(async (name: string) => {
   // double-fire the onboarding-completed event.
   if (existing) return existing
 
-  const [group] = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
+    // #1432 — the check above is a fast path only. Re-read under the
+    // creator's profile lock (the same lock acceptInvite takes): a second tab
+    // that joined a ledger, or created one, in the meantime is seen here and
+    // returned, instead of opening a second open chapter for this person.
+    const current = await lockProfileForGroupCreate(tx, user.id)
+    if (current) return { group: current, created: false }
+
     const [g] = await tx
       .insert(oikosGroups)
       .values({ name, memberA: user.id })
@@ -61,8 +69,10 @@ export const createGroup = action(async (name: string) => {
       memberBId: g.memberB,
     })
 
-    return [g]
+    return { group: g, created: true }
   })
+  if (!result.created) return result.group
+  const { group } = result
 
   // Activation signal (#734): the group is the user's setup milestone. Always
   // solo at creation (partner joins later via invite).
