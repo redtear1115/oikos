@@ -3061,7 +3061,7 @@ I will upload the screenshots once you confirm.`,
       },
       // TODO(#839): en seo copy below pending native review
       'fortune-city': {
-        title: 'Move from Fortune City to Futari · export without a subscription',
+        title: 'Move from Fortune City to Futari · bring your records, no subscription needed',
         description: 'Fortune City CSV export needs a subscription and may need re-encoding. Screenshot it, let ChatGPT build a CSV, and import into Futari, free and ad-free.',
         ogDescription: 'Leaving Fortune City without a subscription — screenshot → ChatGPT → CSV → Futari.',
       },

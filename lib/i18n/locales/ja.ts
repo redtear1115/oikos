@@ -3059,7 +3059,7 @@ I will upload the screenshots once you confirm.`,
         ogDescription: '簡単家計簿からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       'fortune-city': {
-        title: '記帳城市から Futari へ｜契約なしで書き出せます',
+        title: '記帳城市から Futari へ｜サブスクなしで記録をお引っ越し',
         description: '記帳城市の CSV 書き出しはサブスク限定で、開くのにエンコード変換が必要な場合も？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '記帳城市からサブスクなしでお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },

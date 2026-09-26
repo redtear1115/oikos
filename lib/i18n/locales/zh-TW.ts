@@ -6004,7 +6004,7 @@ export const zhTW: Translations = {
       },
       'fortune-city': {
         title: '從記帳城市搬家到 Futari｜不用訂閱也能把記錄搬出來',
-        description: '記帳城市的 CSV 匯出要訂閱，匯出檔還可能要自己轉編碼？截圖請 ChatGPT 整理成 CSV，搬到 Futari 這個專為夫妻、伴侶設計的共同帳本，不再自己蓋城市，兩個人一起記帳。免費、無廣告、只開放給你們倆。',
+        description: '記帳城市的 CSV 匯出要訂閱，匯出檔還可能要自己轉編碼？截圖請 ChatGPT 整理成 CSV，搬到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: '記帳城市要訂閱才能匯出？截圖→ChatGPT→CSV，免費搬進 Futari 雙人記帳。',
       },
       cashman: {
