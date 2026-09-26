@@ -85,7 +85,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, describeSettled, retryOnClockStep } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, describeSettled, retryOnClockStep, getClockStepRetryStats } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -110,6 +110,8 @@ beforeAll(() => {
 afterAll(async () => {
   await holderConn?.end()
   await monitor?.end()
+  const stats = getClockStepRetryStats()
+  console.warn(`[retryOnClockStep] moneyRowChapterScope.test.ts: ${stats.retries} retr${stats.retries === 1 ? 'y' : 'ies'} out of ${stats.attempts} attempt(s)`)
 })
 
 const created = { profiles: [] as string[], groups: [] as string[] }
@@ -505,7 +507,7 @@ async function editedRowBeforeOpenChapter(edit: PromiseSettledResult<unknown>, g
 
 describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter closer (#1290)', { timeout: 30_000 }, () => {
   it('leaveGroup waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -521,7 +523,7 @@ describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter c
   })
 
   it('removePartner waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -535,7 +537,7 @@ describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter c
   })
 
   it('acceptInvite waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const inviter = await person('inviter')
       const joiner = await person('joiner')
       const g = await group(inviter, null)

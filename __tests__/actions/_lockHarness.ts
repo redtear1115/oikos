@@ -82,68 +82,204 @@
 // vitest process runs natively on the host (macOS), not inside the Docker
 // Desktop Linux VM that runs Postgres — only Postgres's clock steps; the
 // test process's own `Date.now()` does not. So the offset between
-// Postgres's `clock_timestamp()` and this process's `Date.now()`, sampled
-// right before and right after the interleaving under test, is a
-// step-detector: if that offset moved by more than ordinary round-trip
-// jitter between the two samples, the VM's clock stepped *during* the
-// window whose reads we're about to compare, and the run is unsafe to
-// judge — not "the lock order was wrong", "we can't tell". `retryOnClockStep`
-// wraps a whole test body (fixtures included, since these actions are
-// one-shot: a group that already left or already closed can't be
-// re-interleaved) and reruns it with fresh fixtures when a step is
-// detected, up to a small bound. It does not touch the assertions
-// themselves, which stay exactly as strict as before (`toBe(true)`, no
-// slop) — it only refuses to let a step-corrupted window reach them.
+// Postgres's `clock_timestamp()` and this process's `Date.now()` is a
+// step-detector: if that offset moves by more than ordinary round-trip
+// jitter, the VM's clock stepped, and the run is unsafe to judge — not "the
+// lock order was wrong", "we can't tell". `retryOnClockStep` wraps a whole
+// test body (fixtures included, since these actions are one-shot: a group
+// that already left or already closed can't be re-interleaved) and reruns
+// it with fresh fixtures when a step is detected, up to a small bound. It
+// does not touch the assertions themselves, which stay exactly as strict as
+// before (`toBe(true)`, no slop) — it only refuses to let a step-corrupted
+// window reach them.
+//
+// ─── round 2: a before/after bracket misses a step that fits inside one
+// attempt ───────────────────────────────────────────────────────────────
+//
+// The first version of this sampled the offset once right before `body()`
+// and once right after it threw. That misses the actual shape of the
+// Docker Desktop step: it isn't an instantaneous jump, it's a *dip* —
+// Postgres's clock drops ~505–580ms, then climbs back 160–220ms later, all
+// within the same ~10s cycle. An attempt whose window is longer than the
+// dip (which most are: a single attempt here runs low hundreds of ms, but
+// the dip is under a second) can start *and end* on the "normal" side of
+// it, so both bracket samples read a normal offset even though a
+// comparison taken *during* the dip was corrupted. This produced a
+// residual failure that wasn't retried (1 in 110 unmodified runs).
+//
+// The fix is a sampler that runs *throughout* the attempt, not just at its
+// edges: `ClockOffsetSampler` opens its own connection (so its polling
+// never contends with the interleaving's own connections) and reads
+// `clock_timestamp()` vs `Date.now()` every ~20ms for the attempt's whole
+// duration, keeping the widest deviation from the attempt's first sample.
+// That first sample is a fresh per-attempt baseline (not a fixed constant),
+// so ordinary cross-attempt offset drift — different round-trip latency,
+// different point in the host's own clock discipline — never itself counts
+// as a step; only a swing *within* one attempt's samples does. Measured
+// thresholds: normal p99 gap between consecutive samples is ~1.5ms, the
+// worst normal (non-step) attempt seen swung 136ms, and real steps swing
+// ~575ms — the existing 150ms threshold sits cleanly between those and
+// applies to the sampler's within-attempt max exactly as it did to the old
+// bracket's before/after delta.
+//
+// The sampler's connection sets `application_name` so the harness's DB-wide
+// waiter-counting queries (`lockWaiterPids`, `waitBlockedBy`) can exclude
+// it — it never takes or waits on a lock, but excluding it by name is
+// cheaper than reasoning about why an idle polling connection can't
+// possibly show up as one.
+//
+// ─── round 1 fix, visibility ────────────────────────────────────────────
+//
+// A retry that discards a real (if step-corrupted) failure silently is a
+// second way for this file to hide something from whoever reads a green
+// run: every retry now logs which test, which attempt, and the offset
+// swing that triggered it, and each file's `afterAll` should print the
+// running attempt/retry counts (see `getClockStepRetryStats` and the
+// `afterAll` blocks in the three test files) so a change in the retry rate
+// shows up in CI output even when every run still passes.
 
-import type postgres from 'postgres'
+import postgres from 'postgres'
+import { expect } from 'vitest'
 type Sql = ReturnType<typeof postgres>
 
 /**
- * Offset (ms) between Postgres's wall clock and this process's, sampled as
- * closely together as a round trip allows. Not itself meaningful (network
- * latency and scheduling jitter both land in it) — only the *change* in this
- * value between two samples is (see #1444 fix section above).
+ * `application_name` the offset sampler connects with, so the harness's
+ * DB-wide waiter-counting queries can exclude it by name (see round-2 note
+ * above) instead of relying on it just happening never to wait on a lock.
  */
-async function pgNodeClockOffsetMs(monitor: Sql): Promise<number> {
-  const t0 = Date.now()
-  const [{ pgNow }] = await monitor<{ pgNow: Date }[]>`SELECT clock_timestamp() AS "pgNow"`
-  const t1 = Date.now()
-  return pgNow.getTime() - (t0 + t1) / 2
-}
+const CLOCK_SAMPLER_APPLICATION_NAME = 'oikos_test_1444_clock_sampler'
 
 /**
- * Generous margin over ordinary round-trip jitter (typically well under
- * 10ms against a local Docker Postgres) but well under the ~0.4–0.6s step
- * this repo has measured — any real step clears this by 3x or more.
+ * Generous margin over ordinary round-trip/scheduling jitter (measured p99
+ * ~1.5ms between samples, worst normal attempt 136ms) but well under the
+ * ~505–580ms dip magnitude this repo has measured — any real step clears
+ * this by 3x or more either way.
  */
 const CLOCK_STEP_JITTER_MS = 150
 
+const SAMPLE_INTERVAL_MS = 20
 const MAX_CLOCK_STEP_ATTEMPTS = 5
+
+/**
+ * Polls `clock_timestamp()` vs this process's `Date.now()` on its own
+ * connection every `SAMPLE_INTERVAL_MS` for as long as it's running, and
+ * tracks the widest deviation from its first sample (the attempt's
+ * baseline) — a within-attempt dip, not just a before/after bracket (see
+ * round-2 note above). One instance is scoped to one `retryOnClockStep`
+ * attempt: construct, `start()`, run `body()`, `stop()` in `finally`.
+ */
+class ClockOffsetSampler {
+  private readonly sql: Sql
+  private timer: ReturnType<typeof setInterval> | null = null
+  private baseline: number | null = null
+  private maxDelta = 0
+  private polling = false
+
+  constructor(databaseUrl: string) {
+    this.sql = postgres(databaseUrl, {
+      max: 1,
+      prepare: false,
+      connection: { application_name: CLOCK_SAMPLER_APPLICATION_NAME },
+    })
+  }
+
+  private async sampleOffset(): Promise<number> {
+    const t0 = Date.now()
+    const [{ pgNow }] = await this.sql<{ pgNow: Date }[]>`SELECT clock_timestamp() AS "pgNow"`
+    const t1 = Date.now()
+    return pgNow.getTime() - (t0 + t1) / 2
+  }
+
+  private recordSample(offset: number) {
+    if (this.baseline === null) {
+      this.baseline = offset
+      return
+    }
+    this.maxDelta = Math.max(this.maxDelta, Math.abs(offset - this.baseline))
+  }
+
+  async start(): Promise<void> {
+    this.recordSample(await this.sampleOffset())
+    this.polling = true
+    const pollOnce = () => {
+      if (!this.polling) return
+      this.sampleOffset()
+        .then((offset) => this.recordSample(offset))
+        .catch(() => {}) // a dropped sample just narrows the window we can see into, never widens it
+        .finally(() => {
+          if (this.polling) this.timer = setTimeout(pollOnce, SAMPLE_INTERVAL_MS)
+        })
+    }
+    this.timer = setTimeout(pollOnce, SAMPLE_INTERVAL_MS)
+  }
+
+  /** Widest offset swing seen from this attempt's own baseline, so far. */
+  getMaxDelta(): number {
+    return this.maxDelta
+  }
+
+  async stop(): Promise<void> {
+    this.polling = false
+    if (this.timer) clearTimeout(this.timer)
+    await this.sql.end({ timeout: 1 }).catch(() => {})
+  }
+}
+
+let attemptCount = 0
+let retryCount = 0
+
+/** Per-file (module-scoped) counters for the `afterAll` summary line — see round-1 visibility note above. */
+export function getClockStepRetryStats(): { attempts: number; retries: number } {
+  return { attempts: attemptCount, retries: retryCount }
+}
+
+async function runAttempt(
+  databaseUrl: string,
+  body: () => Promise<void>,
+): Promise<{ ok: true } | { ok: false; error: unknown; maxDelta: number }> {
+  const sampler = new ClockOffsetSampler(databaseUrl)
+  try {
+    await sampler.start()
+    try {
+      await body()
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, error, maxDelta: sampler.getMaxDelta() }
+    }
+  } finally {
+    await sampler.stop()
+  }
+}
 
 /**
  * Run `body` (which should set up its own fixtures and make its own strict
  * wall-clock assertions — nothing about this weakens them) and, if it
- * throws, check whether the Docker Desktop VM's clock stepped during the
- * attempt (see #1444 fix section above). If it did, the failure is
- * discarded and `body` runs again with whatever fresh fixtures it creates;
- * if it didn't, the failure is real and is rethrown immediately. Retries
- * are bounded — if every attempt's window overlaps a step (not observed in
- * practice: steps are ~0.4–0.6s roughly every 10s, and one attempt here
- * runs in low hundreds of ms at most), the last error is rethrown.
+ * throws, check whether the Docker Desktop VM's clock stepped at any point
+ * during the attempt (see #1444 fix section above — a continuous sampler,
+ * not just a before/after bracket). If it did, the failure is discarded —
+ * logged, not silent — and `body` runs again with whatever fresh fixtures
+ * it creates; if it didn't, the failure is real and is rethrown
+ * immediately. Retries are bounded — if every attempt's window overlaps a
+ * step (not observed in practice: steps are ~0.4–0.6s roughly every 10s,
+ * and one attempt here runs in low hundreds of ms at most), the last error
+ * is rethrown.
  */
-export async function retryOnClockStep(monitor: Sql, body: () => Promise<void>): Promise<void> {
+export async function retryOnClockStep(databaseUrl: string, body: () => Promise<void>): Promise<void> {
+  const testName = expect.getState().currentTestName ?? '(unknown test)'
   for (let attempt = 1; attempt <= MAX_CLOCK_STEP_ATTEMPTS; attempt++) {
-    const before = await pgNodeClockOffsetMs(monitor)
-    try {
-      await body()
-      return
-    } catch (err) {
-      const after = await pgNodeClockOffsetMs(monitor)
-      const stepped = Math.abs(after - before) > CLOCK_STEP_JITTER_MS
-      if (!stepped || attempt === MAX_CLOCK_STEP_ATTEMPTS) throw err
-      // else: the clock stepped inside this attempt's window — discard it
-      // and let the loop try again with fresh fixtures.
-    }
+    attemptCount++
+    const result = await runAttempt(databaseUrl, body)
+    if (result.ok) return
+    const stepped = result.maxDelta > CLOCK_STEP_JITTER_MS
+    if (!stepped || attempt === MAX_CLOCK_STEP_ATTEMPTS) throw result.error
+    retryCount++
+    const message = result.error instanceof Error ? result.error.message : String(result.error)
+    console.warn(
+      `[retryOnClockStep] "${testName}": attempt ${attempt}/${MAX_CLOCK_STEP_ATTEMPTS} discarded — ` +
+        `clock offset swung ${result.maxDelta.toFixed(1)}ms during the window (> ${CLOCK_STEP_JITTER_MS}ms ` +
+        `threshold), consistent with a Docker Desktop VM clock dip (see _lockHarness.ts header). ` +
+        `Retrying with fresh fixtures. Underlying failure: ${message}`,
+    )
   }
 }
 
@@ -199,11 +335,18 @@ export async function openTx(conn: Sql) {
 const DEADLINE_MS = 10_000
 const POLL_MS = 20
 
-/** Backends of this database durably waiting on a heavyweight lock, confirmed by both wait_event_type and a pg_locks row. */
+/**
+ * Backends of this database durably waiting on a heavyweight lock, confirmed
+ * by both wait_event_type and a pg_locks row. Excludes the clock-offset
+ * sampler's own connection by `application_name` — it never takes or waits
+ * on a lock, but this is a DB-wide scan (no specific pid to reason about),
+ * so excluding it by name is cheaper than trusting that.
+ */
 async function lockWaiterPids(monitor: Sql): Promise<number[]> {
   const rows = await monitor`
     SELECT a.pid FROM pg_stat_activity a
     WHERE a.datname = current_database() AND a.wait_event_type = 'Lock'
+      AND a.application_name <> ${CLOCK_SAMPLER_APPLICATION_NAME}
       AND EXISTS (SELECT 1 FROM pg_locks l WHERE l.pid = a.pid AND l.granted = false)`
   return rows.map((r) => r.pid as number)
 }
@@ -254,7 +397,8 @@ export async function waitBlockedBy(monitor: Sql, blockerPid: number, n = 1): Pr
   while (Date.now() < deadline) {
     const rows = await monitor`
       SELECT pid FROM pg_stat_activity
-      WHERE datname = current_database() AND ${blockerPid} = ANY(pg_blocking_pids(pid))`
+      WHERE datname = current_database() AND application_name <> ${CLOCK_SAMPLER_APPLICATION_NAME}
+        AND ${blockerPid} = ANY(pg_blocking_pids(pid))`
     const candidates = rows.map((r) => r.pid as number)
     const confirmed: number[] = []
     for (const pid of candidates) {

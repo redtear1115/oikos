@@ -76,7 +76,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or, and, isNull } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, waitLockWaitersOr, retryOnClockStep } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, waitLockWaitersOr, retryOnClockStep, getClockStepRetryStats } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -103,6 +103,8 @@ beforeAll(() => {
 afterAll(async () => {
   await holderConn?.end()
   await monitor?.end()
+  const stats = getClockStepRetryStats()
+  console.warn(`[retryOnClockStep] trip.epochLock.test.ts: ${stats.retries} retr${stats.retries === 1 ? 'y' : 'ies'} out of ${stats.attempts} attempt(s)`)
 })
 
 const created = { profiles: [] as string[], groups: [] as string[] }
@@ -244,7 +246,7 @@ async function acceptPausedAfterLocks(joiner: string, invite: { id: string; toke
 
 describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
   it('endTrip holds the chapter row, accept waits: the summary rows stay in the old chapter', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const inviter = await person('inviter')
       const joiner = await person('joiner')
       const g = await group(inviter, null)

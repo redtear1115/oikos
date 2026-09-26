@@ -77,7 +77,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, waitLockWaiters, sqlstate, describeSettled, retryOnClockStep } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, waitLockWaiters, sqlstate, describeSettled, retryOnClockStep, getClockStepRetryStats } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -110,6 +110,8 @@ afterAll(async () => {
   await writerConn?.end()
   await closerConn?.end()
   await monitor?.end()
+  const stats = getClockStepRetryStats()
+  console.warn(`[retryOnClockStep] epochCloser.lockOrder.test.ts: ${stats.retries} retr${stats.retries === 1 ? 'y' : 'ies'} out of ${stats.attempts} attempt(s)`)
 })
 
 const created = { profiles: [] as string[], groups: [] as string[] }
@@ -253,7 +255,7 @@ async function interleave<T>(groupId: string, writerPaidBy: string, startCloser:
 
 describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (#1290)', () => {
   it('leaveGroup: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -284,7 +286,7 @@ describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (
   })
 
   it('removePartner: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -308,7 +310,7 @@ describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (
   })
 
   it('acceptInvite: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const inviter = await person('inviter')
       const joiner = await person('joiner')
       const g = await group(inviter, null)
@@ -401,7 +403,7 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
   }
 
   it('leaveGroup', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -412,7 +414,7 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
   })
 
   it('removePartner', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const a = await person('a')
       const b = await person('b')
       const g = await group(a, b)
@@ -423,7 +425,7 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
   })
 
   it('acceptInvite', async () => {
-    await retryOnClockStep(monitor, async () => {
+    await retryOnClockStep(databaseUrl, async () => {
       const inviter = await person('inviter')
       const joiner = await person('joiner')
       const g = await group(inviter, null)
