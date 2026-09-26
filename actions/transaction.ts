@@ -513,8 +513,8 @@ function toPagedTxnRow(r: FeedRow): PagedTxnRow {
 }
 
 /**
- * Return unique CashTransaction descriptions for the viewer's group, ordered
- * by frequency (most-used first). Powers the description-field autocomplete in
+ * Return unique CashTransaction descriptions for the viewer's group — from the
+ * chapters the viewer belonged to — ordered by frequency (most-used first). Powers the description-field autocomplete in
  * AddSheet — re-fetched whenever the sheet opens so newly-added descriptions
  * surface immediately on the next entry.
  */
@@ -526,5 +526,5 @@ export const getDescriptionSuggestions = action(async (): Promise<string[]> => {
   const group = await getActiveGroupForUser(user.id)
   if (!group) return []
 
-  return listDescriptionSuggestions(group.id)
+  return listDescriptionSuggestions(group.id, user.id)
 })
