@@ -77,7 +77,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, waitLockWaiters, sqlstate, describeSettled } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, waitLockWaiters, sqlstate, describeSettled, retryOnClockStep, getClockStepRetryStats } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -110,6 +110,8 @@ afterAll(async () => {
   await writerConn?.end()
   await closerConn?.end()
   await monitor?.end()
+  const stats = getClockStepRetryStats()
+  console.warn(`[retryOnClockStep] epochCloser.lockOrder.test.ts: ${stats.retries} retr${stats.retries === 1 ? 'y' : 'ies'} out of ${stats.attempts} attempt(s)`)
 })
 
 const created = { profiles: [] as string[], groups: [] as string[] }
@@ -208,11 +210,11 @@ async function writerInsertAndCommit(
 /**
  * created_at of the writer's row < the given timestamp column, compared in SQL (µs).
  *
- * Clock-step sensitivity (see _lockHarness.ts header): this compares two
- * wall-clock reads from different backends. On a Docker Desktop VM whose
- * clock steps backwards, this can read `false` even though the lock order
- * was correct — the failure looks like `expected false to be true` here, and
- * a rerun passes.
+ * Clock-step sensitivity (see _lockHarness.ts header, "#1444 fix" section):
+ * this compares two wall-clock reads from different backends, so every `it`
+ * that calls this wraps its whole body in `retryOnClockStep` — the strict
+ * `<` here is unchanged (no tolerance), it's just not evaluated on a window
+ * whose clock stepped.
  */
 async function writerRowBefore(cashId: string, boundaryText: string): Promise<boolean> {
   const [r] = await monitor`
@@ -253,78 +255,84 @@ async function interleave<T>(groupId: string, writerPaidBy: string, startCloser:
 
 describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (#1290)', () => {
   it('leaveGroup: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const invite = await seedInvite(g, a)
+    await retryOnClockStep(databaseUrl, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const invite = await seedInvite(g, a)
 
-    const out = await interleave(g, a, () => as(b, () => leaveGroup()))
-    expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
-      .toMatchObject({ closer: { ok: true }, writer: expect.any(String) })
+      const out = await interleave(g, a, () => as(b, () => leaveGroup()))
+      expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
+        .toMatchObject({ closer: { ok: true }, writer: expect.any(String) })
 
-    const cashId = (out.writer as PromiseFulfilledResult<string>).value
-    const res = (out.closer as PromiseFulfilledResult<{ ok: true; data: { groupId: string; epochId: string } }>).value
-    const newGroupId = res.data.groupId
-    created.groups.push(newGroupId)
+      const cashId = (out.writer as PromiseFulfilledResult<string>).value
+      const res = (out.closer as PromiseFulfilledResult<{ ok: true; data: { groupId: string; epochId: string } }>).value
+      const newGroupId = res.data.groupId
+      created.groups.push(newGroupId)
 
-    // One boundary everywhere, to the microsecond.
-    const [r] = await monitor`
-      SELECT
-        (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
-        (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS stay_started,
-        (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS old_group_cur,
-        (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${newGroupId}) AS new_group_cur,
-        (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${newGroupId} AND ended_at IS NULL) AS new_started,
-        (SELECT revoked_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS revoked`
-    expect(new Set([r.old_ended, r.stay_started, r.old_group_cur, r.new_group_cur, r.new_started, r.revoked]).size).toBe(1)
-    expect(r.old_ended).not.toBeNull()
-    expect(await writerRowBefore(cashId, r.stay_started as string)).toBe(true)
+      // One boundary everywhere, to the microsecond.
+      const [r] = await monitor`
+        SELECT
+          (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
+          (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS stay_started,
+          (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS old_group_cur,
+          (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${newGroupId}) AS new_group_cur,
+          (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${newGroupId} AND ended_at IS NULL) AS new_started,
+          (SELECT revoked_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS revoked`
+      expect(new Set([r.old_ended, r.stay_started, r.old_group_cur, r.new_group_cur, r.new_started, r.revoked]).size).toBe(1)
+      expect(r.old_ended).not.toBeNull()
+      expect(await writerRowBefore(cashId, r.stay_started as string)).toBe(true)
+    })
   })
 
   it('removePartner: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const invite = await seedInvite(g, a)
+    await retryOnClockStep(databaseUrl, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const invite = await seedInvite(g, a)
 
-    const out = await interleave(g, a, () => as(a, () => removePartner()))
-    expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
-      .toMatchObject({ closer: { ok: true }, writer: expect.any(String) })
-    const cashId = (out.writer as PromiseFulfilledResult<string>).value
+      const out = await interleave(g, a, () => as(a, () => removePartner()))
+      expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
+        .toMatchObject({ closer: { ok: true }, writer: expect.any(String) })
+      const cashId = (out.writer as PromiseFulfilledResult<string>).value
 
-    const [r] = await monitor`
-      SELECT
-        (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
-        (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS new_started,
-        (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS group_cur,
-        (SELECT revoked_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS revoked`
-    expect(new Set([r.old_ended, r.new_started, r.group_cur, r.revoked]).size).toBe(1)
-    expect(r.old_ended).not.toBeNull()
-    expect(await writerRowBefore(cashId, r.new_started as string)).toBe(true)
+      const [r] = await monitor`
+        SELECT
+          (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
+          (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS new_started,
+          (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS group_cur,
+          (SELECT revoked_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS revoked`
+      expect(new Set([r.old_ended, r.new_started, r.group_cur, r.revoked]).size).toBe(1)
+      expect(r.old_ended).not.toBeNull()
+      expect(await writerRowBefore(cashId, r.new_started as string)).toBe(true)
+    })
   })
 
   it('acceptInvite: no 40P01 against a writer holding the chapter row, and the writer\'s row stays in the old chapter', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const g = await group(inviter, null)
-    const joinerSolo = await group(joiner, null)
-    const invite = await seedInvite(g, inviter)
+    await retryOnClockStep(databaseUrl, async () => {
+      const inviter = await person('inviter')
+      const joiner = await person('joiner')
+      const g = await group(inviter, null)
+      const joinerSolo = await group(joiner, null)
+      const invite = await seedInvite(g, inviter)
 
-    const out = await interleave(g, inviter, () => as(joiner, () => acceptInvite(invite.token)))
-    expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
-      .toMatchObject({ closer: { ok: true, data: g }, writer: expect.any(String) })
-    const cashId = (out.writer as PromiseFulfilledResult<string>).value
+      const out = await interleave(g, inviter, () => as(joiner, () => acceptInvite(invite.token)))
+      expect({ closer: describeSettled(out.closer), writer: describeSettled(out.writer) })
+        .toMatchObject({ closer: { ok: true, data: g }, writer: expect.any(String) })
+      const cashId = (out.writer as PromiseFulfilledResult<string>).value
 
-    const [r] = await monitor`
-      SELECT
-        (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
-        (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS new_started,
-        (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS group_cur,
-        (SELECT accepted_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS accepted,
-        (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${joinerSolo}) AS solo_ended`
-    expect(new Set([r.old_ended, r.new_started, r.group_cur, r.accepted, r.solo_ended]).size).toBe(1)
-    expect(r.old_ended).not.toBeNull()
-    expect(await writerRowBefore(cashId, r.new_started as string)).toBe(true)
+      const [r] = await monitor`
+        SELECT
+          (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NOT NULL) AS old_ended,
+          (SELECT started_at::text FROM "GroupEpochs" WHERE group_id = ${g} AND ended_at IS NULL) AS new_started,
+          (SELECT current_epoch_started_at::text FROM "OikosGroups" WHERE id = ${g}) AS group_cur,
+          (SELECT accepted_at::text FROM "GroupInvites" WHERE id = ${invite.id}) AS accepted,
+          (SELECT ended_at::text FROM "GroupEpochs" WHERE group_id = ${joinerSolo}) AS solo_ended`
+      expect(new Set([r.old_ended, r.new_started, r.group_cur, r.accepted, r.solo_ended]).size).toBe(1)
+      expect(r.old_ended).not.toBeNull()
+      expect(await writerRowBefore(cashId, r.new_started as string)).toBe(true)
+    })
   })
 
   it('two accepts in opposite roles on the same two groups: one joins, the other gets a domain error, no 40P01', async () => {
@@ -384,12 +392,10 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
     await writer.commit()
 
     const res = await closer
-    // Clock-step sensitivity (see _lockHarness.ts header): `now` and
-    // `started_at` are two wall-clock reads from different backends. On a
-    // Docker Desktop VM whose clock steps backwards, `before` can read
-    // `false` here even though the lock order was correct — the failure
-    // looks like `expected false to be true` on this check, and a rerun
-    // passes.
+    // Clock-step sensitivity (see _lockHarness.ts header, "#1444 fix"
+    // section): `now` and `started_at` are two wall-clock reads from
+    // different backends, so every `it` below wraps its call to this in
+    // `retryOnClockStep` — the strict `<` here is unchanged.
     const [r] = await monitor`
       SELECT ${now as string}::timestamptz < started_at AS before, started_at::text AS started
       FROM "GroupEpochs" WHERE group_id = ${groupId} AND ended_at IS NULL`
@@ -397,31 +403,37 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
   }
 
   it('leaveGroup', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const { res, before } = await writerNowVsBoundary(g, () => as(b, () => leaveGroup()))
-    expect(res).toMatchObject({ ok: true })
-    expect(before).toBe(true)
+    await retryOnClockStep(databaseUrl, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const { res, before } = await writerNowVsBoundary(g, () => as(b, () => leaveGroup()))
+      expect(res).toMatchObject({ ok: true })
+      expect(before).toBe(true)
+    })
   })
 
   it('removePartner', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const { res, before } = await writerNowVsBoundary(g, () => as(a, () => removePartner()))
-    expect(res).toMatchObject({ ok: true })
-    expect(before).toBe(true)
+    await retryOnClockStep(databaseUrl, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const { res, before } = await writerNowVsBoundary(g, () => as(a, () => removePartner()))
+      expect(res).toMatchObject({ ok: true })
+      expect(before).toBe(true)
+    })
   })
 
   it('acceptInvite', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const g = await group(inviter, null)
-    const invite = await seedInvite(g, inviter)
-    const { res, before } = await writerNowVsBoundary(g, () => as(joiner, () => acceptInvite(invite.token)))
-    expect(res).toMatchObject({ ok: true, data: g })
-    expect(before).toBe(true)
+    await retryOnClockStep(databaseUrl, async () => {
+      const inviter = await person('inviter')
+      const joiner = await person('joiner')
+      const g = await group(inviter, null)
+      const invite = await seedInvite(g, inviter)
+      const { res, before } = await writerNowVsBoundary(g, () => as(joiner, () => acceptInvite(invite.token)))
+      expect(res).toMatchObject({ ok: true, data: g })
+      expect(before).toBe(true)
+    })
   })
 })
 
