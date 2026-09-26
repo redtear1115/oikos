@@ -43,6 +43,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.2] - 2026-09-26
+
+主題：**首頁的主要按鈕看你用什麼裝置**——iPhone 直接去 App Store，Android 可以報名測試版。
+完整 diff：[v1.6.1...v1.6.2](https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2)
+
+### 使用者可見變化
+
+- **首頁主要按鈕依裝置分流（#1413）**
+  使用者：用 iPhone／iPad 瀏覽器打開首頁，主要按鈕是「在 App Store 下載」；用 Android 瀏覽器是「報名 Android 測試版」，下方另有「先用網頁版」；電腦、已安裝的 App 與已登入的人維持原本的行為。原本按鈕下方那行 App Store 小字併入按鈕，不再另外顯示。
+  技術：平台只能在瀏覽器端判斷（`lib/visitorPlatform.ts` 純函式＋`useVisitorPlatformTarget`），判斷完成前按鈕以同尺寸佔位、文字透明且不可點（SSR 即帶 `pointer-events-none`）；原生殼內一律是登入；`landing_cta_clicked` 的 `target` 新增 `app_store`／`android_beta`，跨這版的比較要從部署日重算。
+- **兩個搬家頁的說明更貼近搜尋需求（#1414）**
+  使用者：記帳城市搬家頁的標題與描述直接說明「不用訂閱也能把記錄帶過來」；簡單記帳搬家頁新增一題「原本買的（永久）VIP 怎麼辦」。
+  技術：新 FAQ 同步進 FAQPage JSON-LD；FAQ 型別改為「至少 4 題」；fortune-city 的 `contentUpdatedAt` 更新，讓 sitemap 反映這次改動。
+
+### 技術變更
+
+- **client 端邀請事件帶 `group_id`（#1415）**
+  技術：`/setup` 的複製／分享／QR／跳過與邀請頁的 `invite_link_opened` 都帶 `group_id`，可與 server 端的 `invite_created`／`partner_joined` 按群組配對；不回填舊資料。observability-design.md 更正 `invite_created` 的語意（產生連結，不等於送出）與邀請漏斗的配方。
+- **開發日誌抓 RSS 的 User-Agent 網域更正（#1416）**
+  技術：UA 從 `futari.app` 改為 `futari.southern-light.dev`；先前的 403 只在 9/17 集中發生過一次，之後未再出現。
+- **出遊整合測試跑完會清掉自己在 dev 建的資料（#1408）**
+  技術：`outing.test.ts` 在 afterAll 刪除該檔建立的出遊資料，不再每跑一次在共用的 dev 專案留下約 80 筆。
+
 ## [1.6.1] - 2026-09-22
 
 主題：**設計審查的統一優化**——標題字體、按鈕狀態與金額格式收斂成同一套；邀請連結改為 24 小時內有效。
@@ -1328,7 +1351,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.2...HEAD
+[1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0
 [1.5.21]: https://github.com/redtear1115/oikos/compare/v1.5.20...v1.5.21
