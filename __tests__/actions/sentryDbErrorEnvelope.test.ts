@@ -106,4 +106,38 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     expect(all.match(/Failed query: insert into/g)?.length ?? 0).toBeGreaterThanOrEqual(8)
     expect(SECRETS.filter((s) => all.includes(s))).toEqual([])
   })
+
+  // #1439: a bound value containing a real newline + "    at " (anything a
+  // user types) used to look like the first stack frame to the escaped-text
+  // regex, which then stopped — the later params (the ciphertext) stayed in
+  // the log body. `barcode` comes before `verification_code_encrypted` in the
+  // bound params.
+  it('a value containing "\\n    at " does not let the later ciphertext through', async () => {
+    const { db } = await import('@/lib/db/client')
+    const { invoiceCredentials } = await import('@/lib/db/schema')
+    const Sentry = await import('@sentry/node')
+    const FAKE_FRAME_BARCODE = '/NL1439\n    at home (sofa.js:1:1)'
+    const CIPHERTEXT_1439 = 'v1:k1:1439c1f3e27e:0f00ba4:5ec12e7c1a55'
+    const row = { groupId: made.group, userId: made.profile, barcode: FAKE_FRAME_BARCODE, verificationCodeEncrypted: CIPHERTEXT_1439 }
+
+    await db.insert(invoiceCredentials).values(row)
+    const e = await Promise.resolve(db.insert(invoiceCredentials).values(row))
+      .then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+
+    // Control: the real 23505, with the fake frame before the ciphertext.
+    expect((e.cause as { code?: string }).code).toBe('23505')
+    expect(e.message).toContain(`${FAKE_FRAME_BARCODE},${CIPHERTEXT_1439}`)
+
+    await harness.drain()
+    harness.envelopes.length = 0
+    console.error(e)
+    console.error('failed:', e)
+    Sentry.captureException(e)
+    const all = (await harness.drain()).join('\n')
+
+    expect(all).toContain('"type":"log"')
+    expect(all.match(/Failed query: insert into/g)?.length ?? 0).toBeGreaterThanOrEqual(2)
+    expect(all).not.toContain(CIPHERTEXT_1439)
+    expect(all).not.toContain('/NL1439')
+  })
 })
