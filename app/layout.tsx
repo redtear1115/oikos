@@ -100,7 +100,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
   const t = await getTranslations()
   return (
-    <html lang={locale} className="font-fraunces">
+    // suppressHydrationWarning: Android 殼的 SystemBars 原生 plugin 在 hydrate 前
+    // 就把 --safe-area-inset-* 寫進 document.documentElement.style（見 #1424）。
+    // 只影響 <html> 這一層自己的屬性，不會蓋掉子樹的 hydration mismatch 偵測。
+    <html lang={locale} className="font-fraunces" suppressHydrationWarning>
       <head>
         {/* application-name lets Google Search Console and OS install prompts
             associate this PWA with the "雙人記帳" category rather than just

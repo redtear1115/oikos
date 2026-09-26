@@ -34,7 +34,9 @@ export default function GlobalError({
   const t = globalErrorCopy[locale]
 
   return (
-    <html lang={locale} className="font-fraunces">
+    // suppressHydrationWarning: 同 app/layout.tsx（#1424）——Android 殼在 hydrate
+    // 前寫入的 --safe-area-inset-* 只影響 <html> 自己的屬性。
+    <html lang={locale} className="font-fraunces" suppressHydrationWarning>
       <body>
         <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center bg-bg">
           <div className="max-w-md w-full">
