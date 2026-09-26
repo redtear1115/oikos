@@ -5,6 +5,7 @@ import { trips, groupEpochs, tripExpenses, cashTransactions, oikosGroups } from 
 import { and, eq, isNull } from 'drizzle-orm'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { openEpochClause } from '@/lib/db/queries/_predicates'
+import { lockOpenEpochForWrite } from '@/lib/db/queries/epoch'
 import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { getViewerWriteContext } from '@/lib/actionContext'
@@ -107,12 +108,6 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
     // `openEpochClause`: only a trip of the chapter that is open now can be
     // ended; a trip whose chapter has closed is part of the read-only past.
     // Fails as `active_trip_not_found`, same as a missing trip.
-    //
-    // Residual (known, not handled here): this takes no lock on the chapter
-    // row. If a chapter close commits *after* this UPDATE has matched, the
-    // summary rows below still commit, with a created_at later than that
-    // close's boundary. Closing it needs the epoch-row lock ordering between
-    // trip writers and chapter closers, which is a separate change.
     const [row] = await tx
       .update(trips)
       .set({
@@ -133,6 +128,14 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
       // trip is missing or just already closed by checking on the client.
       throw actionError('active_trip_not_found')
     }
+
+    // Trip row (locked by the UPDATE above), then the open chapter row FOR
+    // SHARE — see lockOpenEpochForWrite. A chapter close either waits for this
+    // transaction, so the summary rows below land before its boundary, or has
+    // already closed the trip's chapter, and this is refused (the UPDATE
+    // above rolls back with it).
+    const openEpoch = await lockOpenEpochForWrite(tx, group.id)
+    if (!openEpoch || openEpoch.id !== row.epochId) throw actionError('active_trip_not_found')
 
     // Fold the isolated trip ledger into the main ledger via 0–2 summary
     // CashTransactions. recalcGroupBalance picks them up alongside existing
@@ -334,16 +337,22 @@ export const updateTrip = action(async (input: UpdateTripInput) => {
     patch.defaultCurrency = validated.default
   }
 
-  const [updated] = await db
-    .update(trips)
-    .set(patch)
-    .where(and(
-      eq(trips.id, tripId),
-      eq(trips.groupId, group.id),
-      openEpochClause(trips.epochId, group.id),
-    ))
-    .returning()
-  if (!updated) throw actionError('trip_not_found')
+  const updated = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(trips)
+      .set(patch)
+      .where(and(
+        eq(trips.id, tripId),
+        eq(trips.groupId, group.id),
+        openEpochClause(trips.epochId, group.id),
+      ))
+      .returning()
+    if (!row) throw actionError('trip_not_found')
+    // Trip row, then the open chapter row: see endTrip.
+    const openEpoch = await lockOpenEpochForWrite(tx, group.id)
+    if (!openEpoch || openEpoch.id !== row.epochId) throw actionError('trip_not_found')
+    return row
+  })
   revalidatePath('/trips')
   revalidatePath(`/trips/${tripId}`)
   return updated
@@ -353,15 +362,20 @@ export const softDeleteTrip = action(async (input: { tripId: string }) => {
   const { group } = await getViewerWriteContext()
   // Same chapter rule as updateTrip. `.returning()` so a refused delete is
   // reported instead of silently matching nothing.
-  const deleted = await db
-    .update(trips)
-    .set({ deletedAt: new Date() })
-    .where(and(
-      eq(trips.id, input.tripId),
-      eq(trips.groupId, group.id),
-      openEpochClause(trips.epochId, group.id),
-    ))
-    .returning({ id: trips.id })
-  if (deleted.length === 0) throw actionError('trip_not_found')
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(trips)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(trips.id, input.tripId),
+        eq(trips.groupId, group.id),
+        openEpochClause(trips.epochId, group.id),
+      ))
+      .returning({ id: trips.id, epochId: trips.epochId })
+    if (!row) throw actionError('trip_not_found')
+    // Trip row, then the open chapter row: see endTrip.
+    const openEpoch = await lockOpenEpochForWrite(tx, group.id)
+    if (!openEpoch || openEpoch.id !== row.epochId) throw actionError('trip_not_found')
+  })
   revalidatePath('/trips')
 })

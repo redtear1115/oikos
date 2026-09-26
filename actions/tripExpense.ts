@@ -5,11 +5,14 @@ import { tripExpenses, trips } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { openEpochClause } from '@/lib/db/queries/_predicates'
+import { lockOpenEpochForWrite } from '@/lib/db/queries/epoch'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
 import { convertAmount } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
 import { action, actionError } from '@/lib/action-errors'
+
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 /**
  * v0.17.2 #42 — Trip sub-ledger actions.
@@ -42,9 +45,16 @@ export interface EditTripExpenseInput extends CreateTripExpenseInput {
  * The trip every sub-ledger write targets: in the viewer's group, not deleted,
  * and in the chapter that is open now (`openEpochClause`). A trip whose
  * chapter has closed is read-only and reads as `trip_not_found`.
+ *
+ * Runs inside the write's transaction and takes, in this order, the trip row
+ * FOR SHARE and then the open chapter row FOR SHARE (see
+ * lockOpenEpochForWrite). The trip lock makes the write wait for a concurrent
+ * endTrip / updateTrip and then see its result (`trip_ended`, new rates); the
+ * chapter lock makes a concurrent chapter close either wait for the write or,
+ * if it got there first, refuse it.
  */
-async function loadActiveTripForViewer(tripId: string, groupId: string) {
-  const [trip] = await db
+async function lockActiveTripForWrite(tx: DbTransaction, tripId: string, groupId: string) {
+  const [trip] = await tx
     .select()
     .from(trips)
     .where(and(
@@ -53,8 +63,10 @@ async function loadActiveTripForViewer(tripId: string, groupId: string) {
       isNull(trips.deletedAt),
       openEpochClause(trips.epochId, groupId),
     ))
-    .limit(1)
+    .for('share')
   if (!trip) throw actionError('trip_not_found')
+  const openEpoch = await lockOpenEpochForWrite(tx, groupId)
+  if (!openEpoch || openEpoch.id !== trip.epochId) throw actionError('trip_not_found')
   if (trip.status !== 'active') throw actionError('trip_ended')
   return trip
 }
@@ -142,49 +154,54 @@ function validateCommon(input: CreateTripExpenseInput, group: { memberA: string;
 
 export const createTripExpense = action(async (input: CreateTripExpenseInput) => {
   const { group } = await getViewerWriteContext()
-  const trip = await loadActiveTripForViewer(input.tripId, group.id)
-  validateCommon(input, group)
 
-  const normalized = normalizeAmount(
-    { amount: input.amount, currency: input.currency },
-    group.baseCurrency,
-    trip.rateSnapshot,
-    trip.defaultCurrency ?? group.baseCurrency,
-  )
+  const inserted = await db.transaction(async (tx) => {
+    const trip = await lockActiveTripForWrite(tx, input.tripId, group.id)
+    validateCommon(input, group)
 
-  const [inserted] = await db
-    .insert(tripExpenses)
-    .values({
-      tripId: trip.id,
-      paidBy: input.paidBy,
-      amount: normalized.amount,
-      originalCurrency: normalized.originalCurrency,
-      originalAmount: normalized.originalAmount,
-      category: input.category,
-      splitType: input.splitType,
-      splitRatio: input.splitRatio ?? null,
-      description: input.description?.trim() ? input.description.trim() : null,
-      transactedAt: input.transactedAt ? new Date(input.transactedAt) : new Date(),
-    })
-    .returning()
+    const normalized = normalizeAmount(
+      { amount: input.amount, currency: input.currency },
+      group.baseCurrency,
+      trip.rateSnapshot,
+      trip.defaultCurrency ?? group.baseCurrency,
+    )
 
-  revalidatePath(`/trips/${trip.id}`)
+    const [row] = await tx
+      .insert(tripExpenses)
+      .values({
+        tripId: trip.id,
+        paidBy: input.paidBy,
+        amount: normalized.amount,
+        originalCurrency: normalized.originalCurrency,
+        originalAmount: normalized.originalAmount,
+        category: input.category,
+        splitType: input.splitType,
+        splitRatio: input.splitRatio ?? null,
+        description: input.description?.trim() ? input.description.trim() : null,
+        transactedAt: input.transactedAt ? new Date(input.transactedAt) : new Date(),
+      })
+      .returning()
+    return row
+  })
+
+  revalidatePath(`/trips/${inserted.tripId}`)
   return inserted
 })
 
 export const editTripExpense = action(async (input: EditTripExpenseInput) => {
   const { group } = await getViewerWriteContext()
-  const trip = await loadActiveTripForViewer(input.tripId, group.id)
-  validateCommon(input, group)
-
-  const normalized = normalizeAmount(
-    { amount: input.amount, currency: input.currency },
-    group.baseCurrency,
-    trip.rateSnapshot,
-    trip.defaultCurrency ?? group.baseCurrency,
-  )
 
   const inserted = await db.transaction(async (tx) => {
+    const trip = await lockActiveTripForWrite(tx, input.tripId, group.id)
+    validateCommon(input, group)
+
+    const normalized = normalizeAmount(
+      { amount: input.amount, currency: input.currency },
+      group.baseCurrency,
+      trip.rateSnapshot,
+      trip.defaultCurrency ?? group.baseCurrency,
+    )
+
     const deleted = await tx
       .update(tripExpenses)
       .set({ deletedAt: new Date() })
@@ -216,24 +233,28 @@ export const editTripExpense = action(async (input: EditTripExpenseInput) => {
     return row
   })
 
-  revalidatePath(`/trips/${trip.id}`)
+  revalidatePath(`/trips/${inserted.tripId}`)
   return inserted
 })
 
 export const softDeleteTripExpense = action(async (input: { id: string; tripId: string }) => {
   const { group } = await getViewerWriteContext()
-  const trip = await loadActiveTripForViewer(input.tripId, group.id)
 
-  const deleted = await db
-    .update(tripExpenses)
-    .set({ deletedAt: new Date() })
-    .where(and(
-      eq(tripExpenses.id, input.id),
-      eq(tripExpenses.tripId, trip.id),
-      isNull(tripExpenses.deletedAt),
-    ))
-    .returning({ id: tripExpenses.id })
-  if (deleted.length === 0) throw actionError('record_deleted_or_missing')
+  const tripId = await db.transaction(async (tx) => {
+    const trip = await lockActiveTripForWrite(tx, input.tripId, group.id)
 
-  revalidatePath(`/trips/${trip.id}`)
+    const deleted = await tx
+      .update(tripExpenses)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(tripExpenses.id, input.id),
+        eq(tripExpenses.tripId, trip.id),
+        isNull(tripExpenses.deletedAt),
+      ))
+      .returning({ id: tripExpenses.id })
+    if (deleted.length === 0) throw actionError('record_deleted_or_missing')
+    return trip.id
+  })
+
+  revalidatePath(`/trips/${tripId}`)
 })

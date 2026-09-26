@@ -60,6 +60,7 @@ function queueHappyPath() {
   queueDbResult([OPEN_EPOCH])     // getViewerWriteContext → open epoch lookup (.limit)
   queueDbResult([EXISTING_TRIP])  // existing trip lookup (.limit)
   queueDbResult([{ ...EXISTING_TRIP }]) // update .returning
+  queueDbResult([{ id: 'epoch-current' }]) // open chapter row FOR SHARE
 }
 
 function setPayloads(): Record<string, unknown>[] {

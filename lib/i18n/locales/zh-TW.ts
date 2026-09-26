@@ -2307,6 +2307,9 @@ export type Translations = {
       alreadyInDuo: string
       /** The person who minted the invite is no longer in that ledger (#1031). */
       inviterNotMember: string
+      /** The accepter has a trip in progress in their own ledger, whose
+       *  chapter the join would end (#1290). */
+      activeTrip: string
       unknown: string
     }
     /** `<head>` metadata for the invite landing page. Deliberately generic —
@@ -4879,6 +4882,7 @@ export const zhTW: Translations = {
       alreadyMember: '你已經是此帳本的成員',
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       inviterNotMember: '發出這份邀請的人已經不在這本帳本裡，連結不再有效。',
+      activeTrip: '你的帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，再接受邀請。',
       unknown: '無法加入帳本',
     },
     meta: {

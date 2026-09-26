@@ -16,6 +16,7 @@ import { captureServer } from '@/lib/analytics/server'
 import { and, eq, gt, inArray, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
 import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { hasActiveTrip } from '@/lib/db/queries/trips'
 import { action } from '@/lib/action-errors'
 
 export type InvitePreview =
@@ -258,6 +259,17 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
       const g = lock.groups.get(id.toLowerCase())
       return g?.memberA === user.id && g.memberB === null
     })
+
+    // An active trip in a ledger whose chapter this join ends would be left
+    // in a closed chapter, where it can no longer be ended. Same fence as
+    // leaveGroup's, read under the locks so a trip started while this waited
+    // for them is seen.
+    for (const id of lockedOtherIds) {
+      const openEpoch = lock.openEpochs.get(id.toLowerCase())
+      if (openEpoch && await hasActiveTrip(id, openEpoch.id, tx)) {
+        throw new Error('accept_active_trip')
+      }
+    }
 
     // #1288 — the claim. It runs right after the locks and it is atomic: one
     // conditional UPDATE that only matches while the invite is still
