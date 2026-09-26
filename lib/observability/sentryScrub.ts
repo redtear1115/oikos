@@ -39,6 +39,8 @@
  * free-text fields — exception values, event / logentry messages, breadcrumb
  * messages and console arguments, log messages and parameters — lose the
  * params tail and the value lists; the SQL text and column names stay.
+ * Exception stack frames that the SDK parsed out of such a message (not out
+ * of the call stack) are dropped (#1451, see "Stack frames" below).
  *
  * ## Contract
  *
@@ -291,9 +293,12 @@ const PG_FAILING_ROW_RE = /Failing row contains \([\s\S]*/
  * 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input:
  * `invalid input syntax for type uuid: "<value>"` (also `… for enum "Foo": …`).
  * Only the opening is matched here; see `maskInvalidInput` for where the value
- * ends. Group 1 is `\` when the text is JSON-escaped.
+ * ends. Group 1 is the backslashes before the quote: none in plain text, one
+ * when JSON-escaped, three (or more) when the JSON sat inside another JSON
+ * string (#1451). Any run counts — text over `MAX_STRUCTURED_LENGTH` is never
+ * parsed, so a double-escaped marker there is only ever seen as plain text.
  */
-const PG_INVALID_INPUT_HEAD_RE = /invalid input (?:syntax|value) for [^:\n]{0,256}: (\\?)"/
+const PG_INVALID_INPUT_HEAD_RE = /invalid input (?:syntax|value) for [^:\n]{0,256}: (\\*)"/
 
 /** JSON keys whose value is bound parameters or row context. */
 const DB_VALUE_KEYS = new Set(['params', 'parameters', 'args', 'detail', 'where'])
@@ -334,13 +339,23 @@ function jsonValueEnd(text: string, start: number): number {
  * the first such key to the end → `"params":"[Filtered]"`. Text that did not
  * parse is truncated or malformed, so the end of the value cannot be trusted
  * (a value's own quote may look like its end).
+ *
+ * The key may be escaped any number of times (`\"params\":`, `\\\"params\\\":`
+ * — JSON inside a JSON string, #1451): the same run of backslashes goes back
+ * around the `[Filtered]` placeholder.
  */
 function maskJsonValueKeys(text: string): Plain {
   if (!text.includes('":')) return { text, open: false }
-  const re = /"(\w+)"\s*:/g
+  // The leading backslashes are counted by hand, not matched: a `\\*` at the
+  // start of the pattern would rescan a long backslash run from every
+  // position in it (quadratic).
+  const re = /"(\w+)\\*"\s*:/g
   for (let m = re.exec(text); m; m = re.exec(text)) {
     if (!DB_VALUE_KEYS.has(m[1])) continue
-    return { text: `${text.slice(0, m.index + m[0].length)}"${FILTERED}"`, open: true }
+    let from = m.index
+    while (from > 0 && text[from - 1] === '\\') from--
+    const escape = text.slice(from, m.index)
+    return { text: `${text.slice(0, m.index + m[0].length)}${escape}"${FILTERED}${escape}"`, open: true }
   }
   return { text, open: false }
 }
@@ -655,6 +670,151 @@ function scrubQueryString(value: unknown): unknown {
 }
 
 // ---------------------------------------------------------------------------
+// Stack frames (#1451)
+// ---------------------------------------------------------------------------
+//
+// The SDK builds `exception.values[].stacktrace.frames` by running a line
+// parser over `err.stack`, and `err.stack` starts with the whole message. The
+// node parser is not anchored: ANY stack line containing `at ` becomes a
+// frame, and whatever follows `at ` becomes its filename / module / function.
+// So a Drizzle error whose `params:` line holds a value with ` at ` in it
+// (`…,/AB at CD,v1:k1:<ciphertext>`), or a 22P02 message whose quoted input
+// continues on a new line, yields a "frame" named after the bound values —
+// the ciphertext lands in `filename` and `module`. Server actions are not
+// affected (`sanitizeDbError` rewrites the stack before the re-throw); route
+// handlers and server components (`captureRequestError`) are.
+//
+// Every frame is checked here; a frame that fails is dropped:
+//
+// 1. no field (filename, abs_path, module, function) may carry a database
+//    marker (`params: `, `Key (`, …) — the same rules as free text;
+// 2. the filename must look like a code location: a path (`/…`, `C:\…`,
+//    `node:…`, `app:///…`, `webpack-internal:///…`, anything with a `/`)
+//    with a line number, or one of V8's location-less markers
+//    (`<anonymous>`, `native`, `index 0`). Never a comma, quote or newline —
+//    a params line is comma-joined;
+// 3. the frame's text must not come from a message: when the original error
+//    (and its `cause` chain) is available, the message lines containing `at `
+//    are collected, and a frame whose filename (or `function (`) appears in
+//    them was parsed out of the message, not out of the call stack. This is
+//    what catches a value shaped exactly like a frame (`x at /a/b.js:1:2`).
+//    Messages longer than `MAX_FRAME_MESSAGE_TEXT` in total cannot be checked
+//    within budget; then every frame is dropped.
+//
+// Real frames (app code, node_modules, `node:` internals, bundler paths) pass
+// all three. Known cost: an `eval at …` frame has a comma in its filename
+// and is dropped; so is a `(native)` frame (the SDK gives it the previous
+// frame's filename and no line number), and a real frame whose path is
+// quoted in a message line that contains `at `. Residual: without the
+// original error (a hand-built `captureEvent`) and with the exception value
+// cut by the SDK, a value shaped exactly like `x at /a/b.js:1:2` still passes
+// rule 2 — it shows only its own frame-shaped text, not the values after it.
+//
+// Failure looks like nothing: the Sentry issue's stack trace just shows an
+// odd extra frame whose file name is a piece of user data.
+
+/** Total message text (the `cause` chain) checked against frames. */
+const MAX_FRAME_MESSAGE_TEXT = 1_048_576
+/** The node line parser only looks at the first 1024 characters of a line. */
+const STACK_LINE_LIMIT = 1_024
+const MAX_CAUSE_DEPTH = 8
+/** V8 frames without a file location: `(<anonymous>)`, `(native)`, `Promise.all (index 0)`, `evalmachine.<anonymous>`. */
+const NO_LOCATION_FILENAME_RE = /^(?:native|index \d+|[\w.$-]*<anonymous>)$/
+/** A path: has a separator, or is a `node:` builtin. */
+const CODE_PATH_RE = /[/\\]|^node:/
+/** Never in a code location; always in a comma-joined params line or a quoted value. */
+const NOT_IN_CODE_RE = /[,"\n\r\t]/
+const MAX_FUNCTION_LENGTH = 512
+
+function safeDecodeURI(text: string): string {
+  try {
+    return decodeURI(text)
+  } catch {
+    return text
+  }
+}
+
+/**
+ * Message lines (of the original error and its causes, plus the event's own
+ * exception values) that the SDK's node line parser could have turned into a
+ * frame: each line containing `at ` within its first 1024 characters, cut
+ * there. `null` when the messages are over budget — nothing can be vouched for.
+ */
+function collectFrameSuspects(event: AnyRecord, hint: EventHint | undefined): string | null {
+  const messages: string[] = []
+  const values = safeGet(event.exception, 'values')
+  if (Array.isArray(values)) {
+    for (const v of values) {
+      const value = safeGet(v, 'value')
+      if (typeof value === 'string') messages.push(value)
+    }
+  }
+  const seen = new Set<unknown>()
+  let error: unknown = safeGet(hint, 'originalException')
+  for (let depth = 0; depth < MAX_CAUSE_DEPTH && typeof error === 'object' && error !== null && !seen.has(error); depth++) {
+    seen.add(error)
+    const message = safeGet(error, 'message')
+    if (typeof message === 'string') messages.push(message)
+    error = safeGet(error, 'cause')
+  }
+  let total = 0
+  let out = ''
+  for (const message of messages) {
+    total += message.length
+    if (total > MAX_FRAME_MESSAGE_TEXT) return null
+    let start = 0
+    while (start <= message.length) {
+      let end = message.indexOf('\n', start)
+      if (end === -1) end = message.length
+      const line = message.slice(start, Math.min(end, start + STACK_LINE_LIMIT))
+      if (line.includes('at ')) {
+        out += `${line}\n`
+        const decoded = safeDecodeURI(line)
+        if (decoded !== line) out += `${decoded}\n`
+      }
+      start = end + 1
+    }
+  }
+  return out
+}
+
+function hasDbMarker(value: string): boolean {
+  return scrubDbText(value) !== value
+}
+
+/** See the section comment. `suspects` from `collectFrameSuspects`. */
+function isCodeFrame(frame: unknown, suspects: string): boolean {
+  if (!isRecord(frame)) return false
+  for (const key of ['filename', 'abs_path', 'module', 'function'] as const) {
+    const value = frame[key]
+    if (value === undefined || value === null) continue
+    if (typeof value !== 'string' || hasDbMarker(value)) return false
+  }
+  const fn = frame.function as string | undefined
+  if (fn !== undefined && (fn.length > MAX_FUNCTION_LENGTH || NOT_IN_CODE_RE.test(fn))) return false
+  if (fn !== undefined && fn !== '?' && suspects.includes(`${fn} (`)) return false
+  for (const key of ['filename', 'abs_path'] as const) {
+    const path = frame[key] as string | undefined
+    if (path === undefined || path === '') continue
+    if (NO_LOCATION_FILENAME_RE.test(path)) continue
+    if (NOT_IN_CODE_RE.test(path) || !CODE_PATH_RE.test(path)) return false
+    const lineno = frame.lineno
+    if (typeof lineno !== 'number' || !Number.isInteger(lineno) || lineno < 1) return false
+    if (suspects.includes(path)) return false
+  }
+  return true
+}
+
+/** `exception.values[]` with every frame that fails `isCodeFrame` removed. */
+function scrubExceptionFrames(values: unknown[], suspects: string | null): unknown[] {
+  return values.map(v => {
+    if (!isRecord(v) || !isRecord(v.stacktrace) || !Array.isArray(v.stacktrace.frames)) return v
+    const frames = suspects === null ? [] : v.stacktrace.frames.filter(f => isCodeFrame(f, suspects))
+    return { ...v, stacktrace: { ...v.stacktrace, frames } }
+  })
+}
+
+// ---------------------------------------------------------------------------
 // Structure-level scrubbing (throws are caught by the exported hooks)
 // ---------------------------------------------------------------------------
 
@@ -754,7 +914,7 @@ function scrubSpanInner(span: SpanJSON): SpanJSON {
   return out
 }
 
-function scrubEventInner<T extends Event>(event: T): T {
+function scrubEventInner<T extends Event>(event: T, hint: EventHint | undefined): T {
   const out = { ...event } as T & AnyRecord
   if ('request' in out) {
     const request = scrubRequest(out.request)
@@ -772,9 +932,11 @@ function scrubEventInner<T extends Event>(event: T): T {
     out.logentry = logentry as Event['logentry']
   }
   if (isRecord(out.exception) && Array.isArray(out.exception.values)) {
+    // Frames first: the suspects come from the raw (unscrubbed) messages.
+    const suspects = collectFrameSuspects(out, hint)
     out.exception = {
       ...out.exception,
-      values: out.exception.values.map(v =>
+      values: scrubExceptionFrames(out.exception.values, suspects).map(v =>
         isRecord(v) && 'value' in v ? { ...v, value: scrubMessageText(v.value) } : v),
     } as Event['exception']
   }
@@ -915,10 +1077,10 @@ function fallbackLog(log: unknown): Log {
 // ---------------------------------------------------------------------------
 
 /** `beforeSend` and `beforeSendTransaction`. Never throws, never returns null. */
-export function scrubSentryEvent<T extends Event>(event: T, _hint?: EventHint): T {
+export function scrubSentryEvent<T extends Event>(event: T, hint?: EventHint): T {
   try {
     if (!isRecord(event)) return fallbackEvent<T>(event)
-    return scrubEventInner(event)
+    return scrubEventInner(event, hint)
   } catch {
     return fallbackEvent<T>(event)
   }
