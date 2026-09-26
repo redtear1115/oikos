@@ -55,8 +55,7 @@ function isBarcodeUniqueViolation(e: unknown): boolean {
   for (let depth = 0; cur && depth < 3; depth++) {
     const err = cur as { code?: unknown; constraint_name?: unknown; constraint?: unknown }
     if (err.code === '23505') {
-      const name = err.constraint_name ?? err.constraint
-      return name === undefined || name === 'invoice_credentials_uniq'
+      return (err.constraint_name ?? err.constraint) === 'invoice_credentials_uniq'
     }
     cur = (cur as { cause?: unknown }).cause
   }
