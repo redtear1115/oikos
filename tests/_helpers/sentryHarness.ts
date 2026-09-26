@@ -12,7 +12,7 @@
  * Call from a file that runs in the `node` vitest environment.
  */
 import * as Sentry from '@sentry/node'
-import { createTransport, _INTERNAL_flushLogsBuffer } from '@sentry/core'
+import { createTransport, _INTERNAL_flushLogsBuffer, type Integration } from '@sentry/core'
 import {
   scrubSentryBreadcrumb,
   scrubSentryEvent,
@@ -28,7 +28,16 @@ export interface SentryHarness {
   close(): Promise<void>
 }
 
-export function startSentryHarness(): SentryHarness {
+export interface SentryHarnessOptions {
+  /**
+   * Added to the console integrations. Production keeps the SDK defaults on
+   * (linkedErrors walks `err.cause`, contextLines reads source lines into
+   * each frame); a test about stack frames wants those too.
+   */
+  integrations?: Integration[]
+}
+
+export function startSentryHarness(options: SentryHarnessOptions = {}): SentryHarness {
   const envelopes: string[] = []
   const decoder = new TextDecoder()
   const client = Sentry.init({
@@ -37,6 +46,7 @@ export function startSentryHarness(): SentryHarness {
     integrations: [
       Sentry.consoleIntegration(),
       Sentry.consoleLoggingIntegration({ levels: ['error', 'warn'] }),
+      ...(options.integrations ?? []),
     ],
     enableLogs: true,
     sendDefaultPii: false,
