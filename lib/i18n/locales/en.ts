@@ -1866,6 +1866,7 @@ export const en: Translations = {
       alreadyMember: "You're already a member of this ledger.",
       alreadyInDuo: 'You already share a ledger with {partner}. Leave it first to join a new one.',
       inviterNotMember: 'The person who sent this invite is no longer in that ledger, so the link no longer works.',
+      activeTrip: 'Your ledger has a trip in progress. Mark it as ended in "Trips" before accepting this invite.',
       unknown: "Can't join this ledger.",
     },
     meta: {

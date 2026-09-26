@@ -469,3 +469,34 @@ export async function lockForEpochClose(
 export function boundarySql(boundary: string) {
   return sql`${boundary}::timestamptz`
 }
+
+/**
+ * The writer side of {@link lockForEpochClose}: take the group's open chapter
+ * row `FOR SHARE` and return its id, or `null` when no chapter is open.
+ *
+ * Used by writes that must land in the chapter they checked (ending a trip and
+ * writing its summary rows, editing a trip or its expenses). Call it after any
+ * lock on the entity row itself (entity row → chapter row, never the reverse),
+ * then compare the returned id with the entity's chapter and fail closed when
+ * they differ or the result is `null`.
+ *
+ * - While this lock is held, a closer cannot take the chapter row (its FOR NO
+ *   KEY UPDATE waits), so it reads its boundary only after this transaction
+ *   commits: every row written here has `created_at` < that boundary.
+ * - If a closer holds the row first, this waits; once the closer commits, the
+ *   row no longer matches `ended_at IS NULL` and the next chapter's row is not
+ *   visible to this statement, so the result is `null`. Without this lock
+ *   nothing errors: the write commits after the close, and rows written by it
+ *   silently show up in the next chapter.
+ */
+export async function lockOpenEpochForWrite(
+  tx: DbTransaction,
+  groupId: string,
+): Promise<{ id: string } | null> {
+  const [row] = await tx
+    .select({ id: groupEpochs.id })
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
+    .for('share')
+  return row ?? null
+}

@@ -1853,6 +1853,7 @@ export const zhCN: Translations = {
       alreadyMember: '你已经是此账本的成员',
       alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
       inviterNotMember: '发出这份邀请的人已经不在这本账本里，链接不再有效。',
+      activeTrip: '你的账本目前有进行中的旅行，请先到「旅行」把它标记为结束，再接受邀请。',
       unknown: '无法加入账本',
     },
     meta: {

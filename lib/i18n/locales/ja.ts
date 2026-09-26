@@ -1867,6 +1867,7 @@ export const ja: Translations = {
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
       alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
       inviterNotMember: '招待を送った人は、すでにこの家計簿のメンバーではありません。リンクは無効です。',
+      activeTrip: 'あなたの家計簿には進行中の旅行があります。「旅行」で終了にしてから招待を受けてください。',
       unknown: '家計簿に参加できません',
     },
     meta: {
