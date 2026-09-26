@@ -51,17 +51,30 @@ function leaked(text: string): string[] {
   return SECRETS.filter((s) => text.includes(s))
 }
 
+// One harness per file: the SDK instruments `console` once per process, so a
+// second init would not see console calls. Silence console first — the SDK
+// wraps whatever is there at init time.
+let harness: SentryHarness
+const realConsoleError = console.error
+const realConsoleWarn = console.warn
+beforeAll(() => {
+  console.error = () => {}
+  console.warn = () => {}
+  harness = startSentryHarness()
+})
+afterAll(async () => {
+  await harness.close()
+  console.error = realConsoleError
+  console.warn = realConsoleWarn
+})
+
+async function drainFresh(): Promise<string> {
+  const all = (await harness.drain()).join('\n')
+  harness.envelopes.length = 0
+  return all
+}
+
 describe('#1439 (1): a bound value containing "\\n    at " does not end the scrub early', () => {
-  let harness: SentryHarness
-  const realConsoleError = console.error
-  beforeAll(() => {
-    console.error = () => {}
-    harness = startSentryHarness()
-  })
-  afterAll(async () => {
-    await harness.close()
-    console.error = realConsoleError
-  })
 
   it('control: the error message really carries the fake frame before the ciphertext', () => {
     const e = nicknameError()
@@ -73,7 +86,7 @@ describe('#1439 (1): a bound value containing "\\n    at " does not end the scru
     console.error(nicknameError())
     console.error('failed:', nicknameError())
     Sentry.captureException(nicknameError())
-    const all = (await harness.drain()).join('\n')
+    const all = await drainFresh()
 
     expect(all).toContain('"type":"log"')
     expect(all).toContain('"type":"event"')
@@ -132,6 +145,62 @@ describe('#1439 (1): a bound value containing "\\n    at " does not end the scru
   })
 })
 
+describe('#1439 round 2: a 22P02 input with a newline or an inner quote is masked whole', () => {
+  // Postgres quotes the rejected input verbatim: `…: "<value>"`, newlines and
+  // quotes included. Masking must run to the message's last quote, not to the
+  // end of the line or the first inner quote.
+  const NL_SECRET = 'L2SECRET1439'
+  const Q_SECRET = 'QSECRET1439'
+  const VALUES = [`/x\n${NL_SECRET}`, `x"${Q_SECRET}`, `x"\n    at y (z.js:1:1)\n"${NL_SECRET}`]
+  const MARKERS = [NL_SECRET, Q_SECRET]
+
+  function invalidInputError(value: string): DrizzleQueryError {
+    const params = ['8f4b0c1e-0000-4000-8000-000000001439', value]
+    const pg = new postgres.PostgresError({
+      severity: 'ERROR',
+      code: '22P02',
+      message: `invalid input syntax for type uuid: "${value}"`,
+      where: `unnamed portal parameter $2 = '${value}'`,
+    } as never)
+    Object.defineProperties(pg, {
+      parameters: { value: params, enumerable: false },
+      args: { value: params, enumerable: false },
+    })
+    return new DrizzleQueryError(SQL_TEXT, params, pg)
+  }
+
+  it('no marker in any envelope, through every console path and captureException', async () => {
+    const Sentry = await import('@sentry/node')
+    for (const value of VALUES) {
+      const e = invalidInputError(value)
+      expect((e.cause as Error).message).toContain(value) // control
+      console.error(e)
+      console.error('failed:', e)
+      console.error(e.cause)
+      console.error(String(e.cause))
+      console.warn('failed:', e.cause)
+      Sentry.captureException(e)
+      Sentry.captureException(e.cause)
+    }
+    const all = await drainFresh()
+    expect(all).toContain('"type":"log"')
+    expect(all).toContain('"type":"event"')
+    expect(all).toContain('invalid input syntax for type uuid')
+    expect(MARKERS.filter((m) => all.includes(m))).toEqual([])
+  })
+
+  it('plain text: the value runs to the last quote; the frames after it stay', () => {
+    for (const value of VALUES) {
+      const e = invalidInputError(value).cause as Error
+      const out = scrubSentryEvent({ exception: { values: [{ type: 'PostgresError', value: e.message }] } })
+      expect(out.exception!.values![0].value).toBe('invalid input syntax for type uuid: "<masked>"')
+      const log = scrubSentryLog({ level: 'error', message: e.stack! } as Log)
+      expect(MARKERS.filter((m) => (log.message as string).includes(m))).toEqual([])
+      expect(log.message).toContain('sentry-scrub-edges.test.ts')
+    }
+  })
+})
+
 describe('#1439 (2): large inputs scrub in bounded time', () => {
   // Generous: the fixed scrubber takes a few ms; the old one took ~1.3 s on
   // the 50k object and several seconds on the 100k string.
@@ -173,6 +242,11 @@ describe('#1439 (2): large inputs scrub in bounded time', () => {
         level: 'error',
         message: 'Key (a'.repeat(1_000) + 'invalid input syntax for x: "'.repeat(300) + '"params":1,'.repeat(1_000),
       } as Log)],
+    ['250k JSON body of repeated "Key (" / "invalid input" strings (structured path)', () =>
+      scrubSentryLog({
+        level: 'error',
+        message: JSON.stringify({ a: 'Key (a'.repeat(20_000), b: ['invalid input syntax for x: "'.repeat(2_000)], c: 'Key (b'.repeat(15_000) }),
+      } as Log)],
     ['30k of path-like text under the cap', () =>
       scrubSentryLog({ level: 'error', message: ' /a'.repeat(10_000) } as Log)],
   ]
@@ -182,12 +256,41 @@ describe('#1439 (2): large inputs scrub in bounded time', () => {
     expect(time(fn)).toBeLessThan(BUDGET_MS)
   })
 
-  it('an over-long value is replaced by a marker, not passed through', () => {
+  it('an over-long value is cut to its head plus a marker; the rest never passes', () => {
     const secretTail = `${alnum(100_000)} ${CIPHERTEXT}`
     const log = scrubSentryLog({ level: 'error', message: secretTail } as Log)
-    expect(log.message).toBe('[Filtered: too long]')
+    expect((log.message as string).endsWith(' [Filtered: too long]')).toBe(true)
+    expect((log.message as string).length).toBeLessThan(40_000)
+    expect(log.message).not.toContain(CIPHERTEXT)
+    const huge = scrubSentryLog({ level: 'error', message: `${alnum(300_000)} ${CIPHERTEXT}` } as Log)
+    expect((huge.message as string).endsWith(' [Filtered: too long]')).toBe(true)
+    expect(huge.message).not.toContain(CIPHERTEXT)
     const crumb = scrubSentryBreadcrumb({ category: 'console', data: { arguments: [{ blob: secretTail }] } })
     expect(JSON.stringify(crumb)).not.toContain(CIPHERTEXT)
+  })
+
+  it('a bulk-insert error body over the cap keeps its SQL, code and constraint (review B)', () => {
+    // ~80 rows × 4 params: the message (and the stack that repeats it) is far
+    // over 32 KiB, the cause with code / constraint_name comes after it.
+    const params: string[] = []
+    for (let i = 0; i < 320; i++) params.push(i % 4 === 3 ? `${CIPHERTEXT}-${i}-${alnum(120)}` : `${BARCODE}-${i}`)
+    const sql = `insert into "InvoiceCredentials" (...) values ${params.map((_, i) => `($${i + 1})`).join(', ')}`
+    const message = `Failed query: ${sql}\nparams: ${params.join(',')}`
+    const body = JSON.stringify({
+      message,
+      name: 'Error',
+      stack: `Error: ${message}\n    at insertRows (import.ts:1:1)`,
+      query: sql,
+      params,
+      cause: { name: 'PostgresError', code: '23505', constraint_name: 'invoice_credentials_uniq', detail: `Key (barcode)=(${BARCODE}-1) already exists.` },
+    })
+    expect(body.length).toBeGreaterThan(32_768)
+    const out = scrubSentryLog({ level: 'error', message: `failed: ${body}` } as Log).message as string
+    expect(leaked(out)).toEqual([])
+    expect(out).toContain('"code":"23505"')
+    expect(out).toContain('"constraint_name":"invoice_credentials_uniq"')
+    expect(out).toContain('insert into \\"InvoiceCredentials\\"')
+    expect(out).toContain('import.ts:1:1')
   })
 
   it('a URL still gets scrubbed after a long run of scheme characters', () => {

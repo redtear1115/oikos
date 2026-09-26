@@ -140,4 +140,43 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     expect(all).not.toContain(CIPHERTEXT_1439)
     expect(all).not.toContain('/NL1439')
   })
+
+  // #1439 round 2: Postgres quotes a rejected input verbatim — newlines and
+  // inner quotes included. The mask must run to the message's last quote.
+  it('a 22P02 input with a newline or an inner quote leaks nothing (console, capture, sanitizer)', async () => {
+    const { db } = await import('@/lib/db/client')
+    const { invoiceCredentials } = await import('@/lib/db/schema')
+    const { sanitizeDbError } = await import('@/lib/db/sanitizeError')
+    const Sentry = await import('@sentry/node')
+    const MARKERS = ['L2SECRET1439', 'QSECRET1439']
+    const values = ['/x\nL2SECRET1439', 'x"QSECRET1439']
+
+    await harness.drain()
+    harness.envelopes.length = 0
+    const sanitized: string[] = []
+    for (const groupId of values) {
+      const e = await Promise.resolve(db.insert(invoiceCredentials).values({
+        groupId, userId: made.profile, barcode: '/Q1439', verificationCodeEncrypted: 'v1:k1:q',
+      })).then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+      // Control: the real 22P02, quoting the whole input.
+      expect((e.cause as { code?: string }).code).toBe('22P02')
+      expect((e.cause as Error).message).toBe(`invalid input syntax for type uuid: "${groupId}"`)
+
+      console.error(e)
+      console.error('failed:', e)
+      console.error(e.cause)
+      console.warn('failed:', e.cause)
+      Sentry.captureException(e)
+      Sentry.captureException(e.cause)
+      const clean = sanitizeDbError(e) as Error & { cause: Error }
+      sanitized.push(clean.message, clean.stack ?? '', clean.cause.message, clean.cause.stack ?? '')
+    }
+    const all = (await harness.drain()).join('\n')
+
+    expect(all).toContain('"type":"log"')
+    expect(all).toContain('"type":"event"')
+    expect(all).toContain('invalid input syntax for type uuid')
+    expect(MARKERS.filter((m) => all.includes(m))).toEqual([])
+    expect(MARKERS.filter((m) => sanitized.join('\n').includes(m))).toEqual([])
+  })
 })

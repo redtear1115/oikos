@@ -102,6 +102,20 @@ describe('runAction sanitises driver errors at the source', () => {
     expect(leaks(out.cause.stack)).toEqual([])
   })
 
+  it('#1439: a 22P02 input with a newline or an inner quote is masked whole', () => {
+    for (const value of [`/x\n${DESCRIPTION}`, `x"${DESCRIPTION}`, `x"\n"${CIPHERTEXT}`]) {
+      const pg = new postgres.PostgresError({
+        message: `invalid input syntax for type uuid: "${value}"`,
+        severity: 'ERROR',
+        code: '22P02',
+      } as never)
+      const out = sanitizeDbError(new DrizzleQueryError(SQL_TEXT, [value], pg)) as Error & { cause: Error }
+      expect(out.cause.message).toBe('invalid input syntax for type uuid: "<masked>"')
+      expect(leaks(out)).toEqual([])
+      expect(leaks(out.cause.stack)).toEqual([])
+    }
+  })
+
   it('leaves non-database errors alone', async () => {
     const plain = new Error('something else broke')
     await expect(runAction(async () => { throw plain })).rejects.toBe(plain)
