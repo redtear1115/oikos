@@ -13,7 +13,8 @@ import {
 } from '@/lib/invite'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { captureServer } from '@/lib/analytics/server'
-import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm'
+import { and, eq, gt, inArray, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
+import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { action } from '@/lib/action-errors'
 
@@ -204,57 +205,91 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
   if (!result.ok) throw new Error(result.error)
 
   await db.transaction(async (tx) => {
-    // #1288 — lock order. Take the group row before the invite row, the same
-    // order as createInvite (group FOR UPDATE, then supersede the invites).
-    // Claiming the invite first and updating the group second is the opposite
-    // order: a mint and an accept on the same solo group could each hold one
-    // lock and wait for the other, Postgres aborts one with 40P01 (deadlock),
-    // and the loser only sees the generic error. With one order, whichever
-    // takes the group row first finishes; the other then sees its result:
-    // a later mint reads `group_full`, a later accept finds the invite
-    // superseded (`revoked`). The locked row itself is not used — the guarded
-    // UPDATE below still re-checks the group.
-    await tx
-      .select({ id: oikosGroups.id })
-      .from(oikosGroups)
-      .where(eq(oikosGroups.id, invite.groupId))
-      .for('update')
+    // The accepter's other ledgers whose open chapter is a solo one of theirs
+    // (e.g. the solo ledger a leave left them with). Their chapters end with
+    // this join, so they are locked with the invite's group below. Read
+    // before the locks; only the groups found here are touched.
+    const otherSolo = await tx
+      .select({ groupId: groupEpochs.groupId })
+      .from(groupEpochs)
+      .where(and(
+        isNull(groupEpochs.endedAt),
+        eq(groupEpochs.memberAId, user.id),
+        isNull(groupEpochs.memberBId),
+        ne(groupEpochs.groupId, invite.groupId),
+      ))
+    const otherGroupIds = otherSolo.map((r) => r.groupId)
 
-    // #1288 — the claim. It runs right after the group lock and it
-    // is atomic: one conditional UPDATE that only matches while the invite is
-    // still unaccepted, unrevoked and unexpired by the DB clock. The checks
-    // above ran on a row read earlier; a revoke (supersede, partner removal,
-    // leave) or an expiry landing in between used to be ignored, and the
-    // accept went through with nothing erroring. A concurrent second accept
-    // blocks on the row lock, then matches zero rows. Every later throw in
-    // this callback rolls the claim back.
+    // Lock order (see lockForEpochClose): every group whose chapter this join
+    // ends — the invite's group and the accepter's other solo ledgers — FOR
+    // NO KEY UPDATE in ascending id, then their open chapter rows, then the
+    // boundary from the DB clock. Two accepts touching the same two groups
+    // in opposite roles therefore queue instead of deadlocking.
+    //
+    // #1288 — the group row is taken before the invite row, the same order
+    // as createInvite (group FOR UPDATE, then supersede the invites). With
+    // one order, whichever takes the group row first finishes; the other
+    // then sees its result: a later mint reads `group_full`, a later accept
+    // finds the invite superseded (`revoked`).
+    const lock = await lockForEpochClose(tx, [invite.groupId, ...otherGroupIds])
+    const boundary = boundarySql(lock.boundary)
+
+    // 固定兩人: neither the accepter nor the issuer may already be paired in
+    // another ledger. Checked here, under the locks, so it reads what is
+    // committed now rather than what the validation above saw.
+    const pairedElsewhere = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(and(
+        ne(oikosGroups.id, invite.groupId),
+        isNotNull(oikosGroups.memberB),
+        or(
+          inArray(oikosGroups.memberA, [user.id, invite.invitedBy]),
+          inArray(oikosGroups.memberB, [user.id, invite.invitedBy]),
+        ),
+      ))
+    const isPaired = (id: string) => pairedElsewhere.some((g) => g.memberA === id || g.memberB === id)
+    if (isPaired(user.id)) throw new Error('already_in_duo')
+    if (isPaired(invite.invitedBy)) throw new Error('inviter_not_member')
+
+    // Of the other ledgers found before the locks, the ones that are still the
+    // accepter's own solo ledger now that they are locked.
+    const lockedOtherIds = otherGroupIds.filter((id) => {
+      const g = lock.groups.get(id.toLowerCase())
+      return g?.memberA === user.id && g.memberB === null
+    })
+
+    // #1288 — the claim. It runs right after the locks and it is atomic: one
+    // conditional UPDATE that only matches while the invite is still
+    // unaccepted, unrevoked and unexpired at the boundary (DB clock). The
+    // checks above ran on a row read earlier; a revoke (supersede, partner
+    // removal, leave) or an expiry landing in between used to be ignored,
+    // and the accept went through with nothing erroring. A concurrent second
+    // accept blocks on the row lock, then matches zero rows. Every later
+    // throw in this callback rolls the claim back.
     const claimed = await tx
       .update(groupInvites)
-      .set({ acceptedAt: sql`now()` })
+      .set({ acceptedAt: boundary })
       .where(and(
         eq(groupInvites.id, invite.id),
         isNull(groupInvites.acceptedAt),
         isNull(groupInvites.revokedAt),
-        gt(groupInvites.expiresAt, sql`now()`),
+        gt(groupInvites.expiresAt, boundary),
       ))
-      .returning({ acceptedAt: groupInvites.acceptedAt })
+      .returning({ id: groupInvites.id })
 
     if (claimed.length === 0) {
       const [current] = await tx
         .select({
           acceptedAt: groupInvites.acceptedAt,
           revokedAt: groupInvites.revokedAt,
-          expiredByDbClock: sql<boolean>`${groupInvites.expiresAt} <= now()`,
+          expiredByDbClock: sql<boolean>`${groupInvites.expiresAt} <= ${boundary}`,
         })
         .from(groupInvites)
         .where(eq(groupInvites.id, invite.id))
         .limit(1)
       throw new Error(classifyUnclaimableInvite(current ?? null))
     }
-
-    // One instant for the whole join: the epoch boundaries below use the
-    // moment the invite was stamped accepted.
-    const now = claimed[0].acceptedAt ?? new Date()
 
     // Bump the epoch as the partner joins — relevant for groups that were
     // solo after a prior leave so the new relationship's timeline / stats
@@ -264,7 +299,7 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
     // member" in the same statement that seats member_b.
     const updated = await tx
       .update(oikosGroups)
-      .set({ memberB: user.id, currentEpochStartedAt: now })
+      .set({ memberB: user.id, currentEpochStartedAt: boundary })
       .where(and(
         eq(oikosGroups.id, invite.groupId),
         isNull(oikosGroups.memberB),
@@ -287,30 +322,43 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
     // by acceptInvite/leaveGroup hooks).
     await tx
       .update(groupEpochs)
-      .set({ endedAt: now })
+      .set({ endedAt: boundary })
       .where(and(eq(groupEpochs.groupId, invite.groupId), isNull(groupEpochs.endedAt)))
 
-    // Close any leftover open epoch elsewhere where the accepter is the sole
-    // member. Scenario: accepter previously leaveGroup'd into a personal solo
-    // group Y, then accepted this invite. Y's chapter ends at the moment they
-    // re-join — preserves the invariant 「a user has at most one open epoch」.
-    // Scoped to solo (member_a only, no member_b) so we never close a duo
-    // group's epoch — that case shouldn't happen via the documented flow, but
-    // the guard makes the operation impossible to misuse.
-    await tx
-      .update(groupEpochs)
-      .set({ endedAt: now })
-      .where(and(
-        isNull(groupEpochs.endedAt),
-        eq(groupEpochs.memberAId, user.id),
-        isNull(groupEpochs.memberBId),
-        ne(groupEpochs.groupId, invite.groupId),
-      ))
+    // Close the accepter's leftover solo chapters elsewhere — only on the
+    // groups locked above. Scenario: accepter previously leaveGroup'd into a
+    // personal solo group Y, then accepted this invite. Y's chapter ends at
+    // the moment they re-join — preserves the invariant 「a user has at most
+    // one open epoch」. Scoped to solo (member_a only, no member_b) so we
+    // never close a duo group's epoch — that case shouldn't happen via the
+    // documented flow, but the guard makes the operation impossible to misuse.
+    if (lockedOtherIds.length > 0) {
+      await tx
+        .update(groupEpochs)
+        .set({ endedAt: boundary })
+        .where(and(
+          inArray(groupEpochs.groupId, lockedOtherIds),
+          isNull(groupEpochs.endedAt),
+          eq(groupEpochs.memberAId, user.id),
+          isNull(groupEpochs.memberBId),
+        ))
+
+      // Retire the accepter's own open links on those ledgers, as
+      // leaveGroup / removePartner do for the ledger whose chapter they end.
+      await tx
+        .update(groupInvites)
+        .set({ revokedAt: boundary })
+        .where(and(
+          inArray(groupInvites.groupId, lockedOtherIds),
+          isNull(groupInvites.acceptedAt),
+          isNull(groupInvites.revokedAt),
+        ))
+    }
 
     // Open the new duo epoch — member_a stays as is, member_b is the joiner.
     await tx.insert(groupEpochs).values({
       groupId: invite.groupId,
-      startedAt: now,
+      startedAt: boundary,
       memberAId: updatedGroup.memberA,
       memberBId: user.id,
     })

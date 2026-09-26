@@ -389,3 +389,83 @@ export async function getEpochMembers(
     .limit(1)
   return row ?? null
 }
+
+export interface EpochCloseLock {
+  /** The locked group rows, by id. A missing id means the group does not exist. */
+  groups: Map<string, { memberA: string; memberB: string | null }>
+  /** The locked open chapter row of each group, by group id (absent: none open). */
+  openEpochs: Map<string, { id: string; memberAId: string; memberBId: string | null }>
+  /**
+   * The chapter boundary: `clock_timestamp()` read after every lock above is
+   * held, as Postgres text. Write it back with {@link boundarySql}; never parse
+   * it into a JS `Date`.
+   */
+  boundary: string
+}
+
+/**
+ * The first statements of every transaction that ends a chapter (leaveGroup,
+ * removePartner, acceptInvite). Locks, per group in ascending id order:
+ *
+ *   1. `OikosGroups … FOR NO KEY UPDATE`
+ *   2. the open `GroupEpochs` row `… FOR NO KEY UPDATE`
+ *
+ * and only then reads the boundary from the DB clock.
+ *
+ * - NO KEY UPDATE, never plain FOR UPDATE, on the group row. Every insert of a
+ *   row that references a group (cash, income, settlements) takes FOR KEY
+ *   SHARE on that group for its foreign-key check, and FOR KEY SHARE conflicts
+ *   only with FOR UPDATE. A writer that holds the open chapter row FOR SHARE
+ *   and then inserts a money row would otherwise wait on the closer's group
+ *   lock while the closer waits on the chapter row. The symptom is Postgres
+ *   aborting one side with 40P01 (deadlock detected), which reaches the user
+ *   as a generic error.
+ * - Ascending group id, so two closers that touch the same two groups (two
+ *   accepts in opposite roles) queue instead of deadlocking.
+ * - The boundary is read after the locks: a writer that held the chapter row
+ *   has committed by then, so every row it wrote has `created_at` < boundary.
+ *   A boundary fixed earlier (`new Date()` before the transaction, or the
+ *   transaction-start `now()`) can predate such a row, and the row silently
+ *   shows up in the next chapter instead of the one it was written in.
+ * - The boundary stays text. A JS `Date` keeps milliseconds only; Postgres
+ *   keeps microseconds, so a round-tripped boundary can land before a
+ *   `created_at` in the same millisecond, with nothing erroring.
+ *
+ * The same lock order is used by the account-deletion processor.
+ */
+export async function lockForEpochClose(
+  tx: DbTransaction,
+  groupIds: string[],
+): Promise<EpochCloseLock> {
+  const ordered = Array.from(new Set(groupIds.map((id) => id.toLowerCase()))).sort()
+
+  const groups: EpochCloseLock['groups'] = new Map()
+  for (const id of ordered) {
+    const [row] = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, id))
+      .for('no key update')
+    if (row) groups.set(id, row)
+  }
+
+  const openEpochs: EpochCloseLock['openEpochs'] = new Map()
+  for (const id of ordered) {
+    const [row] = await tx
+      .select({ id: groupEpochs.id, memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
+      .from(groupEpochs)
+      .where(and(eq(groupEpochs.groupId, id), isNull(groupEpochs.endedAt)))
+      .for('no key update')
+    if (row) openEpochs.set(id, row)
+  }
+
+  const [{ boundary }] = await tx.execute<{ boundary: string }>(
+    sql`SELECT clock_timestamp()::text AS boundary`,
+  )
+  return { groups, openEpochs, boundary }
+}
+
+/** A boundary from {@link lockForEpochClose}, as a timestamptz value for a write. */
+export function boundarySql(boundary: string) {
+  return sql`${boundary}::timestamptz`
+}
