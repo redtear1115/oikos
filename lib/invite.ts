@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import type { groupInvites, oikosGroups } from '@/lib/db/schema'
 
 /**
@@ -20,6 +20,33 @@ export const INVITE_TTL_MS = 24 * 60 * 60 * 1000
 
 export function generateToken(): string {
   return randomBytes(32).toString('base64url')
+}
+
+/**
+ * #1288 I3 — the shape {@link generateToken} returns: 32 random bytes as
+ * unpadded base64url, always 43 characters. previewInvite / acceptInvite check
+ * it before any database call, so anything else (a truncated paste, an old
+ * test fixture, a probe) is answered `invalid_or_expired` without a query.
+ */
+const INVITE_TOKEN_RE = /^[A-Za-z0-9_-]{43}$/
+
+export function isWellFormedInviteToken(token: unknown): token is string {
+  return typeof token === 'string' && INVITE_TOKEN_RE.test(token)
+}
+
+/**
+ * #1288 I3 — what `GroupInvites.token_hash` stores: the lowercase hex SHA-256
+ * of the token's UTF-8 bytes. Unkeyed on purpose: the token carries 256
+ * random bits, so the hash cannot be reversed by guessing.
+ *
+ * Must stay byte-for-byte equal to the backfill in
+ * `drizzle/0070_invite_token_hash_expand.sql`,
+ * `encode(sha256(convert_to(token, 'UTF8')), 'hex')`. If they drift, nothing
+ * errors: backfilled links just stop matching and read "invalid or expired".
+ * `__tests__/inviteTokenHash.test.ts` pins both to the same vectors.
+ */
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token, 'utf8').digest('hex')
 }
 
 export function getInviteUrl(token: string): string {
