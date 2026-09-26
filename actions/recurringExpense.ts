@@ -13,6 +13,7 @@
 
 import { db } from '@/lib/db/client'
 import {
+  assets,
   cashTransactions,
   recurringExpenseRules,
   pendingExpenseOccurrences,
@@ -265,9 +266,11 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
       proposedSplitRatioA: pendingExpenseOccurrences.proposedSplitRatioA,
       category: recurringExpenseRules.category,
       assetId: recurringExpenseRules.assetId,
+      assetGroupId: assets.groupId,
     })
     .from(pendingExpenseOccurrences)
     .innerJoin(recurringExpenseRules, eq(recurringExpenseRules.id, pendingExpenseOccurrences.ruleId))
+    .leftJoin(assets, eq(assets.id, recurringExpenseRules.assetId))
     .where(and(
       eq(pendingExpenseOccurrences.id, pendingId),
       eq(pendingExpenseOccurrences.groupId, group.id),
@@ -282,6 +285,12 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
   // to re-pick a payer via 「改一下」 instead of inserting an orphan.
   if (row.proposedPaidBy !== group.memberA && row.proposedPaidBy !== group.memberB) {
     throw actionError('pending_expense_partner_handled')
+  }
+  // The rule's asset is copied onto the new record, so it must still belong to
+  // this group (an asset can move to another group after the rule was made).
+  // A soft-deleted asset in this group is still accepted, as before.
+  if (row.assetId !== null && row.assetGroupId !== group.id) {
+    throw actionError('linked_asset_not_in_group')
   }
 
   const result = await db.transaction(async (tx) => {

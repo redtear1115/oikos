@@ -3562,6 +3562,7 @@ export const zhCN: Translations = {
       linked_asset_not_in_group: '关联资产不在家计簿内',
       linked_asset_deleted: '关联资产已删除',
       linked_vehicle_invalid: '无效的关联车辆',
+      primary_user_not_in_group: '主要使用人不在家计簿内',
       plate_empty: '车牌不能为空',
       field_not_filled: '尚未填写此字段',
       template_unknown: '未知的模板',

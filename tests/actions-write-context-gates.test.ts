@@ -135,3 +135,93 @@ describe('write-context gate while viewing a past chapter', () => {
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 })
+
+describe('car primary user must be a current member', () => {
+  it('createCar refuses a primary user outside the group and writes nothing', async () => {
+    currentChapter()
+    expect(await createCar({
+      name: '阿白', plate: 'ABC-1234', purchasedAt: '2026-04-01', purchasePrice: 500000,
+      primaryUserId: 'user-x',
+    })).toEqual({ ok: false, code: 'primary_user_not_in_group' })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('editCar refuses changing the primary user to someone outside the group', async () => {
+    queueDbResult([GROUP])                        // requireViewerGroup
+    queueDbResult([{ id: 'asset-1' }])            // assets update .returning (ownership)
+    queueDbResult([{ primaryUserId: 'user-b' }])  // stored primary user
+
+    expect(await editCar({
+      id: 'asset-1', name: '阿白', purchasedAt: null, purchasePrice: null,
+      primaryUserId: 'user-x',
+    })).toEqual({ ok: false, code: 'primary_user_not_in_group' })
+    // Only the ownership-proving Assets update ran; CarDetails was not touched
+    // (and the transaction rolled back on the throw).
+    expect(mockDb.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('editCar keeps an unchanged stored primary user who is no longer a member', async () => {
+    queueDbResult([GROUP])                        // requireViewerGroup
+    queueDbResult([{ id: 'asset-1' }])            // assets update .returning
+    queueDbResult([{ primaryUserId: 'user-x' }])  // stored primary user (left in place)
+    queueDbResult([])                             // carDetails update
+
+    expect(await editCar({
+      id: 'asset-1', name: '改名', purchasedAt: null, purchasePrice: null,
+      primaryUserId: 'user-x',
+    })).toEqual({ ok: true, data: undefined })
+    expect(mockDb.update).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('recurring confirmPending re-checks the rule against the group', () => {
+  it('income confirmPending refuses a rule recipient outside the group', async () => {
+    currentChapter()
+    queueDbResult([{ ...PENDING_INCOME, recipientId: 'user-x' }])
+
+    expect(await confirmPendingIncome('pend-2'))
+      .toEqual({ ok: false, code: 'recipient_not_in_group' })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('income confirmPending refuses a rule asset that belongs to another group', async () => {
+    currentChapter()
+    queueDbResult([{ ...PENDING_INCOME, assetId: 'asset-9', assetGroupId: 'grp-other' }])
+
+    expect(await confirmPendingIncome('pend-2'))
+      .toEqual({ ok: false, code: 'linked_asset_not_in_group' })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('expense confirmPending refuses a rule asset that belongs to another group', async () => {
+    currentChapter()
+    queueDbResult([{ ...PENDING_EXPENSE, assetId: 'asset-9', assetGroupId: 'grp-other' }])
+
+    expect(await confirmPendingExpense('pend-1'))
+      .toEqual({ ok: false, code: 'linked_asset_not_in_group' })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('expense confirmPending still confirms when the rule asset is in the group', async () => {
+    currentChapter()
+    queueDbResult([{ ...PENDING_EXPENSE, assetId: 'asset-1', assetGroupId: GROUP.id }])
+    queueDbResult([{ id: 'tx-1' }])     // tx insert CashTx
+    queueDbResult([{ id: 'pend-1' }])   // tx update pending
+    queueDbResult([])                   // recalcGroupBalance execute
+
+    expect(await confirmPendingExpense('pend-1')).toEqual({ ok: true, data: { txId: 'tx-1' } })
+  })
+
+  it('income confirmPending still confirms for a member recipient and in-group asset', async () => {
+    currentChapter()
+    queueDbResult([{ ...PENDING_INCOME, assetId: 'asset-1', assetGroupId: GROUP.id }])
+    queueDbResult([{ id: 'tx-2' }])     // tx insert IncomeTx
+    queueDbResult([{ id: 'pend-2' }])   // tx update pending
+
+    expect(await confirmPendingIncome('pend-2')).toEqual({ ok: true, data: { txId: 'tx-2' } })
+  })
+})

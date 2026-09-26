@@ -13,6 +13,7 @@
 
 import { db } from '@/lib/db/client'
 import {
+  assets,
   incomeTransactions,
   recurringIncomeRules,
   pendingIncomeOccurrences,
@@ -210,9 +211,11 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
       category: recurringIncomeRules.category,
       source: recurringIncomeRules.source,
       assetId: recurringIncomeRules.assetId,
+      assetGroupId: assets.groupId,
     })
     .from(pendingIncomeOccurrences)
     .innerJoin(recurringIncomeRules, eq(recurringIncomeRules.id, pendingIncomeOccurrences.ruleId))
+    .leftJoin(assets, eq(assets.id, recurringIncomeRules.assetId))
     .where(and(
       eq(pendingIncomeOccurrences.id, pendingId),
       eq(pendingIncomeOccurrences.groupId, group.id),
@@ -221,6 +224,13 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
     ))
     .limit(1)
   if (!row) throw actionError('pending_income_not_found')
+
+  // Mirror of the expense side: the rule's recipient and asset are copied onto
+  // the new record, so both must still belong to this group.
+  assertRecipientInGroup(row.recipientId, group)
+  if (row.assetId !== null && row.assetGroupId !== group.id) {
+    throw actionError('linked_asset_not_in_group')
+  }
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
