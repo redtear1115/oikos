@@ -31,6 +31,15 @@
  * Headers, cookies and request bodies (`request.data`) are removed outright —
  * same on client, server and edge.
  *
+ * Database values (#1289): a Drizzle error message ends in `\nparams: <every
+ * bound value>`, and Postgres' detail reads `Key (…)=(<values>)` or `Failing
+ * row contains (<values>)`. Server actions strip these at the source
+ * (`lib/db/sanitizeError.ts`); this is the second line for everything else
+ * (route handlers, server components, a `console.error(err)` anywhere). The
+ * free-text fields — exception values, event / logentry messages, breadcrumb
+ * messages and console arguments, log messages and parameters — lose the
+ * params tail and the value lists; the SQL text and column names stay.
+ *
  * ## Contract
  *
  * - Pure: no `window`, no `next/*` at import time. Imported by
@@ -190,6 +199,46 @@ function scrubText(value: unknown): unknown {
   })
 }
 
+// Database error text (#1289). `params:` must start a line — Drizzle's format —
+// so an unrelated "params: " mid-sentence is left alone.
+const DB_PARAMS_TAIL_RE = /(^|\n)params: [\s\S]*$/
+const PG_KEY_DETAIL_RE = /Key \(([^)\n]*)\)=\([^\n]*/g
+const PG_FAILING_ROW_RE = /Failing row contains \([^\n]*/g
+
+function scrubDbText(value: string): string {
+  return value
+    .replace(DB_PARAMS_TAIL_RE, `$1params: ${FILTERED}`)
+    .replace(PG_KEY_DETAIL_RE, `Key ($1)=(${MASKED_VALUE})`)
+    .replace(PG_FAILING_ROW_RE, `Failing row contains (${MASKED_VALUE})`)
+}
+
+/** Free text: database values first, then URLs. */
+function scrubMessageText(value: unknown): unknown {
+  if (typeof value !== 'string' || value === '') return value
+  return scrubText(scrubDbText(value))
+}
+
+/**
+ * A value that may or may not be text: console arguments, log parameters,
+ * `logentry.params`. Strings are scrubbed; an `Error` becomes its scrubbed
+ * `name: message`; an object or array is kept as is unless its JSON form
+ * carries something to scrub, in which case the scrubbed JSON replaces it.
+ */
+function scrubLooseValue(value: unknown): unknown {
+  if (typeof value === 'string') return scrubMessageText(value)
+  if (value instanceof Error) return scrubMessageText(`${value.name}: ${value.message}`)
+  if (typeof value !== 'object' || value === null) return value
+  let json: string | undefined
+  try {
+    json = JSON.stringify(value)
+  } catch {
+    return FILTERED
+  }
+  if (typeof json !== 'string') return value
+  const cleaned = scrubMessageText(json)
+  return cleaned === json ? value : cleaned
+}
+
 function scrubQueryBody(value: string): string {
   const hasMark = value.startsWith('?')
   const body = hasMark ? value.slice(1) : value
@@ -251,8 +300,9 @@ function scrubAttributes(data: unknown, extraUrlKeys?: ReadonlySet<string>): unk
     } else if (isUrlKey(lower) || extraUrlKeys?.has(lower)) {
       out[key] = scrubUrlValue(value)
     } else if (lower.startsWith('sentry.message.')) {
-      // Log template + parameters: free text that may embed a URL.
-      out[key] = scrubText(value)
+      // Log template + parameters: free text that may embed a URL or
+      // database values; parameters need not be strings.
+      out[key] = scrubLooseValue(value)
     } else {
       out[key] = value
     }
@@ -310,8 +360,15 @@ const BREADCRUMB_URL_KEYS: ReadonlySet<string> = new Set(['from', 'to'])
 
 function scrubBreadcrumbInner(breadcrumb: Breadcrumb): Breadcrumb {
   const out: Breadcrumb = { ...breadcrumb }
-  if ('message' in out) out.message = scrubText(out.message) as string | undefined
-  if ('data' in out) out.data = scrubAttributes(out.data, BREADCRUMB_URL_KEYS) as Breadcrumb['data']
+  if ('message' in out) out.message = scrubMessageText(out.message) as string | undefined
+  if ('data' in out) {
+    const data = scrubAttributes(out.data, BREADCRUMB_URL_KEYS)
+    // Console breadcrumbs keep the raw `console.*` arguments here.
+    if (isRecord(data) && Array.isArray(data.arguments)) {
+      data.arguments = data.arguments.map(scrubLooseValue)
+    }
+    out.data = data as Breadcrumb['data']
+  }
   return out
 }
 
@@ -331,6 +388,20 @@ function scrubEventInner<T extends Event>(event: T): T {
   }
   if (typeof out.transaction === 'string') {
     out.transaction = scrubText(out.transaction) as string
+  }
+  if (typeof out.message === 'string') out.message = scrubMessageText(out.message) as string
+  if (isRecord(out.logentry)) {
+    const logentry: AnyRecord = { ...out.logentry }
+    if ('message' in logentry) logentry.message = scrubMessageText(logentry.message)
+    if (Array.isArray(logentry.params)) logentry.params = logentry.params.map(scrubLooseValue)
+    out.logentry = logentry as Event['logentry']
+  }
+  if (isRecord(out.exception) && Array.isArray(out.exception.values)) {
+    out.exception = {
+      ...out.exception,
+      values: out.exception.values.map(v =>
+        isRecord(v) && 'value' in v ? { ...v, value: scrubMessageText(v.value) } : v),
+    } as Event['exception']
   }
   if ('contexts' in out) out.contexts = scrubContexts(out.contexts) as Event['contexts']
   if (isRecord(out.tags)) {
@@ -360,12 +431,12 @@ function scrubLogInner(log: Log): Log {
   const out: Log = { ...log }
   const message: unknown = out.message
   if (typeof message === 'string') {
-    out.message = scrubText(message) as string
+    out.message = scrubMessageText(message) as string
   } else if (message !== undefined && message !== null) {
     // Parameterized string (a `String` object). Template and parameters were
     // already copied into `sentry.message.*` attributes, scrubbed below.
     const text = String(message)
-    const cleaned = scrubText(text) as string
+    const cleaned = scrubMessageText(text) as string
     if (cleaned !== text) out.message = cleaned
   }
   if ('attributes' in out) out.attributes = scrubAttributes(out.attributes) as Log['attributes']

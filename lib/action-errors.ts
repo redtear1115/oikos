@@ -1,4 +1,5 @@
 import type { Translations } from './i18n/locales/zh-TW'
+import { sanitizeDbError } from './db/sanitizeError'
 
 /**
  * Expected errors from server actions (#1156 → #1213 → #1223).
@@ -27,7 +28,8 @@ import type { Translations } from './i18n/locales/zh-TW'
  * correctly, and there are ~130 of those sites. `runAction` (via {@link action})
  * catches them at the export boundary and converts them into the returned
  * failure, so the throw never crosses the wire. An `Error` that is *not*
- * code-shaped is re-thrown untouched.
+ * code-shaped is re-thrown — untouched, except that a database error loses
+ * its bound parameters and row detail first (`lib/db/sanitizeError.ts`).
  *
  * On the client, {@link unwrapAction} turns a returned failure back into a
  * thrown `ActionError`. Within one JS realm nothing is stripped, so `catch` +
@@ -172,7 +174,9 @@ export async function runAction<T>(body: () => Promise<T>): Promise<ActionResult
   } catch (e) {
     const failure = toActionFailure(e)
     if (failure) return failure
-    throw e
+    // #1289 — a driver error carries every bound value (and Postgres' row
+    // detail); strip them before Next logs it and Sentry captures it.
+    throw sanitizeDbError(e)
   }
 }
 
