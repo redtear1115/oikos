@@ -2664,6 +2664,10 @@ export const zhCN: Translations = {
             question: 'ChatGPT 整理的分类会不会跑掉？',
             answer: '分类文字会原样保留，上传后先预览，正式导入时可以对照调整成 Futari 的分类。',
           },
+          {
+            question: '我在简单记账买的（永久）VIP，换过来会浪费吗？',
+            answer: '那笔 VIP 是在简单记账里买的，不会、也不能转移到其他 App，换到哪一家都一样。Futari 目前完全免费，记账、双人分摊、云端同步、CSV 导出导入都不需要额外解锁，搬过来不会遇到功能被锁住的情况。',
+          },
         ],
       },
       'fortune-city': {
@@ -2983,9 +2987,9 @@ export const zhCN: Translations = {
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       'fortune-city': {
-        title: '从记账城市搬家到 Futari｜截图转 CSV',
-        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
-        ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+        title: '从记账城市搬家到 Futari｜不用订阅也能把记录搬出来',
+        description: '记账城市的 CSV 导出要订阅，导出文件还可能要自己转编码？截图请 ChatGPT 整理成 CSV，搬到 Futari 这个专为夫妻、情侣设计的共同账本，不用再自己盖城市，两个人一起记账。免费、无广告、只开放给你们俩。',
+        ogDescription: '记账城市要订阅才能导出？截图→ChatGPT→CSV，免费搬进 Futari 双人记账。',
       },
       cashman: {
         title: '从 CashMan 搬家到 Futari｜截图转 CSV',

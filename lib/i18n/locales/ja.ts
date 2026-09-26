@@ -2710,6 +2710,12 @@ I will upload the screenshots once you confirm.`,
             answer:
               'カテゴリの文字はそのまま保たれます。アップロード後にプレビューでき、実際の取り込み時に Futari のカテゴリへ対応づけられます。',
           },
+          {
+            // TODO(#1414): ja copy below pending native review
+            question: '簡単家計簿で買った（永久）VIPはどうなりますか？',
+            answer:
+              'その VIP は簡単家計簿での購入なので、どこへ移っても他のアプリには引き継げません。Futari は現在完全無料で、記録・分担・クラウド同期・CSV の書き出しと取り込みはすべて追加課金なしで使えます。',
+          },
         ],
       },
       // TODO(#839): ja copy below pending native review
@@ -3053,9 +3059,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: '簡単家計簿からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       'fortune-city': {
-        title: '記帳城市から Futari へ｜スクショを CSV に',
-        description: '記帳城市の CSV 書き出しはサブスク限定？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
-        ogDescription: '記帳城市からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
+        title: '記帳城市から Futari へ｜契約なしで書き出せます',
+        description: '記帳城市の CSV 書き出しはサブスク限定で、開くのにエンコード変換が必要な場合も？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
+        ogDescription: '記帳城市からサブスクなしでお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       cashman: {
         title: 'CashMan から Futari へ｜スクショを CSV に',
