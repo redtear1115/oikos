@@ -43,9 +43,109 @@
 // mechanism behind the clock-step flake above, which no amount of more
 // careful lock-wait polling can fix: both reads it's comparing already
 // happened after their respective locks were correctly held and released.
+//
+// ─── #1444 fix: why a tolerance doesn't work, and what does ───────────────
+//
+// The obvious-looking fix is a tolerance: accept `created_at < boundary +
+// slop` instead of a strict `<`. Measured against a scratch copy of
+// `lib/db/queries/epoch.ts` with `clock_timestamp()` swapped for `now()`
+// (the exact regression #1290 guards against — the boundary frozen at the
+// closer's transaction start instead of read fresh after its locks), the
+// gap this produces is only ~20–60ms: `writerRowBefore`'s comparison goes
+// from ~(-30 to -4)ms (correct: the writer's row a few ms before the
+// boundary) to ~(+21 to +59)ms (buggy: the boundary now predates the row).
+// That is *smaller* than the ~0.4–0.6s clock-step magnitude this repo
+// measured (see header, and reproduced in #1444's PR with a tight
+// `clock_timestamp()`-polling loop). A tolerance wide enough to absorb the
+// step would also swallow the regression; a tolerance narrow enough to
+// still catch the regression does nothing for the step. There is no
+// threshold that separates the two, so this specific comparison cannot be
+// made step-tolerant by widening it — any width is either too wide (masks
+// the bug) or too narrow (still flaky).
+//
+// A sequence- or txid-based witness (taken by the writer before its commit,
+// compared against one taken after the closer's boundary read) was also
+// considered and rejected: it can prove *statement order* — that the
+// closer's boundary-reading statement executed after the writer's commit —
+// but the #1290 regression this test guards against is not an
+// ordering bug, it's a *value* bug. `now()` vs `clock_timestamp()` changes
+// which value a statement returns, not when the statement runs; the closer
+// calls whichever function at the exact same program point either way,
+// after the same locks, so any purely order-based witness reads identically
+// in the correct and the buggy case. Distinguishing them requires comparing
+// the actual wall-clock value written — which is exactly the comparison the
+// clock step corrupts. (`pg_xact_commit_timestamp`, the other order-ish
+// option, is also a wall-clock read under the hood and needs
+// `track_commit_timestamp` on besides — no better.)
+//
+// What actually works: detect the step instead of tolerating its size. The
+// vitest process runs natively on the host (macOS), not inside the Docker
+// Desktop Linux VM that runs Postgres — only Postgres's clock steps; the
+// test process's own `Date.now()` does not. So the offset between
+// Postgres's `clock_timestamp()` and this process's `Date.now()`, sampled
+// right before and right after the interleaving under test, is a
+// step-detector: if that offset moved by more than ordinary round-trip
+// jitter between the two samples, the VM's clock stepped *during* the
+// window whose reads we're about to compare, and the run is unsafe to
+// judge — not "the lock order was wrong", "we can't tell". `retryOnClockStep`
+// wraps a whole test body (fixtures included, since these actions are
+// one-shot: a group that already left or already closed can't be
+// re-interleaved) and reruns it with fresh fixtures when a step is
+// detected, up to a small bound. It does not touch the assertions
+// themselves, which stay exactly as strict as before (`toBe(true)`, no
+// slop) — it only refuses to let a step-corrupted window reach them.
 
 import type postgres from 'postgres'
 type Sql = ReturnType<typeof postgres>
+
+/**
+ * Offset (ms) between Postgres's wall clock and this process's, sampled as
+ * closely together as a round trip allows. Not itself meaningful (network
+ * latency and scheduling jitter both land in it) — only the *change* in this
+ * value between two samples is (see #1444 fix section above).
+ */
+async function pgNodeClockOffsetMs(monitor: Sql): Promise<number> {
+  const t0 = Date.now()
+  const [{ pgNow }] = await monitor<{ pgNow: Date }[]>`SELECT clock_timestamp() AS "pgNow"`
+  const t1 = Date.now()
+  return pgNow.getTime() - (t0 + t1) / 2
+}
+
+/**
+ * Generous margin over ordinary round-trip jitter (typically well under
+ * 10ms against a local Docker Postgres) but well under the ~0.4–0.6s step
+ * this repo has measured — any real step clears this by 3x or more.
+ */
+const CLOCK_STEP_JITTER_MS = 150
+
+const MAX_CLOCK_STEP_ATTEMPTS = 5
+
+/**
+ * Run `body` (which should set up its own fixtures and make its own strict
+ * wall-clock assertions — nothing about this weakens them) and, if it
+ * throws, check whether the Docker Desktop VM's clock stepped during the
+ * attempt (see #1444 fix section above). If it did, the failure is
+ * discarded and `body` runs again with whatever fresh fixtures it creates;
+ * if it didn't, the failure is real and is rethrown immediately. Retries
+ * are bounded — if every attempt's window overlaps a step (not observed in
+ * practice: steps are ~0.4–0.6s roughly every 10s, and one attempt here
+ * runs in low hundreds of ms at most), the last error is rethrown.
+ */
+export async function retryOnClockStep(monitor: Sql, body: () => Promise<void>): Promise<void> {
+  for (let attempt = 1; attempt <= MAX_CLOCK_STEP_ATTEMPTS; attempt++) {
+    const before = await pgNodeClockOffsetMs(monitor)
+    try {
+      await body()
+      return
+    } catch (err) {
+      const after = await pgNodeClockOffsetMs(monitor)
+      const stepped = Math.abs(after - before) > CLOCK_STEP_JITTER_MS
+      if (!stepped || attempt === MAX_CLOCK_STEP_ATTEMPTS) throw err
+      // else: the clock stepped inside this attempt's window — discard it
+      // and let the loop try again with fresh fixtures.
+    }
+  }
+}
 
 type Step = { fn: (t: Sql) => Promise<unknown>; resolve: (v: unknown) => void; reject: (e: unknown) => void }
 

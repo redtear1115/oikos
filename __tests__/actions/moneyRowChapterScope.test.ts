@@ -85,7 +85,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, describeSettled } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, describeSettled, retryOnClockStep } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -489,11 +489,10 @@ async function editAgainstCloser<T>(
 }
 
 /**
- * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
- * `started_at` are wall-clock reads from different backends. On a Docker
- * Desktop VM whose clock steps backwards, `before` can read `false` here even
- * though the lock order was correct — the failure looks like `expected false
- * to be true` on the assertions built on this, and a rerun passes.
+ * Clock-step sensitivity (see _lockHarness.ts header, "#1444 fix" section):
+ * `created_at` and `started_at` are wall-clock reads from different
+ * backends, so every `it` that calls this wraps its whole body in
+ * `retryOnClockStep` — the strict `<` here is unchanged.
  */
 async function editedRowBeforeOpenChapter(edit: PromiseSettledResult<unknown>, groupId: string) {
   const newId = (edit as PromiseFulfilledResult<{ ok: true; data: { id: string } }>).value.data.id
@@ -506,45 +505,51 @@ async function editedRowBeforeOpenChapter(edit: PromiseSettledResult<unknown>, g
 
 describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter closer (#1290)', { timeout: 30_000 }, () => {
   it('leaveGroup waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const old = await cashRow(g, a)
+    await retryOnClockStep(monitor, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const old = await cashRow(g, a)
 
-    const out = await editAgainstCloser(g, a, old, () => as(b, () => leaveGroup()))
-    expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
-      .toMatchObject({ edit: { ok: true }, closer: { ok: true } })
-    created.groups.push((out.closer as PromiseFulfilledResult<{ ok: true; data: { groupId: string } }>).value.data.groupId)
-    expect(await deletedAt('CashTransactions', old)).not.toBeNull()
-    expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+      const out = await editAgainstCloser(g, a, old, () => as(b, () => leaveGroup()))
+      expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
+        .toMatchObject({ edit: { ok: true }, closer: { ok: true } })
+      created.groups.push((out.closer as PromiseFulfilledResult<{ ok: true; data: { groupId: string } }>).value.data.groupId)
+      expect(await deletedAt('CashTransactions', old)).not.toBeNull()
+      expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+    })
   })
 
   it('removePartner waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    const a = await person('a')
-    const b = await person('b')
-    const g = await group(a, b)
-    const old = await cashRow(g, a)
+    await retryOnClockStep(monitor, async () => {
+      const a = await person('a')
+      const b = await person('b')
+      const g = await group(a, b)
+      const old = await cashRow(g, a)
 
-    const out = await editAgainstCloser(g, a, old, () => as(a, () => removePartner()))
-    expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
-      .toMatchObject({ edit: { ok: true }, closer: { ok: true } })
-    expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+      const out = await editAgainstCloser(g, a, old, () => as(a, () => removePartner()))
+      expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
+        .toMatchObject({ edit: { ok: true }, closer: { ok: true } })
+      expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+    })
   })
 
   it('acceptInvite waits for the edit; no 40P01, and the edited row stays in the chapter it was edited in', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const g = await group(inviter, null)
-    await group(joiner, null)
-    const token = generateToken()
-    await db.insert(groupInvites).values({
-      groupId: g, invitedBy: inviter, token, expiresAt: new Date(Date.now() + INVITE_TTL_MS),
-    })
-    const old = await cashRow(g, inviter)
+    await retryOnClockStep(monitor, async () => {
+      const inviter = await person('inviter')
+      const joiner = await person('joiner')
+      const g = await group(inviter, null)
+      await group(joiner, null)
+      const token = generateToken()
+      await db.insert(groupInvites).values({
+        groupId: g, invitedBy: inviter, token, expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+      })
+      const old = await cashRow(g, inviter)
 
-    const out = await editAgainstCloser(g, inviter, old, () => as(joiner, () => acceptInvite(token)))
-    expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
-      .toMatchObject({ edit: { ok: true }, closer: { ok: true, data: g } })
-    expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+      const out = await editAgainstCloser(g, inviter, old, () => as(joiner, () => acceptInvite(token)))
+      expect({ edit: describeSettled(out.edit), closer: describeSettled(out.closer) })
+        .toMatchObject({ edit: { ok: true }, closer: { ok: true, data: g } })
+      expect(await editedRowBeforeOpenChapter(out.edit, g)).toBe(true)
+    })
   })
 })

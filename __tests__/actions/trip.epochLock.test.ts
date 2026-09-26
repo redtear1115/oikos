@@ -76,7 +76,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or, and, isNull } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
-const { openTx, waitBlockedBy, waitLockWaitersOr } = await import('./_lockHarness')
+const { openTx, waitBlockedBy, waitLockWaitersOr, retryOnClockStep } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -212,12 +212,11 @@ async function seedTrip(
 /**
  * Summary rows of a trip and whether each is before the group's open chapter start (µs, in SQL).
  *
- * Clock-step sensitivity (see _lockHarness.ts header): `created_at` and
- * `started_at` are wall-clock reads from different backends. On a Docker
- * Desktop VM whose clock steps backwards, `before_open_chapter` can read
- * `false` here even though the lock order was correct — the failure looks
- * like `expected false to be true` on the `before_open_chapter` check, and a
- * rerun passes.
+ * Clock-step sensitivity (see _lockHarness.ts header, "#1444 fix" section):
+ * `created_at` and `started_at` are wall-clock reads from different
+ * backends, so the one `it` that asserts `before_open_chapter` on rows this
+ * returns wraps its whole body in `retryOnClockStep` — the strict `<` here
+ * is unchanged.
  */
 async function summariesVsOpenChapter(groupId: string, tripId: string) {
   return await monitor`
@@ -245,31 +244,33 @@ async function acceptPausedAfterLocks(joiner: string, invite: { id: string; toke
 
 describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
   it('endTrip holds the chapter row, accept waits: the summary rows stay in the old chapter', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const g = await group(inviter, null)
-    const { tripId } = await seedTrip(g, inviter)
-    const invite = await seedInvite(g.id, inviter)
+    await retryOnClockStep(monitor, async () => {
+      const inviter = await person('inviter')
+      const joiner = await person('joiner')
+      const g = await group(inviter, null)
+      const { tripId } = await seedTrip(g, inviter)
+      const invite = await seedInvite(g.id, inviter)
 
-    // Pause endTrip after its summary insert: something else holds the
-    // group's balance row, which endTrip updates last.
-    const holder = await openTx(holderConn)
-    await holder.run((t) => t`SELECT group_id FROM "GroupBalance" WHERE group_id = ${g.id} FOR UPDATE`)
-    const ending = as(inviter, () => endTrip({ tripId, endDate: today() }))
-    ending.catch(() => {})
-    await waitBlockedBy(monitor, holder.pid)
+      // Pause endTrip after its summary insert: something else holds the
+      // group's balance row, which endTrip updates last.
+      const holder = await openTx(holderConn)
+      await holder.run((t) => t`SELECT group_id FROM "GroupBalance" WHERE group_id = ${g.id} FOR UPDATE`)
+      const ending = as(inviter, () => endTrip({ tripId, endDate: today() }))
+      ending.catch(() => {})
+      await waitBlockedBy(monitor, holder.pid)
 
-    // accept starts while endTrip is open; with the lock it queues behind endTrip.
-    const accept = as(joiner, () => acceptInvite(invite.token))
-    accept.catch(() => {})
-    await waitLockWaitersOr(monitor, 2, accept)
-    await holder.commit()
+      // accept starts while endTrip is open; with the lock it queues behind endTrip.
+      const accept = as(joiner, () => acceptInvite(invite.token))
+      accept.catch(() => {})
+      await waitLockWaitersOr(monitor, 2, accept)
+      await holder.commit()
 
-    expect(await ending).toMatchObject({ ok: true })
-    expect(await accept).toEqual({ ok: true, data: g.id })
-    const rows = await summariesVsOpenChapter(g.id, tripId)
-    expect(rows.length).toBeGreaterThan(0)
-    expect(rows.every((r) => r.before_open_chapter === true)).toBe(true)
+      expect(await ending).toMatchObject({ ok: true })
+      expect(await accept).toEqual({ ok: true, data: g.id })
+      const rows = await summariesVsOpenChapter(g.id, tripId)
+      expect(rows.length).toBeGreaterThan(0)
+      expect(rows.every((r) => r.before_open_chapter === true)).toBe(true)
+    })
   })
 
   it('accept holds the chapter row, endTrip waits: endTrip is refused and writes nothing', async () => {
