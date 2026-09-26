@@ -43,6 +43,35 @@ function mapMofError(code: string): Error {
 }
 
 /**
+ * #1289 — the pre-check SELECT in create / refresh races a double submit: both
+ * requests see no live row, both insert, and the partial unique index
+ * `invoice_credentials_uniq` rejects the second with 23505. Map that to the
+ * same expected failure the pre-check returns, so the raw driver error (whose
+ * message carries the query parameters: barcode and ciphertext) never leaves
+ * the action.
+ */
+function isBarcodeUniqueViolation(e: unknown): boolean {
+  let cur: unknown = e
+  for (let depth = 0; cur && depth < 3; depth++) {
+    const err = cur as { code?: unknown; constraint_name?: unknown; constraint?: unknown }
+    if (err.code === '23505') {
+      return (err.constraint_name ?? err.constraint) === 'invoice_credentials_uniq'
+    }
+    cur = (cur as { cause?: unknown }).cause
+  }
+  return false
+}
+
+async function mapBarcodeConflict<T>(body: () => Promise<T>): Promise<T> {
+  try {
+    return await body()
+  } catch (e) {
+    if (isBarcodeUniqueViolation(e)) throw actionError('invoice_barcode_already_bound')
+    throw e
+  }
+}
+
+/**
  * Verify barcode + verificationCode against the (mock) MoF API by issuing a
  * 7-day historical query. Throws a user-readable message on failure. Does not
  * persist anything; caller decides what to do with the success signal.
@@ -97,7 +126,7 @@ export const createInvoiceCredential = action(async (
   // #1287 — id generated here so the AAD binds to the row's primary key; the
   // same value goes to `.values({ id })` and to aadFor.
   const id = randomUUID()
-  const [created] = await db
+  const [created] = await mapBarcodeConflict(() => db
     .insert(invoiceCredentials)
     .values({
       id,
@@ -108,7 +137,7 @@ export const createInvoiceCredential = action(async (
       nickname: validated.nickname,
       status: 'active',
     })
-    .returning({ id: invoiceCredentials.id })
+    .returning({ id: invoiceCredentials.id }))
 
   revalidateSettings()
   return { id: created.id }
@@ -162,7 +191,7 @@ export const refreshInvoiceCredential = action(async (
   // SELECT → API verify → soft-delete → insert ALL run inside the transaction
   // so a concurrent delete cannot race between verify and the soft-delete WHERE
   // (TOCTOU). On verify failure the tx rolls back and the old row stays intact.
-  const [created] = await db.transaction(async (tx) => {
+  const [created] = await mapBarcodeConflict(() => db.transaction(async (tx) => {
     const [existing] = await tx
       .select({
         id: invoiceCredentials.id,
@@ -188,9 +217,11 @@ export const refreshInvoiceCredential = action(async (
 
     await verifyCarrierAgainstApi(validated.barcode, validated.verificationCode)
 
+    // #1289 — the old row's ciphertext goes in the same UPDATE (CHECK
+    // invoice_credentials_secret_iff_live rejects a soft delete that keeps it).
     const deleted = await tx
       .update(invoiceCredentials)
-      .set({ deletedAt: new Date() })
+      .set({ deletedAt: new Date(), verificationCodeEncrypted: null })
       .where(and(
         eq(invoiceCredentials.id, id),
         eq(invoiceCredentials.groupId, group.id),
@@ -216,22 +247,24 @@ export const refreshInvoiceCredential = action(async (
         lastSyncedAt: existing.lastSyncedAt,
       })
       .returning({ id: invoiceCredentials.id })
-  })
+  }))
 
   revalidateSettings()
   return { id: created.id }
 })
 
 /**
- * Soft-delete a credential. The verification ciphertext stays encrypted in
- * the row until the cleanup-soft-deleted cron physically purges after 1y.
+ * Soft-delete a credential. The verification ciphertext is cleared in the same
+ * UPDATE (#1289; the CHECK invoice_credentials_secret_iff_live enforces it), so
+ * a deleted credential never keeps the secret. The cleanup-soft-deleted cron
+ * hard-deletes the row 30 days later (0069).
  */
 export const deleteInvoiceCredential = action(async (id: string): Promise<void> => {
   const { user, group } = await requireViewerGroup()
 
   const updated = await db
     .update(invoiceCredentials)
-    .set({ deletedAt: new Date() })
+    .set({ deletedAt: new Date(), verificationCodeEncrypted: null })
     .where(and(
       eq(invoiceCredentials.id, id),
       eq(invoiceCredentials.groupId, group.id),

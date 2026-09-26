@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { DrizzleQueryError } from 'drizzle-orm'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -16,6 +17,25 @@ beforeEach(() => {
   resetDbMocks()
   setMockUser(VIEWER)
 })
+
+/**
+ * What the driver throws when the partial unique index rejects a second live
+ * row: Drizzle's wrapper (message and `.params` carry every bound value) around
+ * the Postgres error (`detail` carries the key values).
+ */
+function uniqueViolation(constraint = 'invoice_credentials_uniq') {
+  const pg = Object.assign(new Error('duplicate key value violates unique constraint'), {
+    code: '23505',
+    severity: 'ERROR',
+    constraint_name: constraint,
+    detail: 'Key (group_id, user_id, barcode)=(grp-1, user-a, /AB12CD3) already exists.',
+  })
+  return new DrizzleQueryError(
+    'insert into "InvoiceCredentials" (...) values ($1, $2, $3, $4, $5)',
+    ['id', 'grp-1', 'user-a', '/AB12CD3', 'v1:k1:0011:2233:4455'],
+    pg,
+  )
+}
 
 // ─── createInvoiceCredential ────────────────────────────────────────────────
 describe('createInvoiceCredential', () => {
@@ -91,6 +111,33 @@ describe('createInvoiceCredential', () => {
       barcode: '/AB12CD3',
       verificationCode: 'A1B2C3D4',
     })).toEqual({ ok: false, code: 'invoice_barcode_already_bound' })
+  })
+
+  // #1289 — a double submit passes the pre-check twice; the second insert
+  // hits the partial unique index. Same answer as the pre-check, and the
+  // driver error (barcode + ciphertext in its params) never leaves the action.
+  it('maps a 23505 on invoice_credentials_uniq to invoice_barcode_already_bound', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    mockBuilder.returning.mockImplementationOnce(() => Promise.reject(uniqueViolation()))
+
+    expect(await createInvoiceCredential({
+      barcode: '/AB12CD3',
+      verificationCode: 'A1B2C3D4',
+    })).toEqual({ ok: false, code: 'invoice_barcode_already_bound' })
+  })
+
+  it('re-throws a 23505 on another constraint, without its params', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    mockBuilder.returning.mockImplementationOnce(() => Promise.reject(uniqueViolation('some_other_uniq')))
+
+    const err = await createInvoiceCredential({ barcode: '/AB12CD3', verificationCode: 'A1B2C3D4' })
+      .then(() => null, (e: unknown) => e as Error & { params?: unknown; cause?: { detail?: unknown } })
+    expect(err).toBeInstanceOf(Error)
+    expect(err!.message).not.toContain('/AB12CD3')
+    expect(err!.params).toBeUndefined()
+    expect(err!.cause?.detail).toBeUndefined()
   })
 
   it('surfaces 919 from API as user-readable error', async () => {
@@ -183,8 +230,11 @@ describe('refreshInvoiceCredential', () => {
     expect(mockDb.update).toHaveBeenCalled()  // soft-delete
     expect(mockDb.insert).toHaveBeenCalled()  // new row
 
+    // #1289 — the old row's ciphertext is cleared in the same UPDATE.
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(Object.keys(setCall).sort()).toEqual(['deletedAt', 'verificationCodeEncrypted'])
     expect(setCall.deletedAt).toBeInstanceOf(Date)
+    expect(setCall.verificationCodeEncrypted).toBeNull()
 
     const newValues = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(newValues.barcode).toBe('/AB12CD3')
@@ -218,6 +268,19 @@ describe('refreshInvoiceCredential', () => {
     expect(mockDb.insert).not.toHaveBeenCalled()
   })
 
+  it('maps a 23505 from the new row insert to invoice_barcode_already_bound', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'cred-1', barcode: '/AB12CD3', nickname: null, lastSyncedAt: null,
+    }])
+    mockBuilder.returning
+      .mockImplementationOnce(() => Promise.resolve([{ id: 'cred-1' }]))  // soft-delete
+      .mockImplementationOnce(() => Promise.reject(uniqueViolation()))
+
+    expect(await refreshInvoiceCredential('cred-1', 'NEWCODEZ'))
+      .toEqual({ ok: false, code: 'invoice_barcode_already_bound' })
+  })
+
   it('rejects malformed new verification code inside tx before hitting API', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
@@ -242,8 +305,11 @@ describe('deleteInvoiceCredential', () => {
     await deleteInvoiceCredential('cred-1')
 
     expect(mockDb.update).toHaveBeenCalled()
+    // #1289 — soft delete and ciphertext removal are one UPDATE.
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(Object.keys(setCall).sort()).toEqual(['deletedAt', 'verificationCodeEncrypted'])
     expect(setCall.deletedAt).toBeInstanceOf(Date)
+    expect(setCall.verificationCodeEncrypted).toBeNull()
   })
 
   it('throws when row not in viewer group (cross-group safety)', async () => {
@@ -266,5 +332,20 @@ describe('listInvoiceCredentialsForViewer', () => {
     expect(rows).toMatchObject({ ok: true, data: [{ barcode: '/AB12CD3' }] })
     expect((rows as { ok: true; data: unknown[] }).data).toHaveLength(1)
     expect(mockDb.select).toHaveBeenCalled()
+  })
+
+  // #1289 F6 — output allowlist. This list is what reaches the client; a new
+  // key (above all verificationCodeEncrypted) has to be added here on purpose.
+  it('selects exactly the allowlisted columns', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+
+    await listInvoiceCredentialsForViewer()
+    const projections = mockDb.select.mock.calls
+      .map((call) => (call as unknown[])[0])
+      .filter((arg): arg is Record<string, unknown> => !!arg && typeof arg === 'object' && 'barcode' in arg)
+    expect(projections).toHaveLength(1)
+    expect(Object.keys(projections[0]).sort())
+      .toEqual(['barcode', 'createdAt', 'id', 'lastSyncedAt', 'nickname', 'status'])
   })
 })

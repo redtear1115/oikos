@@ -36,7 +36,7 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
-interface Hit { file: string; line: number; prop: string; rhs: string }
+interface Hit { file: string; line: number; prop: string; rhs: string; text: string }
 
 function encryptedAssignments(): Hit[] {
   const hits: Hit[] = []
@@ -48,19 +48,44 @@ function encryptedAssignments(): Hit[] {
       const m =
         text.match(/(?:^\s*|[{,]\s*)(\w+Encrypted)\??\s*:\s*(.*)$/) ??
         text.match(/\.(\w+Encrypted)\s*=(?!=)\s*(.*)$/)
-      if (m) hits.push({ file, line: i + 1, prop: m[1], rhs: m[2].trim() })
+      if (m) hits.push({ file, line: i + 1, prop: m[1], rhs: m[2].trim(), text })
     })
   }
   return hits
 }
 
 const isTypeAnnotation = (rhs: string) => /^string\b/.test(rhs)
+// #1289 — retiring an invoice credential: `.set({ deletedAt: …,
+// verificationCodeEncrypted: null })` on one line. A literal null carries no
+// ciphertext and binds no AAD, so neither thing this guard protects is at
+// stake; requiring `deletedAt` on the same line keeps it to the soft-delete
+// shape the CHECK invoice_credentials_secret_iff_live (0069) expects.
+// The retire must be the only `*Encrypted` on its line: the scan records one
+// hit per line, so a second write sharing the line would otherwise ride on
+// the exemption unchecked.
+const isCredentialRetire = (h: Hit) =>
+  h.prop === 'verificationCodeEncrypted' && /^null\s*}/.test(h.rhs) && /\bdeletedAt:/.test(h.text) &&
+  (h.text.match(/\w+Encrypted\b/g) ?? []).length === 1
 // Reads: `.select({ plateEncrypted: carDetails.plateEncrypted, … })`
 const isSelectProjection = (h: Hit) => new RegExp(`^\\w+\\.${h.prop},?$`).test(h.rhs)
 
 describe('encrypted-column writes in actions/', () => {
   const hits = encryptedAssignments()
-  const writes = hits.filter((h) => !isTypeAnnotation(h.rhs) && !isSelectProjection(h))
+  const retires = hits.filter(isCredentialRetire)
+  const writes = hits.filter((h) => !isTypeAnnotation(h.rhs) && !isSelectProjection(h) && !isCredentialRetire(h))
+
+  it('the retire exemption does not cover a second encrypted write on the same line', () => {
+    const line = '      .set({ deletedAt: now, verificationCodeEncrypted: null }); const zz = { verificationCodeEncrypted: row.verificationCodeEncrypted }'
+    const hit: Hit = { file: 'x.ts', line: 1, prop: 'verificationCodeEncrypted', rhs: 'null }); const zz = { verificationCodeEncrypted: row.verificationCodeEncrypted }', text: line }
+    expect(isCredentialRetire(hit)).toBe(false)
+    const alone = '      .set({ deletedAt: now, verificationCodeEncrypted: null })'
+    expect(isCredentialRetire({ ...hit, rhs: 'null })', text: alone })).toBe(true)
+  })
+
+  it('finds the invoice credential retire sites (delete, refresh, removePartner)', () => {
+    expect(retires.map((h) => h.file).sort())
+      .toEqual([join('actions', 'invoice.ts'), join('actions', 'invoice.ts'), join('actions', 'membership.ts')])
+  })
 
   it('finds the known write sites (guard against the scan silently matching nothing)', () => {
     // car ×2, child create ×3, editChild ×3 + upsert insert ×2, house ×2, invoice ×2
