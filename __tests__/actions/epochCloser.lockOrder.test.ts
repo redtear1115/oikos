@@ -428,7 +428,7 @@ describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (
     const failure = settled.find((s) => !(s as { ok: boolean }).ok) as { ok: false; code: string }
     expect(failure.code).toBe('already_in_duo')
 
-    // Nobody is in two ledgers with a partner.
+    // One of the two groups is paired.
     const duos = await db.select().from(oikosGroups).where(inArray(oikosGroups.id, [gx, gy]))
     expect(duos.filter((d) => d.memberB !== null)).toHaveLength(1)
     // Exactly one open chapter per person.
@@ -494,8 +494,8 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
   })
 })
 
-describe.skipIf(!isLocalDb)('acceptInvite: a person already paired elsewhere cannot be seated again (#1290)', () => {
-  it('accepting a partner\'s invite retires the accepter\'s own open link on their solo ledger', async () => {
+describe.skipIf(!isLocalDb)('acceptInvite re-checks membership under the lock (#1290)', () => {
+  it('accepting retires the accepter\'s other open links', async () => {
     const x = await person('x')
     const z = await person('z')
     const w = await person('w')
@@ -506,16 +506,15 @@ describe.skipIf(!isLocalDb)('acceptInvite: a person already paired elsewhere can
 
     expect(await as(x, () => acceptInvite(zLink.token))).toEqual({ ok: true, data: gz })
 
-    // x's old link no longer seats anyone next to x.
+    // The retired link reads as revoked.
     const res = await as(w, () => acceptInvite(xLink.token))
     expect(res).toMatchObject({ ok: false, code: 'revoked' })
     const [row] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, gx))
     expect(row.memberB).toBeNull()
   })
 
-  it('an open link whose issuer is already paired elsewhere is refused under the lock', async () => {
-    // State an older build could leave behind: x is member_b of gz, and still
-    // member_a of a solo gx with a live link.
+  it('accept re-reads the issuer\'s membership under the lock', async () => {
+    // Defensive: the issuer's membership is re-read under the lock.
     const x = await person('x')
     const z = await person('z')
     const w = await person('w')

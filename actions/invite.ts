@@ -234,9 +234,9 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
     const lock = await lockForEpochClose(tx, [invite.groupId, ...otherGroupIds])
     const boundary = boundarySql(lock.boundary)
 
-    // 固定兩人: neither the accepter nor the issuer may already be paired in
-    // another ledger. Checked here, under the locks, so it reads what is
-    // committed now rather than what the validation above saw.
+    // 固定兩人: both parties' membership is re-read here, under the locks, so
+    // it reflects what is committed now rather than what the validation
+    // above saw.
     const pairedElsewhere = await tx
       .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
       .from(oikosGroups)
