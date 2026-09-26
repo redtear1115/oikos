@@ -77,6 +77,7 @@ const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
+const { openTx, waitBlockedBy, waitLockWaiters, sqlstate, describeSettled } = await import('./_lockHarness')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
 
@@ -172,95 +173,11 @@ async function seedInvite(groupId: string, invitedBy: string) {
 }
 
 // ─── scripted transactions ────────────────────────────────────────────────
-
-type Step = { fn: (t: Sql) => Promise<unknown>; resolve: (v: unknown) => void; reject: (e: unknown) => void }
-
-/**
- * One transaction on `conn` driven step by step. `run` queues a statement and
- * resolves with its result; `commit` ends the transaction. A failing step
- * rolls the transaction back (and rejects `done`).
- */
-async function openTx(conn: Sql) {
-  const queue: Step[] = []
-  let wake: (() => void) | null = null
-  let finished = false
-  let setPid!: (pid: number) => void
-  const pidP = new Promise<number>((r) => { setPid = r })
-  const done = conn.begin(async (t) => {
-    const [{ pid }] = await t`SELECT pg_backend_pid() AS pid`
-    setPid(pid as number)
-    for (;;) {
-      while (queue.length === 0 && !finished) await new Promise<void>((r) => { wake = r })
-      const step = queue.shift()
-      if (!step) return
-      try {
-        step.resolve(await step.fn(t as unknown as Sql))
-      } catch (e) {
-        step.reject(e)
-        throw e
-      }
-    }
-  })
-  done.catch(() => {})
-  const pid = await pidP
-  const poke = () => { const w = wake; wake = null; w?.() }
-  return {
-    pid,
-    run<T>(fn: (t: Sql) => Promise<T>): Promise<T> {
-      const p = new Promise<T>((resolve, reject) => {
-        queue.push({ fn, resolve: resolve as (v: unknown) => void, reject })
-      })
-      poke()
-      return p
-    },
-    async commit() {
-      finished = true
-      poke()
-      await done
-    },
-    done,
-  }
-}
-
-/** pid of a backend currently blocked (directly) by `blockerPid`. */
-async function waitBlockedBy(blockerPid: number, n = 1): Promise<number[]> {
-  const deadline = Date.now() + 10_000
-  while (Date.now() < deadline) {
-    const rows = await monitor`
-      SELECT pid FROM pg_stat_activity
-      WHERE datname = current_database() AND ${blockerPid} = ANY(pg_blocking_pids(pid))`
-    if (rows.length >= n) return rows.map((r) => r.pid as number)
-    await new Promise((r) => setTimeout(r, 20))
-  }
-  throw new Error(`timed out waiting for ${n} backend(s) blocked by ${blockerPid}`)
-}
-
-/** Wait until `n` backends of this database are waiting on a heavyweight lock. */
-async function waitLockWaiters(n: number): Promise<void> {
-  const deadline = Date.now() + 10_000
-  while (Date.now() < deadline) {
-    const [r] = await monitor`
-      SELECT count(*)::int AS n FROM pg_stat_activity
-      WHERE datname = current_database() AND wait_event_type = 'Lock'`
-    if ((r.n as number) >= n) return
-    await new Promise((r) => setTimeout(r, 20))
-  }
-  throw new Error(`timed out waiting for ${n} lock waiter(s)`)
-}
-
-function sqlstate(e: unknown): string | undefined {
-  let cur: unknown = e
-  for (let d = 0; cur && d < 4; d++) {
-    const code = (cur as { code?: unknown }).code
-    if (typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code)) return code
-    cur = (cur as { cause?: unknown }).cause
-  }
-  return undefined
-}
-
-function describeSettled(r: PromiseSettledResult<unknown>): unknown {
-  return r.status === 'fulfilled' ? r.value : { rejected: sqlstate(r.reason) ?? String(r.reason) }
-}
+//
+// openTx / waitBlockedBy / waitLockWaiters / sqlstate / describeSettled live
+// in ./_lockHarness (shared with trip.epochLock.test.ts and
+// moneyRowChapterScope.test.ts) — see that file for why the waits check
+// pg_locks and pg_blocking_pids together, not just wait_event_type.
 
 /**
  * The writer: begins after the closer, holds the open chapter row FOR SHARE
@@ -308,14 +225,14 @@ async function interleave<T>(groupId: string, writerPaidBy: string, startCloser:
   // 2. The closer starts (its transaction begins) and waits on the group row.
   const closer = startCloser()
   closer.catch(() => {})
-  await waitBlockedBy(holder.pid)
+  await waitBlockedBy(monitor, holder.pid)
 
   // 3. The writer begins after the closer and takes the open chapter row FOR SHARE.
   const writer = await startWriter(groupId)
 
   // 4. Release the group row; the closer moves on and waits on the writer.
   await holder.commit()
-  await waitBlockedBy(writer.pid)
+  await waitBlockedBy(monitor, writer.pid)
 
   // 5. The writer inserts a money row for the group (FK → group KEY SHARE) and commits.
   const writerResult = writerInsertAndCommit(writer, groupId, writerPaidBy)
@@ -418,7 +335,7 @@ describe.skipIf(!isLocalDb)('chapter closers: lock order and DB-clock boundary (
     xAccepts.catch(() => {})
     yAccepts.catch(() => {})
     // The first waits on the holder, the second queues behind the first.
-    await waitLockWaiters(2)
+    await waitLockWaiters(monitor, 2)
     await holder.commit()
 
     const settled = (await Promise.allSettled([xAccepts, yAccepts])).map(describeSettled)
@@ -450,12 +367,12 @@ describe.skipIf(!isLocalDb)('chapter closers: the boundary is read after a write
     await holder.run((t) => t`SELECT id FROM "OikosGroups" WHERE id = ${groupId} FOR SHARE`)
     const closer = startCloser()
     closer.catch(() => {})
-    await waitBlockedBy(holder.pid)
+    await waitBlockedBy(monitor, holder.pid)
 
     const writer = await startWriter(groupId)
     const [{ now }] = await writer.run((t) => t`SELECT now()::text AS now`)
     await holder.commit()
-    await waitBlockedBy(writer.pid)
+    await waitBlockedBy(monitor, writer.pid)
     await writer.commit()
 
     const res = await closer
@@ -539,7 +456,7 @@ describe.skipIf(!isLocalDb)('negative control: the same interleaving in raw SQL 
     const epochLock = closer.run((t) => t`
       SELECT id FROM "GroupEpochs" WHERE group_id = ${groupId} AND ended_at IS NULL FOR NO KEY UPDATE`)
     epochLock.catch(() => {})
-    await waitBlockedBy(writer.pid)
+    await waitBlockedBy(monitor, writer.pid)
     const writerResult = writerInsertAndCommit(writer, groupId, paidBy)
     const settledWriter = await Promise.allSettled([writerResult])
     const settledEpoch = await Promise.allSettled([epochLock])
