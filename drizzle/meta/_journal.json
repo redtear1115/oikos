@@ -491,6 +491,13 @@
       "when": 1782800000000,
       "tag": "0070_invite_token_hash_expand",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1782900000000,
+      "tag": "0071_account_deletion_rescan",
+      "breakpoints": true
     }
   ]
 }
