@@ -6,6 +6,7 @@ const baseInvite = {
   groupId: 'grp-1',
   invitedBy: 'user-a',
   token: 'tok',
+  tokenHash: null as string | null,
   expiresAt: new Date('2099-01-01'),
   acceptedAt: null,
   revokedAt: null as Date | null,
