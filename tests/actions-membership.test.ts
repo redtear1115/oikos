@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { SQL } from 'drizzle-orm'
+import { PgDialect } from 'drizzle-orm/pg-core'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -192,6 +193,51 @@ describe('leaveGroup', () => {
     expect(insertedGroup.name).toBe('Mei 的家計簿')
     expect(insertedGroup.memberA).toBe('user-b')
     expect(insertedGroup.memberB).toBeNull()
+  })
+
+  // Regression guard for #1440: `sql\`${array}\`` does NOT bind a JS array as
+  // a single array parameter — Drizzle expands it into a parenthesised
+  // parameter list, so `ANY(${ids}::uuid[])` sends `ANY(($1, $2)::uuid[])`,
+  // which Postgres rejects (22P02 / 42846). This never surfaces against the
+  // mocked db above (it doesn't parse SQL), so assert on the *generated*
+  // query text/params directly via the real PgDialect — cheap, no DB needed.
+  it('builds the moving-asset CASE as a flat param list (IN), not an array cast (#1440)', async () => {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult([])                                    // movingHouse rows
+    queueDbResult([{ assetId: 'car-1' }, { assetId: 'car-2' }]) // movingCar rows (2 ids)
+    queueDbResult([])                                    // movingInsurance rows
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
+    queueDbResult([{ balance: 0 }])
+    queueDbResult([{ n: 0 }])
+    queueDbResult([{ n: 0 }])
+    queueDbResult([{ id: 'grp-new' }])
+    queueDbResult([])
+    queueDbResult([{ id: 'epoch-new' }])
+
+    await leaveGroup()
+
+    // Find the CashTransactions UPDATE among the raw sql`` executes (lock
+    // acquisition, the boundary read and getGroupBalance also go through
+    // mockDb.execute, ahead of it).
+    const dialect = new PgDialect()
+    const executeCalls = mockDb.execute.mock.calls as unknown as [SQL][]
+    const cashTxCall = executeCalls
+      .map(([arg]) => dialect.sqlToQuery(arg))
+      .find((q) => q.sql.includes('UPDATE "CashTransactions"'))
+    if (!cashTxCall) throw new Error('CashTransactions UPDATE not found among mockDb.execute calls')
+    const { sql: queryText, params } = cashTxCall
+
+    expect(queryText).toContain('asset_id IN (')
+    expect(queryText).not.toContain('ANY(')
+    // 2 moving-asset ids + newGroupId + oldGroupId + leaver = 5 scalar params,
+    // never a JS array collapsed into one param.
+    expect(params).toHaveLength(5)
+    for (const p of params) expect(Array.isArray(p)).toBe(false)
+    expect(params).toEqual(expect.arrayContaining(['car-1', 'car-2']))
   })
 
   it('rejects when balance is not 0 — read inside the transaction, after the group-row lock', async () => {

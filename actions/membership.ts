@@ -268,10 +268,16 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
     ...movingInsuranceRows.map((r) => r.assetId),
   ]
 
-  // Empty array would interpolate as `ANY(()::uuid[])` (invalid SQL), so
-  // short-circuit to NULL when nothing is moving with the leaver.
+  // Empty array would interpolate as `IN ()` (invalid SQL), so short-circuit
+  // to NULL when nothing is moving with the leaver. Note: `sql\`${array}\``
+  // does NOT bind a single array param — Drizzle expands a JS array into a
+  // parenthesised parameter list (`$1, $2, …`), so `= ANY(${ids}::uuid[])`
+  // sends `ANY(($1, $2)::uuid[])`, which Postgres rejects as a malformed
+  // array literal (22P02) whenever the array has 2+ elements (#1440). Build
+  // an explicit `IN (...)` list instead, matching the pattern already used
+  // elsewhere in lib/db/queries/ (e.g. asset.ts, _predicates.ts).
   const assetIdCase = movingAssetIds.length > 0
-    ? sql`CASE WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id ELSE NULL END`
+    ? sql`CASE WHEN asset_id IN (${sql.join(movingAssetIds.map((id) => sql`${id}::uuid`), sql`, `)}) THEN asset_id ELSE NULL END`
     : sql`NULL`
 
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
