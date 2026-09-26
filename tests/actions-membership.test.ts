@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { SQL } from 'drizzle-orm'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -165,10 +166,11 @@ describe('leaveGroup', () => {
     queueDbResult([])                                    // movingHouse rows
     queueDbResult([])                                    // movingCar rows
     queueDbResult([])                                    // movingInsurance rows
-    // Inside the transaction — guards first, after the group-row lock (#943 S-E):
-    queueDbResult([{ memberB: 'user-b' }])               // OikosGroups … FOR UPDATE
+    // Inside the transaction — locks and the boundary first, then the guards (#943 S-E, #1290):
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // OikosGroups … FOR NO KEY UPDATE
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // open GroupEpochs … FOR NO KEY UPDATE
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // clock_timestamp() → execute()
     queueDbResult([{ balance: 0 }])                      // getGroupBalance(groupId, tx) → execute()
-    queueDbResult([{ id: 'epoch-1' }])                   // currentEpoch (.limit)
     queueDbResult([{ n: 0 }])                            // hasActiveTrip (.then)
     queueDbResult([{ n: 0 }])                            // hasActiveOuting (.then)
     queueDbResult([{ id: 'grp-new' }])                   // insert new group .returning
@@ -180,7 +182,10 @@ describe('leaveGroup', () => {
     // WelcomeSoloCard reads the same key space as PartnerLeftCard (#1125).
     expect(r).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
-    expect(mockBuilder.for).toHaveBeenCalledWith('update')
+    expect(mockBuilder.for).toHaveBeenCalledWith('no key update')
+    expect(mockBuilder.for).not.toHaveBeenCalledWith('update')
+    // Every chapter stamp is the one DB-clock boundary, never a JS Date.
+    expect(mockBuilder.values.mock.calls[0][0].currentEpochStartedAt).toBeInstanceOf(SQL)
 
     // New solo group is named after the leaver's display name
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
@@ -196,14 +201,17 @@ describe('leaveGroup', () => {
     queueDbResult([])
     queueDbResult([])
     queueDbResult([])
-    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
     queueDbResult([{ balance: 500 }])
     expect(await leaveGroup()).toEqual({ ok: false, code: 'balance_not_zero' })
     // The check ran inside the tx (so an endOuting Settlement committed before
     // the lock is seen) and nothing was written.
     expect(mockDb.transaction).toHaveBeenCalledOnce()
-    expect(mockBuilder.for).toHaveBeenCalledWith('update')
-    expect(mockDb.execute).toHaveBeenCalledOnce()
+    expect(mockBuilder.for).toHaveBeenCalledWith('no key update')
+    expect(mockBuilder.for).not.toHaveBeenCalledWith('update')
+    expect(mockDb.execute).toHaveBeenCalledTimes(2) // boundary, then balance
     expect(mockBuilder.values).not.toHaveBeenCalled()
   })
 
@@ -214,9 +222,10 @@ describe('leaveGroup', () => {
     queueDbResult([])
     queueDbResult([])
     queueDbResult([])
-    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
     queueDbResult([{ balance: 0 }])
-    queueDbResult([{ id: 'epoch-1' }])
     queueDbResult([{ n: 0 }])                            // no active trip
     queueDbResult([{ n: 1 }])                            // active outing
     expect(await leaveGroup()).toEqual({ ok: false, code: 'leave_active_outing' })
@@ -230,9 +239,10 @@ describe('leaveGroup', () => {
     queueDbResult([])
     queueDbResult([])
     queueDbResult([])
-    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
     queueDbResult([{ balance: 0 }])
-    queueDbResult([{ id: 'epoch-1' }])
     queueDbResult([{ n: 1 }])                            // active trip
     expect(await leaveGroup()).toEqual({ ok: false, code: 'leave_active_trip' })
   })
@@ -244,7 +254,9 @@ describe('leaveGroup', () => {
     queueDbResult([])
     queueDbResult([])
     queueDbResult([])
-    queueDbResult([{ memberB: null }])                   // partner row changed before we got the lock
+    queueDbResult([{ memberA: 'user-a', memberB: null }]) // partner row changed before we got the lock
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: null }])
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
     expect(await leaveGroup()).toEqual({ ok: false, code: 'only_member_b_can_leave' })
     expect(mockBuilder.values).not.toHaveBeenCalled()
   })
@@ -273,9 +285,10 @@ describe('leaveGroup', () => {
     queueDbResult([])                                    // no house
     queueDbResult([])                                    // no car
     queueDbResult([])                                    // no insurance
-    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
     queueDbResult([{ balance: 0 }])
-    queueDbResult([{ id: 'epoch-1' }])
     queueDbResult([{ n: 0 }])                            // no active trip
     queueDbResult([{ n: 0 }])                            // no active outing
     queueDbResult([{ id: 'grp-new' }])
@@ -292,9 +305,10 @@ describe('removePartner', () => {
   it('happy path: member_a removes member_b — closes epoch, opens solo epoch, clears member_b', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])            // group lookup
-    // Inside the transaction — fences after the group-row lock (#943 S-E):
-    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])  // OikosGroups … FOR UPDATE
-    queueDbResult([{ id: 'epoch-1' }])     // currentEpoch (.limit)
+    // Inside the transaction — locks and the boundary, then the fences (#943 S-E, #1290):
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])  // OikosGroups … FOR NO KEY UPDATE
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // open GroupEpochs … FOR NO KEY UPDATE
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }]) // clock_timestamp()
     queueDbResult([{ n: 0 }])              // hasActiveTrip (.then)
     queueDbResult([{ n: 0 }])              // hasActiveOuting (.then)
     queueDbResult([])                      // tx: invite revocation (.then)
@@ -309,11 +323,11 @@ describe('removePartner', () => {
 
     // First .set() inside the tx is the invite revocation
     const inviteSet = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
-    expect(inviteSet.revokedAt).toBeInstanceOf(Date)
+    expect(inviteSet.revokedAt).toBeInstanceOf(SQL)
 
     // Second .set() closes the old epoch (endedAt)
     const epochCloseSet = mockBuilder.set.mock.calls[1][0] as Record<string, unknown>
-    expect(epochCloseSet.endedAt).toBeInstanceOf(Date)
+    expect(epochCloseSet.endedAt).toBeInstanceOf(SQL)
 
     // The new epoch row inserted for member_a, solo
     const insertedEpoch = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
@@ -342,7 +356,8 @@ describe('removePartner', () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
-    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
     queueDbResult([{ n: 1 }])              // hasActiveTrip → true
     expect(await removePartner()).toEqual({ ok: false, code: 'active_trip' })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
@@ -353,7 +368,8 @@ describe('removePartner', () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
-    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
     queueDbResult([{ n: 0 }])              // no active trip
     queueDbResult([{ n: 1 }])              // hasActiveOuting → true
     expect(await removePartner()).toEqual({ ok: false, code: 'active_outing' })

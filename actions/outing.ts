@@ -59,7 +59,10 @@ import {
  *   any mutation that starts afterwards sees 'ended' and is rejected. Only then
  *   does it read expenses/settlements and compute the couple net.
  * - Lock order is Outings → OikosGroups (endOuting only). leaveGroup /
- *   removePartner lock OikosGroups only and never Outings, so there is no cycle.
+ *   removePartner / acceptInvite lock OikosGroups, then the open GroupEpochs
+ *   row, and never Outings; outing writes never lock GroupEpochs beyond the
+ *   FK check (FOR KEY SHARE, which those NO KEY UPDATE locks don't block), so
+ *   there is no cycle.
  */
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -100,8 +103,8 @@ async function lockOutingForWrite(
 /**
  * Lock the group row FOR SHARE (after any outing lock: the order is always
  * Outings → OikosGroups). Shared, so outing writes don't serialize against
- * each other — only against leaveGroup / removePartner / endOuting, which take
- * it FOR UPDATE.
+ * each other — only against leaveGroup / removePartner / acceptInvite /
+ * endOuting, which take it FOR NO KEY UPDATE.
  */
 async function lockGroupShared(tx: Tx, groupId: string) {
   const [row] = await tx
@@ -156,7 +159,7 @@ export const createOuting = action(async (input: CreateOutingInput): Promise<{ i
   const t = await getTranslations()
 
   const created = await db.transaction(async (tx) => {
-    // Group row FOR SHARE: a concurrent leaveGroup / removePartner (FOR UPDATE)
+    // Group row FOR SHARE: a concurrent leaveGroup / removePartner (FOR NO KEY UPDATE)
     // either commits first — and we read the solo group it left — or waits for
     // this outing and then sees it through its active-outing fence. Members and
     // base currency come from the locked row, not the pre-transaction context.
@@ -367,12 +370,15 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
     }
 
     // 2. Group row lock, then read the members fresh — not from the viewer
-    //    context resolved before the transaction.
+    //    context resolved before the transaction. NO KEY UPDATE, like the
+    //    chapter closers: it still excludes them and other endOutings, but
+    //    does not block the FK check (FOR KEY SHARE) of an insert that
+    //    references this group.
     const [locked] = await tx
       .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB, baseCurrency: oikosGroups.baseCurrency })
       .from(oikosGroups)
       .where(eq(oikosGroups.id, group.id))
-      .for('update')
+      .for('no key update')
 
     // 3. Past epoch → terminal, no fold.
     if (ended.epochId !== await currentEpochId(tx, group.id)) return { folded: false }
