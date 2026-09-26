@@ -9,6 +9,7 @@ import {
   incomeTransactions,
 } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterImportMutation } from '@/lib/revalidate'
 import { isValidCategoryId } from '@/lib/categories'
@@ -404,6 +405,11 @@ export interface ImportBatchSummary {
   rollbackable: boolean
 }
 
+/**
+ * The latest import batches of the viewer's group, limited to the chapter
+ * that is open now: a batch recorded in an earlier chapter (possibly by an
+ * earlier partner) is not listed, and could not be rolled back anyway.
+ */
 export const getImportHistory = action(async (): Promise<ImportBatchSummary[]> => {
   const { group } = await getViewerWriteContext()
 
@@ -420,7 +426,10 @@ export const getImportHistory = action(async (): Promise<ImportBatchSummary[]> =
       rolledBackAt: importBatches.rolledBackAt,
     })
     .from(importBatches)
-    .where(eq(importBatches.groupId, group.id))
+    .where(and(
+      eq(importBatches.groupId, group.id),
+      openChapterCreatedClause('"ImportBatches"."created_at"', group.id),
+    ))
     .orderBy(desc(importBatches.createdAt))
     .limit(5)
 
@@ -436,13 +445,17 @@ export const getImportHistory = action(async (): Promise<ImportBatchSummary[]> =
 
 /**
  * Lightweight count exposed for `getImportHistory`-less surfaces (e.g. unit
- * tests). Kept here so the action file owns every import-batch query.
+ * tests). Kept here so the action file owns every import-batch query. Same
+ * scope as `getImportHistory`: the open chapter only.
  */
 export const countImportBatches = action(async (): Promise<number> => {
   const { group } = await getViewerWriteContext()
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(importBatches)
-    .where(eq(importBatches.groupId, group.id))
+    .where(and(
+      eq(importBatches.groupId, group.id),
+      openChapterCreatedClause('"ImportBatches"."created_at"', group.id),
+    ))
   return result[0]?.count ?? 0
 })

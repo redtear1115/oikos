@@ -14,8 +14,25 @@ function escapeField(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
 }
 
-function toRow(fields: readonly string[]): string {
-  return fields.map(escapeField).join(',')
+/**
+ * A text cell a spreadsheet would read as a formula: its first visible
+ * character is `=` `+` `-` `@` (or the full-width forms), possibly after
+ * leading whitespace — `\s` covers space, tab, CR, LF, NBSP, U+3000 and
+ * U+FEFF; the zero-width characters are listed explicitly. A cell that
+ * itself starts with a tab or CR is also treated as unsafe.
+ */
+const FORMULA_LIKE = /^[\s\u200B-\u200D\u2060]*[=+\-@\uFF1D\uFF0B\uFF0D\uFF20]|^[\t\r]/
+
+/**
+ * Text cells come from what people typed (description, notes, names) or
+ * from labels, so they are made spreadsheet-safe: a formula-looking cell
+ * gets a leading `'`, which spreadsheets treat as "this is text", and every
+ * text cell is quoted. The generated cells — date and integer amount — are
+ * left as they are so they still open as a date and a number.
+ */
+function textField(value: string): string {
+  const safe = FORMULA_LIKE.test(value) ? `'${value}` : value
+  return `"${safe.replace(/"/g, '""')}"`
 }
 
 /** YYYY-MM-DD in Asia/Taipei (TW-only product; matches the rest of the codebase). */
@@ -68,16 +85,17 @@ function splitTypeLabel(raw: SplitType, t: Translations['splitType']): string {
  */
 export function buildTransactionsCsv(rows: readonly ExportTxnRow[], labels: ExportLabels): string {
   const c = labels.columns
-  const header = toRow([c.date, c.description, c.amount, c.category, c.paidBy, c.splitType, c.notes])
-  const body = rows.map(r => toRow([
-    toTaipeiYmd(r.transactedAt),
-    r.description,
-    String(r.amount),
-    categoryLabel(r.category, labels.category),
-    r.paidByName,
-    splitTypeLabel(r.splitType, labels.splitType),
-    r.notes ?? '',
-  ]))
+  const header = [c.date, c.description, c.amount, c.category, c.paidBy, c.splitType, c.notes]
+    .map(textField).join(',')
+  const body = rows.map(r => [
+    escapeField(toTaipeiYmd(r.transactedAt)),
+    textField(r.description),
+    escapeField(String(r.amount)),
+    textField(categoryLabel(r.category, labels.category)),
+    textField(r.paidByName),
+    textField(splitTypeLabel(r.splitType, labels.splitType)),
+    textField(r.notes ?? ''),
+  ].join(','))
   return BOM + [header, ...body].join(CRLF) + CRLF
 }
 
