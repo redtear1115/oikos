@@ -43,9 +43,23 @@ Caveats：
 
 - `drizzle-kit migrate` 套用**所有** pending migrations，不是單一檔。跑 prod 前先確認 pending 清單。
 - 直接讀 prod DB 需要使用者明確授權 prod 為目標（「跑 prod」算數）；migration 後的驗證查詢也要同一份授權。
-- Prod 不被本機 worktree 碰，歷史乾淨、migration 正常執行；但仍然驗證資料效果，不要只信成功訊息。
+- Prod 不被本機 worktree 碰，migration 正常照 journal 順序執行；但**歷史不是乾淨的**（見下）——仍然要驗證資料效果，不要只信成功訊息。
+
+**修正（#1405）**：上一版這裡寫「歷史乾淨」，不成立。`0065`（`when` 為 `1782300000000`，加 `Profiles.avatar_hidden`）在 prod 上是欄位已經手動／繞過工具存在、但 `drizzle.__drizzle_migrations` 沒有對應紀錄；紀錄是在 v1.6.0 migrate（2026-09-22）時才補上（`0065` 本體是 `ADD COLUMN IF NOT EXISTS`，重跑是 no-op，事後補紀錄無害；見 #1354 crew log「0065 補上紀錄（欄位本來就在，跳過）」與其後的唯讀檢查：先 67 筆、跑完 68 筆）。
+
+**每次跑 prod migrate 前，先讀資料比對，不要只看 journal 檔案**：
+
+```sql
+select hash, created_at from drizzle.__drizzle_migrations order by created_at;
+```
+
+比對筆數與 `when` 值，是否對應 `drizzle/meta/_journal.json` 的 `entries`。這一步是唯讀查詢，不是 migrate 本身。**發現待跑清單和預期不一樣就先停**，不要照跑。
+
+**失效的樣子**：待跑清單比預期多一筆，`drizzle-kit migrate` 不會為此報錯——它只看 journal 的 `when` 是否大於 DB 已記錄的最大 `created_at`，缺紀錄的那筆只是被當成「還沒跑過」再套用一次。這次因為 0065 是 `IF NOT EXISTS` 所以無害；換成一個不能重跑的 migration，就會在 prod 上直接失敗。
 
 兩個 Supabase 環境對照見 [CLAUDE.md §環境](../../CLAUDE.md)。
+
+**0065 是怎麼在工具之外套用的**：PR #1332（`feat/1328-hide-avatar`）內文寫「dev 與 prod 都已套用（使用者 2026-09-20 明示同意兩邊一起跑）」，早於該 PR merge、也早於它自己的 journal entry 走一般流程被記錄；確切是手動 SQL 還是透過 Supabase MCP `apply_migration` 執行，repo 內找不到直接證據，沒有查清楚。
 
 ---
 
