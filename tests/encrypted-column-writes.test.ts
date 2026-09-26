@@ -36,7 +36,7 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
-interface Hit { file: string; line: number; prop: string; rhs: string }
+interface Hit { file: string; line: number; prop: string; rhs: string; text: string }
 
 function encryptedAssignments(): Hit[] {
   const hits: Hit[] = []
@@ -48,19 +48,32 @@ function encryptedAssignments(): Hit[] {
       const m =
         text.match(/(?:^\s*|[{,]\s*)(\w+Encrypted)\??\s*:\s*(.*)$/) ??
         text.match(/\.(\w+Encrypted)\s*=(?!=)\s*(.*)$/)
-      if (m) hits.push({ file, line: i + 1, prop: m[1], rhs: m[2].trim() })
+      if (m) hits.push({ file, line: i + 1, prop: m[1], rhs: m[2].trim(), text })
     })
   }
   return hits
 }
 
 const isTypeAnnotation = (rhs: string) => /^string\b/.test(rhs)
+// #1289 — retiring an invoice credential: `.set({ deletedAt: …,
+// verificationCodeEncrypted: null })` on one line. A literal null carries no
+// ciphertext and binds no AAD, so neither thing this guard protects is at
+// stake; requiring `deletedAt` on the same line keeps it to the soft-delete
+// shape the CHECK invoice_credentials_secret_iff_live (0069) expects.
+const isCredentialRetire = (h: Hit) =>
+  h.prop === 'verificationCodeEncrypted' && /^null\s*}/.test(h.rhs) && /\bdeletedAt:/.test(h.text)
 // Reads: `.select({ plateEncrypted: carDetails.plateEncrypted, … })`
 const isSelectProjection = (h: Hit) => new RegExp(`^\\w+\\.${h.prop},?$`).test(h.rhs)
 
 describe('encrypted-column writes in actions/', () => {
   const hits = encryptedAssignments()
-  const writes = hits.filter((h) => !isTypeAnnotation(h.rhs) && !isSelectProjection(h))
+  const retires = hits.filter(isCredentialRetire)
+  const writes = hits.filter((h) => !isTypeAnnotation(h.rhs) && !isSelectProjection(h) && !isCredentialRetire(h))
+
+  it('finds the invoice credential retire sites (delete, refresh, removePartner)', () => {
+    expect(retires.map((h) => h.file).sort())
+      .toEqual([join('actions', 'invoice.ts'), join('actions', 'invoice.ts'), join('actions', 'membership.ts')])
+  })
 
   it('finds the known write sites (guard against the scan silently matching nothing)', () => {
     // car ×2, child create ×3, editChild ×3 + upsert insert ×2, house ×2, invoice ×2

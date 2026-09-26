@@ -416,14 +416,18 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         )
     `)
 
-    // 10. Move InvoiceCredentials where user_id = leaver. Snapshots and Runs
-    // stay (group共同記錄, per design).
+    // 10. Move the leaver's live InvoiceCredentials. Snapshots and Runs stay
+    // (group共同記錄, per design). Soft-deleted credentials stay too: they
+    // carry no secret (0069) and the cron purges them where they are. Runs
+    // left behind can't block anything: their credential FK is ON DELETE SET
+    // NULL (#1289).
     await tx
       .update(invoiceCredentials)
       .set({ groupId: newGroup.id })
       .where(and(
         eq(invoiceCredentials.groupId, oldGroupId),
         eq(invoiceCredentials.userId, leaver),
+        isNull(invoiceCredentials.deletedAt),
       ))
 
     // 11. Move MonthlyReviewMessages where member_id = leaver
@@ -536,6 +540,9 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
  *     doesn't help here since the *remaining* member minted it)
  *   - Close the current epoch, open a fresh solo epoch for member_a
  *   - Clear member_b + any leftover pending-swap fields on the group
+ *   - Soft-delete the removed member's live InvoiceCredentials and clear
+ *     their ciphertext (#1289) — the one exception to "data left in place":
+ *     a credential is a live secret, not history
  *   - Recalc balance (resolves to 0 — solo short-circuit)
  *
  * Irreversible.
@@ -614,6 +621,19 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
         currentEpochStartedAt: boundary,
       })
       .where(eq(oikosGroups.id, groupId))
+
+    // #1289 — the removed member's invoice credentials don't stay behind as
+    // live secrets in a group they no longer belong to, and they don't follow
+    // them either (no group is created for them, see above): soft-delete and
+    // drop the ciphertext in one UPDATE. Their runs stay as group history.
+    await tx
+      .update(invoiceCredentials)
+      .set({ deletedAt: now, verificationCodeEncrypted: null })
+      .where(and(
+        eq(invoiceCredentials.groupId, groupId),
+        eq(invoiceCredentials.userId, removedUserId),
+        isNull(invoiceCredentials.deletedAt),
+      ))
 
     await recalcGroupBalance(groupId, tx)
   })
