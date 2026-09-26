@@ -121,8 +121,13 @@ describe('Landing — device-dependent primary CTA (#1413)', () => {
       getPlatform: () => 'ios',
     }
     renderLanding()
+    // `cta`'s text is present even while pending (the placeholder renders it
+    // text-transparent, not absent — #1413), so waiting on the text alone
+    // would pass before resolution ever finishes. Wait for a real signal
+    // that resolution has settled: `aria-hidden` is only present pending.
     await waitFor(() => {
-      expect(screen.getAllByText(zhTW.landing.cta).length).toBeGreaterThan(0)
+      const anchors = screen.getAllByText(zhTW.landing.cta).map((el) => el.closest('a')!)
+      expect(anchors.some((a) => !a.hasAttribute('aria-hidden'))).toBe(true)
     })
     expect(screen.queryByText(zhTW.landing.appStoreCta)).not.toBeInTheDocument()
   })

@@ -19,11 +19,17 @@ interface Props {
 
 /**
  * Secondary sign-in link next to/under the landing's primary CTA. Same
- * platform resolution as `LandingPrimaryCta` (independent instance — see that
- * file's docstring for why SSR always renders the default label and a beat of
- * hide-first is preferred over a flash of the wrong one): every variant keeps
- * the "already have an account" label except `android_beta`, whose primary CTA
- * is the beta signup form, so this reads "use the web version instead" (#1413).
+ * platform resolution as `LandingPrimaryCta` (independent instance): every
+ * variant keeps the "already have an account" label except `android_beta`,
+ * whose primary CTA is the beta signup form, so this reads "use the web
+ * version instead" (#1413).
+ *
+ * Unlike the primary CTA, this stays fully hidden (`opacity-0`) rather than a
+ * visible placeholder while pending — it's a small secondary link, so hiding
+ * it doesn't read as a broken page the way an invisible primary CTA did, and
+ * a transparent-text placeholder buys nothing extra here. `LandingCtaLink`'s
+ * `inert` prop still adds `pointer-events-none` as a plain CSS class (not
+ * just an `onClick` guard) so a pre-hydration tap can't follow it either.
  */
 export function LandingSecondaryCta({ signInHref, className, style, children, androidLabel }: Props) {
   const target = useVisitorPlatformTarget()

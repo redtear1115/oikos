@@ -36,11 +36,17 @@ interface Props {
   className?: string
   style?: CSSProperties
   ariaLabel?: string
-  /** Renders hidden and non-interactive (#1413): used by `LandingPrimaryCta`
-   *  while the visitor's platform is still resolving. The SSR markup still
-   *  exists — crawlers and no-JS readers see it — but a real visitor must not
-   *  be able to see or tap it before we know which variant they should get.
-   *  Same hide-first pattern as `AppStoreNote` (#1333). */
+  /** Renders non-interactive (#1413): used while the visitor's platform is
+   *  still resolving. The SSR markup still exists — crawlers and no-JS
+   *  readers see it — but a real visitor must not be able to tap it before we
+   *  know which variant they should get. Adds `pointer-events-none` as a
+   *  plain CSS class rather than relying on `onClick`'s `preventDefault`
+   *  alone: `onClick` only runs after React hydrates, so pre-hydration (the
+   *  whole page-load window inside the Capacitor shell) a blind tap on the
+   *  SSR markup would still navigate — a real bug a verifier caught, not a
+   *  hypothetical. `aria-hidden` + `tabIndex=-1` keep it out of the
+   *  accessibility tree meanwhile. Callers decide visibility separately
+   *  (`className`) — see `LandingPrimaryCta` for the visible-placeholder case. */
   inert?: boolean
   children: ReactNode
 }
@@ -57,7 +63,9 @@ export function LandingCtaLink({ href, ctaLocation, target, fromParam, className
     : href
   // Reuse the shared `oik-focus-ring` utility (globals.css) so keyboard focus is
   // visible against dark-fill CTAs; pointer clicks stay clean via :focus-visible.
-  const cls = ['outline-none focus-visible:oik-focus-ring', className].filter(Boolean).join(' ')
+  const cls = ['outline-none focus-visible:oik-focus-ring', inert && 'pointer-events-none', className]
+    .filter(Boolean)
+    .join(' ')
   return (
     <Link
       href={finalHref}

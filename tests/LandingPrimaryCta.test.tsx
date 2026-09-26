@@ -57,16 +57,64 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
     delete (window as { Capacitor?: unknown }).Capacitor
   })
 
-  it('renders hidden and inert while platform resolution is pending', () => {
+  it('renders a visible placeholder (box shown, label text-transparent) while platform resolution is pending', () => {
     // Never resolves → stays pending.
     getSession.mockReturnValue(new Promise(() => {}))
     renderCta()
-    const anchor = screen.getByText('開始').closest('a')!
-    expect(anchor.className).toContain('opacity-0')
+    const label = screen.getByText('開始')
+    const anchor = label.closest('a')!
+    // The box itself is NOT hidden (#1413 verifier feedback: an invisible
+    // primary CTA reads as a broken page) — only its label text is.
+    expect(anchor.className).not.toContain('opacity-0')
+    expect(label.className).toContain('text-transparent')
     expect(anchor).toHaveAttribute('aria-hidden', 'true')
     expect(anchor).toHaveAttribute('tabindex', '-1')
+    // Pre-hydration, only a plain CSS class can block a tap — `onClick`'s
+    // `preventDefault` doesn't run until React hydrates (F1).
+    expect(anchor.className).toContain('pointer-events-none')
     // Still the sign-in default underneath, so layout doesn't jump once shown.
     expect(anchor.getAttribute('href')).toBe('/zh-TW/sign-in?from=landing')
+  })
+
+  it('SSR markup itself carries pointer-events-none (F1: onClick cannot run before hydration)', async () => {
+    // Never resolves within this render — matches what a real page load looks
+    // like before the client JS bundle has executed at all.
+    getSession.mockReturnValue(new Promise(() => {}))
+    const { renderToString } = await import('react-dom/server')
+    const html = renderToString(
+      <LandingPrimaryCta
+        signInHref="/zh-TW/sign-in"
+        dashboardHref="/dashboard"
+        ctaLocation="hero"
+        appStoreLabel="在 App Store 下載"
+        androidBetaLabel="報名 Android 測試版"
+      >
+        開始
+      </LandingPrimaryCta>,
+    )
+    expect(html).toContain('pointer-events-none')
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('tabindex="-1"')
+    expect(html).toContain('text-transparent')
+    // Text is present for crawlers/no-JS readers, just visually transparent —
+    // not `display:none` and not stripped from the markup.
+    expect(html).toContain('開始')
+  })
+
+  it('removes the pending guards once platform resolution settles', async () => {
+    getSession.mockResolvedValue({ data: { session: null } })
+    renderCta()
+    // Re-query inside `waitFor` rather than holding a reference from before
+    // resolution: the pending render swaps a text-transparent <span> wrapper
+    // for the plain string once resolved, so the earlier node detaches.
+    await waitFor(() => {
+      const anchor = screen.getByText('開始').closest('a')!
+      expect(anchor).not.toHaveAttribute('aria-hidden')
+    })
+    const anchor = screen.getByText('開始').closest('a')!
+    expect(anchor).not.toHaveAttribute('tabindex')
+    expect(anchor.className).not.toContain('pointer-events-none')
+    expect(anchor.className).not.toContain('text-transparent')
   })
 
   it('swaps to /dashboard after hydration when a session exists, on any platform', async () => {

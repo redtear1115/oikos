@@ -38,10 +38,19 @@ const FOCUS_RING_CLASS = 'outline-none focus-visible:oik-focus-ring'
  *   everything else                 → sign-in
  *
  * Platform is runtime-only (see `lib/visitorPlatform.ts`), so
- * `useVisitorPlatformTarget` starts `'pending'` and this renders hidden +
- * inert until it resolves — the default-label markup stays in the DOM at its
- * normal size (opacity-0, not display:none) so revealing it doesn't shift
- * the layout. See `LandingCtaLink`'s `inert` prop for the mechanics.
+ * `useVisitorPlatformTarget` starts `'pending'` and this renders a visible
+ * placeholder until it resolves: the exact box the resolved CTA will occupy
+ * (every variant shares the same `className`/`style` from the caller, so the
+ * box never needs to change size or position), with its label text made
+ * `text-transparent` rather than the button being hidden outright. A
+ * verifier flagged the earlier fully-hidden version as a worse trade — an
+ * invisible primary CTA reads as a broken page for that beat, and on a slow
+ * connection that beat isn't always short. The placeholder is `aria-hidden`,
+ * `tabIndex=-1`, and (via `LandingCtaLink`'s `inert` prop) `pointer-events-none`
+ * as a plain CSS class — not just an `onClick` guard — because `onClick` only
+ * runs after React hydrates, and the whole pre-hydration window is exactly
+ * when a shell webview or a slow mobile connection can catch a stray tap; a
+ * class-based guard blocks it before any JS runs.
  */
 export function LandingPrimaryCta({
   signInHref,
@@ -61,11 +70,14 @@ export function LandingPrimaryCta({
         href={signInHref}
         ctaLocation={ctaLocation}
         target="sign_in"
-        className={`${className ?? ''} opacity-0`.trim()}
+        className={className}
         style={style}
         inert
       >
-        {children}
+        {/* Text only — the box itself (background/size/shape from `style` +
+            `className` above) stays visible so the primary action's position
+            never jumps once the real variant resolves. */}
+        <span className="text-transparent">{children}</span>
       </LandingCtaLink>
     )
   }
