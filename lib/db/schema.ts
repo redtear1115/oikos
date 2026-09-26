@@ -305,7 +305,10 @@ export const invoiceCredentials = pgTable('InvoiceCredentials', {
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   userId: uuid('user_id').notNull().references(() => profiles.id),
   barcode: text('barcode').notNull(),
-  verificationCodeEncrypted: text('verification_code_encrypted').notNull(),
+  // #1289 — NULL exactly when the row is soft-deleted (CHECK
+  // invoice_credentials_secret_iff_live, 0069). Every soft-delete clears it
+  // in the same UPDATE.
+  verificationCodeEncrypted: text('verification_code_encrypted'),
   // v0.9.0 additions:
   nickname: text('nickname'),
   status: invoiceCredentialStatusEnum('status').notNull().default('active'),
@@ -333,7 +336,9 @@ export const invoiceImportSnapshots = pgTable('InvoiceImportSnapshots', {
 export const invoiceImportRuns = pgTable('InvoiceImportRuns', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
-  credentialId: uuid('credential_id').notNull().references(() => invoiceCredentials.id),
+  // #1289 — nullable, ON DELETE SET NULL (0069): the run is the group's audit
+  // trail and outlives the credential it used.
+  credentialId: uuid('credential_id').references(() => invoiceCredentials.id, { onDelete: 'set null' }),
   userId: uuid('user_id').notNull().references(() => profiles.id),
   rangeStart: date('range_start').notNull(),
   rangeEnd: date('range_end').notNull(),

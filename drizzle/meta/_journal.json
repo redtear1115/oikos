@@ -477,6 +477,13 @@
       "when": 1782600000000,
       "tag": "0068_account_deletion_tombstone",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1782700000000,
+      "tag": "0069_invoice_credential_retention",
+      "breakpoints": true
     }
   ]
 }
