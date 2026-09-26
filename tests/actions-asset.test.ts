@@ -1,10 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createCar, editCar, softDeleteCar, createLifeEntity, editLifeEntity, softDeleteAsset } from '@/actions/asset'
 
+// next/headers cookies() — the actions below resolve the viewer through
+// getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin in these tests,
+// so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 
 beforeEach(() => {
   resetDbMocks()
@@ -14,6 +22,7 @@ beforeEach(() => {
 describe('createCar', () => {
   it('happy path: validates, inserts Asset + CarDetails in one tx', async () => {
     queueDbResult([GROUP])               // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1' }])   // assets insert .returning
     queueDbResult([])                    // carDetails insert (no .returning, awaited directly)
 
@@ -85,6 +94,7 @@ describe('editCar', () => {
 describe('createCar with auto-transaction', () => {
   it('atomically creates Asset + CarDetails + CashTransaction when purchasePrice > 0', async () => {
     queueDbResult([GROUP])                            // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1' }])                // assets insert .returning
     queueDbResult([])                                 // carDetails insert (await)
     queueDbResult([{ id: 'txn-1' }])                  // cashTransactions insert .returning
@@ -137,6 +147,7 @@ describe('createCar with auto-transaction', () => {
 
   it('skips auto-tx when purchasePrice is null (only Asset + CarDetails)', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-2' }])
     queueDbResult([])
 
@@ -156,6 +167,7 @@ describe('createCar with auto-transaction', () => {
 
   it('uses primaryUserId=NULL → splitType=half + paidBy=viewer (共用)', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-3' }])
     queueDbResult([])
     queueDbResult([{ id: 'txn-3' }])
@@ -178,6 +190,7 @@ describe('createCar with auto-transaction', () => {
   it('falls back to NOW() when purchasedAt is null', async () => {
     // Solo group (memberB null) — primaryUser NULL falls to all_mine via partner=null
     queueDbResult([{ id: 'grp-solo', memberA: 'user-a', memberB: null, name: '我' }])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-4' }])
     queueDbResult([])
     queueDbResult([{ id: 'txn-4' }])
@@ -203,6 +216,7 @@ describe('createCar with auto-transaction', () => {
 
   it('solo group: primaryUserId=null → all_mine + paidBy=viewer', async () => {
     queueDbResult([{ id: 'grp-solo', memberA: 'user-a', memberB: null, name: '我' }])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-5' }])
     queueDbResult([])
     queueDbResult([{ id: 'txn-5' }])
@@ -224,6 +238,7 @@ describe('createCar with auto-transaction', () => {
 
   it('Slice 1 callers without primaryUserId/fuelType still work (validator defaults)', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-6' }])
     queueDbResult([])
 
@@ -243,6 +258,7 @@ describe('createCar with auto-transaction', () => {
 
   it('persists extended car fields', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1' }])  // assets insert
     queueDbResult([])                    // carDetails insert
 

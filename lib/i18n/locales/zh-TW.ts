@@ -2984,6 +2984,7 @@ export type Translations = {
       linked_asset_not_in_group: string
       linked_asset_deleted: string
       linked_vehicle_invalid: string
+      primary_user_not_in_group: string
       plate_empty: string
       field_not_filled: string
       template_unknown: string
@@ -6588,6 +6589,7 @@ export const zhTW: Translations = {
       linked_asset_not_in_group: '關聯資產不在家計簿內',
       linked_asset_deleted: '關聯資產已刪除',
       linked_vehicle_invalid: '無效的關聯車輛',
+      primary_user_not_in_group: '主要使用人不在家計簿內',
       plate_empty: '車牌不能為空',
       field_not_filled: '尚未填寫此欄位',
       template_unknown: '未知的模板',

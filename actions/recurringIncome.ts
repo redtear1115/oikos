@@ -13,6 +13,7 @@
 
 import { db } from '@/lib/db/client'
 import {
+  assets,
   incomeTransactions,
   recurringIncomeRules,
   pendingIncomeOccurrences,
@@ -29,6 +30,7 @@ import {
   assertAssetInGroup,
 } from '@/lib/recurringActionHelpers'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import {
   revalidateAfterRecurringIncomeRuleMutation,
   revalidateAfterIncomeMutation,
@@ -197,7 +199,7 @@ export const resumeRule = action(async (id: string): Promise<void> => {
 })
 
 export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   const [row] = await db
     .select({
@@ -209,9 +211,11 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
       category: recurringIncomeRules.category,
       source: recurringIncomeRules.source,
       assetId: recurringIncomeRules.assetId,
+      assetGroupId: assets.groupId,
     })
     .from(pendingIncomeOccurrences)
     .innerJoin(recurringIncomeRules, eq(recurringIncomeRules.id, pendingIncomeOccurrences.ruleId))
+    .leftJoin(assets, eq(assets.id, recurringIncomeRules.assetId))
     .where(and(
       eq(pendingIncomeOccurrences.id, pendingId),
       eq(pendingIncomeOccurrences.groupId, group.id),
@@ -220,6 +224,13 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
     ))
     .limit(1)
   if (!row) throw actionError('pending_income_not_found')
+
+  // Mirror of the expense side: the rule's recipient and asset are copied onto
+  // the new record, so both must still belong to this group.
+  assertRecipientInGroup(row.recipientId, group)
+  if (row.assetId !== null && row.assetGroupId !== group.id) {
+    throw actionError('linked_asset_not_in_group')
+  }
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
@@ -277,7 +288,7 @@ export const editAndConfirmPending = action(async (
     assetId: input.assetId ?? null,
   })
 
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 

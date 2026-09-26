@@ -3,8 +3,16 @@ import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending, editAndConfirmPending, skipPending } from '@/actions/recurringIncome'
 
+// next/headers cookies() — the actions below resolve the viewer through
+// getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin in these tests,
+// so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 
 // Pin "today" so date-relative logic stays deterministic regardless of the real
 // calendar day. resumeRule/updateRule derive `today` from `new Date()` and snap
@@ -290,6 +298,7 @@ describe('softDeleteRule', () => {
 describe('confirmPending', () => {
   it('atomically inserts IncomeTx and updates pending.resolved_tx_id', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id, ruleId: 'rule-1',
       proposedAmount: 75000, proposedDate: '2026-05-25',
@@ -307,6 +316,7 @@ describe('confirmPending', () => {
 
   it('returns error code when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])
     expect(await confirmPending('pend-x')).toEqual({ ok: false, code: 'pending_income_not_found' })
   })
@@ -315,6 +325,7 @@ describe('confirmPending', () => {
 describe('editAndConfirmPending', () => {
   it('inserts IncomeTx with edited fields and resolves pending', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'pend-1', groupId: GROUP.id }])
     queueDbResult([{ id: 'tx-2' }])
     queueDbResult([{ id: 'pend-1' }])

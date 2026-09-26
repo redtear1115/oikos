@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -10,8 +10,16 @@ import {
 } from '@/actions/asset'
 import { decrypt, aadFor } from '@/lib/crypto'
 
+// next/headers cookies() — the actions below resolve the viewer through
+// getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin in these tests,
+// so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: true }
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 const GROUP_GUARDIAN_OFF = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: false }
 
 // AES-256-GCM ciphertext shape: 12-byte IV (24 hex) : 16-byte authTag (32 hex)
@@ -595,6 +603,7 @@ describe('editInsurance', () => {
 describe('createHouse', () => {
   it('creates asset + houseDetails row', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-h1' }])
     queueDbResult([])
 
@@ -604,6 +613,7 @@ describe('createHouse', () => {
 
   it('passes all houseDetails fields to insert', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-h2' }])
     queueDbResult([])
 
@@ -628,6 +638,7 @@ describe('createHouse', () => {
 
   it('creates auto-transaction when purchasePrice > 0', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-h3' }])
     queueDbResult([])
     queueDbResult([{ id: 'txn-h1' }])
