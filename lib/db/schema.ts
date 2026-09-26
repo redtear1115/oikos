@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb, boolean, primaryKey, unique,
+  timestamp, date, jsonb, boolean, primaryKey, unique, uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -97,14 +97,22 @@ export const groupInvites = pgTable('GroupInvites', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   invitedBy: uuid('invited_by').notNull().references(() => profiles.id),
-  token: text('token').notNull().unique(),
+  // #1288 I3 — nullable since 0070. Still written by createInvite and read by
+  // the lookup's fallback (rows whose token_hash is NULL); a later step stops
+  // writing it and a later migration drops it.
+  token: text('token').unique(),
+  // #1288 I3 — hashToken(token) (lib/invite.ts). The invite lookup key.
+  // Nullable until every row is backfilled; unique index added by 0070.
+  tokenHash: text('token_hash'),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
   // #79 — stamped by leaveGroup so any in-flight invites can't bring a
   // new member into a now-solo group with stale assumptions.
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (t) => ({
+  tokenHashUnique: uniqueIndex('GroupInvites_token_hash_unique').on(t.tokenHash),
+}))
 
 export const groupBalance = pgTable('GroupBalance', {
   groupId: uuid('group_id').primaryKey().references(() => oikosGroups.id),
