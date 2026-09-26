@@ -77,12 +77,21 @@ function isPostgresError(e: unknown): e is AnyError {
 
 /**
  * 22P02-style messages quote the rejected input
- * (`invalid input syntax for type uuid: "…"`); the quoted part is masked.
+ * (`invalid input syntax for type uuid: "…"`). The input is verbatim and may
+ * contain newlines and quotes (#1439), so it is masked from the opening quote
+ * to the END of the text — the closing quote is never searched for (a quote
+ * found in the text may be one of the input's own). The message ends there
+ * anyway; for the stack, `clonePostgresError` swaps in the masked message so
+ * the frames after it stay.
+ *
+ * Failure looks like nothing: the part of the input after its first newline
+ * or inner quote just sits in the re-thrown error's message.
  */
-const INVALID_INPUT_RE = /(invalid input (?:syntax|value) for [^:"\n]*: )"[^"\n]*"/g
+const INVALID_INPUT_HEAD_RE = /invalid input (?:syntax|value) for [^:\n]{0,256}: "/
 
 function maskInvalidInput(text: string): string {
-  return text.replace(INVALID_INPUT_RE, '$1"<masked>"')
+  const m = INVALID_INPUT_HEAD_RE.exec(text)
+  return m ? `${text.slice(0, m.index + m[0].length)}<masked>"` : text
 }
 
 /** A copy that keeps the SQLSTATE, the names and the message — no values. */
@@ -93,7 +102,15 @@ function clonePostgresError(e: AnyError): Error {
     const value = e[key]
     if (typeof value === 'string') out[key] = value
   }
-  if (typeof e.stack === 'string') out.stack = maskInvalidInput(e.stack)
+  if (typeof e.stack === 'string') {
+    // The stack starts with `Name: message`: swap in the masked message so the
+    // mask ends where the message does and the frames stay. Otherwise mask
+    // the stack as text (to its last quote).
+    const at = e.stack.indexOf(e.message)
+    out.stack = e.message !== '' && at !== -1 && !e.stack.slice(0, at).includes('\n')
+      ? `${e.stack.slice(0, at)}${out.message}${maskInvalidInput(e.stack.slice(at + e.message.length))}`
+      : maskInvalidInput(e.stack)
+  }
   return out
 }
 

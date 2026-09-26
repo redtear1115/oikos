@@ -51,6 +51,17 @@
  *   with URL-bearing fields removed or replaced by `REDACTED_URL` — never the
  *   raw input.
  * - Only fixed paths are walked (no recursion), so cyclic input is harmless.
+ *   The one exception, console arguments / log parameters, is walked with
+ *   a depth, node and size budget and an ancestor set (#1439).
+ * - Bounded work (#1439): the regex rules see at most 32 KiB of plain text
+ *   at a time — a longer stretch is cut to its head and ends in
+ *   ` [Filtered: too long]`, the rest dropped, never passed raw. Text up to
+ *   256 KiB keeps its JSON structure (so a bulk-insert error still shows its
+ *   SQL, code and constraint); longer text is cut first. A console argument
+ *   over its budget becomes `[Filtered: too long]`. The hooks run inside the
+ *   `console.error` call that produced them, so a slow scrub is a slow
+ *   request. Failure looks like nothing: the request is just slower, or a
+ *   huge log body arrives cut short.
  *
  * ## What failure looks like
  *
@@ -183,20 +194,36 @@ function scrubUrlValue(value: unknown): unknown {
  * `<masked>` counts as part of a URL token: `beforeSendSpan` and
  * `beforeSendTransaction` both scrub the same child span, and without this
  * the second pass would stop at `<` and append a second `<masked>`.
+ *
+ * The scheme alternative only starts after a character that cannot be part
+ * of a scheme (captured as `absLead`, plus any leading digits / `+.-`, which
+ * a scheme cannot start with). Without that anchor the engine tried a scheme
+ * at every position of a long `[a-z0-9+.-]` run and rescanned the run each
+ * time — quadratic: a 100k alphanumeric log line took seconds (#1439). The
+ * matches are the same as before: a scheme run is only ever entered at its
+ * first letter. The path alternative comes first because the two overlap in
+ * one place — a `/` at position 0, which the old order read as a path and
+ * the scheme alternative would otherwise take as its lead.
  */
 const URL_CHAR = `(?:[^\\s"'<>\`]|${MASKED_VALUE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`
 const URL_IN_TEXT_RE = new RegExp(
-  `([a-z][a-z0-9+.-]*:\\/\\/${URL_CHAR}+)|(^|[\\s("'=])(\\/${URL_CHAR}*)`,
+  `(^|[\\s("'=])(\\/${URL_CHAR}*)|(^|[^a-z0-9+.\\-])([0-9+.\\-]*)([a-z][a-z0-9+.\\-]*:\\/\\/${URL_CHAR}+)`,
   'gi',
 )
 
+/** Test-only: lets tests/sentry-scrub-edges.test.ts check the rewrite matches the old pattern. */
+export const _URL_IN_TEXT_RE_FOR_TESTS = URL_IN_TEXT_RE
+
 function scrubText(value: unknown): unknown {
   if (typeof value !== 'string' || value === '') return value
-  return value.replace(URL_IN_TEXT_RE, (match, abs: string | undefined, lead: string, path: string) => {
-    if (abs) return sanitizeUrl(abs)
-    if (/[?#]|(?:^|\/)invite\//i.test(path)) return `${lead}${sanitizeUrl(path)}`
-    return match
-  })
+  return value.replace(
+    URL_IN_TEXT_RE,
+    (match, lead: string, path: string | undefined, absLead: string, absDigits: string, abs: string | undefined) => {
+      if (abs) return `${absLead}${absDigits}${sanitizeUrl(abs)}`
+      if (path !== undefined && /[?#]|(?:^|\/)invite\//i.test(path)) return `${lead}${sanitizeUrl(path)}`
+      return match
+    },
+  )
 }
 
 // Database error text (#1289). Two shapes reach the hooks:
@@ -204,28 +231,74 @@ function scrubText(value: unknown): unknown {
 // - plain text (`String(err)`, `err.message`): Drizzle's `\nparams: …` tail
 //   with a real newline, Postgres' `Key (…)=(…)` / `Failing row contains (…)`;
 // - JSON (`console.error(err)` in a Node process: consoleLoggingIntegration
-//   formats it as `JSON.stringify(normalize(err))`, because `util` is not on
-//   globalThis): the tail's newline is the escaped `\n`, and the values also
-//   sit in `"params":[…]`, the cause's `"detail"` / `"where"`, and the
-//   cause's message (`invalid input syntax for type uuid: \"…\"`).
+//   formats each non-primitive argument as `JSON.stringify(normalize(arg))`
+//   and joins the arguments with spaces, because `util` is not on
+//   globalThis): the values sit in the `message` / `stack` strings, in
+//   `"params":[…]`, the cause's `"detail"` / `"where"`, and the cause's
+//   message (`invalid input syntax for type uuid: \"…\"`).
+//
+// The JSON shape is handled structurally (#1439): every JSON argument in the
+// text is parsed and walked. Inside it the strings are plain text again, and
+// an error's `stack` is cleaned by swapping in its cleaned `message` — so the
+// tail ends exactly where the message ends, whatever the bound values
+// contain. The regex over the escaped text used to guess that end by
+// stopping at the first `\n    at `; a value that itself contained a newline
+// and `    at ` ended the scrub early and every later value — a ciphertext,
+// say — stayed in the log body.
 //
 // Failure looks like nothing: the values just sit in the Sentry log body.
-// tests/sentry-db-error-envelope.test.ts drives a real client to catch it.
+// tests/sentry-db-error-envelope.test.ts and tests/sentry-scrub-edges.test.ts
+// drive a real client to catch it.
+
+/**
+ * Longest stretch of plain text the regex rules run over; a longer piece is
+ * cut to its head and ends in `TRUNCATED_SUFFIX`. Keeps the work per value
+ * bounded (a hook runs inside the `console.error` call that produced it). A
+ * normalized Drizzle error with its stack and cause is a few KB.
+ */
+const MAX_TEXT_LENGTH = 32_768
+/**
+ * Longest text parsed for JSON arguments as a whole (linear work: a few
+ * scans and `JSON.parse`); anything longer is cut to `MAX_TEXT_LENGTH` first.
+ */
+const MAX_STRUCTURED_LENGTH = 262_144
+/** Budget for one non-string console argument / log parameter. */
+const MAX_LOOSE_TEXT = 65_536
+const MAX_LOOSE_NODES = 2_000
+const MAX_DEPTH = 16
+/** A value too large to scrub within budget. Never the raw value. */
+const TOO_LONG = '[Filtered: too long]'
+/** Appended where text was cut. Never followed by the raw rest. */
+const TRUNCATED_SUFFIX = ` ${TOO_LONG}`
 
 /** Plain text: `params:` must start a line, so "bad params: x" mid-sentence stays. */
 const DB_PARAMS_TAIL_RE = /(^|\n)params: [\s\S]*$/
 /**
- * JSON-escaped text: `\nparams: ` up to the end of the JSON string, stopping
- * before a stack frame (`\n    at `) so a serialised stack keeps its frames.
+ * JSON-escaped text that could not be parsed (truncated, malformed): from
+ * `\nparams: ` to the end of the piece (see `scrubDbPlain`).
  */
-const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: (?:[^"\\]|\\(?!n\s+at\s)[\s\S])*/g
-const PG_KEY_DETAIL_RE = /Key \(([^)\n]*)\)=\([^\n]*/g
-const PG_FAILING_ROW_RE = /Failing row contains \([^\n]*/g
-/** 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input. */
-const PG_INVALID_INPUT_RE = /(invalid input (?:syntax|value) for [^:"\\\n]*: )(\\?)"(?:(?!\2")[^\n])*\2"/g
+const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: /
+/**
+ * Postgres row detail: `Key (<columns>)=(<values>) already exists.` and
+ * `Failing row contains (<values>).` The values are verbatim — they may hold
+ * newlines, parentheses and quotes — so the mask runs to the END of the piece,
+ * not to the end of the line (#1439 round 3). A `Key (` whose column list is
+ * not closed within 256 characters is masked from `Key (` on.
+ */
+const PG_KEY_DETAIL_RE = /Key \((?:([^)\n]{0,256})\)=\()?[\s\S]*/
+const PG_FAILING_ROW_RE = /Failing row contains \([\s\S]*/
+/**
+ * 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input:
+ * `invalid input syntax for type uuid: "<value>"` (also `… for enum "Foo": …`).
+ * Only the opening is matched here; see `maskInvalidInput` for where the value
+ * ends. Group 1 is `\` when the text is JSON-escaped.
+ */
+const PG_INVALID_INPUT_HEAD_RE = /invalid input (?:syntax|value) for [^:\n]{0,256}: (\\?)"/
 
 /** JSON keys whose value is bound parameters or row context. */
 const DB_VALUE_KEYS = new Set(['params', 'parameters', 'args', 'detail', 'where'])
+
+const JSON_SCALAR_RE = /[^,}\]]*/y
 
 /** End index (exclusive) of the JSON value starting at `start`, or -1. */
 function jsonValueEnd(text: string, start: number): number {
@@ -251,63 +324,294 @@ function jsonValueEnd(text: string, start: number): number {
     }
     return -1
   }
-  const m = /^[^,}\]]*/.exec(text.slice(i))
+  JSON_SCALAR_RE.lastIndex = i
+  const m = JSON_SCALAR_RE.exec(text)
   return m ? i + m[0].length : -1
 }
 
-/** `"params":[…]`, `"detail":"…"`, … → `"params":"[Filtered]"`. */
-function maskJsonValueKeys(text: string): string {
-  if (!text.includes('":')) return text
+/**
+ * `"params":[…]`, `"detail":"…"`, … in text that did not parse as JSON: from
+ * the first such key to the end → `"params":"[Filtered]"`. Text that did not
+ * parse is truncated or malformed, so the end of the value cannot be trusted
+ * (a value's own quote may look like its end).
+ */
+function maskJsonValueKeys(text: string): Plain {
+  if (!text.includes('":')) return { text, open: false }
   const re = /"(\w+)"\s*:/g
-  let out = ''
-  let last = 0
   for (let m = re.exec(text); m; m = re.exec(text)) {
     if (!DB_VALUE_KEYS.has(m[1])) continue
-    const valueStart = m.index + m[0].length
-    const end = jsonValueEnd(text, valueStart)
-    // Unterminated (truncated) value: mask to the end.
-    const stop = end === -1 ? text.length : end
-    out += `${text.slice(last, valueStart)}"${FILTERED}"`
-    last = stop
-    re.lastIndex = stop
+    return { text: `${text.slice(0, m.index + m[0].length)}"${FILTERED}"`, open: true }
   }
-  return out + text.slice(last)
+  return { text, open: false }
 }
 
-function scrubDbText(value: string): string {
-  return maskJsonValueKeys(value)
-    .replace(DB_PARAMS_TAIL_ESCAPED_RE, `\\nparams: ${FILTERED}`)
-    .replace(DB_PARAMS_TAIL_RE, `$1params: ${FILTERED}`)
-    .replace(PG_INVALID_INPUT_RE, `$1$2"${MASKED_VALUE}$2"`)
-    .replace(PG_KEY_DETAIL_RE, `Key ($1)=(${MASKED_VALUE})`)
-    .replace(PG_FAILING_ROW_RE, `Failing row contains (${MASKED_VALUE})`)
+/**
+ * A scrubbed plain piece. `open` = some rule masked to the end of the piece,
+ * so whatever follows (the next console arguments) may be part of that value
+ * and is dropped.
+ */
+type Plain = { text: string; open: boolean }
+
+/**
+ * The rejected input of a 22P02-style message, verbatim — it may contain
+ * newlines and quotes (`"/x\n<secret>"`, `"x"<secret>"`). Masked from the
+ * opening quote to the END of the piece: the closing quote is never searched
+ * for, because the text may have been cut (our 32 KiB head, the SDK's
+ * `maxValueLength`, a truncated JSON body) and then the last quote in it is
+ * one of the value's own (#1439 round 3).
+ */
+function maskInvalidInput(text: string): Plain {
+  const m = PG_INVALID_INPUT_HEAD_RE.exec(text)
+  if (!m) return { text, open: false }
+  return { text: `${text.slice(0, m.index + m[0].length)}${MASKED_VALUE}${m[1]}"`, open: true }
 }
 
-/** Free text: database values first, then URLs. */
+/** Apply `re` once: from its first match to the end becomes `replace(match)`. */
+function maskToEnd(piece: Plain, re: RegExp, replace: (m: RegExpExecArray) => string): Plain {
+  const m = re.exec(piece.text)
+  if (!m) return piece
+  return { text: `${piece.text.slice(0, m.index)}${replace(m)}`, open: true }
+}
+
+/**
+ * The regex rules, for text outside any parsed JSON argument and for every
+ * string inside one. A plain piece is untrusted about where a value ends: it
+ * may have been cut anywhere, and a value may contain newlines, quotes,
+ * parentheses or something that looks like a stack frame or a JSON argument.
+ * So every rule masks from its marker to the END of the piece, and the pieces
+ * after it are dropped (`open`). Precise masking — keeping the frames after
+ * a message, the fields after `params` — only happens on parsed JSON
+ * (`scrubDbJson`, `scrubDbStack`), where the structure is known to be
+ * complete.
+ */
+function scrubDbPlain(text: string): Plain {
+  let piece = maskInvalidInput(text)
+  const keys = maskJsonValueKeys(piece.text)
+  piece = { text: keys.text, open: piece.open || keys.open }
+  piece = maskToEnd(piece, DB_PARAMS_TAIL_ESCAPED_RE, () => `\\nparams: ${FILTERED}`)
+  piece = maskToEnd(piece, PG_KEY_DETAIL_RE, m =>
+    m[1] === undefined ? `Key (${MASKED_VALUE})` : `Key (${m[1]})=(${MASKED_VALUE})`)
+  piece = maskToEnd(piece, PG_FAILING_ROW_RE, () => `Failing row contains (${MASKED_VALUE})`)
+  return piece
+}
+
+type Piece = { text: string; json?: unknown }
+
+/** JSON arguments tried per text; the rest is left to the regex rules. */
+const MAX_JSON_ATTEMPTS = 16
+
+/**
+ * Split text into console arguments that are JSON (each starts the text or
+ * follows a space, ends it or precedes a space, and parses) and the plain
+ * text around them.
+ */
+function splitJsonArguments(text: string): Piece[] {
+  const pieces: Piece[] = []
+  let plainStart = 0
+  let attempts = 0
+  for (let i = 0; i < text.length && attempts < MAX_JSON_ATTEMPTS; i++) {
+    const c = text[i]
+    if ((c !== '{' && c !== '[') || (i > 0 && text[i - 1] !== ' ')) continue
+    attempts++
+    const end = jsonValueEnd(text, i)
+    if (end === -1 || (end < text.length && text[end] !== ' ')) continue
+    let json: unknown
+    try {
+      json = JSON.parse(text.slice(i, end))
+    } catch {
+      continue
+    }
+    if (i > plainStart) pieces.push({ text: text.slice(plainStart, i) })
+    pieces.push({ text: text.slice(i, end), json })
+    plainStart = end
+    i = end - 1
+  }
+  if (plainStart < text.length) pieces.push({ text: text.slice(plainStart) })
+  return pieces
+}
+
+/**
+ * An error's stack starts with `Name: message`, so the params tail in it ends
+ * exactly where the message does: swap in the cleaned message and clean the
+ * header and the rest (the frames) on their own. Only that header occurrence
+ * counts — the message must sit on the stack's first line. Anything else (a
+ * stack that does not start with its message, a short message that also
+ * appears inside the values) gets the plain rules, which cut from
+ * `\nparams:` to the end, frames and all.
+ */
+function scrubDbStack(stack: string, message: unknown, depth: number): string {
+  const at = typeof message === 'string' && message !== '' ? stack.indexOf(message) : -1
+  if (at === -1 || stack.slice(0, at).includes('\n')) return scrubDbText(stack, depth)
+  const msg = message as string
+  return (
+    scrubDbText(stack.slice(0, at), depth) +
+    scrubDbText(msg, depth) +
+    scrubDbText(stack.slice(at + msg.length), depth)
+  )
+}
+
+/**
+ * Walk a parsed JSON argument. Same reference back when nothing changed, so
+ * an untouched argument keeps its exact text.
+ */
+function scrubDbJson(value: unknown, depth: number): unknown {
+  if (typeof value === 'string') return scrubDbText(value, depth + 1)
+  if (typeof value !== 'object' || value === null) return value
+  if (depth > MAX_DEPTH) return FILTERED
+  if (Array.isArray(value)) {
+    let changed = false
+    const out = value.map(item => {
+      const cleaned = scrubDbJson(item, depth + 1)
+      if (cleaned !== item) changed = true
+      return cleaned
+    })
+    return changed ? out : value
+  }
+  const record = value as AnyRecord
+  let changed = false
+  const out: AnyRecord = {}
+  for (const [key, item] of Object.entries(record)) {
+    let cleaned: unknown
+    if (DB_VALUE_KEYS.has(key)) cleaned = FILTERED
+    else if (key === 'stack' && typeof item === 'string') cleaned = scrubDbStack(item, record.message, depth + 1)
+    else cleaned = scrubDbJson(item, depth + 1)
+    if (cleaned !== item) changed = true
+    out[key] = cleaned
+  }
+  return changed ? out : value
+}
+
+/**
+ * Database values out of free text. `depth` counts JSON nested inside JSON
+ * strings; past 2 levels only the regex rules run.
+ */
+function scrubDbText(value: string, depth = 0): string {
+  // A real-newline tail can only sit in plain text (JSON escapes newlines):
+  // cut it and everything after it, JSON arguments included.
+  const text = value.replace(DB_PARAMS_TAIL_RE, `$1params: ${FILTERED}`)
+  if (text === '') return text
+  const pieces = depth <= 2 && /[{[]/.test(text) ? splitJsonArguments(text) : [{ text }]
+  let out = ''
+  for (const piece of pieces) {
+    if (piece.json !== undefined) {
+      const cleaned = scrubDbJson(piece.json, depth)
+      out += cleaned === piece.json ? piece.text : JSON.stringify(cleaned)
+      continue
+    }
+    // Bounded regex work: scrub only the head of a long piece and drop the
+    // rest. A cut can only remove values, never unmask them, because every
+    // plain rule masks to the end of the piece.
+    const truncated = piece.text.length > MAX_TEXT_LENGTH
+    const scrubbed = scrubDbPlain(truncated ? piece.text.slice(0, MAX_TEXT_LENGTH) : piece.text)
+    out += scrubbed.text
+    if (truncated) {
+      out += TRUNCATED_SUFFIX
+      break
+    }
+    // A mask ran to the end of this piece: the rest may belong to its value.
+    if (scrubbed.open) break
+  }
+  return out
+}
+
+/**
+ * Free text: database values first, then URLs. Text up to
+ * `MAX_STRUCTURED_LENGTH` keeps its structure (a bulk-insert error's JSON
+ * body still shows its SQL, code and constraint; only over-long plain pieces
+ * are cut); longer text is cut to its first `MAX_TEXT_LENGTH` characters
+ * before anything else runs.
+ */
 function scrubMessageText(value: unknown): unknown {
   if (typeof value !== 'string' || value === '') return value
+  if (value.length > MAX_STRUCTURED_LENGTH) {
+    return `${scrubText(scrubDbText(value.slice(0, MAX_TEXT_LENGTH))) as string}${TRUNCATED_SUFFIX}`
+  }
   return scrubText(scrubDbText(value))
 }
+
+class OverBudget extends Error {}
 
 /**
  * A value that may or may not be text: console arguments, log parameters,
  * `logentry.params`. Strings are scrubbed; an `Error` becomes its scrubbed
- * `name: message`; an object or array is kept as is unless its JSON form
- * carries something to scrub, in which case the scrubbed JSON replaces it.
+ * `name: message`; an object or array is walked (not serialized — #1439) and
+ * a cleaned copy replaces it when something changed. Over budget (size,
+ * node count) → `TOO_LONG`.
  */
 function scrubLooseValue(value: unknown): unknown {
   if (typeof value === 'string') return scrubMessageText(value)
   if (value instanceof Error) return scrubMessageText(`${value.name}: ${value.message}`)
   if (typeof value !== 'object' || value === null) return value
-  let json: string | undefined
+  const budget = { text: MAX_LOOSE_TEXT, nodes: MAX_LOOSE_NODES }
   try {
-    json = JSON.stringify(value)
-  } catch {
-    return FILTERED
+    return scrubLooseNode(value, budget, new Set<object>(), 0)
+  } catch (err) {
+    // A throwing getter / proxy trap: the argument goes, not the whole hook
+    // (JSON.stringify throwing used to do the same).
+    return err instanceof OverBudget ? TOO_LONG : FILTERED
   }
-  if (typeof json !== 'string') return value
-  const cleaned = scrubMessageText(json)
-  return cleaned === json ? value : cleaned
+}
+
+function spendText(budget: { text: number }, text: string): void {
+  budget.text -= text.length
+  if (budget.text < 0) throw new OverBudget()
+}
+
+function scrubLooseNode(
+  value: unknown,
+  budget: { text: number; nodes: number },
+  ancestors: Set<object>,
+  depth: number,
+): unknown {
+  if (typeof value === 'string') {
+    if (value === '') return value
+    if (--budget.nodes < 0) throw new OverBudget()
+    spendText(budget, value)
+    return scrubMessageText(value)
+  }
+  if (typeof value !== 'object' || value === null) return value
+  if (value instanceof Error) {
+    const text = `${value.name}: ${value.message}`
+    spendText(budget, text)
+    return scrubMessageText(text)
+  }
+  // Binary: no text to scan (its JSON form was numbers), and walking a large
+  // buffer index by index would blow the node budget for nothing.
+  if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) return value
+  if (--budget.nodes < 0) throw new OverBudget()
+  if (depth > MAX_DEPTH || ancestors.has(value)) return FILTERED
+  ancestors.add(value)
+  try {
+    if (Array.isArray(value)) {
+      let changed = false
+      const out = value.map(item => {
+        const cleaned = scrubLooseNode(item, budget, ancestors, depth + 1)
+        if (cleaned !== item) changed = true
+        return cleaned
+      })
+      return changed ? out : value
+    }
+    const record = value as AnyRecord
+    let changed = false
+    const out: AnyRecord = {}
+    for (const key of Object.keys(record)) {
+      const item = record[key]
+      let cleaned: unknown
+      if (DB_VALUE_KEYS.has(key)) {
+        cleaned = FILTERED
+      } else if (key === 'stack' && typeof item === 'string') {
+        spendText(budget, item)
+        cleaned = item.length > MAX_TEXT_LENGTH ? TOO_LONG : scrubText(scrubDbStack(item, record.message, 0))
+      } else {
+        cleaned = scrubLooseNode(item, budget, ancestors, depth + 1)
+      }
+      if (cleaned !== item) changed = true
+      out[key] = cleaned
+    }
+    return changed ? out : value
+  } finally {
+    ancestors.delete(value)
+  }
 }
 
 function scrubQueryBody(value: string): string {
