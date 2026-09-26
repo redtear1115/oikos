@@ -12,8 +12,16 @@ import {
   skipPending,
 } from '@/actions/recurringExpense'
 
+// next/headers cookies() — the actions below resolve the viewer through
+// getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin in these tests,
+// so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 
 // Pin "today" the same way `tests/actions-recurring-income.test.ts` does, and
 // for the same reason: createRule / updateRule / resumeRule all derive `today`
@@ -357,6 +365,7 @@ describe('softDeleteRule', () => {
 describe('confirmPending', () => {
   it('atomically inserts CashTx, resolves pending, and recalcs balance', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id,
       proposedAmount: 25000, proposedDate: '2026-06-01',
@@ -387,12 +396,14 @@ describe('confirmPending', () => {
 
   it('returns error code when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])
     expect(await confirmPending('pend-x')).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 
   it('returns race error code when proposedPaidBy left the group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id,
       proposedAmount: 25000, proposedDate: '2026-06-01',
@@ -410,6 +421,7 @@ describe('confirmPending', () => {
 describe('editAndConfirmPending', () => {
   it('inserts CashTx with overridden fields, resolves pending, recalcs balance', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id,
       proposedAmount: 25000, proposedDate: '2026-06-01',
@@ -442,6 +454,7 @@ describe('editAndConfirmPending', () => {
 
   it('uses overridden paidBy and validates it against group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id,
       proposedAmount: 25000, proposedDate: '2026-06-01',
@@ -458,6 +471,7 @@ describe('editAndConfirmPending', () => {
 
   it('returns error code when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])
     expect(await editAndConfirmPending({
       pendingId: 'pend-x',

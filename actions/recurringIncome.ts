@@ -29,6 +29,7 @@ import {
   assertAssetInGroup,
 } from '@/lib/recurringActionHelpers'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import {
   revalidateAfterRecurringIncomeRuleMutation,
   revalidateAfterIncomeMutation,
@@ -197,7 +198,7 @@ export const resumeRule = action(async (id: string): Promise<void> => {
 })
 
 export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   const [row] = await db
     .select({
@@ -277,7 +278,7 @@ export const editAndConfirmPending = action(async (
     assetId: input.assetId ?? null,
   })
 
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 

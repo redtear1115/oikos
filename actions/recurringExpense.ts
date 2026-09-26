@@ -31,6 +31,7 @@ import {
   assertAssetInGroup,
 } from '@/lib/recurringActionHelpers'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import {
   revalidateAfterRecurringExpenseRuleMutation,
   revalidateAfterTransactionMutation,
@@ -250,7 +251,7 @@ export const softDeleteRule = action(async (id: string): Promise<void> => {
 })
 
 export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
-  const { user, group } = await requireViewerGroup()
+  const { user, group } = await getViewerWriteContext()
 
   const [row] = await db
     .select({
@@ -340,7 +341,7 @@ export const editAndConfirmPending = action(async (
   input: EditAndConfirmInput,
 ): Promise<{ txId: string }> => {
   const overrides = validateConfirmPendingExpenseInput(input.overrides)
-  const { user, group } = await requireViewerGroup()
+  const { user, group } = await getViewerWriteContext()
 
   const [row] = await db
     .select({

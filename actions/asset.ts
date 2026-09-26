@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto'
 import { encrypt, decrypt, aadFor, type AadContext } from '@/lib/crypto'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
@@ -76,7 +77,9 @@ export const createCar = action(async (input: CreateCarInput): Promise<{ id: str
   if (typeof validated.plate !== 'string') throw actionError('plate_empty')
   const plate = validated.plate
 
-  const { user: viewer, group } = await requireViewerGroup()
+  // Records a purchase CashTransaction when purchasePrice is set, so it goes
+  // through the same past-chapter write gate as every other ledger write.
+  const { user: viewer, group } = await getViewerWriteContext()
 
   const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -1195,7 +1198,8 @@ export interface CreateHouseInput {
 export const createHouse = action(async (input: CreateHouseInput): Promise<{ id: string }> => {
   'use server'
   const validated = validateHouseInput(input)
-  const { user: viewer, group } = await requireViewerGroup()
+  // Same write gate as createCar: the purchase price records a CashTransaction.
+  const { user: viewer, group } = await getViewerWriteContext()
 
   const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx

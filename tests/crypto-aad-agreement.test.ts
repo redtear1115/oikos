@@ -24,6 +24,14 @@ import {
 import { createInvoiceCredential, refreshInvoiceCredential } from '@/actions/invoice'
 import { decrypt, aadFor, CryptoError } from '@/lib/crypto'
 
+// next/headers cookies() — createCar / createHouse / confirmPending resolve the
+// viewer through getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin
+// here, so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
+
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: true }
 // A7 — the row later belongs to another group (member left). No group in the AAD.
@@ -64,6 +72,7 @@ describe('AAD agreement — CarDetails.plate_encrypted', () => {
 
   it('createCar → revealCarPlate', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'car-1' }])
     queueDbResult([])
     await createCar({ name: '車', plate: 'ABC-1234' })
@@ -216,6 +225,7 @@ describe('AAD agreement — HouseDetails.address_encrypted', () => {
 
   it('createHouse → revealHouseAddress', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'house-1' }])
     queueDbResult([])
     await createHouse({ name: '家', address: '台北市大安區某路1號' })
@@ -279,6 +289,7 @@ describe('S1 default — no ENCRYPTION_WRITE_KID', () => {
   it('create paths still write the legacy format and reveal it', async () => {
     vi.stubEnv('ENCRYPTION_WRITE_KID', '')
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'car-1' }])
     queueDbResult([])
     await createCar({ name: '車', plate: 'ABC-1234' })
