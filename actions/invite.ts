@@ -233,12 +233,11 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
   const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id, viewerActiveGroup)
   if (!result.ok) throw new Error(result.error)
 
-  await db.transaction(async (tx) => {
-    // The accepter's other ledgers whose open chapter is a solo one of theirs
-    // (e.g. the solo ledger a leave left them with). Their chapters end with
-    // this join, so they are locked with the invite's group below. Read
-    // before the locks; only the groups found here are touched.
-    const otherSolo = await tx
+  // The accepter's other ledgers whose open chapter is a solo one of theirs
+  // (e.g. the solo ledger a leave left them with, or one a second tab just
+  // created). Their chapters end with this join.
+  const otherSoloGroupIds = async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) =>
+    (await tx
       .select({ groupId: groupEpochs.groupId })
       .from(groupEpochs)
       .where(and(
@@ -246,8 +245,22 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
         eq(groupEpochs.memberAId, user.id),
         isNull(groupEpochs.memberBId),
         ne(groupEpochs.groupId, invite.groupId),
-      ))
-    const otherGroupIds = otherSolo.map((r) => r.groupId)
+      ))).map((r) => r.groupId.toLowerCase())
+
+  // #1432 — set when the re-read under the locks finds a solo ledger the
+  // first read missed. That ledger is not locked, and locking it now would
+  // break the ascending group-id order, so the transaction rolls back and
+  // runs again: the next pass finds it before the locks. createGroup
+  // re-checks under the same profile lock, so it cannot add another ledger
+  // for this person while a pass holds it; one retry is expected to be
+  // enough, and the bound only stops a loop that should not exist.
+  let soloLedgerAppeared = false
+  const MAX_ATTEMPTS = 3
+
+  const acceptOnce = () => db.transaction(async (tx) => {
+    // Read before the locks; they are locked with the invite's group below,
+    // and re-read once the locks are held.
+    const otherGroupIds = await otherSoloGroupIds(tx)
 
     // Lock order (see lockForEpochClose): every group whose chapter this join
     // ends — the invite's group and the accepter's other solo ledgers — FOR
@@ -260,7 +273,10 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
     // one order, whichever takes the group row first finishes; the other
     // then sees its result: a later mint reads `group_full`, a later accept
     // finds the invite superseded (`revoked`).
-    const lock = await lockForEpochClose(tx, [invite.groupId, ...otherGroupIds])
+    //
+    // #1432 — the accepter's Profiles row is locked last (profileId), the
+    // same row createGroup locks before it re-checks for an existing ledger.
+    const lock = await lockForEpochClose(tx, [invite.groupId, ...otherGroupIds], { profileId: user.id })
     const boundary = boundarySql(lock.boundary)
 
     // 固定兩人: both parties' membership is re-read here, under the locks, so
@@ -280,6 +296,20 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
     const isPaired = (id: string) => pairedElsewhere.some((g) => g.memberA === id || g.memberB === id)
     if (isPaired(user.id)) throw new Error('already_in_duo')
     if (isPaired(invite.invitedBy)) throw new Error('inviter_not_member')
+
+    // #1432 — re-read the accepter's solo ledgers now that their profile row
+    // is held. The read before the locks can miss a ledger whose creation
+    // committed in between (createGroup in a second tab; or a leaveGroup
+    // whose commit the paired check above already saw — this read starts
+    // later, so it sees that leave's new solo ledger too, while a leave the
+    // check did not see was refused there as `already_in_duo`). Nothing would
+    // error: its chapter would stay open next to the new duo one. Start over
+    // instead.
+    const locked = new Set(otherGroupIds)
+    if ((await otherSoloGroupIds(tx)).some((id) => !locked.has(id))) {
+      soloLedgerAppeared = true
+      throw new Error('acceptInvite: solo ledger appeared under the lock (#1432)')
+    }
 
     // Of the other ledgers found before the locks, the ones that are still the
     // accepter's own solo ledger now that they are locked.
@@ -403,6 +433,19 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
       memberBId: user.id,
     })
   })
+
+  for (let attempt = 1; ; attempt++) {
+    soloLedgerAppeared = false
+    try {
+      await acceptOnce()
+      break
+    } catch (e) {
+      if (!soloLedgerAppeared) throw e
+      if (attempt >= MAX_ATTEMPTS) {
+        throw new Error('acceptInvite: a new solo ledger kept appearing under the lock (#1432)')
+      }
+    }
+  }
 
   // Invite-funnel conversion (#734): the invitee (member_b) joined. Keyed on
   // the joiner; `inviter_id` lets the two sides be correlated in analysis.
