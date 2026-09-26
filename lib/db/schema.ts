@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb, boolean, primaryKey, unique, uniqueIndex,
+  timestamp, date, jsonb, boolean, primaryKey, unique, uniqueIndex, check, foreignKey,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -323,7 +323,15 @@ export const invoiceCredentials = pgTable('InvoiceCredentials', {
   lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (t) => ({
+  // #1289 (0069) — live row ⇔ ciphertext present. Declared here so
+  // `drizzle-kit push` against a migrator-built DB (0000..0069) doesn't see
+  // this as unmanaged state and try to drop it.
+  secretIffLive: check(
+    'invoice_credentials_secret_iff_live',
+    sql`(${t.deletedAt} IS NULL) = (${t.verificationCodeEncrypted} IS NOT NULL)`,
+  ),
+}))
 
 // Per-invoice diff base. invoice_number is globally unique nationwide. Server-only.
 export const invoiceImportSnapshots = pgTable('InvoiceImportSnapshots', {
@@ -341,13 +349,23 @@ export const invoiceImportSnapshots = pgTable('InvoiceImportSnapshots', {
 })
 
 // Audit log + debounce for each "click 匯入發票" action.
+//
+// #1289 (0069) — this table was hand-written in 0017 with inline `REFERENCES`
+// (no explicit constraint names), so Postgres gave every FK its default
+// `<table>_<column>_fkey` name instead of drizzle-kit's usual
+// `<Table>_<column>_<RefTable>_id_fk`. All three FKs are named here to match
+// what the migrator actually created — otherwise `drizzle-kit push` sees a
+// name mismatch on every one of them and wants to drop + recreate all three,
+// not just the credential_id one that 0069 touched.
 export const invoiceImportRuns = pgTable('InvoiceImportRuns', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  // FKs declared below (table-level `foreignKey()`) so each can carry the
+  // exact constraint name the migrator gave it — see comment above.
+  groupId: uuid('group_id').notNull(),
   // #1289 — nullable, ON DELETE SET NULL (0069): the run is the group's audit
   // trail and outlives the credential it used.
-  credentialId: uuid('credential_id').references(() => invoiceCredentials.id, { onDelete: 'set null' }),
-  userId: uuid('user_id').notNull().references(() => profiles.id),
+  credentialId: uuid('credential_id'),
+  userId: uuid('user_id').notNull(),
   rangeStart: date('range_start').notNull(),
   rangeEnd: date('range_end').notNull(),
   status: invoiceImportRunStatusEnum('status').notNull().default('fetching'),
@@ -358,7 +376,23 @@ export const invoiceImportRuns = pgTable('InvoiceImportRuns', {
   startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
   finishedAt: timestamp('finished_at', { withTimezone: true }),
   errorMsg: text('error_msg'),
-})
+}, (t) => ({
+  groupIdFk: foreignKey({
+    columns: [t.groupId],
+    foreignColumns: [oikosGroups.id],
+    name: 'InvoiceImportRuns_group_id_fkey',
+  }),
+  credentialIdFk: foreignKey({
+    columns: [t.credentialId],
+    foreignColumns: [invoiceCredentials.id],
+    name: 'InvoiceImportRuns_credential_id_fkey',
+  }).onDelete('set null'),
+  userIdFk: foreignKey({
+    columns: [t.userId],
+    foreignColumns: [profiles.id],
+    name: 'InvoiceImportRuns_user_id_fkey',
+  }),
+}))
 
 export const incomeTransactions = pgTable('IncomeTransactions', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),

@@ -144,6 +144,31 @@ describe.each(LOCK_CASES)('trip writes fail closed when %s', (_label, lockRows) 
   })
 })
 
+// PR #1436 verification, advisory A1: the `describe.each(LOCK_CASES)` "a
+// different chapter is open" row for endTrip passes today for the wrong
+// reason. lockRows = [{ id: 'epoch-next' }] should be refused by the
+// `openEpoch.id !== row.epochId` check right after the lock — but the test
+// never queues a result for the expenses/members selects that follow, so
+// even with that check deleted, endTrip would fall through to the `!members`
+// guard on an empty mock queue and still land on `active_trip_not_found`.
+// This case queues real expense + member rows past the lock, so only the id
+// check — not a starved mock queue — can produce the refusal.
+describe('endTrip refuses a different (but real, non-empty) open chapter', () => {
+  it('active_trip_not_found, no summary insert', async () => {
+    queueViewer()
+    queueDbResult([TRIP])                                    // status UPDATE … returning
+    queueDbResult([{ id: 'epoch-next' }])                    // open chapter FOR SHARE — different id
+    queueDbResult([{                                          // trip expenses (only reached if the id check is gone)
+      amount: 100, paidBy: 'user-a', splitType: 'all_mine', splitRatio: null,
+    }])
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group members (same)
+    expect(await endTrip({ tripId: 'trip-1', endDate: '2026-03-05' }))
+      .toEqual({ ok: false, code: 'active_trip_not_found' })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(forShareCalls()).toBe(1)
+  })
+})
+
 describe('trip writes go through when the trip\'s chapter is still open', () => {
   it('createTripExpense inserts after both locks', async () => {
     queueViewer()
