@@ -3,6 +3,9 @@
 import { db } from '@/lib/db/client'
 import { assets, carDetails, cashTransactions, fuelLogs } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { lockOpenChapterForWrite } from '@/lib/db/queries/epoch'
+import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
+import { assertMemberInGroup } from '@/lib/auth/member'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
@@ -105,7 +108,9 @@ export interface EditFuelLogInput extends FuelLogInputRaw {
  *
  * Throws if the fuel log is missing or already soft-deleted, if the fuel log's
  * CURRENT asset is not in viewer's group, if the (possibly reassigned) target
- * asset is not in viewer's group, or if the payer is not a current group member.
+ * asset is not in viewer's group, if the payer is not a current group member,
+ * if the fuel log was recorded in a chapter that has closed, or if it has no
+ * live linked CashTransaction in the viewer's group.
  */
 export const editFuelLog = action(async (input: EditFuelLogInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
@@ -158,23 +163,37 @@ export const editFuelLog = action(async (input: EditFuelLogInput): Promise<{ id:
     throw actionError('payer_not_in_group')
   }
 
-  // Find the active linked CashTransaction (one per fuel log under normal flow).
+  // Find the active linked CashTransaction (one per fuel log under normal flow),
+  // in the viewer's group only. A car can change groups while its history
+  // stays behind; the fuel log then resolves to the viewer's group through the
+  // car, but its expense belongs to the other group and must not be touched.
+  // No linked expense here → refuse the edit rather than insert a second one.
   const [oldTxn] = await db
     .select({ id: cashTransactions.id })
     .from(cashTransactions)
     .where(and(
       eq(cashTransactions.fuelLogId, input.id),
+      eq(cashTransactions.groupId, group.id),
       isNull(cashTransactions.deletedAt),
     ))
     .limit(1)
+  if (!oldTxn) throw actionError('fuel_transaction_not_found')
 
   const description = validated.station ? `加油 · ${validated.station}` : '加油'
 
   const result = await db.transaction(async (tx) => {
+    // 0. Chapter lock first (see lockOpenChapterForWrite); the payer is
+    //    re-checked against the members read under it.
+    const lock = await lockOpenChapterForWrite(tx, group.id)
+    if (!lock) throw actionError('fuel_log_deleted_or_missing')
+    assertMemberInGroup(validated.paidBy, lock.group, 'payer_not_in_group')
+
     // 1. UPDATE FuelLogs in place — FuelLog has no balance impact, so soft-delete +
     //    insert isn't needed. The fuelLogId stays the same so the new CashTransaction
-    //    can carry it forward unchanged.
-    await tx
+    //    can carry it forward unchanged. Only a live log of the open chapter
+    //    (fuel logs belong to the chapter by their own created_at, as the
+    //    asset page reads them); a closed chapter is read-only.
+    const updatedLog = await tx
       .update(fuelLogs)
       .set({
         liters: validated.liters.toFixed(2),
@@ -183,22 +202,27 @@ export const editFuelLog = action(async (input: EditFuelLogInput): Promise<{ id:
         station: validated.station,
         loggedAt: validated.loggedAt,
       })
-      .where(eq(fuelLogs.id, input.id))
+      .where(and(
+        eq(fuelLogs.id, input.id),
+        isNull(fuelLogs.deletedAt),
+        openChapterCreatedClause('"FuelLogs"."created_at"', group.id),
+      ))
+      .returning({ id: fuelLogs.id })
+    if (updatedLog.length === 0) throw actionError('fuel_log_deleted_or_missing')
 
-    // 2. Phase 1 editTransaction pattern: soft-delete the old txn (if any) and
-    //    INSERT a new one carrying the same fuelLogId. The .returning() / length
-    //    check guards against a partner concurrently soft-deleting the row.
-    if (oldTxn) {
-      const deleted = await tx
-        .update(cashTransactions)
-        .set({ deletedAt: new Date() })
-        .where(and(
-          eq(cashTransactions.id, oldTxn.id),
-          isNull(cashTransactions.deletedAt),
-        ))
-        .returning({ id: cashTransactions.id })
-      if (deleted.length === 0) throw actionError('fuel_transaction_not_found')
-    }
+    // 2. Phase 1 editTransaction pattern: soft-delete the old txn and INSERT a
+    //    new one carrying the same fuelLogId. The .returning() / length check
+    //    guards against a partner concurrently soft-deleting the row.
+    const deleted = await tx
+      .update(cashTransactions)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(cashTransactions.id, oldTxn.id),
+        eq(cashTransactions.groupId, group.id),
+        isNull(cashTransactions.deletedAt),
+      ))
+      .returning({ id: cashTransactions.id })
+    if (deleted.length === 0) throw actionError('fuel_transaction_not_found')
 
     const [newTxn] = await tx
       .insert(cashTransactions)
@@ -266,27 +290,35 @@ export const softDeleteFuelLog = action(async (fuelLogId: string): Promise<void>
   await db.transaction(async (tx) => {
     const now = new Date()
 
-    // 1. Soft-delete the FuelLog. .returning() + length check guards against a
-    //    partner concurrently soft-deleting between our lookup and this UPDATE.
+    // 0. Chapter lock first (see lockOpenChapterForWrite).
+    if (!await lockOpenChapterForWrite(tx, group.id)) throw actionError('fuel_log_deleted_or_missing')
+
+    // 1. Soft-delete the FuelLog, only a live log of the open chapter.
+    //    .returning() + length check guards against a partner concurrently
+    //    soft-deleting between our lookup and this UPDATE.
     const deletedLog = await tx
       .update(fuelLogs)
       .set({ deletedAt: now })
       .where(and(
         eq(fuelLogs.id, fuelLogId),
         isNull(fuelLogs.deletedAt),
+        openChapterCreatedClause('"FuelLogs"."created_at"', group.id),
       ))
       .returning({ id: fuelLogs.id })
     if (deletedLog.length === 0) throw actionError('fuel_log_deleted_or_missing')
 
-    // 2. Soft-delete the linked CashTransaction(s). Under normal flow there's
-    //    exactly one active row per fuelLogId, but matching `deleted_at IS NULL`
-    //    keeps this safe if an editFuelLog left zombies. No length check —
-    //    a missing linked txn shouldn't block deletion of the fuel log itself.
+    // 2. Soft-delete the linked CashTransaction(s) in the viewer's group. Under
+    //    normal flow there's exactly one active row per fuelLogId, but matching
+    //    `deleted_at IS NULL` keeps this safe if an editFuelLog left zombies.
+    //    No length check — a missing linked txn shouldn't block deletion of the
+    //    fuel log itself. The group filter keeps a car's history in the group it
+    //    was recorded in when the car has since changed groups.
     await tx
       .update(cashTransactions)
       .set({ deletedAt: now })
       .where(and(
         eq(cashTransactions.fuelLogId, fuelLogId),
+        eq(cashTransactions.groupId, group.id),
         isNull(cashTransactions.deletedAt),
       ))
       .returning({ id: cashTransactions.id })

@@ -20,8 +20,8 @@ import {
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { listIncomesMonthSummaries } from '@/lib/db/queries/incomes'
 import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
-import { openEpochClause } from '@/lib/db/queries/_predicates'
+import { lockOpenChapterForWrite, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { openChapterCreatedClause, openEpochClause } from '@/lib/db/queries/_predicates'
 import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
@@ -180,7 +180,10 @@ export const createTransaction = action(async (
 export const softDeleteTransaction = action(async (transactionId: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
+  // Only a row of the chapter that is open now, under the chapter lock (see
+  // lockOpenChapterForWrite). A closed chapter is read-only.
   await db.transaction(async (tx) => {
+    if (!await lockOpenChapterForWrite(tx, group.id)) throw actionError('record_not_found')
     const updated = await tx
       .update(cashTransactions)
       .set({ deletedAt: new Date() })
@@ -188,6 +191,7 @@ export const softDeleteTransaction = action(async (transactionId: string): Promi
         eq(cashTransactions.id, transactionId),
         eq(cashTransactions.groupId, group.id),
         isNull(cashTransactions.deletedAt),
+        openChapterCreatedClause('"CashTransactions"."created_at"', group.id),
       ))
       .returning({ id: cashTransactions.id })
     if (updated.length === 0) throw actionError('record_not_found')
@@ -235,6 +239,7 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
       eq(cashTransactions.id, input.oldId),
       eq(cashTransactions.groupId, group.id),
       isNull(cashTransactions.deletedAt),
+      openChapterCreatedClause('"CashTransactions"."created_at"', group.id),
     ))
     .limit(1)
   if (!oldRow) throw actionError('record_not_found')
@@ -277,7 +282,15 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
   //    as a race guard: if a partner soft-deleted the row between step 1 and now,
   //    the WHERE's isNull(deletedAt) makes the UPDATE no-op, and we'd silently
   //    create a dup. The length check restores the existence proof inside the tx.
+  //    The tx starts with the chapter lock, re-checks the payer against the
+  //    members read under it, and only touches a row of the open chapter: the
+  //    re-insert takes created_at = now(), so editing a closed chapter's row
+  //    would move it into the current chapter's balance.
   const [created] = await db.transaction(async (tx) => {
+    const lock = await lockOpenChapterForWrite(tx, group.id)
+    if (!lock) throw actionError('record_not_found')
+    assertMemberInGroup(validated.payerId, lock.group, 'payer_not_in_group')
+
     const deleted = await tx
       .update(cashTransactions)
       .set({ deletedAt: new Date() })
@@ -285,6 +298,7 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
         eq(cashTransactions.id, input.oldId),
         eq(cashTransactions.groupId, group.id),
         isNull(cashTransactions.deletedAt),
+        openChapterCreatedClause('"CashTransactions"."created_at"', group.id),
       ))
       .returning({ id: cashTransactions.id })
     if (deleted.length === 0) throw actionError('record_not_found')
