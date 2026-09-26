@@ -87,7 +87,7 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
   try {
     const res = await fetch(RSS_URL, {
       next: { revalidate: REVALIDATE_SECONDS },
-      headers: { 'User-Agent': 'Futari/1.0 (+https://futari.app; landing dev-log section)' },
+      headers: { 'User-Agent': 'Futari/1.0 (+https://futari.southern-light.dev; landing dev-log section)' },
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) {
