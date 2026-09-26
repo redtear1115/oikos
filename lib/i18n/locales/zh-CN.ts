@@ -90,10 +90,11 @@ export const zhCN: Translations = {
     cta: '一起记录',
     ctaHint: '免费 · 两人一本账 · 用 Google 或 Apple 继续',
     alreadyHaveAccount: '已有账号 · 登录',
-    appStoreNote: {
-      linkText: 'iPhone 版已在 App Store',
-      androidNote: 'Android 版即将上线',
-    },
+    appStoreCta: '在 App Store 下载',
+    appStoreCtaHint: 'iPhone 与 iPad 都能用',
+    androidBetaCta: '报名 Android 测试版',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 账号报名。仅用于寄送测试邀请，加入名单后即删除。',
+    useWebVersion: '先用网页版',
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
     trustPwa: 'iPhone App · 网页版',
@@ -2664,6 +2665,10 @@ export const zhCN: Translations = {
             question: 'ChatGPT 整理的分类会不会跑掉？',
             answer: '分类文字会原样保留，上传后先预览，正式导入时可以对照调整成 Futari 的分类。',
           },
+          {
+            question: '我在简单记账买的（永久）VIP，换过来会浪费吗？',
+            answer: '那笔 VIP 是在简单记账里买的，不会、也不能转移到其他 App，换到哪一家都一样。Futari 目前完全免费，记账、双人分摊、云端同步、CSV 导出导入都不需要额外解锁，搬过来不会遇到功能被锁住的情况。',
+          },
         ],
       },
       'fortune-city': {
@@ -2983,9 +2988,9 @@ export const zhCN: Translations = {
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       'fortune-city': {
-        title: '从记账城市搬家到 Futari｜截图转 CSV',
-        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
-        ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+        title: '从记账城市搬家到 Futari｜不用订阅也能把记录搬出来',
+        description: '记账城市的 CSV 导出要订阅，导出文件还可能要自己转编码？截图请 ChatGPT 整理成 CSV，搬到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起记账。免费、无广告、只开放给你们俩。',
+        ogDescription: '记账城市要订阅才能导出？截图→ChatGPT→CSV，免费搬进 Futari 双人记账。',
       },
       cashman: {
         title: '从 CashMan 搬家到 Futari｜截图转 CSV',

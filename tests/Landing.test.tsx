@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
 
 vi.mock('@/lib/analytics/track', () => ({ track: vi.fn() }))
 
@@ -82,5 +82,53 @@ describe('Landing — ctaHint copy + mobile sign-in entry (#1277)', () => {
     const links = screen.getAllByText(zhTW.landing.alreadyHaveAccount)
     const mobileAnchor = links.map((el) => el.closest('a')!).find((a) => a.className.includes('min-h-11'))!
     expect(mobileAnchor.className).toContain('min-h-11')
+  })
+})
+
+describe('Landing — device-dependent primary CTA (#1413)', () => {
+  const IPHONE_UA =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSession.mockResolvedValue({ data: { session: null } })
+  })
+
+  afterEach(() => {
+    delete (window as { Capacitor?: unknown }).Capacitor
+  })
+
+  it('no longer renders the retired AppStoreNote footnote', () => {
+    renderLanding()
+    // #1333's note is gone — its info now lives in the primary CTA itself.
+    expect(screen.queryByText('iPhone 版已在 App Store')).not.toBeInTheDocument()
+  })
+
+  it('swaps the primary CTA and its mobile hint to the App Store variant for an iPhone browser visitor', async () => {
+    vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(IPHONE_UA)
+    renderLanding()
+    const links = await screen.findAllByText(zhTW.landing.appStoreCta)
+    expect(links.length).toBeGreaterThan(0)
+    for (const link of links) {
+      expect(link.closest('a')).toHaveAttribute('href', 'https://apps.apple.com/app/id6779264784')
+    }
+    expect(screen.getByText(zhTW.landing.appStoreCtaHint)).toBeInTheDocument()
+  })
+
+  it('never shows the App Store CTA inside the iOS native shell (Apple 3.1.1)', async () => {
+    vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(IPHONE_UA)
+    ;(window as unknown as { Capacitor: { getPlatform: () => string } }).Capacitor = {
+      getPlatform: () => 'ios',
+    }
+    renderLanding()
+    // `cta`'s text is present even while pending (the placeholder renders it
+    // text-transparent, not absent — #1413), so waiting on the text alone
+    // would pass before resolution ever finishes. Wait for a real signal
+    // that resolution has settled: `aria-hidden` is only present pending.
+    await waitFor(() => {
+      const anchors = screen.getAllByText(zhTW.landing.cta).map((el) => el.closest('a')!)
+      expect(anchors.some((a) => !a.hasAttribute('aria-hidden'))).toBe(true)
+    })
+    expect(screen.queryByText(zhTW.landing.appStoreCta)).not.toBeInTheDocument()
   })
 })

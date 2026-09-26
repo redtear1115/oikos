@@ -90,11 +90,12 @@ export const en: Translations = {
     cta: 'Record together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
-    // TODO(i18n): native review pending (#1333) — MT-quality draft.
-    appStoreNote: {
-      linkText: 'The iPhone app is on the App Store',
-      androidNote: 'Android is on the way',
-    },
+    // TODO(i18n): native review pending (#1413) — MT-quality draft.
+    appStoreCta: 'Get it on the App Store',
+    appStoreCtaHint: 'Works on iPhone and iPad',
+    androidBetaCta: 'Join the Android beta',
+    androidBetaCtaHint: 'Sign up with the Google account you use on Google Play. It’s only used to send the test invite and is deleted once you’re added.',
+    useWebVersion: 'Use the web version',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
@@ -2711,6 +2712,12 @@ I will upload the screenshots once you confirm.`,
             answer:
               'The category text is kept as-is; you preview after uploading and can map it to Futari categories during the actual import.',
           },
+          {
+            // TODO(#1414): en copy below pending native review
+            question: 'I already paid for (lifetime) VIP in Simple Daily Money — is moving worth it?',
+            answer:
+              "That VIP purchase stays with Simple Daily Money; it doesn't transfer to any other app, wherever you move. Futari is completely free today — logging, splitting, cloud sync, and CSV export/import all work with no paid unlock, so nothing here is locked behind a purchase.",
+          },
         ],
       },
       // TODO(#839): en copy below pending native review
@@ -3055,9 +3062,9 @@ I will upload the screenshots once you confirm.`,
       },
       // TODO(#839): en seo copy below pending native review
       'fortune-city': {
-        title: 'Move from Fortune City to Futari · screenshot to CSV',
-        description: 'CSV export needs a subscription? Screenshot Fortune City, let ChatGPT convert it, and import into Futari, the shared ledger for couples. Free, ad-free.',
-        ogDescription: 'Leaving Fortune City — screenshot → ChatGPT → CSV → Futari.',
+        title: 'Move from Fortune City to Futari · bring your records, no subscription needed',
+        description: 'Fortune City CSV export needs a subscription and may need re-encoding. Screenshot it, let ChatGPT build a CSV, and import into Futari, free and ad-free.',
+        ogDescription: 'Leaving Fortune City without a subscription — screenshot → ChatGPT → CSV → Futari.',
       },
       cashman: {
         title: 'Move from CashMan to Futari · screenshot to CSV',

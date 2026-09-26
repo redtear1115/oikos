@@ -45,121 +45,121 @@ describe('SetupForm invite telemetry (#1015)', () => {
     vi.clearAllMocks()
   })
 
-  it('fires invite_qr_revealed once the QR successfully renders', async () => {
+  it('fires invite_qr_revealed with group_id once the QR successfully renders', async () => {
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.qrReveal))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed')
+      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed', { group_id: 'g1' })
     })
   })
 
-  it('fires invite_link_copied with via: copy_button on successful copy', async () => {
+  it('fires invite_link_copied with via: copy_button and group_id on successful copy', async () => {
     stubClipboard(vi.fn().mockResolvedValue(undefined))
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button', group_id: 'g1' })
     })
     expect(await screen.findByText(zhTW.setup.invite.copied)).toBeTruthy()
   })
 
-  it('fires invite_copy_failed (not an unhandled rejection) when clipboard rejects, and still toasts', async () => {
+  it('fires invite_copy_failed (not an unhandled rejection) with group_id when clipboard rejects, and still toasts', async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button', group_id: 'g1' })
     })
     expect(await screen.findByText(zhTW.setup.invite.shareFailed)).toBeTruthy()
   })
 
-  it('fires invite_link_copied with via: share_button when shareInviteLink resolves "copied"', async () => {
+  it('fires invite_link_copied with via: share_button and group_id when shareInviteLink resolves "copied"', async () => {
     vi.mocked(shareInviteLink).mockResolvedValue('copied')
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.share))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'share_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'share_button', group_id: 'g1' })
     })
     expect(trackMock).not.toHaveBeenCalledWith('invite_link_shared', expect.anything())
   })
 
-  it('fires invite_link_shared (no via) when shareInviteLink resolves "shared"', async () => {
+  it('fires invite_link_shared (no via) with group_id when shareInviteLink resolves "shared"', async () => {
     vi.mocked(shareInviteLink).mockResolvedValue('shared')
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.share))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_link_shared')
+      expect(trackMock).toHaveBeenCalledWith('invite_link_shared', { group_id: 'g1' })
     })
   })
 
-  it('fires invite_copy_failed with via: share_button when shareInviteLink throws', async () => {
+  it('fires invite_copy_failed with via: share_button and group_id when shareInviteLink throws', async () => {
     vi.mocked(shareInviteLink).mockRejectedValue(new Error('nope'))
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.share))
 
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'share_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'share_button', group_id: 'g1' })
     })
     expect(await screen.findByText(zhTW.setup.invite.shareFailed)).toBeTruthy()
   })
 
-  it("invite_skipped fires with attempted: 'none' on a direct skip", async () => {
+  it("invite_skipped fires with attempted: 'none' and group_id on a direct skip", async () => {
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'none' })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'none', group_id: 'g1' })
   })
 
-  it("invite_skipped fires with attempted: 'sent' after a successful copy", async () => {
+  it("invite_skipped fires with attempted: 'sent' and group_id after a successful copy", async () => {
     stubClipboard(vi.fn().mockResolvedValue(undefined))
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button', group_id: 'g1' })
     })
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent' })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent', group_id: 'g1' })
   })
 
-  it("invite_skipped fires with attempted: 'sent' after only revealing the QR", async () => {
+  it("invite_skipped fires with attempted: 'sent' and group_id after only revealing the QR", async () => {
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.qrReveal))
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed')
+      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed', { group_id: 'g1' })
     })
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent' })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent', group_id: 'g1' })
   })
 
-  it("invite_skipped fires with attempted: 'failed' when a copy attempt failed — distinct from never trying", async () => {
+  it("invite_skipped fires with attempted: 'failed' and group_id when a copy attempt failed — distinct from never trying", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
     await waitFor(() => {
-      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button' })
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button', group_id: 'g1' })
     })
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'failed' })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'failed', group_id: 'g1' })
   })
 })

@@ -25,11 +25,15 @@ export type MigrateBasePageCopy = {
   /** cwmoney only — Excel template download rendered inside step 2 */
   templateDownloadLabel?: string
   templateNote?: string
+  /** At least 4 — every source has that many; a source can carry a 5th
+   *  (e.g. simple-daily-money's "原本買的 VIP 怎麼辦" #1414) without the
+   *  other sources needing one too. */
   faq: readonly [
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
+    ...{ question: string; answer: string }[],
   ]
 }
 
@@ -141,21 +145,31 @@ export type Translations = {
     cta: string
     /** Caption under mobile CTA, e.g. 「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」 */
     ctaHint: string
-    /** Secondary desktop CTA — sign-in link for returning users. */
+    /** Secondary desktop CTA — sign-in link for returning users. Swaps to
+     *  `useWebVersion` when the primary CTA is the Android beta form (#1413). */
     alreadyHaveAccount: string
-    /** Quiet note under the hero CTA area (#1333): the iPhone app is live on
-     *  the App Store; Android isn't yet, so this only ever claims "on the
-     *  way" — never a download link or a waitlist. Rendered by `AppStoreNote`,
-     *  which hides it inside the iOS native shell (same runtime gate as
-     *  `components/KofiWidget.tsx` — "download the app" from inside the app
-     *  itself is nonsensical and an App Store review risk); web, PWA and
-     *  Android all see it. */
-    appStoreNote: {
-      /** The anchor's visible label, linking out to the App Store listing. */
-      linkText: string
-      /** Trailing plain-text note after the link. */
-      androidNote: string
-    }
+    /** Primary-CTA label for an iPhone/iPad browser visitor (#1413), replacing
+     *  #1333's `appStoreNote`: the CTA itself now links out to the App Store,
+     *  rather than a secondary footnote beside a web-first CTA. Never shown
+     *  inside the iOS native shell (Apple Guideline 3.1.1 — same runtime gate
+     *  as `components/KofiWidget.tsx`). */
+    appStoreCta: string
+    /** Mobile hint under `appStoreCta` — the default `ctaHint` describes the
+     *  sign-in flow, which is wrong once the CTA points at the App Store. */
+    appStoreCtaHint: string
+    /** Primary-CTA label for an Android browser visitor (#1413): links out to
+     *  the closed-testing signup form (a Google Form — see
+     *  `lib/visitorPlatform.ts#ANDROID_BETA_FORM_URL`). Falls back to the
+     *  default sign-in CTA if that URL is ever emptied. */
+    androidBetaCta: string
+    /** Mobile hint under `androidBetaCta` — must say what the form asks for
+     *  and why (issue #1413): the Google account used on Play, used only to
+     *  send the test invite, deleted once added to the closed-testing list. */
+    androidBetaCtaHint: string
+    /** Secondary link shown instead of `alreadyHaveAccount` when the primary
+     *  CTA is `androidBetaCta` (#1413) — that CTA isn't a returning-user
+     *  sign-in, so this offers the web app as the alternative instead. */
+    useWebVersion: string
     /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
@@ -3101,10 +3115,11 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
-    appStoreNote: {
-      linkText: 'iPhone 版已在 App Store',
-      androidNote: 'Android 版正在路上',
-    },
+    appStoreCta: '在 App Store 下載',
+    appStoreCtaHint: 'iPhone 與 iPad 都能用',
+    androidBetaCta: '報名 Android 測試版',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 帳號報名。只用來寄測試邀請，加入名單後就刪除。',
+    useWebVersion: '先用網頁版',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
     trustPwa: 'iPhone App · 網頁版',
@@ -5675,6 +5690,10 @@ export const zhTW: Translations = {
             question: 'ChatGPT 整理的分類會不會跑掉？',
             answer: '分類文字會原樣保留，上傳後先預覽，正式匯入時可以對照調整成 Futari 的分類。',
           },
+          {
+            question: '我在簡單記帳買的（永久）VIP，搬過來會浪費嗎？',
+            answer: '那筆 VIP 是在簡單記帳裡買的，不會、也不能轉移到其他 App，換去哪一家都一樣。Futari 目前完全免費，記帳、雙人分攤、雲端同步、CSV 匯出匯入都不需要另外解鎖，搬過來不會遇到功能被鎖住的狀況。',
+          },
         ],
       },
       'fortune-city': {
@@ -5995,9 +6014,9 @@ export const zhTW: Translations = {
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
-        title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
-        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
-        ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+        title: '從記帳城市搬家到 Futari｜不用訂閱也能把記錄搬出來',
+        description: '記帳城市的 CSV 匯出要訂閱，匯出檔還可能要自己轉編碼？截圖請 ChatGPT 整理成 CSV，搬到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起記帳。免費、無廣告、只開放給你們倆。',
+        ogDescription: '記帳城市要訂閱才能匯出？截圖→ChatGPT→CSV，免費搬進 Futari 雙人記帳。',
       },
       cashman: {
         title: '從 CashMan 搬家到 Futari｜截圖轉 CSV',

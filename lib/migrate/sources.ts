@@ -203,7 +203,7 @@ export const MIGRATE_SOURCES = {
   'simple-daily-money': {
     slug: 'simple-daily-money',
     name: '簡單記帳',
-    contentUpdatedAt: '2026-09-15',
+    contentUpdatedAt: '2026-09-26',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -218,7 +218,7 @@ export const MIGRATE_SOURCES = {
   'fortune-city': {
     slug: 'fortune-city',
     name: '記帳城市',
-    contentUpdatedAt: '2026-09-15',
+    contentUpdatedAt: '2026-09-26',
     screenshotWorkflow: true,
     comparison: {
       rows: [
