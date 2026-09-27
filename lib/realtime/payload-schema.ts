@@ -133,6 +133,28 @@ function makeParser<TOutput>(
   }
 }
 
+/**
+ * Postgres realtime payloads use snake_case column names. Convert to camelCase to
+ * match the rest of the app. Timestamps come in as ISO strings already.
+ *
+ * #1466 — `*_encrypted` columns are dropped here, before the row reaches any
+ * parser, event, React state or the schema-mismatch console.warn. The Assets
+ * table is in the realtime publication and carries `name_encrypted`, so the
+ * websocket frame itself still contains that ciphertext (only a publication
+ * change can stop that); this keeps the app from holding or logging a copy.
+ * Failure looks like: nothing visible — a `v1:k…` string shows up in the
+ * devtools console on a dropped Assets payload, or in the event bus.
+ */
+export function rowFromPayload(raw: Record<string, unknown>): unknown {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(raw)) {
+    if (k.endsWith('_encrypted')) continue
+    const camel = k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
+    out[camel] = v
+  }
+  return out
+}
+
 export const parseTxnRow = makeParser<TxnRowPayload>('CashTransactions', TxnRowSchema)
 export const parseSettleRow = makeParser<SettleRowPayload>('Settlements', SettleRowSchema)
 export const parseAssetRow = makeParser<AssetRowPayload>('Assets', AssetRowSchema)
