@@ -38,7 +38,13 @@ export interface MofInvoiceResponse {
 
 export interface FetchInvoicesArgs {
   barcode: string
-  verificationCode: string  // plaintext, freshly decrypted by caller
+  // Plaintext. Today it exists only in memory while a credential is being
+  // bound or refreshed (the user just typed it). Phase B's import path will
+  // decrypt the stored value right before the call; that decrypt belongs in
+  // one module (lib/invoice/credentials.ts, guarded by
+  // tests/invoice-credential-guards.test.ts), and the value must never be
+  // logged, captured or returned.
+  verificationCode: string
   startDate: string         // YYYY-MM-DD
   endDate: string           // YYYY-MM-DD
 }

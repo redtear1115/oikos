@@ -36,6 +36,7 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite } = await import('@/actions/invite')
+const { generateToken } = await import('@/lib/invite')
 const { eq, inArray } = await import('drizzle-orm')
 
 beforeAll(() => {
@@ -84,7 +85,8 @@ describe('acceptInvite — accepter already in a duo (#912)', () => {
     ids.target = target.id
     await db.insert(groupBalance).values({ groupId: target.id, balance: 0, version: 0 })
 
-    ids.token = 'TEST_912_' + randomUUID()
+    // A real token: #1288 I3b rejects anything else before the lookup.
+    ids.token = generateToken()
     await db.insert(groupInvites).values({
       groupId: target.id,
       invitedBy: ids.inviter,

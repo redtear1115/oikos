@@ -117,7 +117,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 記帳核心
 
 - [transactions](transactions-design.md) — 雙人記帳 CRUD / Settlement / Balance / /records FAB context-awareness
-- [csv-export](csv-export-design.md) — 支出紀錄整包帶走（入口在信任宣示頁）；刻意跨章節、刻意含 pending
+- [csv-export](csv-export-design.md) — 支出紀錄整包帶走（入口在信任宣示頁）；跨 viewer 待過的章節、刻意含 pending、試算表安全的文字欄
 - [income](income-design.md) — IncomeTransactions + IncomeSheet（進帳獨立 ledger）
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）

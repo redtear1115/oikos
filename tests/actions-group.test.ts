@@ -14,6 +14,8 @@ beforeEach(() => {
 describe('createGroup', () => {
   it('happy path: creates group + balance row', async () => {
     queueDbResult([])  // existing-group lookup → none
+    queueDbResult([])  // #1432 profile row lock (FOR NO KEY UPDATE)
+    queueDbResult([])  // #1432 existing-group re-check under the lock → none
     queueDbResult([{ id: 'grp-new', name: '我們家', memberA: 'user-a', memberB: null }])  // insert returning
     // groupBalance insert (no returning) — gets [] from empty queue (default)
 
@@ -31,6 +33,8 @@ describe('createGroup', () => {
     // member_b_id = null for solo.
     const startedAt = new Date('2026-06-30T00:00:00Z')
     queueDbResult([])  // existing-group lookup → none
+    queueDbResult([])  // #1432 profile row lock
+    queueDbResult([])  // #1432 existing-group re-check under the lock → none
     queueDbResult([{ id: 'grp-new', name: '我們家', memberA: 'user-a', memberB: null, currentEpochStartedAt: startedAt }])
 
     await createGroup('我們家')
@@ -55,6 +59,18 @@ describe('createGroup', () => {
     const g = await createGroup('新家')
     expect(g).toMatchObject({ ok: true, data: { id: 'existing-grp' } })
     expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('a ledger that appears before the profile lock is granted is returned, not duplicated (#1432)', async () => {
+    // A second tab (accept, or another createGroup) committed between the
+    // unlocked fast-path check and the lock: the re-check under the lock sees
+    // it, and createGroup returns it without inserting anything.
+    queueDbResult([])  // fast-path lookup → none
+    queueDbResult([{ id: 'user-a' }])  // profile row lock
+    queueDbResult([{ id: 'joined-grp' }])  // re-check under the lock → found
+    const g = await createGroup('新家')
+    expect(g).toMatchObject({ ok: true, data: { id: 'joined-grp' } })
+    expect(mockBuilder.values).not.toHaveBeenCalled()
   })
 
   it('throws unauthorized when no user', async () => {

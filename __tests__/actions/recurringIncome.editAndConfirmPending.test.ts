@@ -48,6 +48,13 @@ vi.mock('next/cache', () => ({
   revalidateTag: () => {},
 }))
 
+// getViewerWriteContext() (added in #1431) calls cookies() to read the write
+// context; outside a Next.js request scope that throws "cookies was called
+// outside a request scope". Stub it the same way the other actions tests do.
+vi.mock('next/headers', () => ({
+  cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }),
+}))
+
 // Import AFTER the mock + env load.
 const { db } = await import('@/lib/db/client')
 const {

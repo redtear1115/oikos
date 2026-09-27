@@ -1,9 +1,9 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-27
 status: blocked
 blocked_on: 財政部電子發票 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001 認證）
 related_specs: [transactions, income, inbox-layer]
-related_issues: ["#16"]
+related_issues: ["#16", "#1289", "#1376"]
 ---
 
 # 雲端發票匯入
@@ -53,6 +53,9 @@ related_issues: ["#16"]
 | APP_ID 來源 | 財政部 API v0.6 | 唯一官方來源；無第三方代理 |
 | 驗證碼存法 | AES-256-GCM ciphertext，key 在 Vercel env | 既有加密 helper 沿用；DB 只看到 ciphertext |
 | Barcode 存法 | 明文 | barcode 每家店嗶過，不是秘密；明文方便 SQL dedupe |
+| 驗證碼保存期間 | 只在載具有效時存在：解綁、重新驗證的舊列，軟刪的同一次寫入就清掉密文（DB CHECK 保證）；軟刪 30 天後整列實體刪除 | 刪掉的載具沒有理由留著秘密；由 DB 保證，漏掉的寫入路徑會直接報錯而不是默默留著（#1289） |
+| 匯入紀錄保存 | `InvoiceImportRuns` 保留 1 年；載具被刪時紀錄留著、指向載具的欄位變空 | 匯入紀錄是 group 共同歷史，不跟著載具消失 |
+| 成員離開 / 被移除 / 刪帳號 | 自己離開：有效載具跟著走；被移除：該成員在此 group 的載具軟刪並清密文；刪帳號：該使用者所有載具實體刪除 | 載具是個人的秘密，不留在已不屬於的帳本裡 |
 | 觸發模式 | 使用者主動點擊 | 永遠不做背景 cron；違反陪伴原則 |
 | 匯入粒度 | 每張發票 → 一筆 CashTransaction（總額） | 不拆 line item；用戶要分類自己編輯 |
 | Dedup key | `(groupId, invoiceNumber)` partial unique（`WHERE deleted_at IS NULL`） | 一張發票全 group 唯一，不管誰先匯；軟刪後可重匯 |
@@ -132,6 +135,12 @@ Commit 整體在一個 DB transaction 內；任何步驟失敗整批 rollback + 
 - MoF 端折讓 → preview 顯示「需沖銷」+ commit 後軟刪舊 row + insert net amount row
 - 使用者編輯過的 row 在 MoF 又變動時，preview 標記衝突、不預設覆蓋
 - 同 group 兩位 member 各自綁自己載具，paidBy 落各自帳上不混淆
+
+---
+
+## 已知殘留風險
+
+- 清掉或刪掉的密文，仍存在 Supabase 的 point-in-time recovery／備份／WAL 裡，直到超過它們的保存期限。應用程式碼無法控制，已接受並記錄（#1289）。
 
 ---
 

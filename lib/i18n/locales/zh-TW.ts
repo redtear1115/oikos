@@ -2307,6 +2307,9 @@ export type Translations = {
       alreadyInDuo: string
       /** The person who minted the invite is no longer in that ledger (#1031). */
       inviterNotMember: string
+      /** The accepter has a trip in progress in their own ledger, whose
+       *  chapter the join would end (#1290). */
+      activeTrip: string
       unknown: string
     }
     /** `<head>` metadata for the invite landing page. Deliberately generic —
@@ -2984,6 +2987,7 @@ export type Translations = {
       linked_asset_not_in_group: string
       linked_asset_deleted: string
       linked_vehicle_invalid: string
+      primary_user_not_in_group: string
       plate_empty: string
       field_not_filled: string
       template_unknown: string
@@ -4878,6 +4882,7 @@ export const zhTW: Translations = {
       alreadyMember: '你已經是此帳本的成員',
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       inviterNotMember: '發出這份邀請的人已經不在這本帳本裡，連結不再有效。',
+      activeTrip: '你的帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，再接受邀請。',
       unknown: '無法加入帳本',
     },
     meta: {
@@ -6588,6 +6593,7 @@ export const zhTW: Translations = {
       linked_asset_not_in_group: '關聯資產不在家計簿內',
       linked_asset_deleted: '關聯資產已刪除',
       linked_vehicle_invalid: '無效的關聯車輛',
+      primary_user_not_in_group: '主要使用人不在家計簿內',
       plate_empty: '車牌不能為空',
       field_not_filled: '尚未填寫此欄位',
       template_unknown: '未知的模板',

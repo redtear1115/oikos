@@ -43,6 +43,56 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.3] - 2026-09-27
+
+主題：**帳本的邊界更穩**——記帳、旅行、匯出都守在自己的章節裡，名下有愛物也能離開帳本，送往錯誤追蹤的資料先清乾淨。
+完整 diff：[v1.6.2...v1.6.3](https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3)
+
+### 使用者可見變化
+
+- **離開帳本時，名下有愛物（車、房、保險）就會失敗（#1440）**
+  使用者：離開帳本時，只要在這本帳本內名下有一項以上車輛、房屋或保險，操作就會失敗；現在無論有幾項都能正常離開。
+  技術：`leaveGroup` 用 `ANY(${array}::uuid[])` 帶入要跟著移動的資產 id，但 Drizzle 把 JS 陣列展開成逐一參數而非陣列參數——1 個 id 送出 `ANY(($1)::uuid[])`（純量誤當陣列轉型，22P02），2 個以上送出 `ANY(($1, $2)::uuid[])`（誤當 record 轉型，42846）；兩種情況都改用明確的 `IN (...)` 清單解決。
+- **接受邀請時，邀請人正在進行的旅行會自動結束（#1438）**
+  使用者：邀請人開著一趟旅行、伴侶在此時接受邀請的話，該趟旅行會自動結束並把支出折回帳本（等同邀請人自己先按了「結束旅行」）；先前這種情況下該趟旅行會卡住，結束不了、也不能再記新支出。
+  技術：`acceptInvite` 在同一個 transaction 內結束邀請人的 active trip（`lib/trip/endTripInTx.ts`）；取得 chapter 鎖之後才以 `NOWAIT` 嘗試鎖旅行的 row，與其他旅行寫入衝突時直接重試，不進入等待。
+- **接受邀請時，若自己的帳本已有進行中的旅行會被拒絕（#1290）**
+  使用者：接受邀請那一刻，如果你自己的帳本正開著一趟旅行，畫面會顯示「你的帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，再接受邀請。」，要先結束那趟旅行才能接受邀請。
+
+### 技術變更
+
+- **帳號刪除的兩個邊界案例（#1377、#1433）**
+  技術：離開過配對的使用者刪除帳號時，profile 無法刪除的情況改為 tombstone 退路而不是每天重試失敗（`0068`）；刪除處理程序在鎖定後重新掃描使用者當下所在的群組，避免在等鎖期間完成的 `leaveGroup`／`acceptInvite` 讓新群組被漏刪（`0071`）。
+- **同時建立帳本與接受邀請不再留下兩個開著的章節（#1432）**
+  技術：`createGroup` 與 `acceptInvite` 都先取該使用者 `Profiles` row 的 `FOR NO KEY UPDATE` 鎖再重新讀一次現況；兩者競態時，後取得鎖的一方會讀到對方的結果：createGroup 直接沿用剛加入的帳本，acceptInvite 則重跑一次、把剛建立的單人章節一起結束，不再各自插入一筆 GroupEpochs。
+- **抑制 Android 殼的 `<html>` hydration 警告（#1424）**
+  技術：Android SystemBars plugin 在 hydrate 前就把 `--safe-area-inset-*` 寫進 `document.documentElement.style`，`app/layout.tsx`／`app/global-error.tsx` 的 `<html>` 補上 `suppressHydrationWarning`，只影響這一層自己的屬性檢查。
+- **新增 PII 欄位重新加密腳本（#1287 S3）**
+  技術：`scripts/reencrypt-pii.ts` 把既有欄位級密文（含舊格式）批次換成新格式的 write kid 密文並帶入 AAD，預設 dry-run、逐列 compare-and-swap；供之後輪替加密金鑰時使用，本身不改變任何應用程式行為。
+- **修正 prod migration 歷史的錯誤描述（#1405）**
+  技術：ops-runbook 原寫「歷史乾淨」不成立（`0065` 的紀錄是事後補上的）；改記錄跑 prod migrate 前應該比對「待套用清單」而不是筆數或檔案內容。
+- **leaveGroup 清空跨帳本連結的改動已撤回，之後改以凍結副本設計重做（#1442）**
+  技術：#1455 曾讓 `leaveGroup` 把會跨到新帳本的連結清成 NULL，但這會讓原本指向哪個資產的資訊遺失，經 #1459 撤回；之後會改用唯讀的凍結副本重做，本次無淨變更。
+- **本版帶 `0068`–`0071` 四個 migration，必須依序套用（#1435）**
+  技術：`0070` 先於 `0069` 套用會讓 drizzle 誤判 `0069` 已跑過而靜默跳過；prod 部署前務必依 `0068 → 0069 → 0070 → 0071` 的順序執行 `npm run db:migrate`。
+- **邀請連結的查找改用雜湊，明文欄位留待後續步驟清除（#1288）**
+  技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 新增欄位並回填既有資料、程式同時雙寫，查找改成以雜湊比對，只有尚未回填雜湊的舊列才比對明文；格式不符的 token 在查資料庫前就直接判定無效。明文 token 仍保留，資料暴露面沒有變化，所以不放進 Security（見門檻說明）。
+
+### Security
+
+- **多項寫入操作限定在目前章節（#1290）**
+  使用者：操作流程不變（接受邀請時的拒絕見上方使用者可見變化）。
+  技術：記帳、收入、結算、油耗的編輯與刪除，以及旅行的結束、編輯、刪除與旅行支出的新增／編輯／刪除，改為在交易內以 `FOR SHARE` 鎖住目前章節的 row、確認仍是同一章節後才寫入；車輛與房屋建立（含購入金額）與定期支出／收入確認改走過去章節的寫入閘門（沒有交易內鎖）；章節結束的動作（離開帳本、移除夥伴、接受邀請）則依序鎖定 group 與章節 row 後才以 DB 時鐘取得邊界，讓兩邊不再競態（#1428、#1431、#1436、#1437）。
+- **交易匯出、記帳描述自動完成與匯入紀錄依章節限縮（#1290）**
+  使用者：操作流程不變。
+  技術：交易匯出與記帳描述自動完成（`getDescriptionSuggestions`／`listDescriptionSuggestions`）改為只讀取 viewer 待過的每一段章節（加入前、離開後的章節不算）；CSV 匯入的匯入紀錄／匯入筆數則限縮在目前這段開著的章節。匯出另外多送一個稽核事件，CSV 儲存格加上前綴防止試算表公式注入。
+- **已刪除的發票驗證碼密文不再保留（#1289）**
+  使用者：無感。
+  技術：`InvoiceCredentials` 新增 CHECK 保證同一個 UPDATE 內軟刪除與清空密文一起發生；`0069` 同時修正清理 cron 排程遺漏發票兩張表的問題——`InvoiceCredentials` 軟刪除滿 30 天、`InvoiceImportRuns` 依 `started_at` 滿 1 年會被清除，先前這兩張表的資料從未被實際清除過；帳號刪除也會連帶硬刪除該使用者在各群組的憑證。
+- **資料庫錯誤送往 Sentry／伺服器 log 前，實際資料先被清除（#1289、#1439、#1451、#1453）**
+  使用者：無感。
+  技術：伺服器錯誤原本可能把記帳金額、描述、發票驗證碼密文等綁定值原樣送進 Sentry 事件與 Vercel log；新增 `lib/db/sanitizeError.ts` 與 DB 連線層的 `lib/db/sanitizingQuery.ts` 兩道清洗，Sentry scrubber 同步補上結構化處理，並修掉會把訊息裡解析出的堆疊幀誤判、跳脫字元計算錯誤等邊界案例。
+
 ## [1.6.2] - 2026-09-26
 
 主題：**首頁的主要按鈕看你用什麼裝置**——iPhone 直接去 App Store，Android 可以報名測試版。
@@ -1351,7 +1401,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.3...HEAD
+[1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0

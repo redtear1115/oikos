@@ -1,12 +1,13 @@
 ---
-last_updated: 2026-09-12
+last_updated: 2026-09-27
 status: shipped
 first_shipped_in: v1.2.0
 updates:
   - v1.5.11: `/use-case/<slug>` CTA 接上歸因 — `?from=use-case-<slug>` + `landing_cta_clicked`，`entry_source` 擴充 per-slug `use_case_*`（#1056）
   - v1.5.11: `entry_source` 的 migrate 取值改為衍生自 `lib/migrate/sources.ts` registry（全部 15 個，原本只認 3 個有 CSV parser 的，其餘靜默落進 `direct`）；import-resume 軸拆出獨立命名並衍生自 `lib/csvImport/detector.ts`（#1062）
-related_specs: [csv-import, solo-mode]
-related_issues: ["#734", "#1056", "#1062"]
+  - v1.6.3: 事件清單新增稽核事件 `transactions_exported`（#1290）
+related_specs: [csv-import, solo-mode, csv-export]
+related_issues: ["#734", "#1056", "#1062", "#1290"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
@@ -180,6 +181,14 @@ migrate 流程 → `app/[locale]/migrate/_components/MigrateTool.tsx` + `Migrate
 實作落地點：`invite_created` / `invite_superseded` / `partner_joined` / `invite_preview_failed` → `actions/invite.ts`（`createInvite` / `acceptInvite` / `previewInvite`）；
 `invite_link_opened` → `app/invite/[token]/InviteConfirm.tsx`；邀請頁匿名導向 sign-in
 夾帶 `from=invite` → `app/invite/[token]/page.tsx`。
+
+### 稽核事件（不是轉換指標）
+
+| event | 觸發時機 | side | 關鍵屬性 |
+|---|---|---|---|
+| `transactions_exported` | CSV 匯出成功產生檔案（#1290） | server | `group_id`、`row_count` |
+
+只記「誰、何時、從哪本帳、幾列」，**不帶任何紀錄內容**。次數本來就低，不拿來當 KPI；和所有 server 事件一樣只在 prod 部署送出、送失敗不擋匯出，所以查不到事件不代表沒有匯出過。語意與範圍見 [csv-export](csv-export-design.md)「觀測」。實作落地點：`app/api/export/transactions/route.ts`。
 
 ---
 

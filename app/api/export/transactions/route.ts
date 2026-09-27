@@ -1,13 +1,12 @@
-// 匯出的範圍決定（刻意跨章節、刻意含 pending、為什麼入口在信任宣示頁）見
+// 匯出的範圍決定（只含 viewer 待過的章節、刻意含 pending、為什麼入口在信任宣示頁）見
 // docs/superpowers/specs/csv-export-design.md。
 import { NextResponse } from 'next/server'
-import { eq, or } from 'drizzle-orm'
 import { getCurrentUser } from '@/lib/supabase/server'
-import { db } from '@/lib/db/client'
-import { oikosGroups } from '@/lib/db/schema'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { listAllActiveCashTransactionsForExport } from '@/lib/db/queries/transactions'
 import { getTranslations } from '@/lib/i18n/t'
 import { buildExportFilename, buildTransactionsCsv } from '@/lib/csv/transactions'
+import { captureServer } from '@/lib/analytics/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,17 +18,15 @@ export async function GET() {
 
   // Group lookup is the trust boundary: a user can only export the group they
   // belong to. The query layer doesn't enforce membership on its own.
-  const [group] = await db
-    .select({ id: oikosGroups.id })
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  // Same resolver as the dashboard and the server actions, so a user who is
+  // in more than one group always exports the one they are using now.
+  const group = await getActiveGroupForUser(user.id)
   if (!group) {
     return NextResponse.json({ error: 'no_group' }, { status: 404 })
   }
 
   const [rows, t] = await Promise.all([
-    listAllActiveCashTransactionsForExport(group.id),
+    listAllActiveCashTransactionsForExport(group.id, user.id),
     getTranslations(),
   ])
 
@@ -39,6 +36,13 @@ export async function GET() {
     splitType: t.splitType,
   })
   const filename = buildExportFilename(t.csvExport.filenamePrefix)
+
+  // Audit trail: who exported, from which group, how many rows. Never the
+  // content. captureServer never throws and only sends from the prod deploy.
+  await captureServer(user.id, 'transactions_exported', {
+    group_id: group.id,
+    row_count: rows.length,
+  })
 
   return new NextResponse(csv, {
     status: 200,

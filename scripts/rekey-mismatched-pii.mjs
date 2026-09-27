@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 /**
+ * ⚠️ OBSOLETE (#1287) — kept for provenance of the #881 repair. DO NOT RUN.
+ * It re-implements the pre-#1287 legacy format by hand (the mistake #881
+ * itself came from) and knows nothing about the v1 `v1:<kid>:…` format or
+ * its AAD: it reports every v1 row as unrecoverable, and whatever it rewrites
+ * is legacy, which the app stops accepting after #1287 S3b. It also takes
+ * keys inline on the command line, which puts them in shell history.
+ * Use `scripts/reencrypt-pii.ts` (imports lib/crypto.ts) for any re-encryption.
+ *
  * #881 — Repair PII rows encrypted with the WRONG key.
  *
  * Root cause: the original PII backfill (`encrypt-existing-pii.mjs`) was run

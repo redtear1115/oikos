@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-27
 status: shipped
 first_shipped_in: v1.0.0
 related_specs: [product, epoch-readonly, native-auth, sign-in-with-apple, invite-existing-group]
@@ -73,7 +73,7 @@ viewer 對了、group 對了，不代表他送進來的 id 屬於這一本：
 
 ## 不走這套的地方
 
-- **`app/api/export/transactions/route.ts`** 自己反查 group，不用 `lib/auth/`。它是唯一的 route handler，沒有 server action 的 context。行為等價於第 1 層，見 [csv-export](csv-export-design.md)。
+- **`app/api/export/transactions/route.ts`** 不用 `lib/auth/`（它是唯一的 route handler，沒有 server action 的 context），但反查 group 用的是同一個 `getActiveGroupForUser(viewer.id)`，行為等價於第 1 層；匯出內容再限縮到 viewer 待過的章節。見 [csv-export](csv-export-design.md)。
 - **`actions/auth.ts`** — `signOut` 與一支 analytics action，不碰 group 資料。
 - **`actions/epoch-view.ts`** — 只設一個 httpOnly cookie，**刻意不驗 `epochId`**。讀取側的 `getActiveEpochWindow` 會拒絕不屬於 viewer group 的 id，惡意值只會 fallback 回當前章節。驗證放在讀取側而不是寫入側，是因為 cookie 值隨時可能因為 group 變動而失效，寫入時驗過不代表讀取時仍然有效。
 

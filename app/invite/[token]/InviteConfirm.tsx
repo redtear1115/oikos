@@ -12,6 +12,10 @@ import { unwrapAction } from '@/lib/action-errors'
 type TrustStrings = Translations['trust']
 type InviteStrings = Translations['invite']
 
+/** Codes acceptInvite can fail with: the shared validation codes, plus the
+ *  accept-only active-trip refusal (#1290). */
+type AcceptErrorCode = InviteAcceptError | 'accept_active_trip'
+
 interface Props {
   token: string
   groupName: string
@@ -54,7 +58,7 @@ export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, gr
         router.push('/dashboard')
       } catch (err) {
         const code = err instanceof Error ? err.message : ''
-        const errorMap: Record<InviteAcceptError, string> = {
+        const errorMap: Record<AcceptErrorCode, string> = {
           invalid_or_expired: invite.errors.invalidOrExpired,
           already_used: invite.errors.alreadyUsed,
           revoked: invite.errors.revoked,
@@ -64,8 +68,9 @@ export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, gr
           already_member: invite.errors.alreadyMember,
           already_in_duo: invite.errors.alreadyInDuo.replace('{partner}', invite.fallbackInviter),
           inviter_not_member: invite.errors.inviterNotMember,
+          accept_active_trip: invite.errors.activeTrip,
         }
-        setError(errorMap[code as InviteAcceptError] ?? invite.errors.unknown)
+        setError(errorMap[code as AcceptErrorCode] ?? invite.errors.unknown)
       }
     })
   }

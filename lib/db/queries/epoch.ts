@@ -389,3 +389,225 @@ export async function getEpochMembers(
     .limit(1)
   return row ?? null
 }
+
+export interface EpochCloseLock {
+  /** The locked group rows, by id. A missing id means the group does not exist. */
+  groups: Map<string, { memberA: string; memberB: string | null }>
+  /** The locked open chapter row of each group, by group id (absent: none open). */
+  openEpochs: Map<string, { id: string; memberAId: string; memberBId: string | null }>
+  /**
+   * The chapter boundary: `clock_timestamp()` read after every lock above is
+   * held, as Postgres text. Write it back with {@link boundarySql}; never parse
+   * it into a JS `Date`.
+   */
+  boundary: string
+}
+
+/**
+ * The first statements of every transaction that ends a chapter (leaveGroup,
+ * removePartner, acceptInvite). Locks, per group in ascending id order:
+ *
+ *   1. `OikosGroups … FOR NO KEY UPDATE`
+ *   2. the open `GroupEpochs` row `… FOR NO KEY UPDATE`
+ *
+ * and only then reads the boundary from the DB clock.
+ *
+ * - NO KEY UPDATE, never plain FOR UPDATE, on the group row. Every insert of a
+ *   row that references a group (cash, income, settlements) takes FOR KEY
+ *   SHARE on that group for its foreign-key check, and FOR KEY SHARE conflicts
+ *   only with FOR UPDATE. A writer that holds the open chapter row FOR SHARE
+ *   and then inserts a money row would otherwise wait on the closer's group
+ *   lock while the closer waits on the chapter row. The symptom is Postgres
+ *   aborting one side with 40P01 (deadlock detected), which reaches the user
+ *   as a generic error.
+ * - Ascending group id, so two closers that touch the same two groups (two
+ *   accepts in opposite roles) queue instead of deadlocking.
+ * - The boundary is read after the locks: a writer that held the chapter row
+ *   has committed by then, so every row it wrote has `created_at` < boundary.
+ *   A boundary fixed earlier (`new Date()` before the transaction, or the
+ *   transaction-start `now()`) can predate such a row, and the row silently
+ *   shows up in the next chapter instead of the one it was written in.
+ * - The boundary stays text. A JS `Date` keeps milliseconds only; Postgres
+ *   keeps microseconds, so a round-tripped boundary can land before a
+ *   `created_at` in the same millisecond, with nothing erroring.
+ *
+ * The same lock order is used by the account-deletion processor.
+ *
+ * `opts.profileId` (acceptInvite, #1432): also take that user's `Profiles`
+ * row FOR NO KEY UPDATE, after the chapter rows and before the boundary. It
+ * is the lock {@link lockProfileForGroupCreate} takes, so a createGroup by
+ * the same user either committed before this returns (and the caller's
+ * re-read of that user's ledgers sees the new one) or waits until the caller
+ * commits. Why last, not first: the account-deletion processor locks the
+ * user's groups and then deletes / updates their Profiles row, so a closer
+ * that held the profile and then waited on a group would close a cycle with
+ * it (40P01). Groups → chapters → profile keeps one order everywhere.
+ */
+export async function lockForEpochClose(
+  tx: DbTransaction,
+  groupIds: string[],
+  opts: { profileId?: string } = {},
+): Promise<EpochCloseLock> {
+  const ordered = Array.from(new Set(groupIds.map((id) => id.toLowerCase()))).sort()
+
+  const groups: EpochCloseLock['groups'] = new Map()
+  for (const id of ordered) {
+    const [row] = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, id))
+      .for('no key update')
+    if (row) groups.set(id, row)
+  }
+
+  const openEpochs: EpochCloseLock['openEpochs'] = new Map()
+  for (const id of ordered) {
+    const [row] = await tx
+      .select({ id: groupEpochs.id, memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
+      .from(groupEpochs)
+      .where(and(eq(groupEpochs.groupId, id), isNull(groupEpochs.endedAt)))
+      .for('no key update')
+    if (row) openEpochs.set(id, row)
+  }
+
+  if (opts.profileId) await lockProfileRow(tx, opts.profileId)
+
+  const [{ boundary }] = await tx.execute<{ boundary: string }>(
+    sql`SELECT clock_timestamp()::text AS boundary`,
+  )
+  return { groups, openEpochs, boundary }
+}
+
+/**
+ * `Profiles … FOR NO KEY UPDATE` on one user's row: the per-user lock that
+ * serialises the actions which give a user a new ledger or end their solo
+ * chapters (createGroup, acceptInvite — #1432).
+ *
+ * NO KEY UPDATE, not FOR UPDATE: every insert that references the user
+ * (paid_by, member_a, created_by, …) takes FOR KEY SHARE on this row for its
+ * foreign-key check, and only FOR UPDATE conflicts with that. With FOR UPDATE,
+ * the partner's ordinary expense insert would queue behind an accept.
+ */
+async function lockProfileRow(tx: DbTransaction, userId: string): Promise<void> {
+  await tx
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .for('no key update')
+}
+
+/**
+ * The first statement of createGroup's transaction: take the creator's
+ * `Profiles` row (see {@link lockProfileRow}), then re-read whether they
+ * already have a ledger. Returns that ledger, or `null` when the caller may
+ * create one.
+ *
+ * acceptInvite takes the same row inside {@link lockForEpochClose}. So a
+ * createGroup racing an accept by the same person (two tabs) either
+ *   - commits first: the accept's re-read under the lock sees the new solo
+ *     ledger and ends its chapter; or
+ *   - waits for the accept: the re-read here sees the ledger the person just
+ *     joined, and createGroup returns it instead of opening a second chapter.
+ * Without the lock nothing errors: the person ends up with two open chapters
+ * (the duo one and the new solo one), and a later leave or account deletion
+ * computes its boundaries from the wrong one (#1432).
+ *
+ * Lock order: this profile row, then only rows this transaction inserts. It
+ * never waits on a group or chapter row, so it cannot close a cycle with a
+ * closer (groups → chapters → profile).
+ */
+export async function lockProfileForGroupCreate(
+  tx: DbTransaction,
+  userId: string,
+): Promise<typeof oikosGroups.$inferSelect | null> {
+  await lockProfileRow(tx, userId)
+  const [existing] = await tx
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, userId), eq(oikosGroups.memberB, userId)))
+    .orderBy(desc(oikosGroups.currentEpochStartedAt))
+    .limit(1)
+  return existing ?? null
+}
+
+/**
+ * The first statement of a transaction that edits or deletes an existing money
+ * row (expense, income, settlement, fuel log): take the group's open chapter
+ * row `FOR SHARE`, then re-read the group's two members. Returns `null` when
+ * the group has no open chapter; callers fail closed with their own not-found
+ * code.
+ *
+ * Why FOR SHARE on the chapter row: every closer ({@link lockForEpochClose})
+ * must take that same row FOR NO KEY UPDATE, which conflicts with FOR SHARE.
+ * So a closer either
+ *   - finished first: the row read here is the new chapter, and the target
+ *     row's `created_at` check (`openChapterCreatedClause`) sees the new start; or
+ *   - waits for this transaction: it reads its boundary after this commit, so
+ *     the row an edit re-inserts (`created_at` = this transaction's `now()`)
+ *     stays in the chapter it was edited in.
+ * Without the lock, an edit committing while a closer runs can re-insert its
+ * row after the boundary was fixed, and the row silently moves to the next
+ * chapter's balance.
+ *
+ * Lock order: this chapter row, then the money rows the caller updates and
+ * inserts. The inserts take FOR KEY SHARE on OikosGroups for their foreign key;
+ * closers hold that row FOR NO KEY UPDATE, which does not conflict, so the two
+ * cannot deadlock. Do not add a lock on OikosGroups here: FOR SHARE or
+ * stronger would wait on a closer that is itself waiting on this chapter row,
+ * and Postgres aborts one side with 40P01.
+ *
+ * The members are read in the same transaction, after the lock, so an edit's
+ * payer / recipient check sees the membership of the chapter it writes into,
+ * not the one resolved before the transaction began.
+ */
+export async function lockOpenChapterForWrite(
+  tx: DbTransaction,
+  groupId: string,
+): Promise<{ epochId: string; group: { memberA: string; memberB: string | null } } | null> {
+  const epoch = await lockOpenEpochForWrite(tx, groupId)
+  if (!epoch) return null
+
+  const [group] = await tx
+    .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+    .from(oikosGroups)
+    .where(eq(oikosGroups.id, groupId))
+  if (!group) return null
+
+  return { epochId: epoch.id, group }
+}
+
+/** A boundary from {@link lockForEpochClose}, as a timestamptz value for a write. */
+export function boundarySql(boundary: string) {
+  return sql`${boundary}::timestamptz`
+}
+
+/**
+ * The writer side of {@link lockForEpochClose}: take the group's open chapter
+ * row `FOR SHARE` and return its id, or `null` when no chapter is open.
+ *
+ * Used by writes that must land in the chapter they checked (ending a trip and
+ * writing its summary rows, editing a trip or its expenses). Call it after any
+ * lock on the entity row itself (entity row → chapter row, never the reverse),
+ * then compare the returned id with the entity's chapter and fail closed when
+ * they differ or the result is `null`.
+ *
+ * - While this lock is held, a closer cannot take the chapter row (its FOR NO
+ *   KEY UPDATE waits), so it reads its boundary only after this transaction
+ *   commits: every row written here has `created_at` < that boundary.
+ * - If a closer holds the row first, this waits; once the closer commits, the
+ *   row no longer matches `ended_at IS NULL` and the next chapter's row is not
+ *   visible to this statement, so the result is `null`. Without this lock
+ *   nothing errors: the write commits after the close, and rows written by it
+ *   silently show up in the next chapter.
+ */
+export async function lockOpenEpochForWrite(
+  tx: DbTransaction,
+  groupId: string,
+): Promise<{ id: string } | null> {
+  const [row] = await tx
+    .select({ id: groupEpochs.id })
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
+    .for('share')
+  return row ?? null
+}

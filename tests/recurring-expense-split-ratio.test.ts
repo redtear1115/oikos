@@ -22,7 +22,7 @@
  * is what a `?? 50` fallback hands you, so "not null" would have passed on a
  * still-broken build.
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { setMockUser } from './_mocks/supabase'
@@ -31,6 +31,14 @@ import { confirmPending } from '@/actions/recurringExpense'
 import { listActivePendings } from '@/lib/db/queries/recurringExpense'
 import { transactionDelta } from '@/lib/balance'
 import { unwrapAction } from '@/lib/action-errors'
+
+// next/headers cookies() — createCar / createHouse / confirmPending resolve the
+// viewer through getViewerWriteContext, which reads PAST_EPOCH_COOKIE. No pin
+// here, so the open-epoch lookup follows the group lookup in the mock queue.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
+const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -129,6 +137,7 @@ describe('confirmPending — weighted rule, end to end', () => {
     const pending = generatePendingViaCron(RULE)
 
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-1',
       groupId: GROUP.id,
@@ -168,6 +177,7 @@ describe('confirmPending — weighted rule, end to end', () => {
 
   it('leaves the ratio null for a non-weighted rule', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{
       id: 'pend-2', groupId: GROUP.id,
       proposedAmount: 10000, proposedDate: '2026-06-01',

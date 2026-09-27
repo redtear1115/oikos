@@ -18,6 +18,7 @@ import {
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
 import { hasActiveTrip } from '@/lib/db/queries/trips'
 import { hasActiveOuting } from '@/lib/db/queries/outing'
+import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
@@ -267,31 +268,32 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
     ...movingInsuranceRows.map((r) => r.assetId),
   ]
 
-  // Empty array would interpolate as `ANY(()::uuid[])` (invalid SQL), so
-  // short-circuit to NULL when nothing is moving with the leaver.
+  // Empty array would interpolate as `IN ()` (invalid SQL), so short-circuit
+  // to NULL when nothing is moving with the leaver. Note: `sql\`${array}\``
+  // does NOT bind a single array param — Drizzle expands a JS array into a
+  // parenthesised parameter list (`$1, $2, …`), so `= ANY(${ids}::uuid[])`
+  // sends `ANY(($1, $2)::uuid[])`, which Postgres rejects as a malformed
+  // array literal (22P02) whenever the array has 2+ elements (#1440). Build
+  // an explicit `IN (...)` list instead, matching the pattern already used
+  // elsewhere in lib/db/queries/ (e.g. asset.ts, _predicates.ts).
   const assetIdCase = movingAssetIds.length > 0
-    ? sql`CASE WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id ELSE NULL END`
+    ? sql`CASE WHEN asset_id IN (${sql.join(movingAssetIds.map((id) => sql`${id}::uuid`), sql`, `)}) THEN asset_id ELSE NULL END`
     : sql`NULL`
 
-  const now = new Date()
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
-    // 0. Lock the group row, then run every guard against what is committed
-    //    now. endOuting takes this same lock before it writes its Settlement,
-    //    so the two serialize: whichever commits second sees the first.
-    const [lockedGroup] = await tx
-      .select({ memberB: oikosGroups.memberB })
-      .from(oikosGroups)
-      .where(eq(oikosGroups.id, oldGroupId))
-      .for('update')
+    // 0. Lock the group row and its open chapter row, take the chapter
+    //    boundary from the DB clock, then run every guard against what is
+    //    committed now (see lockForEpochClose for the order and why). endOuting
+    //    takes the same group lock before it writes its Settlement, so the two
+    //    serialize: whichever commits second sees the first.
+    const lock = await lockForEpochClose(tx, [oldGroupId])
+    const boundary = boundarySql(lock.boundary)
+    const lockedGroup = lock.groups.get(oldGroupId)
     if (lockedGroup?.memberB !== leaver) throw new Error('only_member_b_can_leave')
 
     if (await getGroupBalance(oldGroupId, tx) !== 0) throw new Error('balance_not_zero')
 
-    const [currentEpochRow] = await tx
-      .select({ id: groupEpochs.id })
-      .from(groupEpochs)
-      .where(and(eq(groupEpochs.groupId, oldGroupId), isNull(groupEpochs.endedAt)))
-      .limit(1)
+    const currentEpochRow = lock.openEpochs.get(oldGroupId)
     // Active trip in the current epoch (#42) / active outing (#943): closing
     // the epoch under either would orphan it.
     if (currentEpochRow && await hasActiveTrip(oldGroupId, currentEpochRow.id, tx)) {
@@ -308,7 +310,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         name: newGroupName,
         memberA: leaver,
         memberB: null,
-        currentEpochStartedAt: now,
+        currentEpochStartedAt: boundary,
       })
       .returning({ id: oikosGroups.id })
 
@@ -333,7 +335,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
       .insert(groupEpochs)
       .values({
         groupId: newGroup.id,
-        startedAt: now,
+        startedAt: boundary,
         memberAId: leaver,
         memberBId: null,
       })
@@ -420,14 +422,18 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         )
     `)
 
-    // 10. Move InvoiceCredentials where user_id = leaver. Snapshots and Runs
-    // stay (group共同記錄, per design).
+    // 10. Move the leaver's live InvoiceCredentials. Snapshots and Runs stay
+    // (group共同記錄, per design). Soft-deleted credentials stay too: they
+    // carry no secret (0069) and the cron purges them where they are. Runs
+    // left behind can't block anything: their credential FK is ON DELETE SET
+    // NULL (#1289).
     await tx
       .update(invoiceCredentials)
       .set({ groupId: newGroup.id })
       .where(and(
         eq(invoiceCredentials.groupId, oldGroupId),
         eq(invoiceCredentials.userId, leaver),
+        isNull(invoiceCredentials.deletedAt),
       ))
 
     // 11. Move MonthlyReviewMessages where member_id = leaver
@@ -442,7 +448,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
     // 12. Revoke any unaccepted GroupInvites on the old group
     await tx
       .update(groupInvites)
-      .set({ revokedAt: now })
+      .set({ revokedAt: boundary })
       .where(and(
         eq(groupInvites.groupId, oldGroupId),
         isNull(groupInvites.acceptedAt),
@@ -459,20 +465,20 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         memberB: null,
         pendingSwapProposedBy: null,
         pendingSwapExpiresAt: null,
-        currentEpochStartedAt: now,
+        currentEpochStartedAt: boundary,
       })
       .where(eq(oikosGroups.id, oldGroupId))
 
     // 13a. Close the duo chapter on the old group and open the stayer's
-    // solo chapter. Same `now` so the past-times list shows a clean handoff.
+    // solo chapter. Same boundary so the past-times list shows a clean handoff.
     await tx
       .update(groupEpochs)
-      .set({ endedAt: now })
+      .set({ endedAt: boundary })
       .where(and(eq(groupEpochs.groupId, oldGroupId), isNull(groupEpochs.endedAt)))
 
     await tx.insert(groupEpochs).values({
       groupId: oldGroupId,
-      startedAt: now,
+      startedAt: boundary,
       memberAId: group.memberA,
       memberBId: null,
     })
@@ -540,6 +546,9 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
  *     doesn't help here since the *remaining* member minted it)
  *   - Close the current epoch, open a fresh solo epoch for member_a
  *   - Clear member_b + any leftover pending-swap fields on the group
+ *   - Soft-delete the removed member's live InvoiceCredentials and clear
+ *     their ciphertext (#1289) — the one exception to "data left in place":
+ *     a credential is a live secret, not history
  *   - Recalc balance (resolves to 0 — solo short-circuit)
  *
  * Irreversible.
@@ -552,7 +561,6 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
 
   const removedUserId = group.memberB
 
-  const now = new Date()
   const groupId = group.id
   // Returned to the caller so `RemovePartnerFlow` can key its client flag off
   // the same epoch id `PartnerLeftCard` uses for dismissal (#1121). Group-keyed
@@ -560,22 +568,17 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
   let newEpochId = ''
 
   await db.transaction(async (tx) => {
-    // Lock the group row, then the fences — same shape as leaveGroup (#943
-    // S-E). No active trip / outing in the current epoch: closing the epoch
-    // would orphan it. No balance check here by design (see above).
-    const [lockedGroup] = await tx
-      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
-      .from(oikosGroups)
-      .where(eq(oikosGroups.id, groupId))
-      .for('update')
+    // Lock the group row and its open chapter row, take the boundary from
+    // the DB clock, then the fences — same shape as leaveGroup (#943 S-E).
+    // No active trip / outing in the current epoch: closing the epoch would
+    // orphan it. No balance check here by design (see above).
+    const lock = await lockForEpochClose(tx, [groupId])
+    const boundary = boundarySql(lock.boundary)
+    const lockedGroup = lock.groups.get(groupId)
     if (lockedGroup?.memberA !== user.id) throw new Error('only_member_a_can_remove')
     if (lockedGroup.memberB !== removedUserId) throw new Error('solo_group')
 
-    const [currentEpochRow] = await tx
-      .select({ id: groupEpochs.id })
-      .from(groupEpochs)
-      .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
-      .limit(1)
+    const currentEpochRow = lock.openEpochs.get(groupId)
     if (currentEpochRow && await hasActiveTrip(groupId, currentEpochRow.id, tx)) {
       throw new Error('active_trip')
     }
@@ -589,7 +592,7 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
     // leaving a live key (valid until it expires) to whoever holds the link.
     await tx
       .update(groupInvites)
-      .set({ revokedAt: now })
+      .set({ revokedAt: boundary })
       .where(and(
         eq(groupInvites.groupId, groupId),
         isNull(groupInvites.acceptedAt),
@@ -599,14 +602,14 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
     // Close the duo chapter and open member_a's new solo chapter.
     await tx
       .update(groupEpochs)
-      .set({ endedAt: now })
+      .set({ endedAt: boundary })
       .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
 
     const [newEpoch] = await tx
       .insert(groupEpochs)
       .values({
         groupId,
-        startedAt: now,
+        startedAt: boundary,
         memberAId: group.memberA,
         memberBId: null,
       })
@@ -621,9 +624,22 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
         memberB: null,
         pendingSwapProposedBy: null,
         pendingSwapExpiresAt: null,
-        currentEpochStartedAt: now,
+        currentEpochStartedAt: boundary,
       })
       .where(eq(oikosGroups.id, groupId))
+
+    // #1289 — the removed member's invoice credentials don't stay behind as
+    // live secrets in a group they no longer belong to, and they don't follow
+    // them either (no group is created for them, see above): soft-delete and
+    // drop the ciphertext in one UPDATE. Their runs stay as group history.
+    await tx
+      .update(invoiceCredentials)
+      .set({ deletedAt: boundary, verificationCodeEncrypted: null })
+      .where(and(
+        eq(invoiceCredentials.groupId, groupId),
+        eq(invoiceCredentials.userId, removedUserId),
+        isNull(invoiceCredentials.deletedAt),
+      ))
 
     await recalcGroupBalance(groupId, tx)
   })

@@ -1,13 +1,14 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-27
 status: shipped
 first_shipped_in: v0.1.0
 updates:
   - v0.12.0: 共同備註（#34 PR #66）、CSV 匯出 transactions（#37 PR #70）、信任宣示頁（#48 PR #62）
   - v0.14.1: Weighted split（取代 `half`）+ Dashboard hero collapse（#109 PR #111）+ /records FAB context-awareness（#110 PR #112）
   - v0.14.2: Description autocomplete in AddSheet（#113 PR #114；v0.14.1 暫 revert、v0.14.2 revert-the-revert ship）
+  - v1.6.3: Description autocomplete 與 CSV 匯出只取 viewer 待過的章節（#1290）
 related_specs: [onboarding, solo-mode, realtime, structured-filter, stats, recurring, epoch-readonly, income]
-related_issues: ["#34", "#37", "#48", "#109", "#110", "#113"]
+related_issues: ["#34", "#37", "#48", "#109", "#110", "#113", "#1290"]
 ---
 
 # 核心記帳：Transaction / Settlement / Balance
@@ -39,7 +40,7 @@ Atomic invariant：上述兩步 + balance 重算必須同 DB transaction；任�
 
 ### Description autocomplete（v0.14.2）
 
-AddSheet 描述欄位輸入時，從目前 household 的歷史 CashTransaction 描述抓前綴（case-insensitive，最多 5 條）做 inline suggestion；soft-deleted 排除、空字串不顯示。實作落地點：`app/(dashboard)/dashboard/_components/DescriptionAutocomplete.tsx` + `actions/transaction.ts › getDescriptionSuggestions()`（server action，不在 query 層）。
+AddSheet 描述欄位輸入時，從目前 household 的歷史 CashTransaction 描述抓前綴（case-insensitive，最多 5 條）做 inline suggestion；soft-deleted 排除、空字串不顯示。來源只取 viewer 待過的章節（v1.6.3，#1290）——與 CSV 匯出同一條規則（`viewerChaptersClause`，見 [csv-export](csv-export-design.md)「範圍：viewer 待過的章節」）：後來加入的伴侶不會看到自己加入之前那些章節的描述；離開帳本的人帶進新帳本的紀錄，描述仍會出現給他自己。實作落地點：`app/(dashboard)/dashboard/_components/DescriptionAutocomplete.tsx` + `actions/transaction.ts › getDescriptionSuggestions()`（server action，不在 query 層）。
 
 ### Weighted split（v0.14.1）
 
@@ -131,6 +132,6 @@ Dashboard 上方 hero card 加 collapse toggle，避免 hero 卡 + balance row �
 - /records 列表混合 transactions + settlements 用 `(transactedAt, createdAt)` cursor 穩定分頁
 - Filter `?fPayer=mine` 套用後 settlement row 仍出現（依 payer 判斷）；filter `?fCats=...` 套用後 settlement row 整批 drop
 - /records FAB 在「收入」tab → mint 色 + 開 IncomeSheet；其他 tab → ink 色 + 開 AddSheet
-- AddSheet description 欄位 → 同 household 歷史 transactions 前綴 inline suggestion（最多 5 條）
+- AddSheet description 欄位 → 同 household、viewer 待過的章節裡的歷史 transactions 前綴 inline suggestion（最多 5 條）
 - Weighted split `ratio_a` 寫入後 balance 重算正確（同時支援 legacy `half` row）
 - Dashboard hero collapse 切態時 settle pill / ToggleButton 位置鎖定不漂

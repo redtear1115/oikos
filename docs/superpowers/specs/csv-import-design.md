@@ -1,10 +1,11 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-27
 status: shipped
 first_shipped_in: v1.1.0
 updates:
   - v1.1.1: 新增 Spendee / Honeydue / CWMoney 原生格式自動 parse（mapper + detector）；銀行對帳單 .xlsx 轉換模板；OFX 1.x/2.x + QIF parser（#585 #586）
   - v1.3.2: 新增 futari_generic——截圖→ChatGPT→CSV 產出的固定 header 格式，偵測 + 專屬 mapper（#839 #1094）
+  - v1.6.3: 匯入紀錄列表與批次計數只看當前章節（#1290）
 related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency, migrate-pages]
 related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586", "#839", "#1094"]
 ---
@@ -238,6 +239,8 @@ sha256(
 ## Import metadata
 
 每次匯入產生一筆 `ImportBatches`；`CashTransactions.importBatchId` + `IncomeTransactions.importBatchId` FK 讓整批可 rollback（軟刪除）。`ImportErrors` 存失敗行原始資料供用戶下載修正後再傳。
+
+匯入頁的「最近匯入」列表（`getImportHistory`）與 `countImportBatches` 只看**當前章節**記下的批次（v1.6.3，#1290）：過去章節的批次不列出、不計數。這與回滾的範圍一致：回滾本來就只接受當前章節、24 小時內的批次（server 端以 DB 時鐘判斷）。帳本沒有開著的章節時列表為空（fail closed）。
 
 欄位語意見 `lib/db/schema.ts`（`importBatches` / `importErrors` 表）。
 

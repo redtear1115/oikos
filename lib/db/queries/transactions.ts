@@ -23,6 +23,7 @@ import {
   splitTypeClause,
   statusClause,
   burdenClause,
+  viewerChaptersClause,
   type BurdenResolution,
 } from './_predicates'
 
@@ -983,12 +984,16 @@ export interface ExportTxnDbRow {
 }
 
 /**
- * Fetch every active CashTransaction in a group for CSV export.
+ * Fetch the active CashTransactions of a group for CSV export, limited to
+ * the chapters `viewerId` belonged to (`viewerChaptersClause`) — every such
+ * chapter, not only the current one, and none from before the viewer
+ * joined or after they left.
  * Joins Profiles so the export shows display names instead of opaque UUIDs.
  * Caller is responsible for the group-membership check.
  */
 export async function listAllActiveCashTransactionsForExport(
   groupId: string,
+  viewerId: string,
 ): Promise<ExportTxnDbRow[]> {
   return db
     .select({
@@ -1005,6 +1010,7 @@ export async function listAllActiveCashTransactionsForExport(
     .where(and(
       eq(cashTransactions.groupId, groupId),
       isNull(cashTransactions.deletedAt),
+      viewerChaptersClause('"CashTransactions"."created_at"', groupId, viewerId),
     ))
     .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
 }
@@ -1015,9 +1021,13 @@ export async function listAllActiveCashTransactionsForExport(
  * can quickly re-enter recurring labels ("早餐", "雜貨", "停車費"...). Empty /
  * whitespace-only descriptions are excluded; results are capped to keep the
  * payload small (autocomplete only needs a handful of matches anyway).
+ *
+ * Drawn only from the chapters `viewerId` belonged to (`viewerChaptersClause`),
+ * the same scope as the CSV export.
  */
 export async function listDescriptionSuggestions(
   groupId: string,
+  viewerId: string,
   limit = 200,
 ): Promise<string[]> {
   const rows = await db
@@ -1030,6 +1040,7 @@ export async function listDescriptionSuggestions(
       eq(cashTransactions.groupId, groupId),
       isNull(cashTransactions.deletedAt),
       sql`length(trim(${cashTransactions.description})) > 0`,
+      viewerChaptersClause('"CashTransactions"."created_at"', groupId, viewerId),
     ))
     .groupBy(cashTransactions.description)
     .orderBy(sql`count(*) desc`)

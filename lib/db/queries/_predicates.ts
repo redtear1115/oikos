@@ -95,6 +95,73 @@ export function openEpochClause(epochIdColumn: ColRef, groupId: string): SQL {
 }
 
 /**
+ * `createdAtCol >= (the group's open GroupEpochs started_at)` — the row was
+ * recorded in the chapter that is open right now.
+ *
+ * Fails closed like `openEpochClause`: no open chapter makes the subquery
+ * NULL and the comparison matches nothing. `groupId` is a bound parameter
+ * for the same reason given there.
+ *
+ * Pass the column as a **table-qualified string** (e.g.
+ * `'"ImportBatches"."created_at"'`). Drizzle renders a single-table select's
+ * columns unqualified, and inside this subquery an unqualified `created_at`
+ * would bind to GroupEpochs' own column — every row would then match or
+ * none would, with no error.
+ */
+export function openChapterCreatedClause(createdAtColumn: ColRef, groupId: string): SQL {
+  return sql`${col(createdAtColumn)} >= (
+    SELECT oe."started_at" FROM "GroupEpochs" oe
+    WHERE oe."group_id" = ${groupId}::uuid AND oe."ended_at" IS NULL
+  )`
+}
+
+/**
+ * The row was recorded in a chapter of `groupId` that `viewerId` belonged
+ * to: some GroupEpochs row of the group lists the viewer as either member
+ * and its `[started_at, ended_at)` contains the row's `created_at`.
+ *
+ * Membership is read from the epoch rows (`member_a_id` / `member_b_id`),
+ * not from OikosGroups, so it describes who was in that chapter at the time
+ * — a later partner does not inherit earlier chapters, and a member swap
+ * (which relabels roles without a new chapter) changes nothing.
+ *
+ * **Rows older than the group's first chapter** belong to that first
+ * chapter: the earliest epoch has no lower bound. Such rows exist because
+ * leaving a ledger carries the leaver's own rows into the new solo group
+ * the leaver starts — they keep their original `created_at`, which predates
+ * that group's first chapter (the leaver's own). Without this, the leaver
+ * would lose their own rows from the export; with it, only members of that
+ * first chapter see them, so a partner who joins the new group later does
+ * not. (Groups from before chapters were recorded behave the same way: their
+ * earliest rows are attributed to the first recorded chapter.)
+ *
+ * No epoch rows for the group ⇒ nothing matches (fails closed).
+ *
+ * Pass the column as a **table-qualified string** — see
+ * `openChapterCreatedClause` for why an unqualified column fails silently.
+ */
+export function viewerChaptersClause(
+  createdAtColumn: ColRef,
+  groupId: string,
+  viewerId: string,
+): SQL {
+  const c = col(createdAtColumn)
+  return sql`EXISTS (
+    SELECT 1 FROM "GroupEpochs" ve
+    WHERE ve."group_id" = ${groupId}::uuid
+      AND (ve."member_a_id" = ${viewerId}::uuid OR ve."member_b_id" = ${viewerId}::uuid)
+      AND (ve."ended_at" IS NULL OR ${c} < ve."ended_at")
+      AND (
+        ${c} >= ve."started_at"
+        OR ve."started_at" = (
+          SELECT min(fe."started_at") FROM "GroupEpochs" fe
+          WHERE fe."group_id" = ${groupId}::uuid
+        )
+      )
+  )`
+}
+
+/**
  * Build the SQL bounds for a timestamptz column scoped to a calendar window in
  * Asia/Taipei local time. Used by CashTransactions (`transacted_at`) and
  * Settlements (`settled_at`).

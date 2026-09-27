@@ -9,6 +9,8 @@ import { randomUUID } from 'crypto'
 import { encrypt, decrypt, aadFor, type AadContext } from '@/lib/crypto'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { assertMemberInGroup } from '@/lib/auth/member'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
@@ -76,7 +78,12 @@ export const createCar = action(async (input: CreateCarInput): Promise<{ id: str
   if (typeof validated.plate !== 'string') throw actionError('plate_empty')
   const plate = validated.plate
 
-  const { user: viewer, group } = await requireViewerGroup()
+  // Records a purchase CashTransaction when purchasePrice is set, so it goes
+  // through the same past-chapter write gate as every other ledger write.
+  const { user: viewer, group } = await getViewerWriteContext()
+  if (validated.primaryUserId !== null) {
+    assertMemberInGroup(validated.primaryUserId, group, 'primary_user_not_in_group')
+  }
 
   const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -187,6 +194,25 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('asset_not_found')
+
+    // A new primary user must be a current member. The value already stored on
+    // the car is accepted unchanged even when that person is no longer in the
+    // group (removePartner leaves their data in place), so the edit form, which
+    // sends the stored value back, keeps working for those cars.
+    if (
+      validated.primaryUserId !== null &&
+      validated.primaryUserId !== group.memberA &&
+      validated.primaryUserId !== group.memberB
+    ) {
+      const [stored] = await tx
+        .select({ primaryUserId: carDetails.primaryUserId })
+        .from(carDetails)
+        .where(eq(carDetails.assetId, input.id))
+        .limit(1)
+      if (stored?.primaryUserId !== validated.primaryUserId) {
+        throw actionError('primary_user_not_in_group')
+      }
+    }
 
     // #837 — plate trinary: only touch plate_encrypted when the form supplied a
     // value (string = encrypt+set, null = clear). undefined leaves it intact —
@@ -1195,7 +1221,8 @@ export interface CreateHouseInput {
 export const createHouse = action(async (input: CreateHouseInput): Promise<{ id: string }> => {
   'use server'
   const validated = validateHouseInput(input)
-  const { user: viewer, group } = await requireViewerGroup()
+  // Same write gate as createCar: the purchase price records a CashTransaction.
+  const { user: viewer, group } = await getViewerWriteContext()
 
   const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx
