@@ -41,6 +41,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.6.3] - 2026-09-27
+
+主題：**帳本的邊界更穩**——記帳、旅行、匯出都守在自己的章節裡，名下有愛物也能離開帳本，送往錯誤追蹤的資料先清乾淨。
+完整 diff：[v1.6.2...v1.6.3](https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3)
+
 ### 使用者可見變化
 
 - **離開帳本時，名下有愛物（車、房、保險）就會失敗（#1440）**
@@ -69,13 +76,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **本版帶 `0068`–`0071` 四個 migration，必須依序套用（#1435）**
   技術：`0070` 先於 `0069` 套用會讓 drizzle 誤判 `0069` 已跑過而靜默跳過；prod 部署前務必依 `0068 → 0069 → 0070 → 0071` 的順序執行 `npm run db:migrate`。
 - **邀請連結的查找改用雜湊，明文欄位留待後續步驟清除（#1288）**
-  技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 雙寫並回填既有資料，查找改成以雜湊比對，只有尚未回填雜湊的舊列才比對明文；格式不符的 token 在查資料庫前就直接判定無效。明文 token 仍保留，資料暴露面沒有變化，所以不放進 Security（見門檻說明）。
+  技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 新增欄位並回填既有資料、程式同時雙寫，查找改成以雜湊比對，只有尚未回填雜湊的舊列才比對明文；格式不符的 token 在查資料庫前就直接判定無效。明文 token 仍保留，資料暴露面沒有變化，所以不放進 Security（見門檻說明）。
 
 ### Security
 
 - **多項寫入操作限定在目前章節（#1290）**
   使用者：操作流程不變（接受邀請時的拒絕見上方使用者可見變化）。
-  技術：記帳、收入、結算、油耗的編輯與刪除，以及旅行的結束、編輯、刪除與旅行支出的新增／編輯／刪除，改為在交易內以 `FOR SHARE` 鎖住目前章節的 row、確認仍是同一章節後才寫入；愛物建立與定期支出／收入確認改走過去章節的寫入閘門（沒有交易內鎖）；章節結束的動作（離開帳本、移除夥伴、接受邀請）則依序鎖定 group 與章節 row 後才以 DB 時鐘取得邊界，讓兩邊不再競態（#1428、#1431、#1436、#1437）。
+  技術：記帳、收入、結算、油耗的編輯與刪除，以及旅行的結束、編輯、刪除與旅行支出的新增／編輯／刪除，改為在交易內以 `FOR SHARE` 鎖住目前章節的 row、確認仍是同一章節後才寫入；車輛與房屋建立（含購入金額）與定期支出／收入確認改走過去章節的寫入閘門（沒有交易內鎖）；章節結束的動作（離開帳本、移除夥伴、接受邀請）則依序鎖定 group 與章節 row 後才以 DB 時鐘取得邊界，讓兩邊不再競態（#1428、#1431、#1436、#1437）。
 - **交易匯出、記帳描述自動完成與匯入紀錄依章節限縮（#1290）**
   使用者：操作流程不變。
   技術：交易匯出與記帳描述自動完成（`getDescriptionSuggestions`／`listDescriptionSuggestions`）改為只讀取 viewer 待過的每一段章節（加入前、離開後的章節不算）；CSV 匯入的匯入紀錄／匯入筆數則限縮在目前這段開著的章節。匯出另外多送一個稽核事件，CSV 儲存格加上前綴防止試算表公式注入。
@@ -1394,7 +1401,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.3...HEAD
+[1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0
