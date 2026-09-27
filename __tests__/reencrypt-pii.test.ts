@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
+import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -25,6 +26,8 @@ const K1 = '0000000000000000000000000000000000000000000000000000000000000001'
 const K2 = 'aa'.repeat(32)
 
 const SCRIPT_DIR = resolve(__dirname, '../scripts')
+const scriptSrc = () => readFileSync(join(SCRIPT_DIR, 'reencrypt-pii.ts'), 'utf8')
+const coreSrc = () => readFileSync(resolve(__dirname, '../lib/reencryptCore.ts'), 'utf8')
 const DEV_URL = `postgresql://postgres:pw@db.${PROJECT_REFS.dev}.supabase.co:5432/postgres`
 const PROD_POOLER_URL = `postgresql://postgres.${PROJECT_REFS.prod}:pw@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres`
 
@@ -95,21 +98,56 @@ describe('reencrypt-pii — targets', () => {
     ])
   })
 
+  // The SQL lives in lib/reencryptCore.ts (shared with any runtime route); the
+  // mocked DB cannot see it, so these read the source.
   it('selects soft-deleted rows too (no deleted_at filter)', () => {
-    const src = readFileSync(join(SCRIPT_DIR, 'reencrypt-pii.ts'), 'utf8')
-    expect(src).not.toMatch(/deleted_at/)
+    expect(coreSrc()).toMatch(/SELECT \$\{sql\(t\.pk\)\}::text AS pk/)
+    expect(coreSrc()).not.toMatch(/deleted_at/)
+    expect(scriptSrc()).not.toMatch(/deleted_at/)
   })
 
   it('the real UPDATE is a compare-and-swap on the old ciphertext (the mocked DB cannot see the SQL)', () => {
-    const src = readFileSync(join(SCRIPT_DIR, 'reencrypt-pii.ts'), 'utf8')
-    const update = /UPDATE \$\{sql\(t\.table\)\}[\s\S]*?`/.exec(src)?.[0] ?? ''
+    const update = /UPDATE \$\{sql\(t\.table\)\}[\s\S]*?`/.exec(coreSrc())?.[0] ?? ''
     expect(update).toMatch(/WHERE \$\{sql\(t\.pk\)\}::text = \$\{pk\} AND \$\{sql\(t\.column\)\} = \$\{prev\}/)
   })
 
-  it('does not re-implement the cipher (#881): no node:crypto cipher calls in the script', () => {
-    const src = readFileSync(join(SCRIPT_DIR, 'reencrypt-pii.ts'), 'utf8')
-    expect(src).not.toMatch(/createCipheriv|createDecipheriv|aes-256-gcm/)
-    expect(src).toMatch(/from '\.\.\/lib\/crypto\.ts'/)
+  it('the script writes no SQL of its own: every query is in the shared core', () => {
+    // (The header comment may describe the UPDATE; what matters is no tagged SQL template.)
+    expect(scriptSrc()).not.toMatch(/\bsql\s*(<[^>]*>)?`/)
+    expect(scriptSrc()).not.toMatch(/(SELECT|UPDATE|INSERT|DELETE)[^\n]*\$\{/)
+    expect(scriptSrc()).not.toMatch(/from 'postgres'|import\('postgres'\)/)
+    expect(scriptSrc()).toMatch(/from '\.\.\/lib\/reencryptCore\.ts'/)
+  })
+
+  it('does not re-implement the cipher (#881): no node:crypto cipher calls in the script or the core', () => {
+    for (const src of [scriptSrc(), coreSrc()]) {
+      expect(src).not.toMatch(/createCipheriv|createDecipheriv|aes-256-gcm/)
+    }
+    expect(coreSrc()).toMatch(/from '\.\/crypto\.ts'/)
+  })
+
+  it('the core is loadable by Node type stripping: relative .ts imports only, no @/ alias', () => {
+    const specifiers = [...coreSrc().matchAll(/from '([^']+)'/g)].map((m) => m[1])
+    expect(specifiers.length).toBeGreaterThan(0)
+    for (const s of specifiers) expect(s).toMatch(/^\.\.?\/.*\.ts$/)
+  })
+})
+
+describe('reencrypt-pii — runs under plain node', () => {
+  it('no arguments → usage GuardError, exit 1, no module/syntax error', () => {
+    // A clean env: no ENCRYPTION_* (the vitest config sets one) and nothing else
+    // the script could pick up.
+    const env: NodeJS.ProcessEnv = { PATH: process.env.PATH ?? '', NODE_ENV: 'test' }
+    const r = spawnSync(
+      process.execPath,
+      ['--disable-warning=MODULE_TYPELESS_PACKAGE_JSON', 'scripts/reencrypt-pii.ts'],
+      { cwd: resolve(__dirname, '..'), env, encoding: 'utf8', timeout: 30_000 },
+    )
+    expect(r.error).toBeUndefined()
+    expect(r.status).toBe(1)
+    expect(r.stdout).toBe('')
+    expect(r.stderr.trim()).toBe('reencrypt-pii: --target=dev|prod is required')
+    expect(r.stderr).not.toMatch(/ERR_|SyntaxError|Cannot find|ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX/)
   })
 })
 
