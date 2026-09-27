@@ -130,11 +130,18 @@ describe('encrypted-column writes in actions/', () => {
     expect(found.sort()).toEqual(registered.sort())
   })
 
-  it('only actions/asset.ts and actions/invoice.ts import lib/crypto (outside tests)', () => {
+  // lib/reencryptCore.ts (#1287) is the shared re-encrypt core: it writes
+  // through raw SQL compare-and-swap with its own aadFor per row, and is
+  // covered by __tests__/reencrypt-pii.test.ts. It imports `./crypto.ts` with
+  // the extension (Node type stripping), which the old pattern did not see —
+  // failure looked like a new importer passing this guard silently.
+  it('only actions/asset.ts, actions/invoice.ts and lib/reencryptCore.ts import lib/crypto (outside tests)', () => {
     const importers = ['actions', 'app', 'lib', 'components']
       .flatMap((d) => sourceFiles(d))
       .filter((f) => f !== join('lib', 'crypto.ts'))
-      .filter((f) => /from '@\/lib\/crypto'|from '\.\.?\/.*crypto'/.test(readFileSync(join(ROOT, f), 'utf8')))
-    expect(importers.sort()).toEqual([join('actions', 'asset.ts'), join('actions', 'invoice.ts')])
+      .filter((f) =>
+        /from '@\/lib\/crypto(?:\.ts)?'|from '\.\.?\/(?:[^']*\/)?crypto(?:\.ts)?'/.test(readFileSync(join(ROOT, f), 'utf8')),
+      )
+    expect(importers.sort()).toEqual([join('actions', 'asset.ts'), join('actions', 'invoice.ts'), join('lib', 'reencryptCore.ts')])
   })
 })
