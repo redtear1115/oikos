@@ -23,5 +23,20 @@
       "mcp__claude_ai_Sentry__search_issues",
       "mcp__claude_ai_Sentry__search_events"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/require-changelog.sh",
+            "timeout": 20,
+            "statusMessage": "Checking CHANGELOG entry before merge"
+          }
+        ]
+      }
+    ]
   }
 }
