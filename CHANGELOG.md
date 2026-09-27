@@ -57,7 +57,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **帳號刪除的兩個邊界案例（#1377、#1433）**
   技術：離開過配對的使用者刪除帳號時，profile 無法刪除的情況改為 tombstone 退路而不是每天重試失敗（`0068`）；刪除處理程序在鎖定後重新掃描使用者當下所在的群組，避免在等鎖期間完成的 `leaveGroup`／`acceptInvite` 讓新群組被漏刪（`0071`）。
 - **同時建立帳本與接受邀請不再留下兩個開著的章節（#1432）**
-  技術：`createGroup` 與 `acceptInvite` 都先取該使用者 `Profiles` row 的 `FOR NO KEY UPDATE` 鎖再重新讀一次現況；兩者競態時，先取得鎖的一方提交後，後取得鎖的一方會讀到剛建立的章節並直接沿用，不再各自插入一筆 GroupEpochs。
+  技術：`createGroup` 與 `acceptInvite` 都先取該使用者 `Profiles` row 的 `FOR NO KEY UPDATE` 鎖再重新讀一次現況；兩者競態時，後取得鎖的一方會讀到對方的結果：createGroup 直接沿用剛加入的帳本，acceptInvite 則重跑一次、把剛建立的單人章節一起結束，不再各自插入一筆 GroupEpochs。
 - **抑制 Android 殼的 `<html>` hydration 警告（#1424）**
   技術：Android SystemBars plugin 在 hydrate 前就把 `--safe-area-inset-*` 寫進 `document.documentElement.style`，`app/layout.tsx`／`app/global-error.tsx` 的 `<html>` 補上 `suppressHydrationWarning`，只影響這一層自己的屬性檢查。
 - **新增 PII 欄位重新加密腳本（#1287 S3）**
@@ -69,12 +69,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **本版帶 `0068`–`0071` 四個 migration，必須依序套用（#1435）**
   技術：`0070` 先於 `0069` 套用會讓 drizzle 誤判 `0069` 已跑過而靜默跳過；prod 部署前務必依 `0068 → 0069 → 0070 → 0071` 的順序執行 `npm run db:migrate`。
 - **邀請連結的查找改用雜湊，明文欄位留待後續步驟清除（#1288）**
-  技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 雙寫並回填既有資料，查找邏輯改成雜湊優先、找不到再退回明文比對；格式不符的 token 在查資料庫前就直接判定無效。這步本身還沒清掉明文 `token` 欄位（留給 I3c/I3d），DB 裡實際存的資料沒有變化，所以不放進 Security（見門檻說明）。
+  技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 雙寫並回填既有資料，查找改成以雜湊比對，只有尚未回填雜湊的舊列才比對明文；格式不符的 token 在查資料庫前就直接判定無效。明文 token 仍保留，資料暴露面沒有變化，所以不放進 Security（見門檻說明）。
 
 ### Security
 
 - **多項寫入操作限定在目前章節（#1290）**
-  技術：記帳、收入、結算、油耗的編輯與刪除，以及旅行的建立、編輯、刪除與新增支出，改為在交易內鎖定目前章節、以 DB 時鐘讀取邊界後才寫入；愛物建立與定期支出／收入確認則改為讀取目前章節的寫入閘門（沒有交易內鎖，屬於較輕量的檢查）；章節結束的動作（離開帳本、移除夥伴、接受邀請）本身也統一走同一套鎖與邊界，避免這些寫入與章節結束彼此競態（#1428、#1431、#1436、#1437）。
+  使用者：操作流程不變（接受邀請時的拒絕見上方使用者可見變化）。
+  技術：記帳、收入、結算、油耗的編輯與刪除，以及旅行的結束、編輯、刪除與旅行支出的新增／編輯／刪除，改為在交易內以 `FOR SHARE` 鎖住目前章節的 row、確認仍是同一章節後才寫入；愛物建立與定期支出／收入確認改走過去章節的寫入閘門（沒有交易內鎖）；章節結束的動作（離開帳本、移除夥伴、接受邀請）則依序鎖定 group 與章節 row 後才以 DB 時鐘取得邊界，讓兩邊不再競態（#1428、#1431、#1436、#1437）。
 - **交易匯出、記帳描述自動完成與匯入紀錄依章節限縮（#1290）**
   使用者：操作流程不變。
   技術：交易匯出與記帳描述自動完成（`getDescriptionSuggestions`／`listDescriptionSuggestions`）改為只讀取 viewer 待過的每一段章節（加入前、離開後的章節不算）；CSV 匯入的匯入紀錄／匯入筆數則限縮在目前這段開著的章節。匯出另外多送一個稽核事件，CSV 儲存格加上前綴防止試算表公式注入。
