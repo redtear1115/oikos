@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 技術變更
+
+- **重新加密的核心抽成共用模組（#1287）**
+  使用者：無可見變化。
+  技術：`scripts/reencrypt-pii.ts` 的 preflight／compare-and-swap 與 SQL 移到 `lib/reencryptCore.ts`，供之後在 preview runtime 內輪替 prod 金鑰時共用同一份；腳本行為不變，ops-runbook 補上「本機標成 prod 的 env 檔其實是 dev 金鑰」的陷阱。
 
 ## [1.6.3] - 2026-09-27
 
