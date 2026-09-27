@@ -1,12 +1,11 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { trips, groupEpochs, tripExpenses, cashTransactions, oikosGroups } from '@/lib/db/schema'
+import { trips, groupEpochs, oikosGroups } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { openEpochClause } from '@/lib/db/queries/_predicates'
 import { lockOpenEpochForWrite } from '@/lib/db/queries/epoch'
-import { buildTripSummaries } from '@/lib/tripSummary'
+import { foldTripIntoLedger } from '@/lib/trip/endTripInTx'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import {
@@ -137,22 +136,6 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
     const openEpoch = await lockOpenEpochForWrite(tx, group.id)
     if (!openEpoch || openEpoch.id !== row.epochId) throw actionError('active_trip_not_found')
 
-    // Fold the isolated trip ledger into the main ledger via 0–2 summary
-    // CashTransactions. recalcGroupBalance picks them up alongside existing
-    // settled rows. See lib/tripSummary.ts for the splitRatioA math.
-    const expenses = await tx
-      .select({
-        amount: tripExpenses.amount,
-        paidBy: tripExpenses.paidBy,
-        splitType: tripExpenses.splitType,
-        splitRatio: tripExpenses.splitRatio,
-      })
-      .from(tripExpenses)
-      .where(and(
-        eq(tripExpenses.tripId, input.tripId),
-        isNull(tripExpenses.deletedAt),
-      ))
-
     // Split with the members as they are inside this transaction, not as
     // they were when the viewer's context was resolved before it.
     const [members] = await tx
@@ -162,32 +145,20 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
       .limit(1)
     if (!members) throw actionError('active_trip_not_found')
 
-    const summaries = buildTripSummaries({
-      expenses,
-      memberA: members.memberA,
-      memberB: members.memberB,
+    // Fold the isolated trip ledger into the main ledger via 0–2 summary
+    // CashTransactions and recalc the balance — shared with acceptInvite,
+    // which ends the inviter's active trip the same way (#1438).
+    const { expenseCount, summaryCount } = await foldTripIntoLedger(tx, {
+      trip: { id: row.id, name: row.name, groupId: group.id },
+      members,
+      transactedAt: row.endedAt ?? new Date(),
     })
 
-    let firstRecord = false
-    if (summaries.length > 0) {
-      const endedAt = row.endedAt ?? new Date()
-      await tx.insert(cashTransactions).values(summaries.map((s) => ({
-        groupId: group.id,
-        paidBy: s.paidBy,
-        amount: s.amount,
-        splitType: s.splitType,
-        splitRatioA: s.splitRatioA,
-        description: `${row.name} 結算`,
-        category: 'entertainment',
-        status: 'settled' as const,
-        transactedAt: endedAt,
-        tripId: row.id,
-      })))
-      await recalcGroupBalance(group.id, tx)
-      firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
-    }
+    const firstRecord = summaryCount > 0
+      ? await isUserFirstNonDeletedRecord(tx, user.id, group.id)
+      : false
 
-    return { row, expenseCount: expenses.length, firstRecord }
+    return { row, expenseCount, firstRecord }
   })
 
   revalidatePath('/trips')

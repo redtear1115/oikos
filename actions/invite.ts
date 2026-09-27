@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { groupEpochs, groupInvites, oikosGroups, profiles } from '@/lib/db/schema'
+import { groupEpochs, groupInvites, oikosGroups, profiles, trips } from '@/lib/db/schema'
 import {
   classifyGroupClaimMiss,
   classifyUnclaimableInvite,
@@ -14,11 +14,12 @@ import {
   type InviteAcceptError,
 } from '@/lib/invite'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
-import { captureServer } from '@/lib/analytics/server'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import { and, eq, gt, inArray, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
 import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { hasActiveTrip } from '@/lib/db/queries/trips'
+import { foldTripIntoLedger } from '@/lib/trip/endTripInTx'
 import { action } from '@/lib/action-errors'
 
 export type InvitePreview =
@@ -255,9 +256,20 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
   // for this person while a pass holds it; one retry is expected to be
   // enough, and the bound only stops a loop that should not exist.
   let soloLedgerAppeared = false
+  // #1438 — set when the inviter's trip row is held by a trip writer (see the
+  // NOWAIT lock below). Same recovery: roll back, run again.
+  let tripRowBusy = false
   const MAX_ATTEMPTS = 3
 
-  const acceptOnce = () => db.transaction(async (tx) => {
+  /** What the transaction reports for analytics once it has committed. */
+  type EndedTrip = {
+    defaultCurrency: string | null
+    startDate: string
+    endDate: string | null
+    expenseCount: number
+  }
+
+  const acceptOnce = () => db.transaction(async (tx): Promise<{ endedTrips: EndedTrip[]; inviterFirstRecord: boolean }> => {
     // Read before the locks; they are locked with the invite's group below,
     // and re-read once the locks are held.
     const otherGroupIds = await otherSoloGroupIds(tx)
@@ -329,6 +341,55 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
       }
     }
 
+    // #1438 — the inviter's side. Their solo chapter closes below, and an
+    // active trip in it would be stranded there: "end trip" answers
+    // `active_trip_not_found`, new trip expenses `trip_not_found`, and its
+    // spending never reaches the ledger — with nothing in any log. So the
+    // accept ends it, in this transaction, as if the inviter had pressed "end
+    // trip" just before inviting (decision (b) on #1438). The accepter's own
+    // active trip is still refused above; that one is theirs to end.
+    //
+    // Lock order. Trip writers (endTrip, updateTrip, softDeleteTrip, the
+    // trip-expense writes) take the trip row and then this chapter row FOR
+    // SHARE. This transaction already holds the chapter row, so the trip row
+    // comes second here — the reverse order — and is taken NOWAIT. Once the
+    // chapter row is ours, whoever holds one of its trip rows is a writer
+    // that is waiting (or about to wait) for the chapter row; waiting for it
+    // would be a certain deadlock, which Postgres breaks by aborting one side
+    // with 40P01 (a generic error for that user). Instead this rolls back and
+    // runs again (the loop below): the writer then gets the chapter row and
+    // commits in the old chapter, and the next pass sees its result — an
+    // endTrip's trip is no longer active, an expense is folded in, a rename
+    // is used in the summary. Taking the trip rows before the group lock
+    // instead would put them ahead of lockForEpochClose's order, and the
+    // account-deletion processor deletes Trips after locking the group.
+    //
+    // Failure looks like (if this is reordered to wait): an accept racing the
+    // inviter's own trip edit fails after ~1s (deadlock_timeout) with a
+    // generic error, or the edit does; nothing is written either way.
+    const inviteGroupKey = invite.groupId.toLowerCase()
+    const inviterEpoch = lock.openEpochs.get(inviteGroupKey)
+    const inviterGroup = lock.groups.get(inviteGroupKey)
+    let inviterTrips: Array<{ id: string }> = []
+    if (inviterEpoch && inviterGroup) {
+      try {
+        inviterTrips = await tx
+          .select({ id: trips.id })
+          .from(trips)
+          .where(and(
+            eq(trips.groupId, invite.groupId),
+            eq(trips.epochId, inviterEpoch.id),
+            eq(trips.status, 'active'),
+            isNull(trips.deletedAt),
+          ))
+          .orderBy(trips.id)
+          .for('no key update', { noWait: true })
+      } catch (e) {
+        if (pgErrorCode(e) === '55P03') tripRowBusy = true
+        throw e
+      }
+    }
+
     // #1288 — the claim. It runs right after the locks and it is atomic: one
     // conditional UPDATE that only matches while the invite is still
     // unaccepted, unrevoked and unexpired at the boundary (DB clock). The
@@ -359,6 +420,61 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
         .where(eq(groupInvites.id, invite.id))
         .limit(1)
       throw new Error(classifyUnclaimableInvite(current ?? null))
+    }
+
+    // #1438 — end the inviter's active trips (locked above) and fold them
+    // into the solo chapter that is about to close. Before the group row is
+    // re-seated: the summaries split with the solo chapter's members (the
+    // locked group row — member_b is still NULL), and the balance is
+    // recalculated for that chapter (structurally 0 while solo).
+    //
+    // One instant for every write: the boundary minus 1µs. It is the last
+    // instant of the closing chapter (epochs are [started_at, ended_at) and
+    // ended_at is the boundary), so `created_at` of the summary rows is in
+    // that chapter by construction — not by comparing two clock reads, and
+    // not by the column default (`now()`, this transaction's start, which
+    // would also land before the boundary but only because of when it was
+    // read). Microseconds are Postgres' resolution, so nothing fits between.
+    //
+    // End date: the one the trip was planned with, unless that is after the
+    // accept day — then the accept day (UTC, as the end-trip sheet's default
+    // computes "today"). Never before the start date.
+    const endedTrips: EndedTrip[] = []
+    let inviterFirstRecord = false
+    if (inviterTrips.length > 0 && inviterGroup) {
+      const endedAt = sql`(${boundary} - interval '1 microsecond')`
+      const endDay = sql`((${endedAt}) AT TIME ZONE 'UTC')::date`
+      const ended = await tx
+        .update(trips)
+        .set({
+          status: 'ended',
+          endedAt,
+          endDate: sql`GREATEST(${trips.startDate}, LEAST(COALESCE(${trips.endDate}, ${endDay}), ${endDay}))`,
+        })
+        .where(and(
+          inArray(trips.id, inviterTrips.map((t) => t.id)),
+          eq(trips.status, 'active'),
+        ))
+        .returning()
+      let summaryCount = 0
+      for (const trip of ended) {
+        const folded = await foldTripIntoLedger(tx, {
+          trip: { id: trip.id, name: trip.name, groupId: invite.groupId },
+          members: { memberA: inviterGroup.memberA, memberB: inviterGroup.memberB },
+          transactedAt: endedAt,
+          createdAt: endedAt,
+        })
+        summaryCount += folded.summaryCount
+        endedTrips.push({
+          defaultCurrency: trip.defaultCurrency,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          expenseCount: folded.expenseCount,
+        })
+      }
+      if (summaryCount > 0) {
+        inviterFirstRecord = await isUserFirstNonDeletedRecord(tx, invite.invitedBy, invite.groupId)
+      }
     }
 
     // Bump the epoch as the partner joins — relevant for groups that were
@@ -432,19 +548,42 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
       memberAId: updatedGroup.memberA,
       memberBId: user.id,
     })
+
+    return { endedTrips, inviterFirstRecord }
   })
 
+  let outcome: Awaited<ReturnType<typeof acceptOnce>>
   for (let attempt = 1; ; attempt++) {
     soloLedgerAppeared = false
+    tripRowBusy = false
     try {
-      await acceptOnce()
+      outcome = await acceptOnce()
       break
     } catch (e) {
-      if (!soloLedgerAppeared) throw e
+      if (!soloLedgerAppeared && !tripRowBusy) throw e
       if (attempt >= MAX_ATTEMPTS) {
-        throw new Error('acceptInvite: a new solo ledger kept appearing under the lock (#1432)')
+        throw new Error(soloLedgerAppeared
+          ? 'acceptInvite: a new solo ledger kept appearing under the lock (#1432)'
+          : 'acceptInvite: the inviter\'s trip kept being written during the accept (#1438)')
       }
     }
+  }
+
+  // #1438 — the same events endTrip sends, keyed on the inviter (the trip is
+  // theirs), with `ended_by` telling the two apart. No trip names, amounts or
+  // ids — the same properties endTrip sends, plus that one.
+  if (outcome.inviterFirstRecord) {
+    await captureServer(invite.invitedBy, 'first_record_created', { via: 'trip_summary' })
+  }
+  for (const t of outcome.endedTrips) {
+    const startMs = new Date(t.startDate).getTime()
+    const endMs = new Date(t.endDate ?? t.startDate).getTime()
+    await captureServer(invite.invitedBy, 'trip_ended', {
+      default_currency: t.defaultCurrency,
+      expense_count: t.expenseCount,
+      duration_days: Math.max(0, Math.round((endMs - startMs) / 86_400_000)),
+      ended_by: 'invite_accept',
+    })
   }
 
   // Invite-funnel conversion (#734): the invitee (member_b) joined. Keyed on
