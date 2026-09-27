@@ -86,7 +86,7 @@ select hash, created_at from drizzle.__drizzle_migrations order by created_at;
 **操作時會踩到的雷（generic，來自 2026-09-27 那次實際執行）：**
 
 - Preview 環境變數如果綁定特定 branch（`--git-branch`），那個 branch 要先存在於遠端才能加變數，否則會回「branch not found」。順序要是：先 push branch → 再加變數 → 再重新部署一次那個 preview；漏了最後一步，該 preview 建置當下還沒有 token，route 只會回 404（看起來像「還沒生效」，其實是建置時序錯了，不是變數沒生效）。
-- Deployment Protection 自己擋下的回應也是 401、也帶著看起來像「錢包被拒絕」的訊息，容易和 route 自己的 token 檢查搞混——那一層是 Vercel 在 route 程式碼跑之前就擋掉的，跟 token 對不對無關，先確認 Deployment Protection bypass 有沒有帶對，再去查 token。
+- Deployment Protection 自己擋下的回應也是 401，格式是 Vercel 自己的 JSON（`{"error":{"code":"401","message":"Protected deployment"}, ...}`），容易和 route 自己的 token 檢查搞混——那一層是 Vercel 在 route 程式碼跑之前就擋掉的，跟 token 對不對無關，看到這個訊息就先確認 Deployment Protection bypass 有沒有帶對，再去查 token。
 - Vercel 的 automation bypass（用來讓一次性 curl 繞過 Deployment Protection 的那個值）要透過 Vercel 的 API 直接寫進本機的 header 檔，不要從後台網頁複製再貼——貼上這種高熵字串很容易在畫面上漏選、多選或多按一次，拿到錯誤長度或空字串卻不會有任何提示。
 - 驗證那份 header 檔時只看**長度與字元類型**（例如逐行印出「欄位名稱＋值的長度」），不要把值本身印出來確認——確認的目的達到了，也沒有把機密留在終端機 scrollback 裡。
 
@@ -102,25 +102,33 @@ select hash, created_at from drizzle.__drizzle_migrations order by created_at;
 4. **在重新加密之前，先刪除或停用「步驟 3 之前建立的每一個部署」**（Production 與 Preview 都要）。失效的樣子：漏刪的舊部署還能接到流量、還在用 k_old 寫入；重新加密跑完之後，這些新寫入又變成一批漏網的 k_old 資料——不會報錯，只會在下一次計數時對不起來，得再跑一次才會補齊，而且沒人會直覺知道要再跑一次。
 5. **依環境跑重新加密（見下方「按環境跑」）**，只有在步驟 4 確認做完之後才開始。
 6. **只看計數（count-only）**，確認每一欄都是 `v1:k_new:`，沒有殘留的舊格式或 legacy。跑一次在重新加密結束後、跑一次在下一步之前再驗一次。失效的樣子：計數裡混著 `v1:k_old:` 或 legacy 格式，代表某個環境沒切乾淨、或步驟 4 漏刪了部署，這時不要往下一步走。
-7. **只有在步驟 6 的計數確認過，才把 k_old 從環境變數移除**。失效的樣子：太早移除 k_old，任何還沒被步驟 5 覆蓋到的舊列（漏跑、漏刪部署造成的漏網列）從此永久解不開——資料庫裡沒有明文備份，這一步做錯無法回頭。
+7. **只有在步驟 6 的計數確認過、且 #1466（密文出現在 client payload）已經解決之後，才把 k_old 從環境變數移除**。失效的樣子：漏跑、漏刪部署造成的舊列還沒被步驟 5 覆蓋到就先移除 k_old，那些列從此解不開，但這時還沒到不可逆——把 k_old 從 secrets image 加回 `ENCRYPTION_KEYS` 就能救回來（見下方「回退」）；#1466 沒解決就移除 k_old，則是瀏覽器端可能還留著的 k_old 密文副本從此連 app 自己都讀不到，這一步也還沒到不可逆，只要 k_old 還在 secrets image 裡都能加回來。真正不可逆的是**步驟 8 把 k_old 銷毀之後**才移除——那時才沒有退路。
 8. **k_old 移除後仍要留在 secrets image 裡離線保存**，直到「每日備份保留期、PITR window、任何操作者手動 `pg_dump`」這三者裡最晚的那個都過了才銷毀。失效的樣子：從備份或 PITR 還原出來的資料是舊快照，裡面的密文仍是 k_old 格式；如果 k_old 已經銷毀，還原出來的那份資料就永久解不開，備份形同白做。
 
 **回退**：步驟 7 之前，把 write kid 指回 k_old（rollback floor 隨之調整回去）、重跑重新加密即可；步驟 7 之後，從 secrets image 把 k_old 加回 `ENCRYPTION_KEYS`（k_old 的位元組本身永遠沒被丟棄，只是先不在環境變數裡）。
 
 **按環境跑（步驟 5 的細節）：**
 
-- **dev**：`scripts/reencrypt-pii.ts --target=dev`，用掛載在 secrets image 上的 env 檔案；本機拿得到 dev 金鑰，preflight／apply 都能直接跑。
-- **prod**：prod 金鑰只活在 Vercel 裡（見本節開頭「陷阱」），本機或 dmg 裡任何標成 prod 的 env 檔實際放的都是 dev 金鑰——拿它們對 prod 跑腳本，preflight 會對每一列都失敗，不是資料壞了，是金鑰拿錯了。對 prod 的重新加密要用上面「prod 重新加密：runtime route」那個模式，**或者**——在 k_new 已經備份進 secrets image 之後——改用一份**只含 k_new（沒有 k_old）**的 env 檔跑腳本；這份 env 檔只放 prod DB 連線字串、`ENCRYPTION_KEYS`（只有 k_new）與 `ENCRYPTION_WRITE_KID=k_new`，不放 `ENCRYPTION_KEY`。這個「k-only env 檔 dry-run 全部 current、preflight 0 failed」的結果同時也是在驗證 secrets image 裡備份的 k_new 真的能解開全部 prod 資料——等於免費做了一次備份校驗。
+- **dev**：
+
+  ```
+  node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/reencrypt-pii.ts \
+    --target=dev --env-file=<secrets image 上的 dev env 檔>
+  ```
+
+  先 dry-run，確認 preflight 全過、`toRewrite` 數字合理，再加 `--apply`。腳本要求一定要帶 `--env-file`（沒帶會直接被參數解析擋掉），且 dev env 檔本身就同時放 k_old 與 k_new——本機拿得到 dev 的完整 keyring，preflight／apply 都能直接跑。
+- **prod**：prod 金鑰只活在 Vercel 裡（見本節開頭「陷阱」），本機或 dmg 裡任何標成 prod 的 env 檔實際放的都是 dev 金鑰——拿它們對 prod 跑腳本，preflight 會對每一列都失敗，不是資料壞了，是金鑰拿錯了。對 prod 的重新加密（也就是實際的步驟 5）要用上面「prod 重新加密：runtime route」那個模式：preflight（`lib/reencryptCore.ts` 的 `reencrypt`）會先解開每一列，任何 kid 不在 keyring 裡就被 `lib/crypto.ts` 丟出 `Unknown key id`、preflight 整批中止，所以 prod 步驟 5 用的 keyring **必須同時含 k_old 與 k_new**——今天的 prod 恰好做不到這件事（k1 從沒被匯出過 Vercel），這正是要用 runtime route 而不是本機腳本的原因。
+  **只含 k_new 的 env 檔，只能用在重新加密**之後**的備份校驗**：在 k_new 已經備份進 secrets image、且步驟 5（runtime route）已經把所有列轉成 `v1:k_new:` 之後，用一份只放 prod DB 連線字串、`ENCRYPTION_KEYS`（只有 k_new）與 `ENCRYPTION_WRITE_KID=k_new`（不放 `ENCRYPTION_KEY`）的 env 檔跑 dry-run，預期結果是全部 `current`、`preflight_failed=0`——這證明的是「secrets image 裡備份的 k_new 真的能解開全部 prod 資料」，不是在做步驟 5 本身；如果這時 DB 裡還混著任何 k_old 或 legacy 列，這份只含 k_new 的 keyring 一樣會在那些列上 preflight 失敗，因為它本來就解不開 k_old。
 
 ### 緊急輪替
 
 順序跟上面規劃內的 8 步**完全一樣**（尤其步驟 4 一定要在重新加密之前做完），另外多這些：
 
 - **同時輪替每一個跟這把加密金鑰放在一起的其他機密**：DB 密碼（`DATABASE_URL`／`DATABASE_URL_DIRECT`，包含所有本機 env 檔）、Supabase service key、其他 Vercel 機密、Vercel 團隊成員與 token。失效的樣子：只換了加密金鑰，其他放在同一份 dmg／同一個密碼管理器條目附近的機密沒有跟著換——攻擊者仍握有等價的存取路徑，輪替沒有真正把人趕出去。
-- **唯讀的 persistence audit**：`pg_roles`、`cron.job`、`pg_proc`（找 SECURITY DEFINER functions）、triggers、RLS policies、`auth.users`／`auth.identities`。目的是找有沒有被植入的存取路徑，這一步全程唯讀，不要邊查邊改。
-- **是否通知受影響的人是使用者要做的決定**，不是自動化流程能自己判斷的一步——資料涵蓋兒童的身分證字號等個資，通知義務的判斷留給人。
+- **唯讀的 persistence audit**：`pg_roles`、`cron.job`、`pg_proc`（找 SECURITY DEFINER functions）、triggers、RLS policies、`auth.users`／`auth.identities`。目的是找有沒有被植入的存取路徑，這一步全程唯讀，不要邊查邊改。失效的樣子：邊查邊改（例如查到可疑的 trigger 就順手刪掉）會把「調查」跟「處置」混在一起，事後說不清楚攻擊者留下的東西哪些是自己動手清掉的、哪些原本就不存在，稽核與後續通報都會失去依據。
+- **是否通知受影響的人是使用者要做的決定**，不是自動化流程能自己判斷的一步——資料涵蓋兒童的身分證字號等個資，通知義務的判斷留給人。失效的樣子：自動化流程自己決定「這次影響不大不用通知」或反過來自動發出通知，兩種都是拿走了本該由人承擔的判斷與責任。
 - **洩漏當下已經存在的備份、資料庫 dump、瀏覽器快取裡的密文，都是用洩漏的那把金鑰加密的**——輪替救不回它們；這些副本永遠暴露，直到它們自然過期或被找出來個別處理。
-- **從 Vercel 移除 k_old（步驟 7）要等 #1466（密文出現在 client payload）解決之後才能做**——在那之前，瀏覽器端可能還留著用 k_old 加密的密文副本，移除 k_old 會讓那些副本從此連 app 自己都解不開，等於自己把還能挽回的東西變成不能挽回。
+- **從 Vercel 移除 k_old（步驟 7）要等 #1466（密文出現在 client payload）解決之後才能做**——在那之前，RSC payload 或瀏覽器快取裡可能還留著用 k_old 加密的密文副本，任何拿到那份洩漏金鑰的人都還解得開它們；rotation 本身碰不到瀏覽器端的這些副本，app 也從來不會去解密它們，所以移除 k_old 前，這批副本的暴露狀態不會因為 rotation 而改變。
 
 ### 規則
 
@@ -130,7 +138,16 @@ select hash, created_at from drizzle.__drizzle_migrations order by created_at;
 
 ### rollback floor 現況（S2 → S3b）
 
-S2 導入時的回退方式是「把 `ENCRYPTION_WRITE_KID` 拿掉、redeploy／restart，資料照樣以 legacy 格式寫入」——這個回退方式**只在 legacy 格式還沒退場之前**成立。legacy 退場（S3b：拿掉 legacy 的 encode／decode 分支）在另一個 PR 做，一旦它上線，rollback floor 就上升到「S3b 上線後的第一個部署」，S2 那種「拿掉 write kid 就能退回」的做法**不再適用**——`encrypt` 在沒有 write kid 時會直接 throw，不會退回成 legacy 寫入。之後任何回退都只能是「把 write kid 指到另一個仍在 keyring 裡的 kid」，不能指望退回沒有 kid 的狀態。
+S2 導入時的回退方式是「把 `ENCRYPTION_WRITE_KID` 拿掉、redeploy／restart，資料照樣以 legacy 格式寫入」——這個回退方式**只在 legacy 格式還沒退場之前**成立。legacy 退場（S3b：拿掉 legacy 的 encode／decode 分支）在另一個 PR 做，一旦它上線，rollback floor 就上升到「**第一個帶著 `ENCRYPTION_WRITE_KID` 設定值上線的部署**」（回退到這個部署或更新的版本是安全的，回退到更早、沒有 write kid 的部署才是問題），S2 那種「拿掉 write kid 就能退回」的做法**不再適用**——`encrypt` 在沒有 write kid 時會直接 throw，不會退回成 legacy 寫入。之後任何回退都只能是「把 write kid 指到另一個仍在 keyring 裡的 kid」，不能指望退回沒有 kid 的狀態。
+
+### dev 演練（尚未執行）
+
+在對 prod 真正輪替之前，規劃是先在 dev 上完整跑一次上面 8 步，驗證 runbook 本身寫得對，而不是直接拿 prod 試錯。演練的結局跟一般 rotation 不一樣：**dev 這次的 k_new 會變成 dev 之後永久使用的金鑰**，不是跑完就丟——所以步驟 8 的「k_old 銷毀」在 dev 演練裡照樣走完，k_old 不會被刻意留著等 rollback 之外的理由。
+
+- 8 步全部在 dev 上跑一次，每一個「使用者跑的環境／金鑰操作」與每一次 `--apply` 都需要使用者自己動手，不代跑。
+- 驗收標準：跑完後 dev 的計數顯示每一欄都是 `v1:k_new:`（沒有 legacy、沒有 k_old 殘留），並且每一種欄位型別都至少「顯示」一筆驗證解密正常。
+- k_new 演練完之後同時留在 secrets image（離線備份）與 `.env.local`（讓本機 `npm run dev` 能繼續寫入／解密）兩處。
+- 這次演練跟前面「prod 重新加密：runtime route」不是同一件事——dev 本機本來就拿得到完整 dev keyring，不需要 runtime route，直接用「按環境跑」段落裡 dev 那條腳本指令即可。
 
 ### 現況（generic，不含金鑰值）
 
