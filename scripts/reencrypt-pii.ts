@@ -8,6 +8,15 @@
 // `v1:<ENCRYPTION_WRITE_KID>:…` is decrypted and re-encrypted under the write
 // kid, bound to its own (table, column, primary key) through `aadFor`.
 //
+// It reads only what the app reads: v1 values. Since #1287 S3b the legacy
+// 3-part format (`iv:tag:ct`, no AAD) is not accepted by `lib/crypto.ts`, so
+// this script can no longer convert legacy rows either — it was run on dev and
+// prod before S3b shipped, and both were at 0 legacy rows.
+// What a leftover legacy row looks like now: preflight fails on that row
+// (`preflight_failed=N`, exit 2) and NOTHING is written, on --apply too. It is
+// not a wrong key and not corrupt data; the only repair is reverting S3b, then
+// running this script, then re-shipping S3b.
+//
 // It imports `lib/crypto.ts` instead of re-implementing the format. #881 was
 // exactly that mistake: a script with its own copy of the cipher code wrote
 // values the app could not read. Here there is one implementation, so if the
@@ -58,7 +67,8 @@
 //
 // The env file must contain:
 //   ENCRYPTION_KEY / ENCRYPTION_KEYS   the keyring, same contract as the app
-//   ENCRYPTION_WRITE_KID               required here (no legacy writes)
+//   ENCRYPTION_WRITE_KID               required (lib/crypto.ts refuses to
+//                                      encrypt without one)
 //   DATABASE_URL_DIRECT                preferred; or DATABASE_URL pointing at the
 //                                      session pooler (the direct host may be
 //                                      IPv6-only)

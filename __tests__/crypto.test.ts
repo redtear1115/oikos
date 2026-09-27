@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { createCipheriv, randomBytes } from 'crypto'
 import { encrypt, decrypt, aadFor, CryptoError, ENCRYPTED_COLUMNS, type AadContext } from '@/lib/crypto'
 
-// vitest.config.ts sets ENCRYPTION_KEY to K1 for every test.
+// vitest.config.ts sets ENCRYPTION_KEY to K1 and ENCRYPTION_WRITE_KID to k1 for every test.
 const K1 = '0000000000000000000000000000000000000000000000000000000000000001'
 const K1_OTHER = '0000000000000000000000000000000000000000000000000000000000000002'
 const K2 = 'aa'.repeat(32)
@@ -12,8 +12,6 @@ const K3 = 'bb'.repeat(32)
 const PK = '6f1c2d3e-4a5b-4c6d-8e7f-001122334455'
 const OTHER_PK = '6f1c2d3e-4a5b-4c6d-8e7f-001122334456'
 const CTX = aadFor('ChildDetails', 'id_number_encrypted', PK)
-
-const LEGACY_RE = /^[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -25,7 +23,11 @@ function setKeyEnv(env: { key?: string; keys?: string; writeKid?: string }) {
   vi.stubEnv('ENCRYPTION_WRITE_KID', env.writeKid ?? '')
 }
 
-/** Hand-rolled legacy ciphertext under an arbitrary key (no AAD). */
+/**
+ * Hand-rolled pre-#1287 legacy ciphertext (`iv:tag:ct`, no AAD) under an
+ * arbitrary key — genuine bytes, exactly what the old code wrote and what an
+ * old dump holds. Retired in S3b: it must never decrypt again.
+ */
 function legacyUnder(keyHex: string, plaintext: string): string {
   const iv = randomBytes(12)
   const c = createCipheriv('aes-256-gcm', Buffer.from(keyHex, 'hex'), iv)
@@ -60,44 +62,86 @@ describe('crypto', () => {
   })
 
   it('throws on tampered auth tag', () => {
-    const [iv, , encrypted] = encrypt('secret', CTX).split(':')
+    const p = v1Parts(encrypt('secret', CTX))
     const fakeTag = 'deadbeefdeadbeefdeadbeefdeadbeef'
-    expect(() => decrypt(`${iv}:${fakeTag}:${encrypted}`, CTX)).toThrow()
-  })
-})
-
-// ── S1: writes stay legacy ─────────────────────────────────────────────────────
-
-describe('crypto — legacy format (S1 default)', () => {
-  it('with only ENCRYPTION_KEY set, encrypt writes the legacy 3-part format', () => {
-    setKeyEnv({ key: K1 })
-    const ct = encrypt('A123456789', CTX)
-    expect(ct).toMatch(LEGACY_RE)
-    expect(decrypt(ct, CTX)).toBe('A123456789')
+    expect(() => decrypt(`v1:${p.kid}:${p.iv}:${fakeTag}:${p.body}`, CTX)).toThrow()
   })
 
-  it('legacy round-trips the empty string and multibyte text', () => {
-    setKeyEnv({ key: K1 })
+  it('round-trips the empty string and multibyte text', () => {
     expect(decrypt(encrypt('', CTX), CTX)).toBe('')
     expect(decrypt(encrypt('陳小白', CTX), CTX)).toBe('陳小白')
   })
+})
 
-  it('a pre-existing legacy row (written by the old code, no AAD) still decrypts', () => {
+// ── S3b: the legacy format is retired (D3) ────────────────────────────────────
+
+describe('crypto — legacy 3-part format is retired (S3b)', () => {
+  /** The message decrypt gives a structurally malformed value. */
+  function malformedMessage(): string {
+    try {
+      decrypt('not:a:ciphertext:at:all:really', CTX)
+    } catch (e) {
+      expect(e).toBeInstanceOf(CryptoError)
+      return (e as Error).message
+    }
+    throw new Error('malformed value decrypted')
+  }
+
+  function rejection(ct: string, ctx: AadContext = CTX): Error {
+    try {
+      decrypt(ct, ctx)
+    } catch (e) {
+      return e as Error
+    }
+    throw new Error('legacy value decrypted')
+  }
+
+  it('encrypt with no ENCRYPTION_WRITE_KID throws — no default kid, no legacy write', () => {
     setKeyEnv({ key: K1 })
-    const existing = legacyUnder(K1, '台北市大安區某路1號')
-    expect(decrypt(existing, aadFor('HouseDetails', 'address_encrypted', PK))).toBe('台北市大安區某路1號')
+    expect(() => encrypt('A123456789', CTX)).toThrow(CryptoError)
+    expect(() => encrypt('A123456789', CTX)).toThrow('ENCRYPTION_WRITE_KID is not set')
+    setKeyEnv({ key: K1, keys: `k2:${K2}` })
+    expect(() => encrypt('A123456789', CTX)).toThrow(CryptoError)
   })
 
-  it('legacy rows still decrypt after v1 writes are on and k2 is in the keyring', () => {
-    const existing = legacyUnder(K1, 'ABC-1234')
-    setKeyEnv({ key: K1, keys: `k2:${K2}`, writeKid: 'k2' })
-    expect(decrypt(existing, aadFor('CarDetails', 'plate_encrypted', PK))).toBe('ABC-1234')
+  it('a genuine legacy value under k1 is rejected exactly like a malformed value', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const expected = malformedMessage()
+    const err = rejection(legacyUnder(K1, '台北市大安區某路1號'), aadFor('HouseDetails', 'address_encrypted', PK))
+    expect(err).toBeInstanceOf(CryptoError)
+    // Same message as any malformed value — not "Unknown key id" and not
+    // "Unable to decrypt value", i.e. it never reached a key lookup or GCM.
+    expect(err.message).toBe(expected)
+    expect(err.message).toBe('Invalid ciphertext format')
   })
 
-  it('legacy never decrypts under any key other than k1', () => {
-    const underK2 = legacyUnder(K2, 'secret')
-    setKeyEnv({ key: K1, keys: `k2:${K2},k3:${K3}` })
-    expect(() => decrypt(underK2, CTX)).toThrow(CryptoError)
+  it('is rejected the same way with or without k1 in the keyring, whatever the write kid', () => {
+    const legacy = legacyUnder(K1, 'ABC-1234')
+    for (const env of [
+      { key: K1 },
+      { key: K1, writeKid: 'k1' },
+      { key: K1, keys: `k2:${K2}`, writeKid: 'k2' },
+      { keys: `k2:${K2}`, writeKid: 'k2' },
+    ]) {
+      setKeyEnv(env)
+      expect(rejection(legacy).message).toBe('Invalid ciphertext format')
+    }
+  })
+
+  it('a 3-part value that is not hex is rejected the same way', () => {
+    expect(rejection('a:b:c').message).toBe('Invalid ciphertext format')
+    expect(rejection('::').message).toBe('Invalid ciphertext format')
+  })
+
+  // The D3 exploit: an AAD-less ciphertext copied out of an old dump, pasted
+  // into any row, decrypted there. It must not — neither as-is nor relabelled.
+  it('an old AAD-less ciphertext pasted into another row does not decrypt', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const fromDump = legacyUnder(K1, 'A123456789')
+    expect(() => decrypt(fromDump, aadFor('Assets', 'name_encrypted', OTHER_PK))).toThrow(CryptoError)
+    expect(() => decrypt(fromDump, aadFor('ChildDetails', 'id_number_encrypted', PK))).toThrow(CryptoError)
+    // Relabelling it as v1:k1 does not revive it: it was sealed without AAD.
+    expect(() => decrypt(`v1:k1:${fromDump}`, aadFor('Assets', 'name_encrypted', OTHER_PK))).toThrow(CryptoError)
   })
 })
 
@@ -155,13 +199,6 @@ describe('crypto — fails closed', () => {
     setKeyEnv({ key: K1, writeKid: 'k1' })
     const ct = encrypt('secret', CTX)
     setKeyEnv({ key: K1_OTHER, writeKid: 'k1' })
-    expect(() => decrypt(ct, CTX)).toThrow(CryptoError)
-  })
-
-  it('wrong key (same kid k1, different bytes) throws — legacy', () => {
-    setKeyEnv({ key: K1 })
-    const ct = encrypt('secret', CTX)
-    setKeyEnv({ key: K1_OTHER })
     expect(() => decrypt(ct, CTX)).toThrow(CryptoError)
   })
 
@@ -225,38 +262,29 @@ describe('crypto — fails closed', () => {
   // Buffer.from(x, 'hex') silently stops at the first bad character, so a
   // lenient parser would decrypt a value with junk appended. Strict regexes
   // reject it before any crypto runs.
-  it('invalid hex appended to the ct throws — legacy and v1', () => {
-    setKeyEnv({ key: K1 })
-    const legacy = encrypt('secret', CTX)
-    expect(() => decrypt(`${legacy}zz`, CTX)).toThrow(CryptoError)
-    expect(() => decrypt(`${legacy}0`, CTX)).toThrow(CryptoError) // odd length
+  it('invalid hex appended to the ct throws', () => {
     setKeyEnv({ key: K1, writeKid: 'k1' })
     const v1 = encrypt('secret', CTX)
     expect(() => decrypt(`${v1}zz`, CTX)).toThrow(CryptoError)
     expect(() => decrypt(`${v1}g0`, CTX)).toThrow(CryptoError)
+    expect(() => decrypt(`${v1}0`, CTX)).toThrow(CryptoError) // odd length
   })
 
   it('uppercase or non-hex iv/tag are rejected', () => {
-    setKeyEnv({ key: K1 })
-    const [iv, tag, body] = encrypt('secret', CTX).split(':')
-    expect(() => decrypt(`${iv.toUpperCase()}:${tag}:${body}`, CTX)).toThrow(CryptoError)
-    expect(() => decrypt(`${iv}:${tag.slice(0, -1)}z:${body}`, CTX)).toThrow(CryptoError)
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const p = v1Parts(encrypt('secret', CTX))
+    expect(() => decrypt(`v1:k1:${p.iv.toUpperCase()}:${p.tag}:${p.body}`, CTX)).toThrow(CryptoError)
+    expect(() => decrypt(`v1:k1:${p.iv}:${p.tag.slice(0, -1)}z:${p.body}`, CTX)).toThrow(CryptoError)
   })
 
   // Without authTagLength, Node accepts a 4-byte prefix of a genuine tag
   // (DEP0182) — a forgery needs ~2^32 tries instead of 2^128. A genuine,
   // truncated tag must be refused.
-  it('a truncated tag throws — legacy', () => {
-    setKeyEnv({ key: K1 })
-    const [iv, tag, body] = encrypt('secret', CTX).split(':')
-    expect(() => decrypt(`${iv}:${tag.slice(0, 8)}:${body}`, CTX)).toThrow(CryptoError)
-    expect(() => decrypt(`${iv}:${tag.slice(0, 24)}:${body}`, CTX)).toThrow(CryptoError)
-  })
-
-  it('a truncated tag throws — v1', () => {
+  it('a truncated tag throws', () => {
     setKeyEnv({ key: K1, writeKid: 'k1' })
     const p = v1Parts(encrypt('secret', CTX))
     expect(() => decrypt(`v1:k1:${p.iv}:${p.tag.slice(0, 8)}:${p.body}`, CTX)).toThrow(CryptoError)
+    expect(() => decrypt(`v1:k1:${p.iv}:${p.tag.slice(0, 24)}:${p.body}`, CTX)).toThrow(CryptoError)
   })
 
   it('wrong part counts throw', () => {
@@ -264,6 +292,7 @@ describe('crypto — fails closed', () => {
     expect(() => decrypt('', CTX)).toThrow(CryptoError)
     expect(() => decrypt('abc', CTX)).toThrow(CryptoError)
     expect(() => decrypt('a:b', CTX)).toThrow(CryptoError)
+    expect(() => decrypt('a:b:c', CTX)).toThrow(CryptoError)
     expect(() => decrypt('a:b:c:d', CTX)).toThrow(CryptoError)
     expect(() => decrypt('v1:k1:a:b:c:d', CTX)).toThrow(CryptoError)
   })
@@ -307,10 +336,11 @@ describe('crypto — AAD binds a v1 value to its row, column and table', () => {
     expect(decrypt(ct, ctxAfterMove)).toBe('A123456789')
   })
 
-  it('a legacy value is not bound (known S1 limitation, removed in S3b)', () => {
-    setKeyEnv({ key: K1 })
-    const ct = encrypt('A123456789', aadFor('ChildDetails', 'id_number_encrypted', PK))
-    expect(decrypt(ct, aadFor('Assets', 'name_encrypted', OTHER_PK))).toBe('A123456789')
+  it('an unbound (legacy, AAD-less) value no longer decrypts in any row — the S1 limitation is gone', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const unbound = legacyUnder(K1, 'A123456789')
+    expect(() => decrypt(unbound, aadFor('ChildDetails', 'id_number_encrypted', PK))).toThrow(CryptoError)
+    expect(() => decrypt(unbound, aadFor('Assets', 'name_encrypted', OTHER_PK))).toThrow(CryptoError)
   })
 
   it('aadFor rejects unknown columns and bad pks', () => {
@@ -322,8 +352,8 @@ describe('crypto — AAD binds a v1 value to its row, column and table', () => {
     expect(() => aadFor('Assets', 'name_encrypted', 'a|b')).toThrow(CryptoError)
   })
 
-  it('encrypt and decrypt refuse a missing or hand-built context, even on the legacy path', () => {
-    setKeyEnv({ key: K1 })
+  it('encrypt and decrypt refuse a missing or hand-built context', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
     const ct = encrypt('x', CTX)
     const forged = { aad: 'anything' } as unknown as AadContext
     expect(() => encrypt('x', undefined as unknown as AadContext)).toThrow(CryptoError)
@@ -348,15 +378,25 @@ describe('crypto — AAD binds a v1 value to its row, column and table', () => {
 // ── keyring parsing ────────────────────────────────────────────────────────────
 
 describe('crypto — keyring env contract', () => {
-  it('works with only ENCRYPTION_KEY set (today\'s deployments)', () => {
-    setKeyEnv({ key: K1 })
+  it('works with ENCRYPTION_KEY as k1 and write kid k1 (dev\'s keyring)', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
     expect(decrypt(encrypt('x', CTX), CTX)).toBe('x')
   })
 
-  it('a duplicate kid in ENCRYPTION_KEYS throws', () => {
-    setKeyEnv({ key: K1, keys: `k2:${K2},k2:${K3}` })
+  it('ENCRYPTION_KEY alone still decrypts v1:k1 (decrypt needs no write kid) but cannot write', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const ct = encrypt('x', CTX)
+    setKeyEnv({ key: K1 })
+    expect(decrypt(ct, CTX)).toBe('x')
     expect(() => encrypt('x', CTX)).toThrow(CryptoError)
-    expect(() => decrypt(legacyUnder(K1, 'x'), CTX)).toThrow(CryptoError)
+  })
+
+  it('a duplicate kid in ENCRYPTION_KEYS throws', () => {
+    setKeyEnv({ key: K1, writeKid: 'k1' })
+    const ct = encrypt('x', CTX)
+    setKeyEnv({ key: K1, keys: `k2:${K2},k2:${K3}`, writeKid: 'k1' })
+    expect(() => encrypt('x', CTX)).toThrow(CryptoError)
+    expect(() => decrypt(ct, CTX)).toThrow(CryptoError)
   })
 
   it('k1 inside ENCRYPTION_KEYS throws (k1 is ENCRYPTION_KEY)', () => {
