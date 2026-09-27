@@ -240,6 +240,58 @@ describe('leaveGroup', () => {
     expect(params).toEqual(expect.arrayContaining(['car-1', 'car-2']))
   })
 
+  // #1442 — CI-level guard (no DB) that leaveGroup still issues a clearing
+  // statement for every link audited as able to cross ledgers. The real
+  // behaviour is proven against Postgres in
+  // __tests__/actions/leaveGroup.crossLedgerLinks.test.ts (local only).
+  function leaveGroupQueries(moving: { house?: string[]; car?: string[]; insurance?: string[] }) {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult((moving.house ?? []).map((assetId) => ({ assetId })))
+    queueDbResult((moving.car ?? []).map((assetId) => ({ assetId })))
+    queueDbResult((moving.insurance ?? []).map((assetId) => ({ assetId })))
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
+    queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
+    queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
+    queueDbResult([{ balance: 0 }])
+    queueDbResult([{ n: 0 }])
+    queueDbResult([{ n: 0 }])
+    queueDbResult([{ id: 'grp-new' }])
+    queueDbResult([])
+    queueDbResult([{ id: 'epoch-new' }])
+    return async () => {
+      expect(await leaveGroup()).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
+      const dialect = new PgDialect()
+      return (mockDb.execute.mock.calls as unknown as [SQL][]).map(([arg]) => dialect.sqlToQuery(arg))
+    }
+  }
+
+  it('clears cross-ledger links for every audited column when 愛物 move (#1442)', async () => {
+    const queries = await leaveGroupQueries({ house: ['house-1'], car: ['car-1'], insurance: ['ins-1'] })()
+    const texts = queries.map((q) => q.sql.replace(/\s+/g, ' '))
+    for (const table of ['CashTransactions', 'IncomeTransactions', 'RecurringExpenseRules', 'RecurringIncomeRules']) {
+      expect(texts.some((t) => t.includes(`UPDATE "${table}" SET asset_id = NULL`))).toBe(true)
+    }
+    expect(texts.filter((t) => t.includes('SET fuel_log_id = NULL'))).toHaveLength(2)
+    expect(texts.filter((t) => t.includes('UPDATE "InsuranceDetails"')
+      && t.includes('vehicle_id = CASE') && t.includes('insured_child_id = CASE'))).toHaveLength(2)
+    // Same flat IN-list shape as the #1440 CASE — never an array param.
+    for (const q of queries) {
+      expect(q.sql).not.toContain('ANY(')
+      for (const p of q.params) expect(Array.isArray(p)).toBe(false)
+    }
+  })
+
+  it('still clears moved fuel links when no 愛物 move (#1442)', async () => {
+    const queries = await leaveGroupQueries({})()
+    const texts = queries.map((q) => q.sql.replace(/\s+/g, ' '))
+    const fuel = texts.filter((t) => t.includes('SET fuel_log_id = NULL'))
+    expect(fuel).toHaveLength(1)
+    expect(fuel[0]).toContain('FALSE')
+    expect(texts.some((t) => t.includes('UPDATE "InsuranceDetails"'))).toBe(false)
+  })
+
   it('rejects when balance is not 0 — read inside the transaction, after the group-row lock', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])

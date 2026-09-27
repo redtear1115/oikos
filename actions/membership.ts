@@ -19,7 +19,7 @@ import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
 import { hasActiveTrip } from '@/lib/db/queries/trips'
 import { hasActiveOuting } from '@/lib/db/queries/outing'
 import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
   revalidateSettings,
@@ -198,6 +198,10 @@ export const confirmSwap = action(async (): Promise<{ ok: true }> => {
  *   - MonthlyReviewMessages: by member_id; Snapshots stay (group analytics)
  *   - Transactions / rules whose asset_id points to a staying asset: set NULL
  *     to preserve same-group invariant
+ *   - Every other link that would cross ledgers after the split is cleared
+ *     too, record kept (#1442): old-ledger rows' asset_id / fuel_log_id into
+ *     moved 愛物, moved rows' fuel_log_id into staying cars, and
+ *     InsuranceDetails.vehicle_id / insured_child_id across the split
  *   - GroupInvites with no acceptedAt: revoke
  *   - current_epoch_started_at: bumped on both groups (new chapters)
  *
@@ -279,6 +283,13 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
   const assetIdCase = movingAssetIds.length > 0
     ? sql`CASE WHEN asset_id IN (${sql.join(movingAssetIds.map((id) => sql`${id}::uuid`), sql`, `)}) THEN asset_id ELSE NULL END`
     : sql`NULL`
+
+  // `<col> IN (<moving asset ids>)`, built the same way as the CASE above;
+  // FALSE when nothing moves (an empty `IN ()` is invalid SQL). Used by the
+  // cross-ledger link clearing in step 9a (#1442).
+  const isMovingAsset = (column: SQL) => movingAssetIds.length > 0
+    ? sql`${column} IN (${sql.join(movingAssetIds.map((id) => sql`${id}::uuid`), sql`, `)})`
+    : sql`FALSE`
 
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
     // 0. Lock the group row and its open chapter row, take the chapter
@@ -419,6 +430,78 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
       WHERE group_id = ${oldGroupId}
         AND rule_id IN (
           SELECT id FROM "RecurringIncomeRules" WHERE group_id = ${newGroup.id}
+        )
+    `)
+
+    // 9a. Clear every link that now crosses ledgers (#1442). Steps 2–9 split
+    //     the 愛物 by owner and the rows by payer / recipient, and those two
+    //     partitions disagree whenever someone recorded something against the
+    //     other person's 愛物. The user's decision (2026-09-27): the link is
+    //     cleared, the record is kept — amounts, payer and split are never
+    //     touched here, so neither ledger's balance moves. Covers soft-deleted
+    //     rows too, like the moves above. The moved rows' own asset_id was
+    //     already settled by the step 3/4/6/8 CASE. Full column audit: #1442's
+    //     PR and __tests__/actions/leaveGroup.crossLedgerLinks.test.ts, which
+    //     fails when a new FK into "Assets" / "FuelLogs" appears un-audited.
+    //
+    //     Failure looks like: no error; the 愛物 page on one side counts or
+    //     links records that belong to the other ledger.
+    if (movingAssetIds.length > 0) {
+      // Rows staying in the old ledger that point at a 愛物 that just moved
+      // (e.g. the stayer's repair expense on the leaver's house).
+      await tx.execute(sql`
+        UPDATE "CashTransactions" SET asset_id = NULL
+        WHERE group_id = ${oldGroupId} AND ${isMovingAsset(sql`asset_id`)}
+      `)
+      await tx.execute(sql`
+        UPDATE "IncomeTransactions" SET asset_id = NULL
+        WHERE group_id = ${oldGroupId} AND ${isMovingAsset(sql`asset_id`)}
+      `)
+      await tx.execute(sql`
+        UPDATE "RecurringExpenseRules" SET asset_id = NULL
+        WHERE group_id = ${oldGroupId} AND ${isMovingAsset(sql`asset_id`)}
+      `)
+      await tx.execute(sql`
+        UPDATE "RecurringIncomeRules" SET asset_id = NULL
+        WHERE group_id = ${oldGroupId} AND ${isMovingAsset(sql`asset_id`)}
+      `)
+      // Old-ledger expenses linked to a fuel log of a car that moved. The
+      // fuel log itself stays on its car (FuelLogs has no group_id).
+      await tx.execute(sql`
+        UPDATE "CashTransactions" SET fuel_log_id = NULL
+        WHERE group_id = ${oldGroupId}
+          AND fuel_log_id IN (
+            SELECT id FROM "FuelLogs" WHERE ${isMovingAsset(sql`asset_id`)}
+          )
+      `)
+      // Insurance ↔ 愛物 links. A policy that moved keeps only links to 愛物
+      // that moved with it; a policy that stayed loses links to 愛物 that
+      // moved. (Children never move — no owner field — but the rule is the
+      // same for every referenced 愛物.)
+      await tx.execute(sql`
+        UPDATE "InsuranceDetails"
+        SET vehicle_id = CASE WHEN ${isMovingAsset(sql`vehicle_id`)} THEN vehicle_id ELSE NULL END,
+            insured_child_id = CASE WHEN ${isMovingAsset(sql`insured_child_id`)} THEN insured_child_id ELSE NULL END
+        WHERE ${isMovingAsset(sql`asset_id`)}
+          AND (vehicle_id IS NOT NULL OR insured_child_id IS NOT NULL)
+      `)
+      await tx.execute(sql`
+        UPDATE "InsuranceDetails"
+        SET vehicle_id = CASE WHEN ${isMovingAsset(sql`vehicle_id`)} THEN NULL ELSE vehicle_id END,
+            insured_child_id = CASE WHEN ${isMovingAsset(sql`insured_child_id`)} THEN NULL ELSE insured_child_id END
+        WHERE asset_id IN (SELECT id FROM "Assets" WHERE group_id = ${oldGroupId})
+          AND (${isMovingAsset(sql`vehicle_id`)} OR ${isMovingAsset(sql`insured_child_id`)})
+      `)
+    }
+    // Moved expenses linked to a fuel log of a car that stayed (e.g. the
+    // leaver's fuel expense on the stayer's car). Runs even when nothing
+    // moves: then every fuel log stays behind.
+    await tx.execute(sql`
+      UPDATE "CashTransactions" SET fuel_log_id = NULL
+      WHERE group_id = ${newGroup.id}
+        AND fuel_log_id IS NOT NULL
+        AND fuel_log_id NOT IN (
+          SELECT id FROM "FuelLogs" WHERE ${isMovingAsset(sql`asset_id`)}
         )
     `)
 
