@@ -23,14 +23,30 @@ MERGE_RE='(^|[;&|(`[:space:]]|\$\()gh[[:space:]]+pr[[:space:]]+merge([[:space:]]
 printf '%s' "$cmd" | grep -Eq "$MERGE_RE" || exit 0
 
 # Every merge in the command is checked (a chained `merge A && merge B` must
-# not let A through). Split on each occurrence; for each segment take the PR
-# number: a /pull/N URL, else the first bare integer argument.
-prs=$(printf '%s' "$cmd" | awk '{ n = split($0, parts, /gh[[:space:]]+pr[[:space:]]+merge/); for (i = 2; i <= n; i++) print parts[i] }' | while IFS= read -r seg; do
-  seg=$(printf '%s' "$seg" | sed -E 's/(&&|\|\||;|\)).*//')
-  n=$(printf '%s' "$seg" | grep -Eo '/pull/[0-9]+' | head -1 | grep -Eo '[0-9]+')
-  [ -z "$n" ] && n=$(printf '%s' "$seg" | tr ' \t' '\n\n' | grep -Ex '#?[0-9]+' | head -1 | tr -d '#')
-  # No number in this segment → the current branch's PR (fail open if unknown).
-  [ -z "$n" ] && n=$(gh pr view --json number -q .number 2>/dev/null)
+# not let A through). Parsing is done in python so quoted --subject/--body text
+# (which may contain ( ; && …) can't truncate the argument list: quoted strings
+# are dropped first, unless they are just a PR number like '#1459'.
+# Output: one PR number per line, or the word CURRENT for "no number given".
+parsed=$(printf '%s' "$cmd" | python3 -c '
+import re, sys
+c = sys.stdin.read()
+def unq(m):
+    inner = m.group(0)[1:-1]
+    return " " + inner + " " if re.fullmatch(r"#?\d+", inner.strip()) else " _ "
+c = re.sub(r"\x27[^\x27]*\x27|\"(?:\\.|[^\"\\])*\"", unq, c)
+c = re.sub(r"[`()]|\$\(", " ; ", c)
+for seg in re.split(r"(?:^|(?<=[\s;&|]))gh\s+pr\s+merge(?=\s|$)", c)[1:]:
+    seg = re.split(r"&&|\|\||[;|\n]", seg)[0]
+    m = re.search(r"/pull/(\d+)", seg)
+    if m:
+        print(m.group(1)); continue
+    tok = next((t.lstrip("#") for t in seg.split() if re.fullmatch(r"#?\d+", t)), None)
+    print(tok if tok else "CURRENT")
+' 2>/dev/null) || exit 0
+[ -z "$parsed" ] && exit 0
+prs=$(printf '%s\n' "$parsed" | while IFS= read -r n; do
+  # No number → the current branch's PR (fail open if unknown).
+  [ "$n" = "CURRENT" ] && n=$(gh pr view --json number -q .number 2>/dev/null)
   [ -n "$n" ] && printf '%s\n' "$n"
 done | sort -u)
 [ -z "$prs" ] && exit 0
