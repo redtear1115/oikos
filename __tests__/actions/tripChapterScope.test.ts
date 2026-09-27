@@ -355,6 +355,58 @@ describe('trip in a closed chapter', () => {
       .where(eq(cashTransactions.groupId, groupId))
     expect(rows).toHaveLength(1)
   })
+
+  it('a stranded active trip left in an already-closed chapter (pre-#1438 state) cannot be ended', async () => {
+    // Every other test in this file gets its closed chapter from a real
+    // write path (acceptInvite), which since #1438 never leaves a trip
+    // active in the chapter it closes. This seeds the shape that could exist
+    // in prod from BEFORE #1438 shipped: a trip still `status='active'`
+    // whose epoch already has `ended_at` set — the guard this file is about
+    // (openEpochClause, actions/trip.ts) has to hold for that legacy row too,
+    // not just for rows a current write path can produce.
+    const ownerId = randomUUID()
+    await db.insert(profiles).values({ id: ownerId, displayName: 'TEST_TRIP_CHAPTER_stranded' })
+    const [group] = await db.insert(oikosGroups).values({
+      name: 'TEST_TRIP_CHAPTER_stranded_group',
+      memberA: ownerId,
+      currentEpochStartedAt: new Date('2026-06-01T00:00:00Z'),
+    }).returning({ id: oikosGroups.id })
+    active = { groupId: group.id, people: [ownerId] }
+    await db.insert(groupBalance).values({ groupId: group.id, balance: 0, version: 0 })
+
+    const [closedEpoch] = await db.insert(groupEpochs).values({
+      groupId: group.id,
+      startedAt: new Date('2026-05-01T00:00:00Z'),
+      endedAt: new Date('2026-06-01T00:00:00Z'),
+      memberAId: ownerId,
+    }).returning({ id: groupEpochs.id })
+    await db.insert(groupEpochs).values({
+      groupId: group.id,
+      startedAt: new Date('2026-06-01T00:00:00Z'),
+      memberAId: ownerId,
+    })
+
+    const [strandedTrip] = await db.insert(trips).values({
+      groupId: group.id,
+      epochId: closedEpoch.id,
+      name: 'Stranded trip',
+      startDate: '2026-05-10',
+      status: 'active',
+    }).returning()
+
+    mockUserId = ownerId
+    expect(await endTrip({ tripId: strandedTrip.id, endDate: todayIso() }))
+      .toEqual({ ok: false, code: 'active_trip_not_found' })
+
+    const summaries = await db
+      .select({ id: cashTransactions.id })
+      .from(cashTransactions)
+      .where(eq(cashTransactions.tripId, strandedTrip.id))
+    expect(summaries).toHaveLength(0)
+    const after = await tripRow(strandedTrip.id)
+    expect(after.status).toBe('active')
+    expect(after.endedAt).toBeNull()
+  })
 })
 
 describe('trip writes while pinned to a past chapter', () => {
