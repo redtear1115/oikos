@@ -33,9 +33,11 @@
  *
  * Database values (#1289): a Drizzle error message ends in `\nparams: <every
  * bound value>`, and Postgres' detail reads `Key (…)=(<values>)` or `Failing
- * row contains (<values>)`. Server actions strip these at the source
- * (`lib/db/sanitizeError.ts`); this is the second line for everything else
- * (route handlers, server components, a `console.error(err)` anywhere). The
+ * row contains (<values>)`. Every Drizzle query and transaction error is
+ * stripped at the source, in the database layer (`lib/db/sanitizingQuery.ts`,
+ * #1453), and server actions strip again at their boundary; this is the
+ * second line for whatever did not come through there (a raw postgres.js
+ * client, a hand-built error, a `console.error(err)` of anything else). The
  * free-text fields — exception values, event / logentry messages, breadcrumb
  * messages and console arguments, log messages and parameters — lose the
  * params tail and the value lists; the SQL text and column names stay.
@@ -91,6 +93,7 @@ import {
   REDACTED_URL,
   sanitizeAnalyticsUrl,
 } from '@/lib/analytics/urlSanitizer'
+import { isDataExceptionCode, maskFromFirstQuote } from '@/lib/db/sanitizeError'
 
 /** `SpanJSON` is not re-exported by `@sentry/nextjs`; take it from the hook. */
 type SpanJSON = Parameters<NonNullable<NodeOptions['beforeSendSpan']>>[0]
@@ -122,6 +125,15 @@ const QUERY_KEYS = new Set(['http.query', 'url.query', 'query_string'])
 
 /** The `#hash` alone — never needed, dropped. */
 const FRAGMENT_KEYS = new Set(['http.fragment', 'url.fragment'])
+
+/**
+ * Span attributes holding bound query values (#1453): drizzle's own tracer
+ * sets `drizzle.query.params` (JSON of every value), OTel database
+ * instrumentations use `db.query.parameter.<n>`. Dropped outright — the SQL
+ * text in `db.query.text` / `drizzle.query.text` has only `$n` placeholders.
+ */
+const DB_PARAMETER_KEYS = new Set(['drizzle.query.params'])
+const DB_PARAMETER_ATTRIBUTE_RE = /^db\.query\.parameter\./
 
 /** `http.request.header.<name>` / `http.response.header.<name>` span attributes. */
 const HEADER_ATTRIBUTE_RE = /^http\.(?:request|response)\.header\./
@@ -290,15 +302,27 @@ const DB_PARAMS_TAIL_ESCAPED_RE = /\\nparams: /
 const PG_KEY_DETAIL_RE = /Key \((?:([^)\n]{0,256})\)=\()?[\s\S]*/
 const PG_FAILING_ROW_RE = /Failing row contains \([\s\S]*/
 /**
- * 22P02 / 22007 / 22008 / 22003-style messages quote the rejected input:
- * `invalid input syntax for type uuid: "<value>"` (also `… for enum "Foo": …`).
+ * Class 22 (data exception) messages quote the rejected input:
+ * `invalid input syntax for type uuid: "<value>"` (also `… for enum "Foo": …`),
+ * `value "<value>" is out of range for type integer` (22003),
+ * `malformed array literal: "<value>"` (also record / range / multirange),
+ * `date/time field value out of range: "<value>"` (22008),
+ * `invalid value "<value>" for "<format>"` (22007),
+ * `invalid byte sequence for encoding "UTF8": 0x…` (22021).
  * Only the opening is matched here; see `maskInvalidInput` for where the value
  * ends. Group 1 is the backslashes before the quote: none in plain text, one
  * when JSON-escaped, three (or more) when the JSON sat inside another JSON
  * string (#1451). Any run counts — text over `MAX_STRUCTURED_LENGTH` is never
  * parsed, so a double-escaped marker there is only ever seen as plain text.
+ *
+ * Where the SQLSTATE is known (a parsed error object, the original exception,
+ * a postgres.js span's `db.response.status_code`), the source rule applies
+ * instead, whatever the wording: a class 22 message is masked from its first
+ * quote on (`maskFromFirstQuote`, #1453). This list is for text that arrives
+ * without its code.
  */
-const PG_INVALID_INPUT_HEAD_RE = /invalid input (?:syntax|value) for [^:\n]{0,256}: (\\*)"/
+const PG_INVALID_INPUT_HEAD_RE =
+  /(?:invalid input (?:syntax|value) for [^:\n]{0,256}: |malformed (?:array|record|range|multirange) literal: |date\/time field value out of range: |invalid byte sequence for encoding |(?:^|[^a-z])(?:invalid )?value )(\\*)"/
 
 /** JSON keys whose value is bound parameters or row context. */
 const DB_VALUE_KEYS = new Set(['params', 'parameters', 'args', 'detail', 'where'])
@@ -454,15 +478,34 @@ function splitJsonArguments(text: string): Piece[] {
  * appears inside the values) gets the plain rules, which cut from
  * `\nparams:` to the end, frames and all.
  */
-function scrubDbStack(stack: string, message: unknown, depth: number): string {
+function scrubDbStack(stack: string, message: unknown, depth: number, dataException = false): string {
   const at = typeof message === 'string' && message !== '' ? stack.indexOf(message) : -1
-  if (at === -1 || stack.slice(0, at).includes('\n')) return scrubDbText(stack, depth)
+  if (at === -1 || stack.slice(0, at).includes('\n')) {
+    return scrubDbText(dataException ? maskFromFirstQuote(stack) : stack, depth)
+  }
   const msg = message as string
   return (
     scrubDbText(stack.slice(0, at), depth) +
-    scrubDbText(msg, depth) +
+    scrubDbText(dataException ? maskFromFirstQuote(msg) : msg, depth) +
     scrubDbText(stack.slice(at + msg.length), depth)
   )
+}
+
+/**
+ * An error object whose `code` is a class 22 SQLSTATE (#1453): its message is
+ * masked from the first quote on, whatever the wording — the same rule as
+ * `sanitizeDbError` at the source.
+ */
+function isDataExceptionRecord(record: AnyRecord): boolean {
+  return isDataExceptionCode(record.code)
+}
+
+/** `Name: message` of an Error, class 22 messages masked from the first quote. */
+function errorText(error: Error): string {
+  const message = isDataExceptionCode((error as Error & { code?: unknown }).code)
+    ? maskFromFirstQuote(error.message)
+    : error.message
+  return `${error.name}: ${message}`
 }
 
 /**
@@ -483,12 +526,14 @@ function scrubDbJson(value: unknown, depth: number): unknown {
     return changed ? out : value
   }
   const record = value as AnyRecord
+  const dataException = isDataExceptionRecord(record)
   let changed = false
   const out: AnyRecord = {}
   for (const [key, item] of Object.entries(record)) {
     let cleaned: unknown
     if (DB_VALUE_KEYS.has(key)) cleaned = FILTERED
-    else if (key === 'stack' && typeof item === 'string') cleaned = scrubDbStack(item, record.message, depth + 1)
+    else if (key === 'stack' && typeof item === 'string') cleaned = scrubDbStack(item, record.message, depth + 1, dataException)
+    else if (key === 'message' && dataException && typeof item === 'string') cleaned = scrubDbText(maskFromFirstQuote(item), depth + 1)
     else cleaned = scrubDbJson(item, depth + 1)
     if (cleaned !== item) changed = true
     out[key] = cleaned
@@ -555,7 +600,7 @@ class OverBudget extends Error {}
  */
 function scrubLooseValue(value: unknown): unknown {
   if (typeof value === 'string') return scrubMessageText(value)
-  if (value instanceof Error) return scrubMessageText(`${value.name}: ${value.message}`)
+  if (value instanceof Error) return scrubMessageText(errorText(value))
   if (typeof value !== 'object' || value === null) return value
   const budget = { text: MAX_LOOSE_TEXT, nodes: MAX_LOOSE_NODES }
   try {
@@ -586,7 +631,7 @@ function scrubLooseNode(
   }
   if (typeof value !== 'object' || value === null) return value
   if (value instanceof Error) {
-    const text = `${value.name}: ${value.message}`
+    const text = errorText(value)
     spendText(budget, text)
     return scrubMessageText(text)
   }
@@ -607,6 +652,7 @@ function scrubLooseNode(
       return changed ? out : value
     }
     const record = value as AnyRecord
+    const dataException = isDataExceptionRecord(record)
     let changed = false
     const out: AnyRecord = {}
     for (const key of Object.keys(record)) {
@@ -616,7 +662,10 @@ function scrubLooseNode(
         cleaned = FILTERED
       } else if (key === 'stack' && typeof item === 'string') {
         spendText(budget, item)
-        cleaned = item.length > MAX_TEXT_LENGTH ? TOO_LONG : scrubText(scrubDbStack(item, record.message, 0))
+        cleaned = item.length > MAX_TEXT_LENGTH ? TOO_LONG : scrubText(scrubDbStack(item, record.message, 0, dataException))
+      } else if (key === 'message' && dataException && typeof item === 'string') {
+        spendText(budget, item)
+        cleaned = scrubMessageText(maskFromFirstQuote(item))
       } else {
         cleaned = scrubLooseNode(item, budget, ancestors, depth + 1)
       }
@@ -680,9 +729,10 @@ function scrubQueryString(value: unknown): unknown {
 // So a Drizzle error whose `params:` line holds a value with ` at ` in it
 // (`…,/AB at CD,v1:k1:<ciphertext>`), or a 22P02 message whose quoted input
 // continues on a new line, yields a "frame" named after the bound values —
-// the ciphertext lands in `filename` and `module`. Server actions are not
-// affected (`sanitizeDbError` rewrites the stack before the re-throw); route
-// handlers and server components (`captureRequestError`) are.
+// the ciphertext lands in `filename` and `module`. Errors thrown through
+// `db` are not affected: the database layer (`lib/db/sanitizingQuery.ts`,
+// #1453) rewrites the message and stack before anyone catches them. This is
+// the second line, for a driver error that reaches Sentry some other way.
 //
 // Every frame is checked here; a frame that fails is dropped:
 //
@@ -778,6 +828,40 @@ function collectFrameSuspects(event: AnyRecord, hint: EventHint | undefined): st
   return out
 }
 
+/**
+ * #1453 — the class 22 rule for exception values. An exception value is the
+ * bare message; its SQLSTATE is on the original error (or somewhere down its
+ * `cause` chain, which linkedErrors turns into more values). For each class
+ * 22 error there, the text up to and including its message's first quote is
+ * the "head"; an exception value containing that head is masked from there
+ * to its end. Matching on the head alone still works when the SDK cut the
+ * value short.
+ */
+function dataExceptionHeads(hint: EventHint | undefined): string[] {
+  const heads: string[] = []
+  const seen = new Set<unknown>()
+  let error: unknown = safeGet(hint, 'originalException')
+  for (let depth = 0; depth < MAX_CAUSE_DEPTH && typeof error === 'object' && error !== null && !seen.has(error); depth++) {
+    seen.add(error)
+    const message = safeGet(error, 'message')
+    if (isDataExceptionCode(safeGet(error, 'code')) && typeof message === 'string') {
+      const q = message.indexOf('"')
+      if (q !== -1) heads.push(message.slice(0, q + 1))
+    }
+    error = safeGet(error, 'cause')
+  }
+  return heads
+}
+
+function maskDataExceptionValue(value: unknown, heads: string[]): unknown {
+  if (typeof value !== 'string' || heads.length === 0) return value
+  for (const head of heads) {
+    const at = value.indexOf(head)
+    if (at !== -1) return `${value.slice(0, at + head.length)}${MASKED_VALUE}"`
+  }
+  return value
+}
+
 function hasDbMarker(value: string): boolean {
   return scrubDbText(value) !== value
 }
@@ -828,6 +912,7 @@ function scrubAttributes(data: unknown, extraUrlKeys?: ReadonlySet<string>): unk
   for (const [key, value] of Object.entries(data)) {
     const lower = key.toLowerCase()
     if (IP_KEYS.has(lower) || FRAGMENT_KEYS.has(lower)) continue
+    if (DB_PARAMETER_KEYS.has(lower) || DB_PARAMETER_ATTRIBUTE_RE.test(lower)) continue
     if (HEADER_ATTRIBUTE_RE.test(lower)) {
       out[key] = KEPT_HEADER_ATTRIBUTES.has(lower) ? value : FILTERED
     } else if (QUERY_KEYS.has(lower)) {
@@ -882,6 +967,8 @@ function scrubContexts(contexts: unknown): unknown {
     for (const [key, value] of Object.entries(copy)) {
       if (name === 'trace' && key === 'data') {
         copy.data = scrubAttributes(value)
+      } else if (name === 'trace' && key === 'status') {
+        copy.status = scrubSpanStatus(value, context.data)
       } else if (typeof value === 'string' && CONTEXT_URL_KEY_RE.test(key)) {
         copy[key] = scrubUrlValue(value)
       }
@@ -907,8 +994,23 @@ function scrubBreadcrumbInner(breadcrumb: Breadcrumb): Breadcrumb {
   return out
 }
 
+/**
+ * A span's `status` is free text when it failed: the postgres.js integration
+ * puts the raw Postgres message there (`invalid input syntax for type uuid:
+ * "<value>"`) and the SQLSTATE in `db.response.status_code`. Class 22 → the
+ * source rule (mask from the first quote); every status gets the text rules.
+ * Failure looks like nothing: the value just sits in the span's status in
+ * the trace view.
+ */
+function scrubSpanStatus(status: unknown, data: unknown): unknown {
+  if (typeof status !== 'string' || status === '') return status
+  const code = isRecord(data) ? data['db.response.status_code'] : undefined
+  return scrubMessageText(isDataExceptionCode(code) ? maskFromFirstQuote(status) : status)
+}
+
 function scrubSpanInner(span: SpanJSON): SpanJSON {
   const out: SpanJSON = { ...span }
+  if ('status' in out) out.status = scrubSpanStatus(out.status, span.data) as SpanJSON['status']
   if ('description' in out) out.description = scrubText(out.description) as string | undefined
   if ('data' in out) out.data = scrubAttributes(out.data) as SpanJSON['data']
   return out
@@ -934,10 +1036,13 @@ function scrubEventInner<T extends Event>(event: T, hint: EventHint | undefined)
   if (isRecord(out.exception) && Array.isArray(out.exception.values)) {
     // Frames first: the suspects come from the raw (unscrubbed) messages.
     const suspects = collectFrameSuspects(out, hint)
+    const heads = dataExceptionHeads(hint)
     out.exception = {
       ...out.exception,
       values: scrubExceptionFrames(out.exception.values, suspects).map(v =>
-        isRecord(v) && 'value' in v ? { ...v, value: scrubMessageText(v.value) } : v),
+        isRecord(v) && 'value' in v
+          ? { ...v, value: scrubMessageText(maskDataExceptionValue(v.value, heads)) }
+          : v),
     } as Event['exception']
   }
   if ('contexts' in out) out.contexts = scrubContexts(out.contexts) as Event['contexts']
@@ -1004,6 +1109,11 @@ function pickScalars(source: unknown, keys: readonly string[]): AnyRecord {
   return out
 }
 
+/**
+ * Kept by the fallbacks. Not `status`: on a failed database span it is the
+ * raw Postgres message (#1453), and the fallback runs exactly when the scrub
+ * could not be trusted.
+ */
 const SPAN_SCALAR_KEYS = [
   'span_id',
   'trace_id',
@@ -1011,7 +1121,6 @@ const SPAN_SCALAR_KEYS = [
   'start_timestamp',
   'timestamp',
   'op',
-  'status',
   'origin',
   'is_segment',
 ] as const

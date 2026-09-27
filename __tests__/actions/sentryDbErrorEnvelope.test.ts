@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { randomUUID } from 'node:crypto'
+import { inspect } from 'node:util'
+import postgres from 'postgres'
+import { DrizzleQueryError } from 'drizzle-orm'
 import { loadEnvLocal } from '../outing/_setup'
 import { startSentryHarness, type SentryHarness } from '../../tests/_helpers/sentryHarness'
 
@@ -10,12 +13,25 @@ import { startSentryHarness, type SentryHarness } from '../../tests/_helpers/sen
 // invoiceRetention0069.test.ts for how to build one). Needs 0069 applied: the
 // 23514 case is its CHECK.
 //
-// Four real postgres.js errors, wrapped by Drizzle exactly as an action would
-// see them — 23505 (unique), 23514 (check: "Failing row contains" the whole
-// row), 23503 (foreign key: "Key (…)=(…)"), 22P02 (the rejected input quoted
-// in the message and in `where`) — each passed raw to console.error(err),
-// console.error('…', err) and Sentry.captureException(err). No bound value
-// may appear in any envelope the client would send.
+// Four real postgres.js errors — 23505 (unique), 23514 (check: "Failing row
+// contains" the whole row), 23503 (foreign key: "Key (…)=(…)"), 22P02 (the
+// rejected input quoted in the message and in `where`).
+//
+// Two layers (#1453):
+// 1. At the source: the same four failures thrown through `db` are already
+//    clean — no `params:`, no `.params`, no `detail`, nothing under
+//    `inspect(showHidden)`. Remove `installDbErrorSanitizer()` from
+//    lib/db/client.ts and this turns red.
+// 2. The Sentry hooks, on RAW errors: since `lib/db/client` is imported here
+//    (for seeding and for layer 1), drizzle's prototype is wrapped for this
+//    whole file, so a raw error cannot come out of `db`. It is built by hand
+//    instead, exactly as Drizzle builds it: the statement from `.toSQL()`,
+//    run on a separate raw postgres.js client (`.unsafe`), the driver error
+//    wrapped in `new DrizzleQueryError(sql, params, cause)`. Each is passed
+//    to console.error(err), console.error('…', err) and
+//    Sentry.captureException(err); no bound value may appear in any envelope
+//    the client would send. (tests/db-error-guards.test.ts keeps this file
+//    building them by hand.)
 // ──────────────────────────────────────────────────────────────────────────────
 
 loadEnvLocal()
@@ -36,6 +52,7 @@ const SECRETS = [BARCODE, CIPHERTEXT, BAD_UUID]
 
 describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client — local throwaway DB', () => {
   let harness: SentryHarness
+  let raw: ReturnType<typeof postgres>
   const realConsoleError = console.error
   const realConsoleWarn = console.warn
   const made = { profile: '', group: '' }
@@ -49,6 +66,7 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
       .values({ name: 'TEST_1289_SENTRY', memberA: made.profile, memberB: null })
       .returning({ id: oikosGroups.id })
     made.group = g.id
+    raw = postgres(databaseUrl, { max: 1, onnotice: () => {} })
     // The SDK wraps whatever console.error is at init; keep the values out of
     // the test output.
     console.error = () => {}
@@ -60,6 +78,7 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     await harness?.close()
     console.error = realConsoleError
     console.warn = realConsoleWarn
+    await raw?.end()
     const { db } = await import('@/lib/db/client')
     const { profiles, oikosGroups, invoiceCredentials } = await import('@/lib/db/schema')
     const { eq } = await import('drizzle-orm')
@@ -68,6 +87,67 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
       await db.delete(oikosGroups).where(eq(oikosGroups.id, made.group))
     }
     if (made.profile) await db.delete(profiles).where(eq(profiles.id, made.profile))
+  })
+
+  /**
+   * The raw error Drizzle would have thrown for `query`, without going
+   * through the (wrapped) drizzle prototype: same statement, same
+   * parameters, same wrapper.
+   */
+  async function rawFail(query: { toSQL(): { sql: string; params: unknown[] } }): Promise<Error & { cause: Error & { code?: string } }> {
+    const { sql, params } = query.toSQL()
+    return Promise.resolve(raw.unsafe(sql, params as never[])).then(
+      () => { throw new Error('expected the query to fail') },
+      (e: unknown) => new DrizzleQueryError(sql, params, e as Error) as Error & { cause: Error & { code?: string } },
+    )
+  }
+
+  function surfaces(e: unknown): string {
+    let json = ''
+    try { json = JSON.stringify(e) ?? '' } catch { json = '<unserializable>' }
+    const chain: string[] = []
+    for (let cur: unknown = e, d = 0; cur && d < 5; cur = (cur as { cause?: unknown }).cause, d++) {
+      chain.push(String((cur as Error).message), String((cur as Error).stack))
+    }
+    return [inspect(e, { showHidden: true, depth: 8 }), json, ...chain].join('\n')
+  }
+
+  // #1453 — layer 1. Runs first: it also inserts the row the 23505 cases
+  // collide with.
+  it('errors thrown through db are clean at the source (no params, no detail, nothing hidden)', async () => {
+    const { db } = await import('@/lib/db/client')
+    const { invoiceCredentials } = await import('@/lib/db/schema')
+    const row = (over: Partial<typeof invoiceCredentials.$inferInsert> = {}) => ({
+      groupId: made.group, userId: made.profile, barcode: BARCODE, verificationCodeEncrypted: CIPHERTEXT, ...over,
+    })
+    const fail = (p: PromiseLike<unknown>) =>
+      Promise.resolve(p).then(() => { throw new Error('expected the query to fail') }, (e: unknown) => e as Error & { cause: Error & Record<string, unknown> })
+
+    await db.insert(invoiceCredentials).values(row())
+    const queries = [
+      db.insert(invoiceCredentials).values(row()),
+      db.insert(invoiceCredentials).values(row({ barcode: '/OTHER01', deletedAt: new Date() })),
+      db.insert(invoiceCredentials).values(row({ groupId: randomUUID() })),
+      db.insert(invoiceCredentials).values(row({ groupId: BAD_UUID })),
+    ]
+    // Control: the same statements, raw, carry the values.
+    const raws = []
+    for (const q of queries) raws.push(await rawFail(q))
+    expect(raws.map((e) => e.cause.code)).toEqual(['23505', '23514', '23503', '22P02'])
+    for (const e of raws) expect(SECRETS.some((s) => surfaces(e).includes(s))).toBe(true)
+
+    const clean = []
+    for (const q of queries) clean.push(await fail(q))
+    expect(clean.map((e) => e.cause.code)).toEqual(['23505', '23514', '23503', '22P02'])
+    expect(clean[0].cause.constraint_name).toBe('invoice_credentials_uniq')
+    for (const e of clean) {
+      expect(e.message).toMatch(/^Failed query: insert into /)
+      expect(e.message).not.toContain('params:')
+      expect('params' in e).toBe(false)
+      expect(e.cause.detail).toBeUndefined()
+      expect(e.cause.where).toBeUndefined()
+      expect(SECRETS.filter((s) => surfaces(e).includes(s))).toEqual([])
+    }
   })
 
   it('console.error(err), console.error("…", err) and captureException leak no bound value', async () => {
@@ -82,15 +162,12 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
       verificationCodeEncrypted: CIPHERTEXT,
       ...over,
     })
-    const fail = (p: PromiseLike<unknown>) =>
-      Promise.resolve(p).then(() => { throw new Error('expected the query to fail') }, (e: unknown) => e as Error)
-
-    await db.insert(invoiceCredentials).values(row())
+    // The colliding row was inserted by the source test above.
     const errors = [
-      await fail(db.insert(invoiceCredentials).values(row())),                                  // 23505
-      await fail(db.insert(invoiceCredentials).values(row({ barcode: '/OTHER01', deletedAt: new Date() }))), // 23514
-      await fail(db.insert(invoiceCredentials).values(row({ groupId: randomUUID() }))),         // 23503
-      await fail(db.insert(invoiceCredentials).values(row({ groupId: BAD_UUID }))),             // 22P02
+      await rawFail(db.insert(invoiceCredentials).values(row())),                                  // 23505
+      await rawFail(db.insert(invoiceCredentials).values(row({ barcode: '/OTHER01', deletedAt: new Date() }))), // 23514
+      await rawFail(db.insert(invoiceCredentials).values(row({ groupId: randomUUID() }))),         // 23503
+      await rawFail(db.insert(invoiceCredentials).values(row({ groupId: BAD_UUID }))),             // 22P02
     ]
 
     // Control: these are the real driver errors, carrying the values.
@@ -124,8 +201,7 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     const row = { groupId: made.group, userId: made.profile, barcode: FAKE_FRAME_BARCODE, verificationCodeEncrypted: CIPHERTEXT_1439 }
 
     await db.insert(invoiceCredentials).values(row)
-    const e = await Promise.resolve(db.insert(invoiceCredentials).values(row))
-      .then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+    const e = await rawFail(db.insert(invoiceCredentials).values(row))
 
     // Control: the real 23505, with the fake frame before the ciphertext.
     expect((e.cause as { code?: string }).code).toBe('23505')
@@ -158,9 +234,9 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     harness.envelopes.length = 0
     const sanitized: string[] = []
     for (const groupId of values) {
-      const e = await Promise.resolve(db.insert(invoiceCredentials).values({
+      const e = await rawFail(db.insert(invoiceCredentials).values({
         groupId, userId: made.profile, barcode: '/Q1439', verificationCodeEncrypted: 'v1:k1:q',
-      })).then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+      }))
       // Control: the real 22P02, quoting the whole input.
       expect((e.cause as { code?: string }).code).toBe('22P02')
       expect((e.cause as Error).message).toBe(`invalid input syntax for type uuid: "${groupId}"`)
@@ -204,9 +280,9 @@ describe.skipIf(!isLocalDb)('real driver errors through a real Sentry client —
     harness.envelopes.length = 0
     const sanitized: string[] = []
     for (const groupId of values) {
-      const e = await Promise.resolve(db.insert(invoiceCredentials).values({
+      const e = await rawFail(db.insert(invoiceCredentials).values({
         groupId, userId: made.profile, barcode: '/Q1439', verificationCodeEncrypted: 'v1:k1:q',
-      })).then(() => { throw new Error('expected the query to fail') }, (err: unknown) => err as Error)
+      }))
       const cause = e.cause as Error & { code?: string }
       // Control: the real 22P02 quotes the whole input.
       expect(cause.code).toBe('22P02')
