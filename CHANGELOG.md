@@ -46,6 +46,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **重新加密的核心抽成共用模組（#1287）**
   使用者：無可見變化。
   技術：`scripts/reencrypt-pii.ts` 的 preflight／compare-and-swap 與 SQL 移到 `lib/reencryptCore.ts`，供之後在 preview runtime 內輪替 prod 金鑰時共用同一份；腳本行為不變，ops-runbook 補上「本機標成 prod 的 env 檔其實是 dev 金鑰」的陷阱。
+- **欄位加密不再讀寫舊格式密文（#1287 S3b）**
+  使用者：無可見變化。
+  技術：`lib/crypto.ts` 移除不帶 AAD 的三段式舊格式，讀到一律當格式錯誤拒絕；沒設 `ENCRYPTION_WRITE_KID` 時 `encrypt` 直接丟錯；重新加密腳本遇到舊格式列只算 preflight 失敗、不寫入。
 
 ## [1.6.3] - 2026-09-27
 

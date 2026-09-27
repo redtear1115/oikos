@@ -22,9 +22,10 @@ const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們
 const OPEN_EPOCH = { id: 'epoch-current', groupId: 'grp-1', startedAt: new Date('2026-01-01T00:00:00Z'), endedAt: null, memberAId: 'user-a', memberBId: 'user-b' }
 const GROUP_GUARDIAN_OFF = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: false }
 
-// AES-256-GCM ciphertext shape: 12-byte IV (24 hex) : 16-byte authTag (32 hex)
-// : variable-length ciphertext (hex). lib/crypto.ts produces exactly this.
-const CIPHERTEXT_RE = /^[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/
+// AES-256-GCM ciphertext shape (#1287 v1): `v1:<kid>:` + 12-byte IV (24 hex)
+// : 16-byte authTag (32 hex) : variable-length ciphertext (hex). The test
+// keyring writes under k1 (vitest.config.ts); lib/crypto.ts produces exactly this.
+const CIPHERTEXT_RE = /^v1:k1:[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/
 
 beforeEach(() => {
   resetDbMocks()

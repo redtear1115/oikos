@@ -61,7 +61,7 @@ describe('createInvoiceCredential', () => {
     // Verification code should be ciphertext, not plaintext.
     expect(values.verificationCodeEncrypted).not.toBe('A1B2C3D4')
     // AES-GCM ciphertext format: ivHex:tagHex:cipherHex
-    expect(values.verificationCodeEncrypted).toMatch(/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/)
+    expect(values.verificationCodeEncrypted).toMatch(/^v1:k1:[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/)
   })
 
   it('uppercases lowercase barcode + verification code', async () => {
@@ -239,7 +239,7 @@ describe('refreshInvoiceCredential', () => {
     const newValues = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(newValues.barcode).toBe('/AB12CD3')
     expect(newValues.nickname).toBe('我的')
-    expect(newValues.verificationCodeEncrypted).toMatch(/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/)
+    expect(newValues.verificationCodeEncrypted).toMatch(/^v1:k1:[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/)
   })
 
   it('throws inside tx when row not in viewer group (rolls back before API verify)', async () => {

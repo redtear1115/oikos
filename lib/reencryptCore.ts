@@ -176,6 +176,8 @@ export async function reencrypt(db: Db, opts: { apply: boolean; writeKid: string
       try {
         decrypt(row.ct, ctxFor(t, row.pk))
       } catch {
+        // Wrong key, wrong AAD, tampering — and, since #1287 S3b, any leftover
+        // legacy 3-part value, which lib/crypto.ts rejects as malformed.
         counts.preflightFailed++
         continue
       }

@@ -53,6 +53,7 @@ cp .env.local.example .env.local
 - `DATABASE_URL_DIRECT` — direct connection（5432），給 Drizzle migrations 用
 - `DATABASE_URL` — pooler connection（6543, `?pgbouncer=true`），給 runtime 用
 - `ENCRYPTION_KEY` — `openssl rand -hex 32` 產生
+- `ENCRYPTION_WRITE_KID` — 填 `k1`；沒設的話，存車牌、地址、孩子證號這類加密欄位時會直接失敗
 - `NEXT_PUBLIC_APP_URL` — local dev 用 `http://localhost:3000`
 
 `NEXT_PUBLIC_POSTHOG_*` / `*SENTRY_DSN` 也在 `.env.local.example` 裡，但只在 `NODE_ENV=production` 送出，本機留 placeholder 即可。

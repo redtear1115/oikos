@@ -1,11 +1,9 @@
 /**
  * #1287 S1 (b) — action-level AAD agreement.
  *
- * S1 still writes the legacy format, where the AAD is not bound, so a call
- * site that builds the wrong AAD (wrong column string, wrong pk) is invisible
- * until ENCRYPTION_WRITE_KID is set in S2 — and then it shows up only as
- * reveals of new rows throwing. These tests turn v1 writes on (write kid k1)
- * and prove, for every encrypted column, that what each create AND edit path
+ * A call site that builds the wrong AAD (wrong column string, wrong pk) shows
+ * up only as reveals of new rows throwing, in prod. These tests write v1
+ * under write kid k1 and prove, for every encrypted column, that what each create AND edit path
  * writes is what the matching reveal action decrypts, and that the pk bound
  * into the AAD is the pk written into the row.
  *
@@ -283,21 +281,32 @@ describe('AAD agreement — InvoiceCredentials.verification_code_encrypted', () 
   })
 })
 
-// ── S1 default: writes stay legacy ────────────────────────────────────────────
+// ── S3b: no write kid → no write; legacy rows no longer reveal ─────────────────
 
-describe('S1 default — no ENCRYPTION_WRITE_KID', () => {
-  it('create paths still write the legacy format and reveal it', async () => {
+describe('S3b — legacy retired', () => {
+  it('with no ENCRYPTION_WRITE_KID a create path throws and writes no ciphertext', async () => {
     vi.stubEnv('ENCRYPTION_WRITE_KID', '')
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'car-1' }])
     queueDbResult([])
-    await createCar({ name: '車', plate: 'ABC-1234' })
-    const ct = valuesCall(1).plateEncrypted as string
-    expect(ct).toMatch(/^[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/)
+    await expect(createCar({ name: '車', plate: 'ABC-1234' })).rejects.toThrow(CryptoError)
+    const written = mockBuilder.values.mock.calls.some(
+      (c) => typeof (c[0] as Record<string, unknown>).plateEncrypted === 'string',
+    )
+    expect(written).toBe(false)
+  })
+
+  it('a legacy 3-part row (genuine, under k1) no longer reveals', async () => {
+    // Hand-rolled the way the pre-#1287 code wrote it: no AAD, key k1.
+    const { createCipheriv, randomBytes } = await import('crypto')
+    const iv = randomBytes(12)
+    const c = createCipheriv('aes-256-gcm', Buffer.from(process.env.ENCRYPTION_KEY as string, 'hex'), iv)
+    const body = Buffer.concat([c.update('ABC-1234', 'utf8'), c.final()])
+    const legacy = `${iv.toString('hex')}:${c.getAuthTag().toString('hex')}:${body.toString('hex')}`
 
     queueDbResult([GROUP])
-    queueDbResult([{ assetType: 'car', assetDeletedAt: null, plateEncrypted: ct }])
-    expect(await revealCarPlate('car-1')).toEqual({ ok: true, data: 'ABC-1234' })
+    queueDbResult([{ assetType: 'car', assetDeletedAt: null, plateEncrypted: legacy }])
+    await expect(revealCarPlate('car-1')).rejects.toThrow(CryptoError)
   })
 })
