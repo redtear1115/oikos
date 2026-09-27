@@ -175,7 +175,9 @@ export async function runAction<T>(body: () => Promise<T>): Promise<ActionResult
     const failure = toActionFailure(e)
     if (failure) return failure
     // #1289 — a driver error carries every bound value (and Postgres' row
-    // detail); strip them before Next logs it and Sentry captures it.
+    // detail); strip them before Next logs it and Sentry captures it. Since
+    // #1453 the database layer (`lib/db/sanitizingQuery.ts`) already did for
+    // anything thrown through `db`; this is the second line, and idempotent.
     throw sanitizeDbError(e)
   }
 }

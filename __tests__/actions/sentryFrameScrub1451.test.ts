@@ -22,9 +22,11 @@ import { startSentryHarness, type SentryHarness } from '../../tests/_helpers/sen
 // contains `at `, and `err.stack` starts with the whole message. A barcode
 // with ` at ` in it turns Drizzle's `params:` line into a frame whose
 // filename is the rest of the params — the ciphertext included; a 22P02
-// input with a newline does the same from the Postgres message. Route
-// handlers and server components reach Sentry without `sanitizeDbError`, so
-// only the event hook stands in the way.
+// input with a newline does the same from the Postgres message. Errors thrown
+// through `db` are cleaned at the database layer (#1453), so this is about a
+// driver error that reaches Sentry some other way: this file never imports
+// `lib/db/client` (enforced by tests/db-error-guards.test.ts), its own drizzle
+// instance throws raw errors, and only the event hook stands in the way.
 //
 // The secrets are assembled at runtime: contextLines copies source lines of
 // this file into the frames, so a literal would leak by itself.
