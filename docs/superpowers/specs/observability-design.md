@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-26
+last_updated: 2026-09-27
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -10,8 +10,9 @@ updates:
   - v1.5.18: 補「Sentry 看不到原始網址、cookie、請求 body」這條邊界（#1274，v1.5.16 起生效）
   - v1.6.0: 補「GA 收得到邀請 token 與帳務篩選值」這條已接受的風險（#1300）
   - v1.6.2: 補「`invite_created` 的真正語意」與「client 邀請事件補 group_id」兩條邊界（#1415）
+  - v1.6.3: 補「DB 錯誤在 DB 層就被清洗」這條邊界（#1453）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -48,6 +49,8 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", 
 - **Session Replay 在前端鎖死（`disable_session_recording: true`）。** PostHog 專案後台那個開關現在是無效的；要開必須先連同 replay 自己的遮罩（`session_recording.maskAllInputs` + `maskTextSelector: '*'`）一起改 code，因為上面那兩個選項管不到 recorder。
 - **Sentry 的 request、breadcrumb、span、log 裡看不到原始網址、cookie、header、請求 body 與 client IP——但 exception 的訊息內容不經清洗。** 自 v1.5.16 起（#1274），client / server / edge 三份 Sentry config 的 `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` / `beforeBreadcrumb` / `beforeSendLog` 全部走 `lib/observability/sentryScrub.ts`：網址套用與 PostHog 共用的 `lib/analytics/urlSanitizer.ts` 規則（路徑與 query key 保留，邀請 token 變 `:token`，非白名單 query 值變 `<masked>`），header / cookie / `request.data` 整段拿掉。所以「重現某個錯誤時的完整網址或 server action 參數」在 Sentry 上查不到，要從 issue 的路徑形狀與 stack 回推。錯誤訊息（`exception.values[].value`）不在清洗範圍內：丟出含 URL 的 `Error` 前要自己處理（同「catch 住的錯誤只進 Logs」那條的做法）。
   - **失效的樣子是沒有任何錯誤。** 某份 config 漏接一個 hook，原始網址與 cookie 會安靜地重新出現在 Sentry，而沒人會去那裡看；hook 自己 throw 時，`beforeSend*` 那幾個會讓 SDK 丟掉整筆事件，breadcrumb／log 的則漏給呼叫端。唯一會變紅的是 `tests/sentry-scrub-wiring.test.ts`。
+- **DB 錯誤在 DB 層就被清洗過，Sentry／Vercel log 看不到綁定值或整列資料（#1453）。** `lib/db/sanitizingQuery.ts` 包住 drizzle 的 `PgPreparedQuery.prototype.queryWithCache`（所有 `db.select` / `insert` / `update` / `delete` / `query.*` / `execute` 都經過）以及 postgres-js 的 `PostgresJsSession.prototype.transaction` / `PostgresJsTransaction.prototype.transaction`（transaction 內失敗的原始 `PostgresError` 會被 postgres.js 重丟一次，繞過前者），由 `lib/db/client.ts` 在建立 `db` 之前呼叫 `installDbErrorSanitizer()` 裝上。清洗後保留 `code`、`constraint_name`、`table_name`、`column_name`、`routine`、`hint`、`position`（這些控制流程要讀、也是查錯的線索）；`detail` 只在 40P01（deadlock）／40001（序列化失敗）／55P03（拿不到鎖）／57014（statement 被取消）這四個 SQLSTATE 保留——它們描述的是進程與鎖，不是某一列的值。其餘一律清掉：Drizzle 訊息尾端的 `\nparams: …`、Postgres `detail` 的 `Key (...)=(...)` / `Failing row contains (...)`、class 22（data exception）訊息裡從第一個引號開始的內容。`runAction`（`lib/action-errors.ts`，#1289）與 `lib/observability/sentryScrub.ts` 是第二、第三道線，各自獨立、冪等；**這條是第一道，把 DB 層本身也算進觀測邊界**。
+  - **失效的樣子**：drizzle 升級把上面三個方法改名或搬走 → `installDbErrorSanitizer` 在啟動時直接 throw（每個碰資料庫的頁面都壞），故意設計成吵；CI 的 `tests/db-layer-sanitize.test.ts` 和 `next build` 會先在 import 階段紅掉，比任何人發現漏洞更早。**如果這層被繞過**（例如程式碼直接用 `db.$client`、開了 drizzle `logger` 或 postgres.js `debug`、或 Sentry 開了 `includeLocalVariables`），失效的樣子是沒有任何錯誤——綁定值安靜地出現在 Vercel runtime log 的 `params: …` 或 Sentry 事件的 `Failing row contains …` 裡，只有打開 log 的人才會發現。`tests/db-error-guards.test.ts` grep 應用程式碼（`actions` / `app` / `components` / `lib` 等）禁止 `db.$client`、drizzle `logger`、postgres.js `debug`、Sentry 的 `includeLocalVariables` / `extraErrorDataIntegration` / `localVariablesIntegration`，抓的是「繞過這層」的寫法，不是清洗邏輯本身。
 - **GA 會收到原始網址，包括邀請 token 和帳務篩選值。這是已接受的風險，不是漏掉的洞（#1300，使用者 2026-09-21 決定）。** #1274 的清洗只涵蓋 PostHog、Sentry、Vercel Analytics／Speed Insights。`app/layout.tsx:130` 的 `<GoogleAnalytics>`（`@next/third-parties`）只跑 `gtag('js')` 和不帶參數的 `gtag('config', id)`，沒有地方傳 config 參數。所以 GA 收到的是 `document.location` 的原文：
   - **`dl` 帶邀請 token**：已登入的人整頁打開 `/invite/<token>`，第一個 page view 就帶著 token。
   - **`dr` 帶邀請 token**：`app/[locale]/sign-in/SignInButton.tsx:157` 從 `/sign-in?next=/invite/<token>` 整頁跳轉，同源 referrer 是完整網址。
