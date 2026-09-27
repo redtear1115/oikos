@@ -206,9 +206,9 @@ Trip 結束時 (`actions/trip.ts#endTrip`)：
    - `start_date < currentEpochStartedAt` → reject「不可建在過去章節」
    - `epoch_id` 由 `start_date` 落點自動派生，不接受手動指定
 
-2. **結束 epoch**（`actions/membership.ts` 的 leave / accept invite 走到 swap 以外路徑）：
-   - 檢查當前 epoch 是否有 `status='active'` 的 trip
-   - 有則 reject「請先結束旅行再離開章節」+ 提供 trip 結束捷徑
+2. **結束 epoch**（`actions/membership.ts` 的 leave，或 accept invite 走到 swap 以外路徑）：
+   - `leaveGroup`：檢查當前 epoch 是否有 `status='active'` 的 trip，有則 reject「請先結束旅行再離開章節」+ 提供 trip 結束捷徑
+   - **`acceptInvite`（非 swap 路徑）不再 reject（#1438，v1.6.3）**：邀請人的 active trip 由 `acceptInvite` 在同一個 transaction 裡自動結束（`lib/trip/endTripInTx.ts#foldTripIntoLedger`）——支出以 solo 語意結算、摘要記在正在關閉的 solo 章節，然後才關舊開新；行為等同邀請人先按了「結束旅行」再邀請。**撤回紀錄**：原本這裡把 accept 和 leave 寫成同一條 reject 規則，但 accept 端沒有人能在收到邀請的當下先幫邀請人按「結束旅行」——reject 只會把支出卡在即將關閉的章節裡，結束旅行回 `active_trip_not_found`、新增支出回 `trip_not_found`，永遠折不回帳本，而且沒有任何錯誤紀錄。詳見 [solo-trip-design.md](solo-trip-design.md) 「solo 期間開 trip，中途伴侶加入」一列
    - **swap 不算結束 epoch**（per existing rule），所以 swap 不檢查 trip
 
 過去章節的 trip 沿用 [epoch-readonly](epoch-readonly-design.md) → UI 唯讀。
@@ -358,7 +358,8 @@ Trip 結束時 (`actions/trip.ts#endTrip`)：
 ### Trip × Epoch
 
 - Trip 建立時若 `start_date < currentEpochStartedAt` → server reject
-- 結束 epoch（leave / 新伴侶 accept invite 走非 swap 路徑）時若有 active trip → reject
+- `leaveGroup` 結束 epoch 時若有 active trip → reject
+- **撤回**：原本這行也把「新伴侶 accept invite 走非 swap 路徑」和 leave 寫成同一條 reject 規則。自 #1438（v1.6.3）起，accept 這一側改成自動結束邀請人的 active trip（`lib/trip/endTripInTx.ts`），不再 reject；只有 `leaveGroup` 與 remove-partner 仍走 reject。失效的樣子：照舊規則驗收會誤判「accept 時卡著旅行應該擋下」為 bug——實際上擋下才是 bug，會讓支出永遠折不回帳本
 - Pin 在 past epoch 時 trip 相關 UI 唯讀
 
 ### Trip × Expense × Currency

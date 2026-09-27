@@ -81,6 +81,7 @@ const {
 } = await import('@/actions/tripExpense')
 const { createTransaction, editTransaction } = await import('@/actions/transaction')
 const { acceptInvite } = await import('@/actions/invite')
+const { generateToken } = await import('@/lib/invite')
 const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
 const { unwrapAction } = await import('@/lib/action-errors')
 const { eq, and, isNull, inArray } = await import('drizzle-orm')
@@ -165,7 +166,7 @@ async function seedSoloTripThenAccept() {
     splitType: 'half',
   }))
 
-  const token = 'TEST_TRIP_CHAPTER_' + randomUUID()
+  const token = generateToken() // a well-formed token (#1288 I3b)
   await db.insert(groupInvites).values({
     groupId: group.id,
     invitedBy: ownerId,
@@ -203,7 +204,11 @@ async function liveExpenses(tripId: string) {
 }
 
 describe('trip in a closed chapter', () => {
-  it('endTrip is refused after the chapter closes; no summary rows, balance unchanged', async () => {
+  it('endTrip is refused after the chapter closes; already folded once by accept, not folded again, balance unchanged', async () => {
+    // Since #1438 (acceptInvite auto-ends the inviter's active trip), the
+    // trip is already `status='ended'` with one summary row by the time
+    // seedSoloTripThenAccept returns. A second endTrip call must still be
+    // refused, and must not write a second summary.
     const { groupId, trip } = await seedSoloTripThenAccept()
     const balanceBefore = await readBalance(groupId)
 
@@ -214,11 +219,11 @@ describe('trip in a closed chapter', () => {
       .select({ id: cashTransactions.id })
       .from(cashTransactions)
       .where(eq(cashTransactions.tripId, trip.id))
-    expect(summaries).toHaveLength(0)
+    expect(summaries).toHaveLength(1)
     expect(await readBalance(groupId)).toEqual(balanceBefore)
     const after = await tripRow(trip.id)
-    expect(after.status).toBe('active')
-    expect(after.endedAt).toBeNull()
+    expect(after.status).toBe('ended')
+    expect(after.endedAt).not.toBeNull()
   })
 
   it('updateTrip is refused with trip_not_found and writes nothing', async () => {
@@ -273,11 +278,14 @@ describe('trip in a closed chapter', () => {
     expect(await editTransaction({ ...base, oldId: id, tripId: trip.id }))
       .toEqual({ ok: false, code: 'trip_missing' })
 
+    // The group already carries the auto-fold summary row from accept
+    // (#1438); the plain `lunch` transaction is the only other row.
     const rows = await db
       .select({ id: cashTransactions.id, tripId: cashTransactions.tripId, deletedAt: cashTransactions.deletedAt })
       .from(cashTransactions)
       .where(eq(cashTransactions.groupId, groupId))
-    expect(rows).toEqual([{ id, tripId: null, deletedAt: null }])
+    expect(rows).toEqual(expect.arrayContaining([{ id, tripId: null, deletedAt: null }]))
+    expect(rows).toHaveLength(2)
   })
 
   it('positive control: a trip created in the new chapter can be written, tagged and ended', async () => {
@@ -341,9 +349,11 @@ describe('trip in a closed chapter', () => {
       transactedAt: todayIso(),
       tripId: trip.id,
     })).toEqual({ ok: false, code: 'trip_missing' })
+    // Only the auto-fold summary row from accept (#1438) exists; the refused
+    // `lunch` transaction writes nothing.
     const rows = await db.select({ id: cashTransactions.id }).from(cashTransactions)
       .where(eq(cashTransactions.groupId, groupId))
-    expect(rows).toHaveLength(0)
+    expect(rows).toHaveLength(1)
   })
 })
 

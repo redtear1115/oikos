@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-21
+last_updated: 2026-09-27
 status: planned
 related_specs: [solo-mode, trip-multi-currency, group-outing, epoch-readonly, invite-existing-group, transactions]
 depends_on: [solo-mode, trip-multi-currency]
@@ -161,7 +161,7 @@ balance 回答的是「我們**現在**之間怎麼樣」，而章節的定義�
 
 | 情境 | 行為 | 為什麼 |
 |---|---|---|
-| solo 期間開 trip，中途伴侶加入 | **接受邀請時自動結束這趟旅行**（#1438）：支出以 solo 語意結算、摘要記在正在關閉的 solo 章節，然後才關舊開新；行為等同邀請人先按了「結束旅行」再邀請。新伴侶不被算入分攤 | 與 [solo-mode](solo-mode-design.md)「升雙人不 retroactive」一致。**撤回紀錄**：原寫「trip 留在舊 epoch，維持 solo 語意直到結束」，但章節一關，舊章節的旅行就是唯讀的過去——結束旅行回 `active_trip_not_found`、新增支出回 `trip_not_found`，支出永遠折不回帳本，而且沒有任何錯誤紀錄。「留著等它結束」這條路不存在 |
+| solo 期間開 trip，中途伴侶加入 | **接受邀請時自動結束這趟旅行**（#1438）：支出以 solo 語意結算、摘要記在正在關閉的 solo 章節，然後才關舊開新；行為等同邀請人先按了「結束旅行」再邀請。新伴侶不被算入分攤。**結束日**：沿用旅行原本規劃的結束日；規劃日晚於接受當天時 clamp 成接受當天（UTC，和結束旅行 sheet 手動結束時的預設一致），且不會早於開始日 | 與 [solo-mode](solo-mode-design.md)「升雙人不 retroactive」一致。**撤回紀錄**：原寫「trip 留在舊 epoch，維持 solo 語意直到結束」，但章節一關，舊章節的旅行就是唯讀的過去——結束旅行回 `active_trip_not_found`、新增支出回 `trip_not_found`，支出永遠折不回帳本，而且沒有任何錯誤紀錄。「留著等它結束」這條路不存在 |
 | duo 期間開 trip，伴侶想離開 | 維持現行 reject。訊息要說明「結束旅行」是什麼意思，不只是擋下 | 孤兒 trip 的柵欄 |
 | 移除伴侶（#1033）時有 active trip | 同樣 reject。移除與離開在這件事上對稱 | 兩者都會關閉 epoch |
 | 移除伴侶後回到 solo | 關舊開新 epoch，與 `leaveGroup` 對稱；門自動關上（Locked decision 4）；**並撤銷該 group 所有未接受的邀請** | #1033 明寫等這份 spec 定案。撤銷邀請不是額外要求：`leaveGroup` 已經這樣做（`actions/membership.ts`），而 #1031 的修補讓「鑄造者必須仍是成員」成為接受條件——移除伴侶若不撤銷，留守者自己鑄的舊邀請仍通過該條件，等於留一把到期前都有效的鑰匙（當時 7 天，#1288 起 24 小時） |
