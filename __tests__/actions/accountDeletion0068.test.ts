@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterAll } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -16,13 +16,31 @@ import { loadEnvLocal } from '../outing/_setup'
 // If dev already has 0068 applied, the "before" assertions (old function
 // leaves the user undeleted) are skipped; the "after" ones still run.
 // Excluded from CI with the rest of __tests__/actions/** (vitest.config.ci.ts).
+//
+// Admin connection (#1467): this test seeds auth.users, applies DDL and calls
+// the SECURITY DEFINER process_account_deletions() — none of which the
+// runtime role (futari_app, DATABASE_URL) may do. It connects with
+// DATABASE_URL_DIRECT (the migration / admin role) instead of the app's
+// `db`. A 42501 here means the test is on the wrong connection, never that
+// futari_app needs another grant (ops-runbook §「Runtime DB role
+// (futari_app)」).
 // ──────────────────────────────────────────────────────────────────────────────
 
 loadEnvLocal()
 vi.setConfig({ testTimeout: 60_000 })
 
-const { db } = await import('@/lib/db/client')
+const adminUrl = process.env.DATABASE_URL_DIRECT
+if (!adminUrl) {
+  throw new Error('DATABASE_URL_DIRECT not set; this test needs the admin connection. Ensure .env.local has it.')
+}
+const postgres = (await import('postgres')).default
+const { drizzle } = await import('drizzle-orm/postgres-js')
 const { sql } = await import('drizzle-orm')
+const adminClient = postgres(adminUrl, { max: 1, prepare: false, onnotice: () => {} })
+const db = drizzle(adminClient)
+afterAll(async () => {
+  await adminClient.end()
+})
 
 const ROLLBACK = new Error('rollback')
 const TOMBSTONE = '已離開的夥伴'
