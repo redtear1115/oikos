@@ -275,7 +275,10 @@ describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
     })
   })
 
-  it('accept holds the chapter row, endTrip waits: endTrip is refused and writes nothing', async () => {
+  // #1438: accept now ends the inviter's active trip itself (it holds the
+  // trip row too by this point), so endTrip is refused, and the only summary
+  // is the accept's — in the old chapter.
+  it('accept holds the chapter row, endTrip waits: endTrip is refused and adds no summary of its own', async () => {
     const inviter = await person('inviter')
     const joiner = await person('joiner')
     const g = await group(inviter, null)
@@ -296,9 +299,9 @@ describe.skipIf(!isLocalDb)('endTrip vs a chapter close (#1290)', () => {
     const rows = await summariesVsOpenChapter(g.id, tripId)
     expect(rows.filter((r) => r.before_open_chapter !== true)).toEqual([])
     expect(res).toEqual({ ok: false, code: 'active_trip_not_found' })
-    expect(rows).toHaveLength(0)
+    expect(rows).toHaveLength(1)
     const [trip] = await db.select({ status: trips.status }).from(trips).where(eq(trips.id, tripId))
-    expect(trip.status).toBe('active')
+    expect(trip.status).toBe('ended')
   })
 })
 
