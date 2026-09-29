@@ -41,6 +41,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 修正
+
+- **iOS 27 上 App 一開啟就閃退（UIScene）**
+  使用者：iOS 27 上可以正常開啟；需重送 App Store 才會觸達使用者。
+  技術：原生殼改採 UIScene 生命週期（新增 `SceneDelegate.swift`、`UIApplicationSceneManifest`），Capacitor 升至 8.5.2。
+
 ### 技術變更
 
 - **重新加密的核心抽成共用模組（#1287）**
