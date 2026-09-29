@@ -41,11 +41,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### 修正
+_Nothing unreleased yet._
 
-- **iOS 27 上 App 一開啟就閃退（UIScene）**
-  使用者：iOS 27 上可以正常開啟；需重送 App Store 才會觸達使用者。
-  技術：原生殼改採 UIScene 生命週期（新增 `SceneDelegate.swift`、`UIApplicationSceneManifest`），Capacitor 升至 8.5.2。
+## [1.6.4] - 2026-09-29
+
+主題：**iOS 27 上又打得開了**——原生殼改用 iOS 27 要求的新生命週期，另外把欄位加密的金鑰輪替工具收整。
+完整 diff：[v1.6.3...v1.6.4](https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4)
+
+### 使用者可見變化
+
+- **iOS 27 上 App 一開啟就閃退（#1473）**
+  使用者：iOS 27 上 Futari 一打開就關閉；更新到 App Store 的 1.6.4 版後可正常開啟，iOS 26 以下不受影響。
+  技術：原生殼改採 UIScene 生命週期（新增 `SceneDelegate.swift`、`UIApplicationSceneManifest`），Capacitor 升至 8.5.2；需重送 App Store。
 
 ### 技術變更
 
@@ -1414,7 +1421,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.4...HEAD
+[1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1
