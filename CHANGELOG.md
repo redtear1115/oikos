@@ -43,6 +43,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.4] - 2026-09-29
+
+主題：**iOS 27 上又打得開了**——原生殼改用 iOS 27 要求的新生命週期，另外把欄位加密的金鑰輪替工具收整。
+完整 diff：[v1.6.3...v1.6.4](https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4)
+
+### 使用者可見變化
+
+- **iOS 27 上 App 一開啟就閃退（#1473）**
+  使用者：iOS 27 上 Futari 一打開就關閉；更新到 App Store 的 1.6.4 版後可正常開啟，iOS 26 以下不受影響。
+  技術：原生殼改採 UIScene 生命週期（新增 `SceneDelegate.swift`、`UIApplicationSceneManifest`），Capacitor 升至 8.5.2；需重送 App Store。
+
+### 技術變更
+
+- **重新加密的核心抽成共用模組（#1287）**
+  使用者：無可見變化。
+  技術：`scripts/reencrypt-pii.ts` 的 preflight／compare-and-swap 與 SQL 移到 `lib/reencryptCore.ts`，供之後在 preview runtime 內輪替 prod 金鑰時共用同一份；腳本行為不變，ops-runbook 補上「本機標成 prod 的 env 檔其實是 dev 金鑰」的陷阱。
+- **欄位加密不再讀寫舊格式密文（#1287 S3b）**
+  使用者：無可見變化。
+  技術：`lib/crypto.ts` 移除不帶 AAD 的三段式舊格式，讀到一律當格式錯誤拒絕；沒設 `ENCRYPTION_WRITE_KID` 時 `encrypt` 直接丟錯；重新加密腳本遇到舊格式列只算 preflight 失敗、不寫入。
+
 ## [1.6.3] - 2026-09-27
 
 主題：**帳本的邊界更穩**——記帳、旅行、匯出都守在自己的章節裡，名下有愛物也能離開帳本，送往錯誤追蹤的資料先清乾淨。
@@ -1401,7 +1421,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.4...HEAD
+[1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/redtear1115/oikos/compare/v1.6.0...v1.6.1

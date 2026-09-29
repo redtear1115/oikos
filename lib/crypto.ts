@@ -6,17 +6,26 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
  * encryption — see the #1191 retraction note in CLAUDE.md before describing
  * it anywhere user-facing.
  *
- * ── Formats ─────────────────────────────────────────────────────────────────
- *   legacy : `<iv24hex>:<tag32hex>:<cthex>`          no AAD, always key `k1`
- *   v1     : `v1:<kid>:<iv24hex>:<tag32hex>:<cthex>` AAD mandatory (see aadFor)
+ * ── Format ──────────────────────────────────────────────────────────────────
+ *   v1 : `v1:<kid>:<iv24hex>:<tag32hex>:<cthex>`  AAD mandatory (see aadFor)
+ *
+ * The pre-#1287 legacy format (`<iv>:<tag>:<ct>`, no AAD, always k1) was
+ * retired in S3b (D3): it is neither written nor accepted. A 3-part value is
+ * rejected as malformed before any key is looked up. While it was accepted,
+ * an AAD-less ciphertext copied out of an old dump could be pasted into any
+ * row and still decrypt. What a leftover legacy row looks like now: its reveal
+ * throws CryptoError (the generic unexpected-error digest on the client) and
+ * `scripts/reencrypt-pii.ts` counts it as a preflight failure and writes
+ * nothing — it cannot repair it; only reverting S3b can.
  *
  * ── Keyring (env contract, #1287 D2) ────────────────────────────────────────
  *   ENCRYPTION_KEY        64 hex; implicitly keyring entry `k1` (optional once
- *                         other kids exist, but legacy values need it)
+ *                         other kids exist, needed while any v1:k1 value does)
  *   ENCRYPTION_KEYS       optional `k2:<64hex>[,k3:<64hex>]`; `k1` is reserved
  *                         for ENCRYPTION_KEY and may not appear here
- *   ENCRYPTION_WRITE_KID  optional; unset → writes stay legacy (S1/S2),
- *                         set → writes v1 under that kid
+ *   ENCRYPTION_WRITE_KID  required for writes: the kid every encrypt uses.
+ *                         Unset → `encrypt` throws (there is no default kid);
+ *                         decrypt does not need it.
  *
  * Rules: a kid is never reused and its bytes are never edited in place. A
  * rotation always adds a new kid. Editing ENCRYPTION_KEY in place does not
@@ -24,7 +33,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
  *
  * ── Failure behaviour ───────────────────────────────────────────────────────
  * Parsing is strict and fails closed: a value is decrypted with exactly the
- * key its format names (legacy → k1, v1 → its kid), never "try the next key".
+ * key its v1 kid names, never "try the next key".
  * Every failure throws CryptoError. Messages never contain ciphertext,
  * plaintext, key material or AAD values; to the client they surface as the
  * generic unexpected-error digest (lib/action-errors.ts).
@@ -33,7 +42,8 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
 const ALGORITHM = 'aes-256-gcm'
 const IV_BYTES = 12
 const TAG_BYTES = 16
-const LEGACY_KID = 'k1'
+/** The kid ENCRYPTION_KEY is installed under. */
+const ENCRYPTION_KEY_KID = 'k1'
 const V1_PREFIX = 'v1'
 
 const KEY_HEX_RE = /^[0-9a-fA-F]{64}$/
@@ -102,7 +112,7 @@ export function aadFor<T extends EncryptedTable>(
 
 function aadBytes(ctx: AadContext): Buffer {
   // Runtime check too: a call site that forgot the context (or hand-built one)
-  // must fail even on the legacy path, where the AAD is not used.
+  // must fail before any key is touched.
   if (!ctx || typeof ctx.aad !== 'string' || !AAD_RE.test(ctx.aad)) {
     throw new CryptoError('Missing or invalid encryption context')
   }
@@ -113,7 +123,7 @@ function aadBytes(ctx: AadContext): Buffer {
 
 interface Keyring {
   keys: Map<string, Buffer>
-  /** null → write the legacy format under k1. */
+  /** null → encrypt throws; decrypt does not need a write kid. */
   writeKid: string | null
 }
 
@@ -129,10 +139,10 @@ function envValue(name: string): string | undefined {
 function loadKeyring(): Keyring {
   const keys = new Map<string, Buffer>()
 
-  const legacy = envValue('ENCRYPTION_KEY')
-  if (legacy !== undefined) {
-    if (!KEY_HEX_RE.test(legacy)) throw new CryptoError('ENCRYPTION_KEY must be 64 hex chars (32 bytes)')
-    keys.set(LEGACY_KID, Buffer.from(legacy, 'hex'))
+  const k1 = envValue('ENCRYPTION_KEY')
+  if (k1 !== undefined) {
+    if (!KEY_HEX_RE.test(k1)) throw new CryptoError('ENCRYPTION_KEY must be 64 hex chars (32 bytes)')
+    keys.set(ENCRYPTION_KEY_KID, Buffer.from(k1, 'hex'))
   }
 
   const extra = envValue('ENCRYPTION_KEYS')
@@ -146,7 +156,7 @@ function loadKeyring(): Keyring {
       if (!KID_RE.test(kid) || !KEY_HEX_RE.test(hex)) {
         throw new CryptoError(`ENCRYPTION_KEYS entry ${i + 1} is malformed (expected kN:<64 hex>)`)
       }
-      if (kid === LEGACY_KID) {
+      if (kid === ENCRYPTION_KEY_KID) {
         throw new CryptoError('ENCRYPTION_KEYS must not contain k1 (k1 is ENCRYPTION_KEY)')
       }
       if (keys.has(kid)) {
@@ -169,21 +179,21 @@ function loadKeyring(): Keyring {
 
 // ── encrypt / decrypt ───────────────────────────────────────────────────────
 
-function seal(key: Buffer, plaintext: string, aad: Buffer | null): [string, string, string] {
+function seal(key: Buffer, plaintext: string, aad: Buffer): [string, string, string] {
   const iv = randomBytes(IV_BYTES)
   const cipher = createCipheriv(ALGORITHM, key, iv, { authTagLength: TAG_BYTES })
-  if (aad) cipher.setAAD(aad)
+  cipher.setAAD(aad)
   const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
   return [iv.toString('hex'), cipher.getAuthTag().toString('hex'), ct.toString('hex')]
 }
 
-function open(key: Buffer, ivHex: string, tagHex: string, ctHex: string, aad: Buffer | null): string {
+function open(key: Buffer, ivHex: string, tagHex: string, ctHex: string, aad: Buffer): string {
   if (!IV_RE.test(ivHex) || !TAG_RE.test(tagHex) || !CT_RE.test(ctHex)) {
     throw new CryptoError('Invalid ciphertext format')
   }
   try {
     const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, 'hex'), { authTagLength: TAG_BYTES })
-    if (aad) decipher.setAAD(aad)
+    decipher.setAAD(aad)
     decipher.setAuthTag(Buffer.from(tagHex, 'hex'))
     return decipher.update(Buffer.from(ctHex, 'hex')).toString('utf8') + decipher.final('utf8')
   } catch {
@@ -194,43 +204,32 @@ function open(key: Buffer, ivHex: string, tagHex: string, ctHex: string, aad: Bu
 }
 
 /**
- * Encrypt one cell. `ctx` is required at every call site; with
- * ENCRYPTION_WRITE_KID unset the output is still the legacy format (the
- * context is validated but not bound), so deploying the keyring changes no
- * stored bytes until the write kid is set (#1287 S2).
+ * Encrypt one cell as `v1:<ENCRYPTION_WRITE_KID>:…`, bound to `ctx`.
+ * With ENCRYPTION_WRITE_KID unset this throws: there is no default kid, so a
+ * missing env var fails loudly on the first write instead of silently
+ * producing a format nothing reads (#1287 S3b).
  */
 export function encrypt(plaintext: string, ctx: AadContext): string {
   const aad = aadBytes(ctx)
   const { keys, writeKid } = loadKeyring()
 
-  if (writeKid === null) {
-    const key = keys.get(LEGACY_KID)
-    if (!key) throw new CryptoError('Legacy writes need ENCRYPTION_KEY (set ENCRYPTION_WRITE_KID instead)')
-    return seal(key, plaintext, null).join(':')
-  }
+  if (writeKid === null) throw new CryptoError('ENCRYPTION_WRITE_KID is not set')
 
   const key = keys.get(writeKid)!
   return [V1_PREFIX, writeKid, ...seal(key, plaintext, aad)].join(':')
 }
 
 /**
- * Decrypt one cell. Accepts legacy (k1, no AAD) and v1 (named kid, AAD from
- * `ctx`). Throws CryptoError on anything else, on an unknown kid, and on any
- * authentication failure — including a v1 value moved to another row, column
- * or table.
+ * Decrypt one cell. Accepts only v1 (named kid, AAD from `ctx`). Throws
+ * CryptoError on anything else (including the retired 3-part legacy format),
+ * on an unknown kid, and on any authentication failure — including a v1 value
+ * moved to another row, column or table.
  */
 export function decrypt(ciphertext: string, ctx: AadContext): string {
   const aad = aadBytes(ctx)
   if (typeof ciphertext !== 'string') throw new CryptoError('Invalid ciphertext format')
   const parts = ciphertext.split(':')
   const { keys } = loadKeyring()
-
-  if (parts.length === 3) {
-    const key = keys.get(LEGACY_KID)
-    if (!key) throw new CryptoError('Unknown key id')
-    const [ivHex, tagHex, ctHex] = parts
-    return open(key, ivHex, tagHex, ctHex, null)
-  }
 
   if (parts.length === 5 && parts[0] === V1_PREFIX) {
     const [, kid, ivHex, tagHex, ctHex] = parts

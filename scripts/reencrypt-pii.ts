@@ -8,10 +8,38 @@
 // `v1:<ENCRYPTION_WRITE_KID>:…` is decrypted and re-encrypted under the write
 // kid, bound to its own (table, column, primary key) through `aadFor`.
 //
+// It reads only what the app reads: v1 values. Since #1287 S3b the legacy
+// 3-part format (`iv:tag:ct`, no AAD) is not accepted by `lib/crypto.ts`, so
+// this script can no longer convert legacy rows either — it was run on dev and
+// prod before S3b shipped, and both were at 0 legacy rows.
+// What a leftover legacy row looks like now: preflight fails on that row
+// (`preflight_failed=N`, exit 2) and NOTHING is written, on --apply too. It is
+// not a wrong key and not corrupt data; the only repair is reverting S3b, then
+// running this script, then re-shipping S3b.
+//
 // It imports `lib/crypto.ts` instead of re-implementing the format. #881 was
 // exactly that mistake: a script with its own copy of the cipher code wrote
 // values the app could not read. Here there is one implementation, so if the
-// app can decrypt it, so can this script, and vice versa.
+// app can decrypt it, so can this script, and vice versa. The preflight /
+// compare-and-swap loop and its SQL live in `lib/reencryptCore.ts` for the
+// same reason: any runtime route that has to do this job (see the trap below)
+// calls that one copy instead of carrying its own.
+//
+// TRAP — you probably do not have the prod key locally
+// ----------------------------------------------------
+// Every local / secrets-image env file labelled "prod" (`.env.production`,
+// the image's `env/.env.production`, `reencrypt-prod.env`) holds the DEV
+// `ENCRYPTION_KEY`, not prod's. The prod key exists only as a Vercel
+// Sensitive variable (`vercel env pull` gives back `[SENSITIVE]`), so this
+// script cannot re-encrypt prod as-is.
+// What it looks like: `--target=prod` passes every guard (the DB URL in those
+// files is the real prod one), then preflight fails on EVERY row — including
+// the rows the app itself wrote — and nothing is written (2026-09-27 dry-run:
+// preflight 22/22 failed). It is not corrupt data; it is the wrong key.
+// What to do: run the shared core inside a Vercel *preview* deployment,
+// which has the prod DB and the prod keyring — a one-off, token-guarded route
+// on a throwaway branch that never merges (#882 did this for #881; #1287 for
+// the k2 rotation). Procedure: docs/superpowers/ops-runbook.md.
 //
 // Guards (plan #1287 Part C, S3)
 // ------------------------------
@@ -39,7 +67,8 @@
 //
 // The env file must contain:
 //   ENCRYPTION_KEY / ENCRYPTION_KEYS   the keyring, same contract as the app
-//   ENCRYPTION_WRITE_KID               required here (no legacy writes)
+//   ENCRYPTION_WRITE_KID               required (lib/crypto.ts refuses to
+//                                      encrypt without one)
 //   DATABASE_URL_DIRECT                preferred; or DATABASE_URL pointing at the
 //                                      session pooler (the direct host may be
 //                                      IPv6-only)
@@ -63,71 +92,34 @@ import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseEnv } from 'node:util'
+import { CryptoError } from '../lib/crypto.ts'
 import {
-  CryptoError,
-  ENCRYPTED_COLUMNS,
-  aadFor,
-  decrypt,
-  encrypt,
-  type EncryptedTable,
-} from '../lib/crypto.ts'
+  GuardError,
+  assertKeyringWritesCurrent,
+  assertTargetMatchesUrl,
+  openDb,
+  reencrypt,
+  type ColumnCounts,
+  type Db,
+  type RunResult,
+  type Target,
+} from '../lib/reencryptCore.ts'
 
-// ── Targets ─────────────────────────────────────────────────────────────────
-
-export const PROJECT_REFS = {
-  prod: 'cxbnlahuhdvrbwcnzoqo',
-  dev: 'ufhcprrauwsxdmscbkrf',
-} as const
-export type Target = keyof typeof PROJECT_REFS
-
-/** Primary key column per table; must match the pk that the app passes to aadFor. */
-const PK_COLUMN: Record<EncryptedTable, string> = {
-  Assets: 'id',
-  CarDetails: 'asset_id',
-  HouseDetails: 'asset_id',
-  ChildDetails: 'asset_id',
-  InvoiceCredentials: 'id',
-}
-
-export interface ColumnTarget {
-  table: EncryptedTable
-  pk: string
-  column: string
-}
-
-/** Derived from ENCRYPTED_COLUMNS so a newly encrypted column is covered automatically. */
-export const COLUMN_TARGETS: readonly ColumnTarget[] = (
-  Object.keys(ENCRYPTED_COLUMNS) as EncryptedTable[]
-).flatMap((table) =>
-  (ENCRYPTED_COLUMNS[table] as readonly string[]).map((column) => ({
-    table,
-    pk: PK_COLUMN[table],
-    column,
-  })),
-)
-
-// ── DB seam (mocked in tests) ───────────────────────────────────────────────
-
-export interface Row {
-  pk: string
-  ct: string
-}
-
-export interface Db {
-  /** Every non-null value of the column, soft-deleted rows included. */
-  selectColumn(t: ColumnTarget): Promise<Row[]>
-  /** `UPDATE … SET col = next WHERE pk = pk AND col = prev`; returns rows changed (0 or 1). */
-  compareAndSwap(t: ColumnTarget, pk: string, prev: string, next: string): Promise<number>
-}
+// The algorithm, its SQL and the target/keyring guards live in
+// lib/reencryptCore.ts (one copy, shared with any runtime route). Re-exported
+// so existing imports of this module keep working.
+export {
+  COLUMN_TARGETS,
+  GuardError,
+  PROJECT_REFS,
+  assertKeyringWritesCurrent,
+  assertTargetMatchesUrl,
+  openDb,
+  reencrypt,
+} from '../lib/reencryptCore.ts'
+export type { ColumnCounts, ColumnTarget, Db, Row, RunResult, Target } from '../lib/reencryptCore.ts'
 
 // ── Argument / env handling ─────────────────────────────────────────────────
-
-export class GuardError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'GuardError'
-  }
-}
 
 export interface Options {
   target: Target
@@ -228,131 +220,7 @@ export function parseEnvFile(contents: string): LoadedEnv {
   return { databaseUrl, writeKid, keyVars }
 }
 
-/**
- * Guard 2. The ref has to be *the* identifying part of the URL — the host of
- * a direct connection or the tenant suffix of a pooler username — and the
- * other environment's ref may not appear anywhere.
- */
-export function assertTargetMatchesUrl(target: Target, databaseUrl: string): void {
-  let url: URL
-  try {
-    url = new URL(databaseUrl)
-  } catch {
-    throw new GuardError('Database URL is not a valid URL')
-  }
-  const ref = PROJECT_REFS[target]
-  const otherRef = PROJECT_REFS[target === 'prod' ? 'dev' : 'prod']
-  const host = url.hostname.toLowerCase()
-  const user = decodeURIComponent(url.username).toLowerCase()
-  const hostMatches = host === `db.${ref}.supabase.co`
-  const userMatches = user.endsWith(`.${ref}`)
-  if (databaseUrl.toLowerCase().includes(otherRef)) {
-    throw new GuardError(`Database URL names the ${target === 'prod' ? 'dev' : 'prod'} project, not --target=${target}`)
-  }
-  if (!hostMatches && !userMatches) {
-    throw new GuardError(`Database URL does not name the ${target} project in its host or username`)
-  }
-}
-
-// ── Core ────────────────────────────────────────────────────────────────────
-
-export interface ColumnCounts {
-  label: string
-  total: number
-  current: number
-  toRewrite: number
-  preflightFailed: number
-  rewritten: number
-  raced: number
-  failed: number
-}
-
-export interface RunResult {
-  mode: 'dry-run' | 'apply'
-  aborted: 'preflight' | null
-  columns: ColumnCounts[]
-}
-
-function isCurrent(ct: string, writeKid: string): boolean {
-  const parts = ct.split(':')
-  return parts.length === 5 && parts[0] === 'v1' && parts[1] === writeKid
-}
-
-function ctxFor(t: ColumnTarget, pk: string) {
-  // ColumnTarget comes from ENCRYPTED_COLUMNS, so the pair is valid by construction.
-  return aadFor(t.table, t.column as never, pk)
-}
-
-/**
- * Runs guards 1, 3, 4 against an already-guarded (2) connection. Keys must
- * already be installed in process.env; `lib/crypto.ts` reads them there.
- */
-export async function reencrypt(db: Db, opts: { apply: boolean; writeKid: string }): Promise<RunResult> {
-  const columns: ColumnCounts[] = []
-  const pending: { t: ColumnTarget; counts: ColumnCounts; rows: Row[] }[] = []
-
-  // Guard 3 — preflight every row of every column before any write.
-  for (const t of COLUMN_TARGETS) {
-    const counts: ColumnCounts = {
-      label: `${t.table}.${t.column}`,
-      total: 0,
-      current: 0,
-      toRewrite: 0,
-      preflightFailed: 0,
-      rewritten: 0,
-      raced: 0,
-      failed: 0,
-    }
-    const rows = await db.selectColumn(t)
-    const toRewrite: Row[] = []
-    for (const row of rows) {
-      counts.total++
-      try {
-        decrypt(row.ct, ctxFor(t, row.pk))
-      } catch {
-        counts.preflightFailed++
-        continue
-      }
-      if (isCurrent(row.ct, opts.writeKid)) counts.current++
-      else {
-        counts.toRewrite++
-        toRewrite.push(row)
-      }
-    }
-    columns.push(counts)
-    pending.push({ t, counts, rows: toRewrite })
-  }
-
-  if (columns.some((c) => c.preflightFailed > 0)) {
-    return { mode: opts.apply ? 'apply' : 'dry-run', aborted: 'preflight', columns }
-  }
-  // Guard 1 — dry-run writes nothing.
-  if (!opts.apply) return { mode: 'dry-run', aborted: null, columns }
-
-  // Guard 4 — compare-and-swap per row.
-  for (const { t, counts, rows } of pending) {
-    for (const row of rows) {
-      try {
-        const ctx = ctxFor(t, row.pk)
-        const plaintext = decrypt(row.ct, ctx)
-        const next = encrypt(plaintext, ctx)
-        // Belt and braces: the new value must be current-format and round-trip
-        // under the same AAD before it replaces anything.
-        if (!isCurrent(next, opts.writeKid) || decrypt(next, ctx) !== plaintext) {
-          counts.failed++
-          continue
-        }
-        const changed = await db.compareAndSwap(t, row.pk, row.ct, next)
-        if (changed === 1) counts.rewritten++
-        else if (changed === 0) counts.raced++
-        else counts.failed++
-      } catch {
-        counts.failed++
-      }
-    }
-  }
-  return { mode: 'apply', aborted: null, columns }
-}
+// ── Output ──────────────────────────────────────────────────────────────────
 
 export function formatResult(target: Target, r: RunResult): string {
   const lines = [`target=${target} mode=${r.mode}`]
@@ -379,45 +247,6 @@ export function exitCodeFor(r: RunResult): number {
   if (r.aborted) return 2
   if (r.mode === 'apply' && r.columns.some((c) => c.failed > 0 || c.raced > 0)) return 3
   return 0
-}
-
-/**
- * Fail before connecting if the keyring is malformed or would not write
- * `v1:<writeKid>` (otherwise a bad keyring would only show up as every row
- * failing preflight). Encrypts an empty string under a throwaway context.
- */
-export function assertKeyringWritesCurrent(writeKid: string): void {
-  const ctx = aadFor('Assets', 'name_encrypted', 'keyring-self-check')
-  const probe = encrypt('', ctx)
-  if (!isCurrent(probe, writeKid) || decrypt(probe, ctx) !== '') {
-    throw new GuardError('Keyring does not write the v1 format under ENCRYPTION_WRITE_KID')
-  }
-}
-
-// ── postgres.js implementation ──────────────────────────────────────────────
-
-async function openDb(databaseUrl: string): Promise<{ db: Db; close: () => Promise<void> }> {
-  const { default: postgres } = await import('postgres')
-  const sql = postgres(databaseUrl, { max: 1, prepare: false, onnotice: () => {} })
-  const db: Db = {
-    async selectColumn(t) {
-      const rows = await sql<{ pk: string; ct: string }[]>`
-        SELECT ${sql(t.pk)}::text AS pk, ${sql(t.column)} AS ct
-        FROM ${sql(t.table)}
-        WHERE ${sql(t.column)} IS NOT NULL
-      `
-      return rows.map((r) => ({ pk: r.pk, ct: r.ct }))
-    },
-    async compareAndSwap(t, pk, prev, next) {
-      const res = await sql`
-        UPDATE ${sql(t.table)}
-        SET ${sql(t.column)} = ${next}
-        WHERE ${sql(t.pk)}::text = ${pk} AND ${sql(t.column)} = ${prev}
-      `
-      return res.count
-    },
-  }
-  return { db, close: () => sql.end({ timeout: 5 }) }
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────

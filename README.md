@@ -53,6 +53,7 @@ cp .env.local.example .env.local
 - `DATABASE_URL_DIRECT` — direct connection（5432），給 Drizzle migrations 用
 - `DATABASE_URL` — pooler connection（6543, `?pgbouncer=true`），給 runtime 用
 - `ENCRYPTION_KEY` — `openssl rand -hex 32` 產生
+- `ENCRYPTION_WRITE_KID` — 填 `k1`；沒設的話，存車牌、地址、孩子證號這類加密欄位時會直接失敗
 - `NEXT_PUBLIC_APP_URL` — local dev 用 `http://localhost:3000`
 
 `NEXT_PUBLIC_POSTHOG_*` / `*SENTRY_DSN` 也在 `.env.local.example` 裡，但只在 `NODE_ENV=production` 送出，本機留 placeholder 即可。
@@ -181,9 +182,9 @@ docs/superpowers/specs/    架構規格 + 設計決策
 
 | 版本 | 主題 |
 |---|---|
+| [v1.6.4](CHANGELOG.md#164---2026-09-29) | 修正 iOS 27 一開啟就閃退（原生殼改用 UIScene）· 加密金鑰輪替工具收整 |
 | [v1.6.3](CHANGELOG.md#163---2026-09-27) | 章節邊界加固 · 名下有愛物也能離開 · 接受邀請時自動結束旅行 · 錯誤資料先清除 |
 | [v1.6.2](CHANGELOG.md#162---2026-09-26) | 首頁按鈕依裝置分流：iPhone 去 App Store、Android 報名測試版 · 搬家頁說明更新 |
-| [v1.6.1](CHANGELOG.md#161---2026-09-22) | 標題改用黑體 · 按鈕與金額格式統一 · 邀請 24 小時有效 · 簡中分享圖 |
 
 ---
 

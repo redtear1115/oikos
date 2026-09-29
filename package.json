@@ -1,6 +1,6 @@
 {
   "name": "oikos",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -24,11 +24,11 @@
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "7.1.0",
-    "@capacitor/android": "^8.3.4",
+    "@capacitor/android": "^8.5.2",
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
-    "@capacitor/core": "^8.3.4",
-    "@capacitor/ios": "^8.3.4",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@capacitor/keyboard": "^8.0.5",
     "@capacitor/push-notifications": "^8.1.1",
     "@next/third-parties": "^16.2.4",
@@ -50,7 +50,7 @@
     "valibot": "^1.4.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.3.4",
+    "@capacitor/cli": "^8.5.2",
     "@next/bundle-analyzer": "^16.2.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
