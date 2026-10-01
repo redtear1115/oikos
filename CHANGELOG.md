@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### Security
+
+- **房子地址的密文不再送到瀏覽器（#1466）**
+  使用者：無可見變化。
+  技術：`getHouseDetails` 在 server 端把 `addressEncrypted` 轉成 `hasAddress`，房子頁 props 不再帶密文；realtime 列先丟掉 `*_encrypted` 欄位才進 app state；新增靜態＋頁面資料路徑兩道測試守住「密文不過 server → client 邊界」。
 
 ## [1.6.4] - 2026-09-29
 
@@ -62,9 +66,6 @@ _Nothing unreleased yet._
 - **欄位加密不再讀寫舊格式密文（#1287 S3b）**
   使用者：無可見變化。
   技術：`lib/crypto.ts` 移除不帶 AAD 的三段式舊格式，讀到一律當格式錯誤拒絕；沒設 `ENCRYPTION_WRITE_KID` 時 `encrypt` 直接丟錯；重新加密腳本遇到舊格式列只算 preflight 失敗、不寫入。
-- **房子地址的密文不再送到瀏覽器（#1466）**
-  使用者：無可見變化。
-  技術：`getHouseDetails` 在 server 端把 `addressEncrypted` 轉成 `hasAddress`，房子頁 props 不再帶密文；realtime 列先丟掉 `*_encrypted` 欄位才進 app state；新增靜態＋頁面資料路徑兩道測試守住「密文不過 server → client 邊界」。
 
 ## [1.6.3] - 2026-09-27
 
