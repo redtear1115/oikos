@@ -2,9 +2,10 @@
 # be reported (a multi-line call reports the line it starts on), and no other line may be. Never executed.
 # The comments with apostrophes and parens are deliberate: they're what broke
 # the earlier regex-based guard (#1467 review).
-import logging, os, subprocess, sys, warnings
+import logging, os, re, subprocess, sys, warnings
 
-pw = app_pw = url = direct = line = lines = new_line = 'x'
+pw = app_pw = url = 'x'  # seeds
+direct = line = lines = new_line = pw  # derived, so tainted
 redacted = 'futari_app.<ref>'
 w = 4
 
@@ -40,6 +41,16 @@ os.environ |= {'X': pw}  # LEAK
 os.environ.update(X=pw)  # LEAK
 os.putenv('X', pw)  # LEAK
 print(sys.argv)  # LEAK
+m = re.match(r'^(.*)$', direct)
+sys.exit(f'wrong env file? got {m[0]}')  # LEAK
+keep = []
+keep.append(f'h:5432:postgres:u:{pw}')
+print(keep)  # LEAK
+print([l for l in open('.env.local')])  # LEAK
+raise RuntimeError('x') from ValueError(pw)  # LEAK
+assert m, f'no match for {direct}'  # LEAK
+from subprocess import run  # LEAK
+import os as o2  # LEAK
 
 # Benign: must not be reported.
 print('the line, url and pw words in a literal')
@@ -49,3 +60,5 @@ line pw url""")
 subprocess.run(['pbcopy'], input=url.encode(), check=True)
 x = os.environ.get('HOME') == 'prod'
 # print(pw) in a comment is fine
+print(f'{len(keep)} lines kept')
+print(f'ok: {redacted}')
