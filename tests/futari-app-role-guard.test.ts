@@ -26,20 +26,39 @@ const OPS_SCRIPTS = ['scripts/ops/futari-app-pgpass.py', 'scripts/ops/futari-app
 
 // Names the ops scripts give to values holding a credential (or a line/URL
 // that embeds one).
-const SECRET_IDENT = /(?<![\w.])(pw|app_pw|url|direct|current|line|raw|parts)(?!\w)/
+const SECRET_IDENT = /(?<![\w.])(pw|app_pw|url|direct|current|line|lines|new_line|raw|parts)(?!\w)/
 
-/** Argument text of every print / sys.exit / sys.std*.write call, with string
- *  literal text dropped but f-string `{…}` expressions kept — so a message
- *  that merely contains the word "line" doesn't count, `{pw}` and `pw` do. */
-function outputCalls(py: string): string[] {
+/** Python source with string-literal text blanked (triple-quoted, prefixed,
+ *  multi-line) but f-string `{…}` expressions kept, so the word "line" in a
+ *  message doesn't count while `{pw}` does. */
+function blankStrings(py: string): string {
+  return py.replace(
+    /([rbfRBF]{0,2})('''|"""|'|")((?:\\[\s\S]|(?!\2)[\s\S])*?)\2/g,
+    (_s, prefix: string, _q, body: string) =>
+      /f/i.test(prefix) ? ` (${[...body.matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]).join(', ')}) ` : ' "" ',
+  )
+}
+
+/** Full argument text of every call matching `callee`, across line breaks. */
+function callArgs(src: string, callee: RegExp): string[] {
   const out: string[] = []
-  for (const m of py.matchAll(/(?:\bprint|sys\.exit|sys\.std(?:out|err)\.write)\(([^\n]*)/g)) {
-    const kept = m[1].replace(/([rbfRBF]*)(['"])((?:\\.|(?!\2).)*)\2/g, (_s, prefix: string, _q, body: string) =>
-      /f/i.test(prefix) ? ' ' + [...body.matchAll(/\{([^{}]*)\}/g)].map((b) => b[1]).join(' ') + ' ' : ' ')
-    out.push(kept)
+  for (const m of src.matchAll(new RegExp(callee.source + String.raw`\s*\(`, 'g'))) {
+    const start = m.index! + m[0].length
+    let depth = 1
+    let i = start
+    for (; i < src.length && depth > 0; i++) {
+      if (src[i] === '(') depth++
+      else if (src[i] === ')') depth--
+    }
+    out.push(src.slice(start, i - 1))
   }
   return out
 }
+
+// Every way a value reaches the terminal: stdout/stderr, exit messages,
+// exception tracebacks, logging.
+const OUTPUT_CALLEE =
+  /(?:(?<![\w.])(?:print|exit|quit)|sys\.exit|sys\.std(?:out|err)(?:\.buffer)?\.write|os\.write|logging\.\w+|\braise\s+[\w.]+)/
 
 const RUNBOOK_HEADING = '## Runtime DB role (futari_app)'
 function runbookSection(): string {
@@ -124,14 +143,19 @@ describe('futari_app runbook section + ops script (#1467)', () => {
   // terminal scrollback and, when an agent is driving, in its transcript;
   // argv and env are visible in `ps`.
   it.each(OPS_SCRIPTS)('%s never prints, argv-passes or env-passes a secret', (rel) => {
-    const py = read(rel)
-    for (const call of outputCalls(py)) {
-      expect(call, `secret reaches output: ${call}`).not.toMatch(SECRET_IDENT)
+    const py = blankStrings(read(rel))
+    for (const args of callArgs(py, OUTPUT_CALLEE)) {
+      expect(args, `secret reaches output: ${args}`).not.toMatch(SECRET_IDENT)
     }
-    for (const argv of py.matchAll(/subprocess\.\w+\(\s*(\[[^\]]*\])/g)) {
-      expect(argv[1], 'secret in subprocess argv').not.toMatch(SECRET_IDENT)
+    for (const args of callArgs(py, /subprocess\.\w+/)) {
+      // stdin (`input=`) is the one sanctioned channel; everything else is argv.
+      const rest = args.replace(/\binput\s*=\s*[\w.]+\([^)]*\)|\binput\s*=\s*[\w.]+/, '')
+      expect(rest, `secret in subprocess call: ${args}`).not.toMatch(SECRET_IDENT)
+      expect(rest, `argv must be an inline list: ${args}`).toMatch(/^\s*\[/)
     }
-    expect(py).not.toMatch(/os\.system|os\.putenv|environ\s*(\[[^\]]*\]\s*=(?!=)|\.update|\.setdefault)|(?<![\w.])env\s*=(?!=)/)
+    expect(py).not.toMatch(
+      /os\.system|os\.putenv|environ\s*(\[[^\]]*\]\s*=(?!=)|\|=|\.update|\.setdefault|\.__setitem__)|(?<![\w.])env\s*=(?!=)|shell\s*=\s*True/,
+    )
     expect(py).not.toMatch(/sys\.argv/)
   })
 
