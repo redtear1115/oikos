@@ -16,6 +16,22 @@ review); the failure look was a natural debugging edit to an error message
 passing the suite. Analysis is flow- and scope-insensitive (one taint set per
 file) — conservative, so a reused name can only add findings, not hide them.
 `len(...)` and names in SANITIZED are treated as safe to print.
+
+This is a tripwire for ordinary edits, NOT a proof that no secret can leak.
+Known gaps (#1467 review, five passes; accepted rather than chased):
+  - no interprocedural flow: function parameters and return values are not
+    tainted, so a debug print inside write600()/replace_line() (whose `text`/
+    `new_line` carry the secret), or a helper `def die(msg): sys.exit(msg)`,
+    passes. Review edits inside helpers by hand.
+  - SANITIZED matches the name, not the value: anything assigned to
+    `redacted` is trusted. Changes to how `redacted` is built need review.
+  - sinks are matched by qualified name: logger objects
+    (`logging.getLogger().info`), pprint, `.writelines`, `ArgumentParser.error`
+    and similar are not covered; sources other than open()/os.fdopen
+    (e.g. pathlib.read_text) don't seed taint.
+  - false positive: user/host/port parsed from the same regex match as the
+    password are tainted. Don't add them to SANITIZED to silence it — that
+    exempts the names everywhere; print from the pg_service.conf values instead.
 """
 import ast, sys
 
