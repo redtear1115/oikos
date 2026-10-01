@@ -24,6 +24,23 @@ const migration = read(`drizzle/${MIGRATION_TAG}.sql`)
 const dropScript = read('scripts/ops/drop-futari-app-role.sql')
 const OPS_SCRIPTS = ['scripts/ops/futari-app-pgpass.py', 'scripts/ops/futari-app-db-url.py'] as const
 
+// Names the ops scripts give to values holding a credential (or a line/URL
+// that embeds one).
+const SECRET_IDENT = /(?<![\w.])(pw|app_pw|url|direct|current|line|raw|parts)(?!\w)/
+
+/** Argument text of every print / sys.exit / sys.std*.write call, with string
+ *  literal text dropped but f-string `{…}` expressions kept — so a message
+ *  that merely contains the word "line" doesn't count, `{pw}` and `pw` do. */
+function outputCalls(py: string): string[] {
+  const out: string[] = []
+  for (const m of py.matchAll(/(?:\bprint|sys\.exit|sys\.std(?:out|err)\.write)\(([^\n]*)/g)) {
+    const kept = m[1].replace(/([rbfRBF]*)(['"])((?:\\.|(?!\2).)*)\2/g, (_s, prefix: string, _q, body: string) =>
+      /f/i.test(prefix) ? ' ' + [...body.matchAll(/\{([^{}]*)\}/g)].map((b) => b[1]).join(' ') + ' ' : ' ')
+    out.push(kept)
+  }
+  return out
+}
+
 const RUNBOOK_HEADING = '## Runtime DB role (futari_app)'
 function runbookSection(): string {
   const doc = read('docs/superpowers/ops-runbook.md')
@@ -103,15 +120,19 @@ describe('futari_app runbook section + ops script (#1467)', () => {
   })
 
   // The scripts hold the password in a variable; the only safe exits are a
-  // mode-600 file, .env.local, or pbcopy's stdin. stdout ends up in the
-  // terminal scrollback and, when an agent is driving, in its transcript.
-  it.each(OPS_SCRIPTS)('%s never prints or argv-passes a secret', (rel) => {
+  // mode-600 file, .env.local, or pbcopy's stdin. stdout/stderr end up in the
+  // terminal scrollback and, when an agent is driving, in its transcript;
+  // argv and env are visible in `ps`.
+  it.each(OPS_SCRIPTS)('%s never prints, argv-passes or env-passes a secret', (rel) => {
     const py = read(rel)
-    for (const m of py.matchAll(/print\(([^\n]*)/g)) {
-      expect(m[1], m[0]).not.toMatch(/\{\s*(pw|app_pw|url|direct|line|current\[0\])\s*[}!:]/)
+    for (const call of outputCalls(py)) {
+      expect(call, `secret reaches output: ${call}`).not.toMatch(SECRET_IDENT)
     }
+    for (const argv of py.matchAll(/subprocess\.\w+\(\s*(\[[^\]]*\])/g)) {
+      expect(argv[1], 'secret in subprocess argv').not.toMatch(SECRET_IDENT)
+    }
+    expect(py).not.toMatch(/os\.system|os\.putenv|environ\s*(\[[^\]]*\]\s*=(?!=)|\.update|\.setdefault)|(?<![\w.])env\s*=(?!=)/)
     expect(py).not.toMatch(/sys\.argv/)
-    expect(py).not.toMatch(/subprocess\.run\(\[[^\]]*\b(pw|url)\b/)
   })
 
   it('the drop script takes back the default privileges before dropping the role', () => {

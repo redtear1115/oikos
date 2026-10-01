@@ -269,7 +269,7 @@ group by 1;
 
 ### 事故處理：懷疑 `futari_app` 的密碼外洩
 
-1. **換密碼**：admin service 裡 `\password futari_app`（照啟用步驟 3–4；步驟 3 的腳本看到舊的 `futari_<env>_app.pw` 會拒絕執行，先把它改名成 `.pw.old`，新密碼上線後再刪），更新 `.pgpass` 與各環境 env（Vercel 標 Sensitive），redeploy。需要立刻切斷時先 `ALTER ROLE futari_app NOLOGIN;`（會造成 app 停擺，直到新密碼上線再 `LOGIN`）。
+1. **換密碼**：admin service 裡 `\password futari_app`（照啟用步驟 3–4；步驟 3 的腳本看到舊的 `futari_<env>_app.pw` 會拒絕執行，先把它改名成 `.pw.old`，新密碼上線後再刪；dev 的 `.env.local` 要先 `futari-app-db-url.py … dev --rollback` 再重跑，因為它看到已經是 `futari_app` 會拒絕），更新 `.pgpass` 與各環境 env（Vercel 標 Sensitive），redeploy。需要立刻切斷時先 `ALTER ROLE futari_app NOLOGIN;`（會造成 app 停擺，直到新密碼上線再 `LOGIN`）。
 2. **重設角色設定**：`ALTER ROLE futari_app RESET ALL;` 再重跑 0072 最後兩條 `ALTER ROLE futari_app SET …`。
 3. **踢掉既有連線**：`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'futari_app';`（`postgres` 在 Supabase 上是 `pg_signal_backend` 的成員）。換密碼不會中斷已經登入的 session，這一步不能省。
 4. **唯讀確認沒有留下東西**：`futari_app` 擁有的物件必須是 0（`pg_class`／`pg_proc`／`pg_namespace`／`pg_type`／`pg_largeobject_metadata` 的 owner），`pg_auth_members` 裡它不屬於任何角色，再跑一次上方覆蓋檢查確認沒有多出來的授權。同〈緊急輪替〉：全程唯讀，查完再處置。

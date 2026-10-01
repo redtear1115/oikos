@@ -89,7 +89,7 @@ def main() -> None:
     if a.rollback:
         with open(backup) as f:
             line = f.read().strip()
-        if not line.startswith('DATABASE_URL=postgresql://postgres.'):
+        if '\n' in line or not line.startswith('DATABASE_URL=postgresql://postgres.'):
             sys.exit('backup does not look like the postgres URL; not touching .env.local')
         replace_line(line)
         print('ok: DATABASE_URL restored to the postgres role (restart npm run dev)')
@@ -105,6 +105,7 @@ def main() -> None:
     fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, 'w') as f:
         f.write(current[0] + '\n')
+    os.chmod(backup, 0o600)  # O_CREAT's mode only applies to a new file
     replace_line(f'DATABASE_URL={url}')
     print(f'ok: DATABASE_URL -> {redacted} (old line backed up; restart npm run dev)')
 
