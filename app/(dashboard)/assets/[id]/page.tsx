@@ -312,7 +312,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       name: asset.name,
       notes: asset.notes,
       // #837 — address is encrypted; the form gets only a has-value bool.
-      houseHasAddress: Boolean(houseDetailsData?.addressEncrypted),
+      houseHasAddress: houseDetailsData?.hasAddress ?? false,
       housePurchasedAt: houseDetailsData?.purchasedAt ?? null,
       housePurchasePrice: houseDetailsData?.purchasePrice ?? null,
     }

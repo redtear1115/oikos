@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### Security
+
+- **房子地址的密文不再送到瀏覽器（#1466）**
+  使用者：無可見變化。
+  技術：`getHouseDetails` 在 server 端把 `addressEncrypted` 轉成 `hasAddress`，房子頁 props 不再帶密文；realtime 列先丟掉 `*_encrypted` 欄位才進 app state；新增靜態＋頁面資料路徑兩道測試守住「密文不過 server → client 邊界」。
 
 ## [1.6.4] - 2026-09-29
 

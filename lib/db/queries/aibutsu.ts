@@ -257,10 +257,13 @@ export async function getLinkedInsurancesForVehicle(vehicleId: string): Promise<
 
 export interface HouseDetailsRow {
   owner: string
-  /** #826/#837 — presence signal for the encrypted address (the detail page
-   *  derives `hasAddress` from this). Raw ciphertext never drives display;
-   *  reveal goes through revealHouseAddress. Legacy `address` dropped in 0053. */
-  addressEncrypted: string | null
+  /** #826/#837/#1466 — true when an encrypted address is stored. The
+   *  ciphertext itself is read here and never leaves this function: this row
+   *  is passed whole to the client (HouseDetailClient), so a ciphertext field
+   *  would land in the RSC payload and browser caches, where a later key
+   *  rotation cannot reach it. Reveal goes through revealHouseAddress.
+   *  Legacy `address` dropped in 0053. */
+  hasAddress: boolean
   purchasedAt: string | null
   purchasePrice: number | null
 }
@@ -276,5 +279,12 @@ export async function getHouseDetails(assetId: string): Promise<HouseDetailsRow 
     .from(houseDetails)
     .where(eq(houseDetails.assetId, assetId))
     .limit(1)
-  return rows[0] ?? null
+  const row = rows[0]
+  if (!row) return null
+  return {
+    owner: row.owner,
+    hasAddress: row.addressEncrypted !== null,
+    purchasedAt: row.purchasedAt,
+    purchasePrice: row.purchasePrice,
+  }
 }

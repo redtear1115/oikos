@@ -6,6 +6,7 @@ import {
   parseFuelLogRow,
   parseIncomeRow,
   parseBalanceUpdate,
+  rowFromPayload,
 } from '@/lib/realtime/payload-schema'
 
 describe('realtime payload-schema parsers', () => {
@@ -192,5 +193,28 @@ describe('realtime payload-schema parsers', () => {
     it('rejects string-encoded numbers', () => {
       expect(parseBalanceUpdate({ balance: '100', version: 5 })).toBeNull()
     })
+  })
+})
+
+// #1466 — Assets is in the realtime publication and carries name_encrypted.
+// The frame still reaches the browser (a publication change is the only fix
+// for that), but the app must not keep or log a copy: the key is dropped
+// before any parser, event or schema-mismatch console.warn sees the row.
+// Failure looks like: a `v1:k…` string in the devtools console or event bus.
+describe('rowFromPayload (#1466)', () => {
+  const CT = 'v1:k2:000000000000000000000000:00000000000000000000000000000000:ab'
+
+  it('camelCases keys and drops every *_encrypted column', () => {
+    expect(rowFromPayload({
+      id: 'a1', group_id: 'g1', type: 'child', name: '小白', created_at: '2026-01-01T00:00:00Z',
+      deleted_at: null, name_encrypted: CT, plate_encrypted: CT,
+    })).toEqual({ id: 'a1', groupId: 'g1', type: 'child', name: '小白', createdAt: '2026-01-01T00:00:00Z', deletedAt: null })
+  })
+
+  it('a schema-mismatch warning never logs the ciphertext', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(parseAssetRow(rowFromPayload({ id: 'a1', type: 'bogus', name_encrypted: CT }))).toBeNull()
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(CT)
+    warn.mockRestore()
   })
 })
