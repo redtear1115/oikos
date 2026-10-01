@@ -71,6 +71,9 @@ describe('0072 futari_app migration (#1467)', () => {
     expect(sql).not.toMatch(/\bTRUNCATE\b/i)
     expect(sql).not.toMatch(/\bGRANT\s+futari_app\b|\bGRANT\s+\w+\s+TO\s+futari_app\s*;/i)
     expect(sql).not.toMatch(/\bON\s+SCHEMA\s+(?!public\b)\w+/i)
+    expect(sql).not.toMatch(/\bIN\s+SCHEMA\s+(?!public\b)\w+/i)
+    expect(sql).not.toMatch(/\bGRANT\s+EXECUTE\b/i)
+    expect(sql).not.toMatch(/\bON\s+(ALL\s+)?(FUNCTIONS?|ROUTINES?|PROCEDURES?)\b/i)
   })
 
   it('covers tables and sequences created later by postgres', () => {
@@ -104,6 +107,18 @@ describe('futari_app runbook section + ops script (#1467)', () => {
     expect(revoke).toBeGreaterThan(-1)
     expect(drop).toBeGreaterThan(revoke)
     expect(sql).not.toMatch(/DROP OWNED/i)
+  })
+
+  // pg_stat_activity is a view: a pg_terminate_backend(...) in its WHERE clause
+  // gets pushed below the user-name filter and terminates every session the
+  // caller may signal, including its own. Only the select-list form is safe.
+  it.each([
+    ['ops-runbook §Runtime DB role', runbookSection],
+    ['scripts/ops/drop-futari-app-role.sql', () => code(dropScript)],
+  ])('%s never calls pg_terminate_backend from a WHERE clause', (_name, text) => {
+    const body = text()
+    expect(body).toMatch(/pg_terminate_backend/)
+    expect(body).not.toMatch(/\b(WHERE|AND|OR)\s+(NOT\s+)?\(?\s*pg_terminate_backend/i)
   })
 })
 

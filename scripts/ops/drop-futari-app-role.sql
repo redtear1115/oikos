@@ -21,9 +21,18 @@ ALTER ROLE futari_app NOLOGIN;
 
 -- 2. End the ones still open (postgres is a member of pg_signal_backend on
 --    Supabase; the pre-check prints it). Pooler connections included.
-SELECT count(*) AS terminated
-FROM pg_stat_activity
-WHERE usename = 'futari_app' AND pg_terminate_backend(pid);
+--    The pids are picked first (MATERIALIZED) and terminated in the select
+--    list. Never put pg_terminate_backend in the WHERE clause: pg_stat_activity
+--    is a view, and the planner pushes the call below the user-name filter.
+--      Failure look: every session postgres may signal dies — the app, the
+--      pooler, PostgREST, this psql itself (FATAL: terminating connection due
+--      to administrator command) — and step 3 never runs, so the role is
+--      still there afterwards.
+WITH targets AS MATERIALIZED (
+  SELECT pid FROM pg_stat_activity
+  WHERE usename = 'futari_app' AND pid <> pg_backend_pid()
+)
+SELECT pid, pg_terminate_backend(pid) AS terminated FROM targets;
 
 -- 3. Take back every grant the migration (0072) gave, then drop the role.
 --    No DROP OWNED BY: futari_app must own nothing. If DROP ROLE fails with
