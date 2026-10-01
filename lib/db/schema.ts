@@ -158,6 +158,12 @@ export const assets = pgTable('Assets', {
   templateFields: jsonb('template_fields'),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // #1442 — set on a *frozen copy*: the read-only stand-in leaveGroup creates
+  // in a record's own ledger when the 愛物 it pointed at ends up in the other
+  // ledger. Copies carry display fields only (type / name / template_key) and
+  // are hidden from lists and pickers; every asset write goes through
+  // `writableAsset` (lib/auth/asset.ts), which excludes them. NULL = ordinary.
+  frozenAt: timestamp('frozen_at', { withTimezone: true }),
 })
 
 export const cashTransactions = pgTable('CashTransactions', {

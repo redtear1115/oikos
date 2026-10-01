@@ -105,12 +105,12 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
   const v = validateRecurringIncomeRuleInput(input)
   const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
-  if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
   const [existing] = await db
     .select({
       id: recurringIncomeRules.id,
       groupId: recurringIncomeRules.groupId,
+      assetId: recurringIncomeRules.assetId,
     })
     .from(recurringIncomeRules)
     .where(and(
@@ -120,6 +120,12 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     ))
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
+
+  // #1442 — the rule may keep the frozen copy leaveGroup re-pointed it at
+  // (read from the stored rule above, group-scoped), so editing other fields
+  // doesn't strand it; it cannot newly link one. resumeRule stays blocked
+  // while the link is frozen, so a kept link never generates records.
+  if (v.assetId) await assertAssetInGroup(v.assetId, group.id, { keepFrozenId: existing.assetId })
 
   // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
   // screen while the user saves, promising the change applies from the *next*
@@ -174,8 +180,10 @@ export const resumeRule = action(async (id: string): Promise<void> => {
       nextOccurrenceAt: recurringIncomeRules.nextOccurrenceAt,
       intervalMonths: recurringIncomeRules.intervalMonths,
       dayOfMonth: recurringIncomeRules.dayOfMonth,
+      assetFrozenAt: assets.frozenAt,
     })
     .from(recurringIncomeRules)
+    .leftJoin(assets, eq(assets.id, recurringIncomeRules.assetId))
     .where(and(
       eq(recurringIncomeRules.id, id),
       eq(recurringIncomeRules.groupId, group.id),
@@ -183,6 +191,10 @@ export const resumeRule = action(async (id: string): Promise<void> => {
     ))
     .limit(1)
   if (!rule) throw actionError('recurring_rule_not_found')
+  // #1442 — a rule linked to a frozen copy (leaveGroup paused it) stays
+  // paused: resuming would generate records on a read-only 愛物. The way out
+  // is editing the rule to clear or change the 愛物, then resuming.
+  if (rule.assetFrozenAt) throw actionError('linked_asset_not_in_group')
 
   const today = new Date().toISOString().slice(0, 10)
   const snapped = rule.nextOccurrenceAt > today
@@ -212,6 +224,7 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
       source: recurringIncomeRules.source,
       assetId: recurringIncomeRules.assetId,
       assetGroupId: assets.groupId,
+      assetFrozenAt: assets.frozenAt,
     })
     .from(pendingIncomeOccurrences)
     .innerJoin(recurringIncomeRules, eq(recurringIncomeRules.id, pendingIncomeOccurrences.ruleId))
@@ -228,7 +241,9 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
   // Mirror of the expense side: the rule's recipient and asset are copied onto
   // the new record, so both must still belong to this group.
   assertRecipientInGroup(row.recipientId, group)
-  if (row.assetId !== null && row.assetGroupId !== group.id) {
+  // #1442 — nor may it be a frozen copy (read-only); the user can skip, or
+  // edit-and-confirm with another / no 愛物.
+  if (row.assetId !== null && (row.assetGroupId !== group.id || row.assetFrozenAt)) {
     throw actionError('linked_asset_not_in_group')
   }
 

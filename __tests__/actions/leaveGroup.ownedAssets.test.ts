@@ -85,9 +85,10 @@ const {
   carDetails,
   houseDetails,
   insuranceDetails,
+  fuelLogs,
 } = await import('@/lib/db/schema')
 const { leaveGroup } = await import('@/actions/membership')
-const { eq, inArray } = await import('drizzle-orm')
+const { and, eq, inArray, isNotNull } = await import('drizzle-orm')
 const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
@@ -144,6 +145,16 @@ async function seedDuoGroup(): Promise<SeedRefs> {
 async function cleanup(refs: SeedRefs) {
   if (refs.cashTxIds.length) {
     await db.delete(cashTransactions).where(inArray(cashTransactions.id, refs.cashTxIds))
+  }
+  // #1442 — frozen copies (and fuel logs copied onto them) leaveGroup created
+  // in either ledger. Records pointing at them are gone by now.
+  const groupIds = refs.newGroupId ? [refs.oldGroupId, refs.newGroupId] : [refs.oldGroupId]
+  const frozenCopies = await db.select({ id: assets.id }).from(assets)
+    .where(and(inArray(assets.groupId, groupIds), isNotNull(assets.frozenAt)))
+  if (frozenCopies.length) {
+    const copyIds = frozenCopies.map((c) => c.id)
+    await db.delete(fuelLogs).where(inArray(fuelLogs.assetId, copyIds))
+    await db.delete(assets).where(inArray(assets.id, copyIds))
   }
   if (refs.assetIds.length) {
     await db.delete(carDetails).where(inArray(carDetails.assetId, refs.assetIds))
@@ -202,7 +213,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — leaver with owned 愛物 (#1440)', (
     expect(movedTx.assetId).toBe(car.id)
   })
 
-  it('moves car + house + insurance together, nulling asset_id for a tx pointing at a staying asset', async () => {
+  it('moves car + house + insurance together, re-pointing a tx at a staying asset to a frozen copy (#1442)', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
 
@@ -242,7 +253,9 @@ describe.skipIf(!isLocalDb)('leaveGroup — leaver with owned 愛物 (#1440)', (
     refs.cashTxIds.push(movingTx.id)
 
     // Leaver-paid tx whose asset_id points at the asset that stays behind —
-    // must be nulled out, not left dangling on a cross-group reference.
+    // must not be left dangling on a cross-group reference. Since #1442 it is
+    // re-pointed at a frozen copy of that asset in the leaver's new ledger
+    // (it used to be NULLed, losing the link).
     const [danglingTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userBId, assetId: stayingCar.id,
       amount: 300, splitType: 'all_mine',
@@ -266,8 +279,13 @@ describe.skipIf(!isLocalDb)('leaveGroup — leaver with owned 愛物 (#1440)', (
     expect(movedTx.groupId).toBe(result.groupId)
     expect(movedTx.assetId).toBe(house.id)
 
-    const [nulledTx] = await db.select().from(cashTransactions).where(eq(cashTransactions.id, danglingTx.id)).limit(1)
-    expect(nulledTx.groupId).toBe(result.groupId)
-    expect(nulledTx.assetId).toBeNull()
+    const [repointedTx] = await db.select().from(cashTransactions).where(eq(cashTransactions.id, danglingTx.id)).limit(1)
+    expect(repointedTx.groupId).toBe(result.groupId)
+    expect(repointedTx.assetId).not.toBe(stayingCar.id)
+    const [copy] = await db.select().from(assets).where(eq(assets.id, repointedTx.assetId!)).limit(1)
+    expect(copy.groupId).toBe(result.groupId)
+    expect(copy.frozenAt).not.toBeNull()
+    expect(copy.type).toBe('car')
+    expect(copy.name).toBe('TEST_1440 stayer car')
   })
 })

@@ -24,6 +24,9 @@ export interface AssetWithCar {
   notes: string | null
   deletedAt: Date | null
   createdAt: Date
+  /** #1442 — non-null on a frozen copy (see Assets.frozenAt). Only
+   *  `getAssetById` returns such rows; `listAssetsForGroup` excludes them. */
+  frozenAt?: Date | null
   // #222 — template path. NULL for legacy assets; NOT NULL for template-based
   // ones (which always have type='item'). v1 ships only `general`.
   templateKey: 'general' | null
@@ -140,6 +143,9 @@ export async function listAssetsForGroup(
     .where(and(
       eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
+      // #1442 — frozen copies are never listed (愛物 tab, every picker built
+      // on this list). They surface only as a record's linked-asset name.
+      isNull(assets.frozenAt),
       createdBefore ? lt(assets.createdAt, createdBefore) : undefined,
     ))
     .orderBy(sql`${assets.createdAt} DESC`)
@@ -147,8 +153,23 @@ export async function listAssetsForGroup(
 }
 
 /**
+ * Asset options for the records FilterSheet's 愛物 multi-select: live assets
+ * of the group, oldest first. Frozen copies (#1442) are not offered.
+ */
+export async function listFilterAssetsForGroup(
+  groupId: string,
+): Promise<{ id: string; name: string; type: AssetType }[]> {
+  return db
+    .select({ id: assets.id, name: assets.name, type: assets.type })
+    .from(assets)
+    .where(and(eq(assets.groupId, groupId), isNull(assets.deletedAt), isNull(assets.frozenAt)))
+    .orderBy(assets.createdAt)
+}
+
+/**
  * Get a single asset by id, **including soft-deleted** ones (so the AddSheet
- * can show "(已刪除)" labels on zombie asset references). Returns null if not
+ * can show "(已刪除)" labels on zombie asset references) and frozen copies
+ * (#1442 — a record's linked-asset name still resolves). Returns null if not
  * found or wrong group.
  *
  * `createdBefore` (optional): same cut-off as `listAssetsForGroup` — an asset
@@ -175,6 +196,7 @@ export async function getAssetById(
       templateFields: assets.templateFields,
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
+      frozenAt: assets.frozenAt,
       plateEncrypted: carDetails.plateEncrypted,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,

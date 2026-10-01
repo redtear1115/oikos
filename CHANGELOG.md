@@ -41,6 +41,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 使用者可見變化
+
+- **離開家計簿後，跨帳本的愛物連結改成唯讀副本（#1442）**
+  使用者：留下與離開的一方，舊紀錄都還看得到原本的愛物名稱（不再變成沒有愛物）；副本不出現在清單與選單，也不能編輯，連到它的定期規則會先暫停。
+  技術：`0073` 加 `Assets.frozen_at`；`leaveGroup` 在同一個交易裡為七種連結欄位建立只含顯示欄位的副本（油耗紀錄一併複製），寫入路徑一律走 `writableAsset`，靜態 guard test 擋新的寫入點漏掉。
+
 ### 技術變更
 
 - **新增較窄的 runtime DB 角色 `futari_app`（#1467）**
