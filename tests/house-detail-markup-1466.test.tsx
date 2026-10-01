@@ -12,7 +12,7 @@
 // header subtitle (●●●●●●●●) and the 地址 row's reveal toggle silently appear
 // for a house with no address, or vanish for one that has it.
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn(), prefetch: vi.fn() }) }))
 vi.mock('@/app/(dashboard)/_components/BottomNav', () => ({ BottomNav: () => null }))
@@ -56,6 +56,16 @@ function renderHouse(hasAddress: boolean) {
 }
 
 describe('HouseDetailClient markup is unchanged by #1466', () => {
+  // 入住天數 is counted from the wall clock, not from TodayProvider; pin it to
+  // the day the snapshot was recorded or the snapshot drifts by one every day.
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-09-27T12:00:00+08:00'))
+  })
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   it('with a stored address: masked subtitle + reveal row', () => {
     const html = renderHouse(true)
     expect(html).toContain('●●●●●●●●')
