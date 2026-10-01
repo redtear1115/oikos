@@ -220,6 +220,8 @@ PGSERVICEFILE="<secrets image>/pg_service.conf" PGPASSFILE="<secrets image>/.pgp
 8. **寫進 env**：
    - dev：`python3 scripts/ops/futari-app-db-url.py "<secrets image>" dev` 從 service file + `.pgpass` 組出 transaction pooler（6543、`?pgbouncer=true`）的 URL，原地改寫 `.env.local` 的 `DATABASE_URL`（worktree 的 symlink 照樣有效），舊的那行備份到 `dev-DATABASE_URL.postgres.bak`（`600`）。退回：同一指令加 `--rollback`。之後重啟 `npm run dev`。
    - prod：`… prod --pbcopy` 把 URL 放進剪貼簿，貼到 Vercel 的 `DATABASE_URL`（標 **Sensitive**），然後**立刻** `pbcopy < /dev/null`。不寫進任何檔案。
+     - **Vercel 不讓你改 Sensitive 變數的環境勾選**：原本 Production＋Preview 共用一個 Sensitive 的 `DATABASE_URL` 時，取消勾選 Preview 會被擋。做法是刪掉重建成兩個（Production 用舊值、Preview 用新值）。正在跑的部署不受影響，因為環境變數在部署建立時就固定了；但刪掉到重建 Production 之間不能有 Production 部署。Production 的值重貼之後，要等下一次 Production 部署才算驗收。
+     - **驗收時要看 prod 資料庫，不是看 Vercel**：`pg_stat_activity` 要出現 `futari_app`／Supavisor 的連線。閒置連線會被回收，所以要先打一個請求，否則「沒有連線」什麼都說明不了。
    - **驗收**（dev 2026-10-01 的做法）：`pg_stat_activity` 裡 runtime 連線全是 `futari_app`；dashboard 有資料（BYPASSRLS 生效——沒生效的樣子是畫面空白、不報錯）；新增／編輯／刪除一筆紀錄＋月回顧留言成功；主要頁面 200；`postgres_logs` 從切換時間起沒有 permission denied。這條 log 查詢要先用切換前的時間窗確認抓得到已知錯誤，才能相信它回的「0 筆」。
 
 ### Circuit breaker：失敗一次就退回，不重試
