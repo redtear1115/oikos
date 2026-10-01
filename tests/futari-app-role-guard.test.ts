@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -23,42 +24,6 @@ const MIGRATION_TAG = '0072_futari_app_role'
 const migration = read(`drizzle/${MIGRATION_TAG}.sql`)
 const dropScript = read('scripts/ops/drop-futari-app-role.sql')
 const OPS_SCRIPTS = ['scripts/ops/futari-app-pgpass.py', 'scripts/ops/futari-app-db-url.py'] as const
-
-// Names the ops scripts give to values holding a credential (or a line/URL
-// that embeds one).
-const SECRET_IDENT = /(?<![\w.])(pw|app_pw|url|direct|current|line|lines|new_line|raw|parts)(?!\w)/
-
-/** Python source with string-literal text blanked (triple-quoted, prefixed,
- *  multi-line) but f-string `{…}` expressions kept, so the word "line" in a
- *  message doesn't count while `{pw}` does. */
-function blankStrings(py: string): string {
-  return py.replace(
-    /([rbfRBF]{0,2})('''|"""|'|")((?:\\[\s\S]|(?!\2)[\s\S])*?)\2/g,
-    (_s, prefix: string, _q, body: string) =>
-      /f/i.test(prefix) ? ` (${[...body.matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]).join(', ')}) ` : ' "" ',
-  )
-}
-
-/** Full argument text of every call matching `callee`, across line breaks. */
-function callArgs(src: string, callee: RegExp): string[] {
-  const out: string[] = []
-  for (const m of src.matchAll(new RegExp(callee.source + String.raw`\s*\(`, 'g'))) {
-    const start = m.index! + m[0].length
-    let depth = 1
-    let i = start
-    for (; i < src.length && depth > 0; i++) {
-      if (src[i] === '(') depth++
-      else if (src[i] === ')') depth--
-    }
-    out.push(src.slice(start, i - 1))
-  }
-  return out
-}
-
-// Every way a value reaches the terminal: stdout/stderr, exit messages,
-// exception tracebacks, logging.
-const OUTPUT_CALLEE =
-  /(?:(?<![\w.])(?:print|exit|quit)|sys\.exit|sys\.std(?:out|err)(?:\.buffer)?\.write|os\.write|logging\.\w+|\braise\s+[\w.]+)/
 
 const RUNBOOK_HEADING = '## Runtime DB role (futari_app)'
 function runbookSection(): string {
@@ -143,20 +108,30 @@ describe('futari_app runbook section + ops script (#1467)', () => {
   // terminal scrollback and, when an agent is driving, in its transcript;
   // argv and env are visible in `ps`.
   it.each(OPS_SCRIPTS)('%s never prints, argv-passes or env-passes a secret', (rel) => {
-    const py = blankStrings(read(rel))
-    for (const args of callArgs(py, OUTPUT_CALLEE)) {
-      expect(args, `secret reaches output: ${args}`).not.toMatch(SECRET_IDENT)
-    }
-    for (const args of callArgs(py, /subprocess\.\w+/)) {
-      // stdin (`input=`) is the one sanctioned channel; everything else is argv.
-      const rest = args.replace(/\binput\s*=\s*[\w.]+\([^)]*\)|\binput\s*=\s*[\w.]+/, '')
-      expect(rest, `secret in subprocess call: ${args}`).not.toMatch(SECRET_IDENT)
-      expect(rest, `argv must be an inline list: ${args}`).toMatch(/^\s*\[/)
-    }
-    expect(py).not.toMatch(
-      /os\.system|os\.putenv|environ\s*(\[[^\]]*\]\s*=(?!=)|\|=|\.update|\.setdefault|\.__setitem__)|(?<![\w.])env\s*=(?!=)|shell\s*=\s*True/,
-    )
-    expect(py).not.toMatch(/sys\.argv/)
+    // Python's own parser does the work (tests/fixtures/py-secret-flow-check.py):
+    // regex scanning was fooled by comments, multi-line calls and nested f-strings.
+    const violations = execFileSync('python3', [join(ROOT, 'tests/fixtures/py-secret-flow-check.py'), join(ROOT, rel)], {
+      encoding: 'utf8',
+    })
+    expect(violations).toBe('')
+  })
+
+  // The checker itself must keep working: a fixture of known leak forms
+  // (including the comment / multi-line / nested f-string cases that fooled
+  // the earlier regex guard) must be reported line for line, benign ones not.
+  it('the secret-flow checker flags exactly the known leak lines', () => {
+    const fixture = 'tests/fixtures/py-secret-flow-leaky.py'
+    const expected = read(fixture)
+      .split('\n')
+      .flatMap((l, i) => (/LEAK$/.test(l) ? [i + 1] : []))
+    const reported = execFileSync('python3', [join(ROOT, 'tests/fixtures/py-secret-flow-check.py'), join(ROOT, fixture)], {
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => Number(l.match(/:(\d+): /)![1]))
+    expect(expected.length).toBeGreaterThan(25)
+    expect([...new Set(reported)].sort((x, y) => x - y)).toEqual(expected)
   })
 
   it('the drop script takes back the default privileges before dropping the role', () => {
