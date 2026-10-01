@@ -41,6 +41,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 技術變更
+
+- **新增較窄的 runtime DB 角色 `futari_app`（#1467）**
+  使用者：無可見變化。
+  技術：`0072` 建立不能登入、只有 public 表 DML 的 `futari_app`（BYPASSRLS，自動涵蓋之後的新表），ops-runbook 補上啟用、事故處理與回退程序；app 仍以 `postgres` 連線，切換環境是之後的步驟。
+
 ### Security
 
 - **房子地址的密文不再送到瀏覽器（#1466）**
@@ -60,9 +66,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
-- **新增較窄的 runtime DB 角色 `futari_app`（#1467）**
-  使用者：無可見變化。
-  技術：`0072` 建立不能登入、只有 public 表 DML 的 `futari_app`（BYPASSRLS，自動涵蓋之後的新表），ops-runbook 補上啟用、事故處理與回退程序；app 仍以 `postgres` 連線，切換環境是之後的步驟。
 - **重新加密的核心抽成共用模組（#1287）**
   使用者：無可見變化。
   技術：`scripts/reencrypt-pii.ts` 的 preflight／compare-and-swap 與 SQL 移到 `lib/reencryptCore.ts`，供之後在 preview runtime 內輪替 prod 金鑰時共用同一份；腳本行為不變，ops-runbook 補上「本機標成 prod 的 env 檔其實是 dev 金鑰」的陷阱。
