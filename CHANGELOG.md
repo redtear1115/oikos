@@ -47,6 +47,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：無可見變化。
   技術：`0072` 建立不能登入、只有 public 表 DML 的 `futari_app`（BYPASSRLS，自動涵蓋之後的新表），ops-runbook 補上啟用、事故處理與回退程序；app 仍以 `postgres` 連線，切換環境是之後的步驟。
 
+- **`futari_app` 啟用步驟改成腳本（#1467）**
+  使用者：無可見變化。
+  技術：`scripts/ops/futari-app-pgpass.py`（產生密碼、寫 `.pgpass`）與 `futari-app-db-url.py`（dev 改寫 `.env.local`／prod 放進剪貼簿），全程不印秘密；runbook 補上 dev 切換時踩到的四個坑與驗收做法，guard test 用 Python ast 做污點追蹤，擋改腳本時把密碼印出或傳進子程序的常見寫法（是絆線不是證明，已知缺口寫在檢查器檔頭）。
+
 ### Security
 
 - **房子地址的密文不再送到瀏覽器（#1466）**

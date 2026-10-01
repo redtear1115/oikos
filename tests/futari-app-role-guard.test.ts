@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -22,6 +23,7 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), 'utf8')
 const MIGRATION_TAG = '0072_futari_app_role'
 const migration = read(`drizzle/${MIGRATION_TAG}.sql`)
 const dropScript = read('scripts/ops/drop-futari-app-role.sql')
+const OPS_SCRIPTS = ['scripts/ops/futari-app-pgpass.py', 'scripts/ops/futari-app-db-url.py'] as const
 
 const RUNBOOK_HEADING = '## Runtime DB role (futari_app)'
 function runbookSection(): string {
@@ -95,9 +97,41 @@ describe('futari_app runbook section + ops script (#1467)', () => {
   it.each([
     ['ops-runbook §Runtime DB role', runbookSection],
     ['scripts/ops/drop-futari-app-role.sql', () => dropScript],
+    ...OPS_SCRIPTS.map((rel) => [rel, () => read(rel)] as [string, () => string]),
   ])('%s has no leak shape', (_name, text) => {
     const body = text()
     for (const [name, re] of LEAK_SHAPES) expect(body, name).not.toMatch(re)
+  })
+
+  // The scripts hold the password in a variable; the only safe exits are a
+  // mode-600 file, .env.local, or pbcopy's stdin. stdout/stderr end up in the
+  // terminal scrollback and, when an agent is driving, in its transcript;
+  // argv and env are visible in `ps`.
+  it.each(OPS_SCRIPTS)('%s never prints, argv-passes or env-passes a secret', (rel) => {
+    // Python's own parser does the work (tests/fixtures/py-secret-flow-check.py):
+    // regex scanning was fooled by comments, multi-line calls and nested f-strings.
+    const violations = execFileSync('python3', [join(ROOT, 'tests/fixtures/py-secret-flow-check.py'), join(ROOT, rel)], {
+      encoding: 'utf8',
+    })
+    expect(violations).toBe('')
+  })
+
+  // The checker itself must keep working: a fixture of known leak forms
+  // (including the comment / multi-line / nested f-string cases that fooled
+  // the earlier regex guard) must be reported line for line, benign ones not.
+  it('the secret-flow checker flags exactly the known leak lines', () => {
+    const fixture = 'tests/fixtures/py-secret-flow-leaky.py'
+    const expected = read(fixture)
+      .split('\n')
+      .flatMap((l, i) => (/LEAK$/.test(l) ? [i + 1] : []))
+    const reported = execFileSync('python3', [join(ROOT, 'tests/fixtures/py-secret-flow-check.py'), join(ROOT, fixture)], {
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => Number(l.match(/:(\d+): /)![1]))
+    expect(expected.length).toBeGreaterThan(25)
+    expect([...new Set(reported)].sort((x, y) => x - y)).toEqual(expected)
   })
 
   it('the drop script takes back the default privileges before dropping the role', () => {
