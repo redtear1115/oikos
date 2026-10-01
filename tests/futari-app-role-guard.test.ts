@@ -22,6 +22,7 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), 'utf8')
 const MIGRATION_TAG = '0072_futari_app_role'
 const migration = read(`drizzle/${MIGRATION_TAG}.sql`)
 const dropScript = read('scripts/ops/drop-futari-app-role.sql')
+const OPS_SCRIPTS = ['scripts/ops/futari-app-pgpass.py', 'scripts/ops/futari-app-db-url.py'] as const
 
 const RUNBOOK_HEADING = '## Runtime DB role (futari_app)'
 function runbookSection(): string {
@@ -95,9 +96,22 @@ describe('futari_app runbook section + ops script (#1467)', () => {
   it.each([
     ['ops-runbook §Runtime DB role', runbookSection],
     ['scripts/ops/drop-futari-app-role.sql', () => dropScript],
+    ...OPS_SCRIPTS.map((rel) => [rel, () => read(rel)] as [string, () => string]),
   ])('%s has no leak shape', (_name, text) => {
     const body = text()
     for (const [name, re] of LEAK_SHAPES) expect(body, name).not.toMatch(re)
+  })
+
+  // The scripts hold the password in a variable; the only safe exits are a
+  // mode-600 file, .env.local, or pbcopy's stdin. stdout ends up in the
+  // terminal scrollback and, when an agent is driving, in its transcript.
+  it.each(OPS_SCRIPTS)('%s never prints or argv-passes a secret', (rel) => {
+    const py = read(rel)
+    for (const m of py.matchAll(/print\(([^\n]*)/g)) {
+      expect(m[1], m[0]).not.toMatch(/\{\s*(pw|app_pw|url|direct|line|current\[0\])\s*[}!:]/)
+    }
+    expect(py).not.toMatch(/sys\.argv/)
+    expect(py).not.toMatch(/subprocess\.run\(\[[^\]]*\b(pw|url)\b/)
   })
 
   it('the drop script takes back the default privileges before dropping the role', () => {

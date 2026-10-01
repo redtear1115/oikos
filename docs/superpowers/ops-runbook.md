@@ -209,12 +209,18 @@ PGSERVICEFILE="<secrets image>/pg_service.conf" PGPASSFILE="<secrets image>/.pgp
 
 1. **跑 migration**（dev：`npm run db:migrate`；prod：見上方〈Prod：npm script 到不了〉），然後照〈Dev：跑完必須驗證資料效果〉直接查資料確認 0072 真的跑了：`select rolname, rolcanlogin, rolbypassrls from pg_roles where rolname = 'futari_app'` 要有一列、`rolcanlogin = false`、`rolbypassrls = true`。
 2. **確認 `SHOW password_encryption;` 是 `scram-sha-256`**（admin service）。不是就停。失效的樣子：若是 `md5`，下一步 psql 仍會在 client 端雜湊，但存進去的是 md5 驗證值——能登入、不報錯，只是比預期弱。
-3. **產生密碼**：`openssl rand -hex 32` 直接寫進 secrets image 上的檔案（重導向到檔案，不印到畫面），再把它填進 `.pgpass` 對應 `futari_<env>_app` 那一行。
-4. **設定密碼**：`psql service=futari_<env>_admin` 裡執行 `\password futari_app`，在提示字元貼上（貼完清掉剪貼簿）。psql 在 client 端算好 SCRAM 驗證值才送出，送到伺服器與 log 裡的是 `SCRAM-SHA-256$…`，不是明文。
+0. **工具**：需要 psql（macOS：`brew install libpq`，它是 keg-only，不會進 PATH——用 `/opt/homebrew/opt/libpq/bin/psql` 或自己加 PATH）。指令從文件複製時，留意貼進來的不換行空白（NBSP）。失效的樣子：zsh 回 `command not found: psql service=futari_dev_admin`——整串被當成一個指令名稱，因為中間的「空白」其實是 NBSP；手打一次就好。
+3. **產生密碼並寫好 `.pgpass`**：`python3 scripts/ops/futari-app-pgpass.py "<secrets image>" <env>`（prod 要多帶 `--admin-env-file <存 prod DATABASE_URL_DIRECT 的檔>`，因為 `.env.local` 指向 dev）。它產生 64 hex 的新密碼寫進 `futari_<env>_app.pw`，並把 admin／app 兩行寫進 `.pgpass`，都是 `600`、不印出任何秘密；`futari_<env>_app.pw` 已存在就拒絕執行，避免重跑時產生第二組、跟伺服器上的對不起來。
+4. **設定密碼**：`psql service=futari_<env>_admin` 裡執行 **`\password futari_app`**（一定要帶角色名稱），在提示字元貼上 `pbcopy < "<secrets image>/futari_<env>_app.pw"` 的內容，貼完 `pbcopy < /dev/null` 清掉剪貼簿。psql 在 client 端算好 SCRAM 驗證值才送出。
+   - **失效的樣子（漏了角色名稱）**：`\password` 不帶參數改的是**目前登入的角色**，也就是 `postgres`。Supabase 會擋下來（`permission denied to alter role`），所以不會真的改到——但 `futari_app` 也就沒有密碼，下一步連線測試會得到 `EAUTHQUERY … unsupported or invalid secret format`（Supavisor 的說法是「這個角色沒有可用的密碼」，不是「密碼錯」）。重跑 `\password futari_app` 即可。
+   - **剪貼簿是第二個外洩面**：沒清掉的剪貼簿會在下一次貼上時跟著出去——聊天框、issue、或替 agent 打字的瀏覽器工具（2026-10-01 dev 切換時，一段 terminal 輸出就是這樣被貼進了測試紀錄的描述；那段不含密碼，但下一次可能有）。
 5. **開放登入**：`ALTER ROLE futari_app LOGIN;`
-6. **確認 log 乾淨**：Logs Explorer 搜 `futari_app`，出現的密碼相關內容只能是 `SCRAM-SHA-256$…` 形式。
+6. **確認 log 乾淨**：Logs Explorer（`postgres_logs`）搜 `PASSWORD`。Supabase 會把密碼語句記成 `ALTER USER "futari_app" …`，密碼值的位置顯示成 `{REDACTED}`——看到 `{REDACTED}` 或 `SCRAM-SHA-256$…` 都是乾淨的；同時確認被改的角色是 `"futari_app"`，不是 `"postgres"`（那就是步驟 4 漏了角色名稱）。
 7. **連線測試一次**（circuit breaker，見下）：`psql service=futari_<env>_app -c 'select current_user'`，回 `futari_app` 才往下。
-8. **寫進 env**：pooler URL 由使用者在本機用「讀 `.pgpass` 欄位、直接寫進檔案」的一行指令產生（`.env.local`，或 `vercel env add … < file`，Vercel 上標 **Sensitive**），不 echo——同 #1287 金鑰步驟的做法。
+8. **寫進 env**：
+   - dev：`python3 scripts/ops/futari-app-db-url.py "<secrets image>" dev` 從 service file + `.pgpass` 組出 transaction pooler（6543、`?pgbouncer=true`）的 URL，原地改寫 `.env.local` 的 `DATABASE_URL`（worktree 的 symlink 照樣有效），舊的那行備份到 `dev-DATABASE_URL.postgres.bak`（`600`）。退回：同一指令加 `--rollback`。之後重啟 `npm run dev`。
+   - prod：`… prod --pbcopy` 把 URL 放進剪貼簿，貼到 Vercel 的 `DATABASE_URL`（標 **Sensitive**），然後**立刻** `pbcopy < /dev/null`。不寫進任何檔案。
+   - **驗收**（dev 2026-10-01 的做法）：`pg_stat_activity` 裡 runtime 連線全是 `futari_app`；dashboard 有資料（BYPASSRLS 生效——沒生效的樣子是畫面空白、不報錯）；新增／編輯／刪除一筆紀錄＋月回顧留言成功；主要頁面 200；`postgres_logs` 從切換時間起沒有 permission denied。這條 log 查詢要先用切換前的時間窗確認抓得到已知錯誤，才能相信它回的「0 筆」。
 
 ### Circuit breaker：失敗一次就退回，不重試
 
@@ -263,7 +269,7 @@ group by 1;
 
 ### 事故處理：懷疑 `futari_app` 的密碼外洩
 
-1. **換密碼**：admin service 裡 `\password futari_app`（照啟用步驟 3–4），更新 `.pgpass` 與各環境 env（Vercel 標 Sensitive），redeploy。需要立刻切斷時先 `ALTER ROLE futari_app NOLOGIN;`（會造成 app 停擺，直到新密碼上線再 `LOGIN`）。
+1. **換密碼**：admin service 裡 `\password futari_app`（照啟用步驟 3–4；步驟 3 的腳本看到舊的 `futari_<env>_app.pw` 會拒絕執行，先把它改名成 `.pw.old`，新密碼上線後再刪），更新 `.pgpass` 與各環境 env（Vercel 標 Sensitive），redeploy。需要立刻切斷時先 `ALTER ROLE futari_app NOLOGIN;`（會造成 app 停擺，直到新密碼上線再 `LOGIN`）。
 2. **重設角色設定**：`ALTER ROLE futari_app RESET ALL;` 再重跑 0072 最後兩條 `ALTER ROLE futari_app SET …`。
 3. **踢掉既有連線**：`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'futari_app';`（`postgres` 在 Supabase 上是 `pg_signal_backend` 的成員）。換密碼不會中斷已經登入的 session，這一步不能省。
 4. **唯讀確認沒有留下東西**：`futari_app` 擁有的物件必須是 0（`pg_class`／`pg_proc`／`pg_namespace`／`pg_type`／`pg_largeobject_metadata` 的 owner），`pg_auth_members` 裡它不屬於任何角色，再跑一次上方覆蓋檢查確認沒有多出來的授權。同〈緊急輪替〉：全程唯讀，查完再處置。
