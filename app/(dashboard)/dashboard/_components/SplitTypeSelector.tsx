@@ -91,7 +91,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
             <div className="text-base font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
               {weightedLabel}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-sm mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {weightedSub(sts, payerWho, amount, splitRatioA)}
             </div>
           </div>
@@ -104,7 +104,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
         </button>
         {isWeighted && (
           <div className="flex flex-col gap-1 pt-1 w-full">
-            <div className="flex justify-between text-xs w-full" style={{ color: 'var(--ink-3)' }}>
+            <div className="flex justify-between text-sm w-full" style={{ color: 'var(--ink-3)' }}>
               <span>{sts.meRatio.replace('{ratio}', String(splitRatioA))}</span>
               <span>{sts.partnerRatio.replace('{ratio}', String(100 - splitRatioA))}</span>
             </div>
@@ -126,7 +126,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               <button
                 type="button"
                 onClick={() => onSplitRatioAChange(defaultViewerShare)}
-                className="relative before:absolute before:-inset-x-3 before:top-0 before:-bottom-3 before:content-[''] self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
+                className="relative before:absolute before:-inset-x-3 before:top-0 before:-bottom-3 before:content-[''] self-end text-sm underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
                 style={{ color: 'var(--ink-3)' }}
               >
                 {sts.resetToDefault}
@@ -157,7 +157,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               <div className="text-base font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
                 {s.label}
               </div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{s.sub}</div>
+              <div className="text-sm mt-0.5" style={{ color: 'var(--ink-3)' }}>{s.sub}</div>
             </div>
             <div className="w-5 h-5 rounded-full transition-all duration-150"
               style={{

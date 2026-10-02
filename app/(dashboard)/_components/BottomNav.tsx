@@ -91,7 +91,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
         style={{
           background: 'var(--surface)',
           borderTop: '1px solid var(--hairline)',
-          height: 'calc(64px + env(safe-area-inset-bottom))',
+          minHeight: 'calc(64px + env(safe-area-inset-bottom))',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
         <NavTab tab={TABS[0]} label={t.bottomNav.home}     active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
@@ -121,7 +121,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
         <button
           id={FAB_ID}
           onClick={onAddClick}
-          className="fixed left-1/2 z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-sm font-medium tracking-[0.5px]"
+          className="fixed left-1/2 z-[85] -translate-x-1/2 min-h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-sm font-medium tracking-[0.5px]"
           style={{
             bottom: 'calc(12px + env(safe-area-inset-bottom))',
             background: fabBg(fabVariant),
@@ -146,10 +146,10 @@ function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number
       prefetch={allowPrefetch ? true : false}
       aria-current={active ? 'page' : undefined}
       aria-label={label}
-      className="flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
+      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
       style={{ color }}>
       <Icon active={active} color={color} />
-      <span className="text-xs tracking-[0.4px]" style={{ fontWeight: active ? 500 : 400 }}>
+      <span className="max-w-full truncate text-sm tracking-[0.4px]" style={{ fontWeight: active ? 500 : 400 }}>
         {label}
       </span>
     </Link>

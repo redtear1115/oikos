@@ -145,6 +145,13 @@
    * 0px is both the no-JS answer and the correct one for an empty stack. */
   --top-stack-h: 0px;
 
+  /* Body-text multiplier for the iOS system text size (#1490). 1 = no scaling,
+   * and 1 is what every page outside the dashboard (and every non-iOS platform)
+   * sees. components/TextScale + the dashboard layout's inline script set it on
+   * <html> only while the dashboard is mounted; see the --text-xs…--text-mini
+   * tiers in @theme below and lib/textScale.ts. */
+  --text-scale: 1;
+
   /* Typography scale — P3-1 */
   --fs-xs:        12px;   /* extra small: labels, metadata (even-px unify #876, was 11) */
   --fs-sm:        14px;   /* small: secondary text, captions (even-px unify #876, was 13) */
@@ -198,12 +205,31 @@
   --font-sans: var(--font-noto-tc, 'PingFang TC'), 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK TC', sans-serif;
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
-  /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()).
+  /* Body-text tiers follow the system text size on iOS (#1490).
+   * `--text-scale` is set on <html> by components/TextScale (dashboard only,
+   * iOS/macOS WebKit only) and is absent everywhere else, so the `, 1`
+   * fallback keeps every tier equal to the plain rem value. Only the five
+   * Tailwind body tiers and text-mini scale; title/page/amount/display tiers
+   * below stay fixed on purpose, and spacing (rem-based `--spacing`) does not
+   * scale — rows that hold text must grow by content (min-h, wrap).
+   * Failure looks like: text-sm stays 14px at the largest iOS text size, with
+   * no error anywhere. Line-height pairs are unitless ratios and follow.
+   * The "static values, not var()" note below (fdd8c40) was about aliasing
+   * `--fs-*` vars; calc(rem * var(--text-scale, 1)) is emitted verbatim —
+   * tests/text-scale-tokens.test.ts proves it against the compiled CSS. */
+  --text-xs:   calc(0.75rem  * var(--text-scale, 1));
+  --text-sm:   calc(0.875rem * var(--text-scale, 1));
+  --text-base: calc(1rem     * var(--text-scale, 1));
+  --text-lg:   calc(1.125rem * var(--text-scale, 1));
+  --text-xl:   calc(1.25rem  * var(--text-scale, 1));
+  --text-mini: calc(0.625rem * var(--text-scale, 1));  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
+
+  /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()
+   * — except the --text-scale tiers above).
    * Even-px scale only (#876): the 11/13/15 tiers (text-micro/label/body) AND
    * the 12/14 aliases (text-caption/text-meta) were removed — callsites use the
    * Tailwind-native text-xs/sm/base (12/14/16) directly. The only kept custom
    * tier below text-title is text-mini (10) — no Tailwind equivalent. */
-  --text-mini:      10px;  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
   --text-title:     22px;
   --text-page:      26px;
   --text-amount-md: 44px;
