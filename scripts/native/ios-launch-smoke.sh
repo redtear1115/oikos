@@ -114,30 +114,42 @@ fi
 
 # 4c. WebView 真的畫出東西：輪詢截圖直到「中段區域」不是純色（預設每 5 秒、最多 RENDER_TIMEOUT=90 秒）。
 #     全新模擬器第一次啟動，WebView 要 ~60 秒才畫出 prod（12 秒時是黑的、30 秒時是灰的，build 本身沒問題），
-#     所以不能只在 12 秒拍一張。只看畫面中段（略過狀態列時鐘）的不同顏色數；落地頁有插圖，遠超門檻，純色頁只有 1 色。
+#     所以不能只在 12 秒拍一張。只看畫面中段（略過狀態列時鐘）的不同顏色數；落地頁有插圖，遠超門檻，純色頁只有 1 色；離線頁另外辨識（見下）。
 SHOT="$OUT/launch.png"
 RENDER_TIMEOUT="${SMOKE_RENDER_TIMEOUT:-90}"
 colors() {
-  sips -s format bmp "$1" --out "$1.bmp" >/dev/null 2>&1 || { echo 0; return; }
+  sips -s format bmp "$1" --out "$1.bmp" >/dev/null 2>&1 || { echo "0 - 0"; return; }
   python3 - "$1.bmp" <<'PY'
 import struct,sys
 d=open(sys.argv[1],'rb').read()
 off=struct.unpack_from('<I',d,10)[0]; w,h=struct.unpack_from('<ii',d,18); bpp=struct.unpack_from('<H',d,28)[0]
 Bpp=bpp//8; row=(w*Bpp+3)//4*4; h=abs(h)
-seen=set()
+seen={}; total=0
 for y in range(int(h*.2),int(h*.8),6):
     base=off+y*row
     for x in range(0,w,6):
-        seen.add(d[base+x*Bpp:base+x*Bpp+3])
-print(len(seen))
+        k=d[base+x*Bpp:base+x*Bpp+3]
+        seen[k]=seen.get(k,0)+1; total+=1
+top=max(seen,key=seen.get)
+# 輸出：不同顏色數、最多的那個顏色（RRGGBB，BMP 是 BGR 所以反過來）、它佔取樣點的比例
+print(len(seen), top[::-1].hex(), "%.4f"%(seen[top]/total))
 PY
 }
-RENDERED=0; WAITED=0
+# 離線頁（#1499）：殼連不到 prod 時 Capacitor 的 server.errorPath 會載入殼內 offline.html（~215 色），
+# 色數遠超過 50 門檻，舊版因此誤報 PASS。直接辨識它：整頁底色是 offline.html 的 --bg（#FBEDE0，
+# scripts/build-native-offline-page.ts），實測佔中段取樣點 96.2%；真正的落地頁 13,226 色、最大色塊 #EFDDC4 僅佔 56.2%。
+# 閾值 0.90 落在兩者之間；底色改了要同步改這裡（失效的樣子：離線頁又被當成 PASS）。
+OFFLINE_BG="fbede0"; OFFLINE_SHARE_MIN="0.90"
+RENDERED=0; WAITED=0; OFFLINE=0; TOP="-"; SHARE="0"
 while [ "$FAILED" -eq 0 ]; do
   xcrun simctl io "$UDID" screenshot "$SHOT" >/dev/null 2>&1
-  N=$( [ -s "$SHOT" ] && colors "$SHOT" || echo 0 )
+  if [ -s "$SHOT" ]; then read -r N TOP SHARE <<< "$(colors "$SHOT")"; else N=0; TOP="-"; SHARE=0; fi
   rm -f "$SHOT.bmp"
-  if [ "${N:-0}" -ge 50 ]; then RENDERED=1; break; fi
+  OFFLINE=0
+  # 還要有文字／圖示的色數（N>=20）：純 #FBEDE0 一片空白仍歸「純色」，不算離線頁。
+  if [ "$TOP" = "$OFFLINE_BG" ] && [ "${N:-0}" -ge 20 ] && awk -v s="$SHARE" -v m="$OFFLINE_SHARE_MIN" 'BEGIN{exit !(s>=m)}'; then OFFLINE=1; fi
+  # 離線頁不算畫出內容；繼續輪詢（可能只是網路剛好還沒好），到期仍是離線頁才失敗
+  if [ "$OFFLINE" -eq 0 ] && [ "${N:-0}" -ge 50 ]; then RENDERED=1; break; fi
   [ "$WAITED" -ge "$RENDER_TIMEOUT" ] && break
   sleep 5; WAITED=$((WAITED+5))
 done
@@ -146,7 +158,10 @@ if [ "$FAILED" -ne 0 ]; then
   echo "（前面已失敗，略過渲染檢查；失敗當下的畫面：${SHOT}）"
 elif [ "$RENDERED" -eq 1 ]; then
   echo "OK   WebView 已畫出內容（中段 ${N} 色，啟動後約 $((WAIT+WAITED))s）"
-  echo "screenshot: $SHOT  <- 仍請看一眼：要是 https://futari.southern-light.dev 的 Futari 頁面，不是系統錯誤頁／離線頁"
+  echo "screenshot: $SHOT  <- 仍請看一眼：要是 https://futari.southern-light.dev 的 Futari 頁面（離線頁已由腳本擋下，系統錯誤頁仍要自己看）"
+elif [ "$OFFLINE" -eq 1 ]; then
+  echo "FAIL offline page shown — prod unreachable?（${RENDER_TIMEOUT}s 內畫面仍是殼內離線頁 offline.html：中段 ${N} 色、#${TOP} 佔 ${SHARE}；檢查網路與 prod，${SHOT}）" >&2
+  FAILED=1
 else
   echo "FAIL ${RENDER_TIMEOUT}s 內畫面仍是純色（中段 ${N:-0} 色）：WebView 沒載入內容（${SHOT}）" >&2
   FAILED=1
