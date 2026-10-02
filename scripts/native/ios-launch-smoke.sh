@@ -6,12 +6,12 @@
 # 流程裡沒有任何一步會真的啟動 app。
 #
 # 做的事：Release + iphonesimulator + 最新 SDK 建同一份原始碼 → 在「最新已安裝 iOS runtime」的專用模擬器
-# 安裝並啟動 → 等 >=10 秒確認 process 還活著 → 查該 process 的 error/fault log → 截圖。
+# 安裝並啟動 → 等 >=10 秒確認 process 還活著 → 查 log → 輪詢截圖直到 WebView 畫出非純色內容（全新模擬器約 60 秒）。
 # 任何一項失敗 exit 1 並印出原因；上傳不得進行。
 #
 # 用法（repo root，已跑過 `npx cap sync ios`）：
 #   scripts/native/ios-launch-smoke.sh
-# 環境變數：SMOKE_OUT（輸出目錄，預設 mktemp）、SMOKE_WAIT（等待秒數，預設 12，下限 10）
+# 環境變數：SMOKE_OUT（輸出目錄，預設 mktemp）、SMOKE_WAIT（存活等待秒數，預設 12，下限 10）、SMOKE_RENDER_TIMEOUT（等畫面渲染，預設 90）
 #
 # 只動名為 "futari-launch-smoke-<runtime>" 的專用模擬器（每次刪除重建、結束時關機並刪除）；不碰其他模擬器。
 set -u
@@ -101,7 +101,7 @@ fi
 #     "Could not resolve UID for user mobile" 之類是常態雜訊，把它們當失敗會讓 gate 永遠紅、很快被人關掉）
 PRED="(process == \"$PROCESS_NAME\" AND (messageType == error OR messageType == fault)) OR eventMessage CONTAINS[c] \"failed to launch\" OR eventMessage CONTAINS[c] \"UIScene life cycle is required\""
 xcrun simctl spawn "$UDID" log show --start "$START" --style compact --predicate "$PRED" > "$OUT/log-errors.txt" 2>&1
-FATAL=$(grep -E 'failed to launch|UIScene life cycle is required' "$OUT/log-errors.txt" | head -5)
+FATAL=$(grep -E 'failed to launch|UIScene life cycle is required' "$OUT/log-errors.txt" | grep -v ' log\[' | head -5)
 NERR=$(grep -cE ' E  App\[' "$OUT/log-errors.txt")
 NFAULT=$(grep -cE ' F  App\[' "$OUT/log-errors.txt")
 if [ -n "$FATAL" ]; then
@@ -112,13 +112,48 @@ else
   echo "OK   log 沒有啟動失敗訊息（App process error=${NERR} fault=${NFAULT}，列在 ${OUT}/log-errors.txt，僅供參考）"
 fi
 
-# 4c. 截圖（WebView 是否載入 prod 要看這張圖）
+# 4c. WebView 真的畫出東西：輪詢截圖直到「中段區域」不是純色（預設每 5 秒、最多 RENDER_TIMEOUT=90 秒）。
+#     全新模擬器第一次啟動，WebView 要 ~60 秒才畫出 prod（12 秒時是黑的、30 秒時是灰的，build 本身沒問題），
+#     所以不能只在 12 秒拍一張。只看畫面中段（略過狀態列時鐘）的不同顏色數；落地頁有插圖，遠超門檻，純色頁只有 1 色。
 SHOT="$OUT/launch.png"
-if xcrun simctl io "$UDID" screenshot "$SHOT" >/dev/null 2>&1 && [ -s "$SHOT" ]; then
-  echo "screenshot: $SHOT  <- 確認畫面是 https://futari.southern-light.dev 的 Futari 頁面，不是空白／系統錯誤頁／離線頁"
+RENDER_TIMEOUT="${SMOKE_RENDER_TIMEOUT:-90}"
+colors() {
+  sips -s format bmp "$1" --out "$1.bmp" >/dev/null 2>&1 || { echo 0; return; }
+  python3 - "$1.bmp" <<'PY'
+import struct,sys
+d=open(sys.argv[1],'rb').read()
+off=struct.unpack_from('<I',d,10)[0]; w,h=struct.unpack_from('<ii',d,18); bpp=struct.unpack_from('<H',d,28)[0]
+Bpp=bpp//8; row=(w*Bpp+3)//4*4; h=abs(h)
+seen=set()
+for y in range(int(h*.2),int(h*.8),6):
+    base=off+y*row
+    for x in range(0,w,6):
+        seen.add(d[base+x*Bpp:base+x*Bpp+3])
+print(len(seen))
+PY
+}
+RENDERED=0; WAITED=0
+while [ "$FAILED" -eq 0 ]; do
+  xcrun simctl io "$UDID" screenshot "$SHOT" >/dev/null 2>&1
+  N=$( [ -s "$SHOT" ] && colors "$SHOT" || echo 0 )
+  rm -f "$SHOT.bmp"
+  if [ "${N:-0}" -ge 50 ]; then RENDERED=1; break; fi
+  [ "$WAITED" -ge "$RENDER_TIMEOUT" ] && break
+  sleep 5; WAITED=$((WAITED+5))
+done
+if [ "$FAILED" -ne 0 ]; then
+  xcrun simctl io "$UDID" screenshot "$SHOT" >/dev/null 2>&1
+  echo "（前面已失敗，略過渲染檢查；失敗當下的畫面：${SHOT}）"
+elif [ "$RENDERED" -eq 1 ]; then
+  echo "OK   WebView 已畫出內容（中段 ${N} 色，啟動後約 $((WAIT+WAITED))s）"
+  echo "screenshot: $SHOT  <- 仍請看一眼：要是 https://futari.southern-light.dev 的 Futari 頁面，不是系統錯誤頁／離線頁"
 else
-  echo "FAIL 截圖失敗" >&2
+  echo "FAIL ${RENDER_TIMEOUT}s 內畫面仍是純色（中段 ${N:-0} 色）：WebView 沒載入內容（${SHOT}）" >&2
   FAILED=1
+fi
+# process 在輪詢期間也不能死
+if [ "$FAILED" -eq 0 ] && ! xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | awk -v b="UIKitApplication:$BUNDLE_ID" 'index($0,b){print $1}' | grep -qE '^[0-9]+$'; then
+  echo "FAIL process 在等待畫面期間結束" >&2; FAILED=1
 fi
 
 [ "$FAILED" -eq 0 ] || fail "launch smoke 未通過——不要上傳"

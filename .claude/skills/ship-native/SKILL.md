@@ -211,8 +211,9 @@ scripts/native/ios-launch-smoke.sh      # 約 2–4 分鐘；失敗 exit 1 並�
 ```
 
 它用同一份原始碼建 Release／iphonesimulator，在最新 iOS runtime 的專用模擬器啟動，等 ≥10 秒確認
-process 活著、查 log、截圖到 `$SMOKE_OUT/launch.png`（輸出路徑會印出來）。
-**通過後還要自己開那張截圖**：要看到 prod 的 Futari 落地頁，空白／錯誤頁／離線頁都算失敗。
+process 活著、查 log，再每 5 秒截圖、最多等 90 秒，直到畫面中段不是純色（`$SMOKE_OUT/launch.png`，路徑會印出來）。
+**全新模擬器第一次啟動，WebView 約 60 秒才畫出 prod**（12 秒黑、30 秒灰，build 沒壞），所以整個跑完要幾分鐘；
+90 秒內仍是純色才算失敗。**通過後還是自己開一眼截圖**：要是 prod 的 Futari 落地頁，不是系統錯誤頁／離線頁（這兩種不是純色，腳本分不出來）。
 **非 0 或截圖不對就停，不要上傳**，回報原因。失敗樣子與前置（`xcodebuild -downloadPlatform iOS`、
 DeviceHub、log 查法）見 [runbook §K](../../../docs/app-store-submission-runbook.md#k-原生-build-雷點)。
 
@@ -279,7 +280,7 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 
 ```
 上傳前（iOS）
-  □ scripts/native/ios-launch-smoke.sh 通過（exit 0）且截圖看到 prod 落地頁
+  □ scripts/native/ios-launch-smoke.sh 通過（exit 0）且截圖是 prod 落地頁（腳本已確認非純色）
     ※ 1.5.18(5) 沒跑這步，iOS 27 上開機即閃退
 
 實機 / TestFlight 驗證（iOS 上傳後必做）
