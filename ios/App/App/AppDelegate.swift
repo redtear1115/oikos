@@ -1,7 +1,7 @@
 import UIKit
 import Capacitor
 
-@UIApplicationMain
+// Entry point is main.swift (starts native crash reporting before UIApplicationMain, #1478).
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
