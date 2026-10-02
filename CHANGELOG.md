@@ -55,10 +55,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **iOS 上傳前加 launch smoke（#1476）**
   使用者：無直接變化；避免再送出一開就閃退的 iOS 殼（1.5.18 (5) 在 iOS 27 閃退）。
   技術：`scripts/native/ios-launch-smoke.sh` 在最新 runtime 模擬器跑 Release 建置、確認存活與 log、截圖；ship-native 於 archive 後、upload 前呼叫。
-
 - **刪除帳號排程在重查帳本前先鎖住使用者的 Profiles 列（#1449）**
   使用者：無可見變化；刪除帳號後不會再以「已離開的夥伴」留在對方帳本或孤兒帳本裡。
   技術：`0074` 在重查前加 `Profiles … FOR UPDATE`，新增 `profile_is_live()`；`acceptInvite`／`createGroup` 拿到鎖後確認帳號仍在，否則回 `profile_not_found`。須先套 migration 再部署。
+- **加密欄位的密文不再經由 Realtime 與 Data API 送到瀏覽器（#1471）**
+  使用者：無可見變化；寶寶本名、車牌、身分證字號等欄位的密文不再出現在瀏覽器收得到的資料裡。
+  技術：`0075` 收回 `anon`／`authenticated` 在 Assets、各 *Details、InvoiceCredentials 的授權，`authenticated` 只留 Assets 非加密欄位的 SELECT（Realtime 依欄位權限裁切 payload；publication 欄位清單對 wal2json 無效，已在 dev 驗證）。
 
 ## [1.6.5] - 2026-10-02
 
