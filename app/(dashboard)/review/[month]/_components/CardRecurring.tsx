@@ -31,7 +31,7 @@ export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="inline-block text-mini font-medium px-1.5 py-0.5 rounded"
+                    className="inline-block text-xs font-medium px-1.5 py-0.5 rounded"
                     style={{
                       background: ev.direction === 'income' ? '#D7E5DC' : '#F7D8DD',
                       color: ev.direction === 'income' ? '#3F6A56' : '#8A3F50',
@@ -57,7 +57,7 @@ export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow
             ))}
           </ul>
           <div
-            className="mt-3 pt-3 text-xs space-y-1"
+            className="mt-3 pt-3 text-sm space-y-1"
             style={{ color: 'var(--ink-3)', borderTop: '1px solid var(--hairline)' }}
           >
             {snapshot.recurringTotalIncome > 0 && (
