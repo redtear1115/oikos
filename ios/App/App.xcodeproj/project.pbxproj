@@ -18,6 +18,7 @@
 		E9A8D930A08C48ED828540F9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71123C65CB864C92B2F0DAC5 /* SceneDelegate.swift */; };
 		55EEB5CE313D9D2537DB613E /* SentryBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C589C2922BCCB8E53BEBF251 /* SentryBootstrap.swift */; };
 		EFBB4A181299C3925D08CD98 /* Sentry-Dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = B2288611E2022F833C4C3A4E /* Sentry-Dynamic */; };
+		8E4D2B6FAC304D7E9F1B2C3D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D3C1A5E9B2F4C6D8E0A1B2C /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		71123C65CB864C92B2F0DAC5 /* SceneDelegate.swift */ = {isa = PBXFileReference; name = "SceneDelegate.swift"; path = "SceneDelegate.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
 		C589C2922BCCB8E53BEBF251 /* SentryBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentryBootstrap.swift; sourceTree = "<group>"; };
+		7D3C1A5E9B2F4C6D8E0A1B2C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
+				7D3C1A5E9B2F4C6D8E0A1B2C /* main.swift */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
@@ -167,6 +170,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E4D2B6FAC304D7E9F1B2C3D /* main.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				E9A8D930A08C48ED828540F9 /* SceneDelegate.swift in Sources */,
 				55EEB5CE313D9D2537DB613E /* SentryBootstrap.swift in Sources */,
