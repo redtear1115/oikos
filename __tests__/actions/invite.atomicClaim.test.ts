@@ -340,10 +340,11 @@ describe('createInvite — one open invite per group (#1288)', () => {
     expect(first.ok).toBe(true)
     expect(captured.filter((c) => c.event === 'invite_superseded')).toHaveLength(0)
 
-    const stale = await seedInvite(groupId, inviter, { expiresAt: new Date(Date.now() - 60_000) })
-    // Drop the live one so only the expired row is left open.
+    // Drop the live one so only the expired row seeded next is left open
+    // (in this order: since 0076 a group holds at most one open invite).
     await db.update(groupInvites).set({ revokedAt: new Date() })
-      .where(and(eq(groupInvites.groupId, groupId), sql`${groupInvites.id} <> ${stale.id}`))
+      .where(eq(groupInvites.groupId, groupId))
+    const stale = await seedInvite(groupId, inviter, { expiresAt: new Date(Date.now() - 60_000) })
 
     expect((await as(inviter, () => createInvite())).ok).toBe(true)
     expect((await inviteRow(stale.id)).revokedAt).not.toBeNull()

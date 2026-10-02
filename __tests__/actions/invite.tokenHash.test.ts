@@ -311,10 +311,12 @@ describe.skipIf(!isLocalDb)('0070 migration (#1288 I3a)', () => {
     await runDown()
     expect(await shape()).toEqual({ columns: { token: 'NO' }, uniqueHashIndex: false })
 
+    // Revoked rows: since 0076 (#1288 I1b) a group holds at most one open
+    // invite, and the backfill does not care whether a row is open.
     const tokens = [generateToken(), generateToken(), generateToken()]
     for (const t of tokens) {
-      await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-                VALUES (${groupId}, ${inviter}, ${t}, ${expiresAt()})`
+      await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at, revoked_at)
+                VALUES (${groupId}, ${inviter}, ${t}, ${expiresAt()}, now())`
     }
 
     const first = await runUp()
@@ -335,17 +337,17 @@ describe.skipIf(!isLocalDb)('0070 migration (#1288 I3a)', () => {
     expect(matches).toEqual([1, 1, 1])
 
     // Unique: a second row with an existing hash is refused.
-    const dup = await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at)
-      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(tokens[0])}, ${expiresAt()})`.catch((e) => e)
+    const dup = await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at, revoked_at)
+      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(tokens[0])}, ${expiresAt()}, now())`.catch((e) => e)
     expect(sqlstate(dup)).toBe('23505')
 
     // `token` accepts NULL now (I3c will rely on it); NULL hashes don't collide.
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at)
-      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(generateToken())}, ${expiresAt()})`
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()})`
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()})`
+    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at, revoked_at)
+      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(generateToken())}, ${expiresAt()}, now())`
+    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at, revoked_at)
+      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()}, now())`
+    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at, revoked_at)
+      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()}, now())`
 
     // A re-run (gate G1) hashes the two rows minted "by old code" above.
     expect((await runUp()).backfilled).toBe(2)

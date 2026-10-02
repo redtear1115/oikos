@@ -112,6 +112,12 @@ export const groupInvites = pgTable('GroupInvites', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({
   tokenHashUnique: uniqueIndex('GroupInvites_token_hash_unique').on(t.tokenHash),
+  // #1288 I1b — at most one open (unaccepted, unrevoked) invite per group;
+  // created by drizzle/0076_invite_one_open_per_group.sql. createInvite
+  // supersedes earlier open invites before inserting, so it never trips this.
+  oneOpenPerGroup: uniqueIndex('GroupInvites_one_open_per_group')
+    .on(t.groupId)
+    .where(sql`accepted_at IS NULL AND revoked_at IS NULL`),
 }))
 
 export const groupBalance = pgTable('GroupBalance', {
