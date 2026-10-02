@@ -1,6 +1,11 @@
 -- ROLLBACK for drizzle/0070_invite_token_hash_expand.sql — DEV ONLY, NEVER RUN AUTOMATICALLY.
 -- Not a drizzle migration: drizzle-kit only runs files listed in drizzle/meta/_journal.json.
 --
+-- SUPERSEDED BY 0078 (drizzle/0078_invite_drop_plaintext_token.sql), which
+-- drops the `token` column. Once 0078 has run, this rollback fails (step 3
+-- names `token`) and no longer applies; 0078's own rollback is
+-- scripts/rollback/0078_invite_drop_plaintext_token.down.sql.
+--
 -- Revert the code first. The #1288 I3b code writes and reads `token_hash`;
 -- with the column gone, minting fails and every link reads "invalid or
 -- expired". Run this only once the deployed code is from before I3b.
