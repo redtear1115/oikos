@@ -138,7 +138,7 @@ grep -n 'versionCode\|versionName' android/app/build.gradle
 現在只有一把 ASC key：`LRB54C7D5X`（App 管理），**只用於 validate / upload**，不參與簽章。
 簽章走本機憑證。
 
-**Issuer ID**：altool 需要，不在 dmg 也不在 repo。
+**Issuer ID**：altool 需要。在 dmg 的 `env/.env`（`ASC_ISSUER_ID`），不在 repo；dmg 沒有時才去 ASC 查：
 ASC → 使用者與存取權 → 整合 → App Store Connect API，頁面最上方那串 UUID。**沒有就停下來問。**
 
 #### 0) 裝 provisioning profile（乾淨機器必做）
