@@ -41,6 +41,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.6.6] - 2026-10-03
+
+主題：**送審前先把殼看牢**——iOS 殼加上原生崩潰回報與上傳前的啟動檢查，帳本之間的資料界線再收緊一層。
+完整 diff：[v1.6.5...v1.6.6](https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6)
+
 ### 使用者可見變化
 
 - **離線頁改用品牌提燈（#1423）**
@@ -73,12 +80,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **刪除帳號排程在重查帳本前先鎖住使用者的 Profiles 列（#1449）**
   使用者：無可見變化；刪除帳號後不會再以「已離開的夥伴」留在對方帳本或孤兒帳本裡。
   技術：`0074` 在重查前加 `Profiles … FOR UPDATE`，新增 `profile_is_live()`；`acceptInvite`／`createGroup` 拿到鎖後確認帳號仍在，否則回 `profile_not_found`。須先套 migration 再部署。
-- **加密欄位的密文不再經由 Realtime 與 Data API 送到瀏覽器（#1471）**
-  使用者：無可見變化；寶寶本名、車牌、身分證字號等欄位的密文不再出現在瀏覽器收得到的資料裡。
-  技術：`0075` 收回 `anon`／`authenticated` 在 Assets、各 *Details、InvoiceCredentials 的授權，`authenticated` 只留 Assets 非加密欄位的 SELECT（Realtime 依欄位權限裁切 payload；publication 欄位清單對 wal2json 無效，已在 dev 驗證）。
 - **新建立的邀請連結只存雜湊，每個帳本最多一條有效邀請（#1288）**
   使用者：無可見變化；被新連結取代或已過期的舊連結照舊顯示失效。
   技術：`0076` 先撤銷過期與重複的未用邀請，再以 partial unique index 限定每個帳本一條；建立邀請不再寫入明文 `token`、查找只比對 `token_hash`，Drizzle schema 移除該欄（實體欄位由後續 migration 刪除），guard test 擋新的引用。
+
+### Security
+
+- **加密欄位的密文不再經由 Realtime 與 Data API 送到瀏覽器（#1471）**
+  使用者：無可見變化；寶寶本名、車牌、身分證字號等欄位的密文不再出現在瀏覽器收得到的資料裡。
+  技術：`0075` 收回 `anon`／`authenticated` 在 Assets、各 *Details、InvoiceCredentials 的授權，`authenticated` 只留 Assets 非加密欄位的 SELECT（Realtime 依欄位權限裁切 payload；publication 欄位清單對 wal2json 無效，已在 dev 驗證）。
 
 ## [1.6.5] - 2026-10-02
 
@@ -1485,7 +1495,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.6...HEAD
+[1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
