@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── Integration: trip writes stay inside the current chapter ────────────────
 //
@@ -123,6 +124,7 @@ afterEach(async () => {
     await db.delete(groupEpochs).where(eq(groupEpochs.groupId, groupId))
     await db.delete(groupBalance).where(eq(groupBalance.groupId, groupId))
     await db.delete(oikosGroups).where(eq(oikosGroups.id, groupId))
+    await deleteAuthUsers(people)
     await db.delete(profiles).where(inArray(profiles.id, people))
   } catch (e) {
     console.error('cleanup failed', e)
@@ -139,6 +141,10 @@ async function seedSoloTripThenAccept() {
   const ownerId = randomUUID()
   const joinerId = randomUUID()
   await db.insert(profiles).values([
+    { id: ownerId, displayName: 'TEST_TRIP_CHAPTER_owner' },
+    { id: joinerId, displayName: 'TEST_TRIP_CHAPTER_joiner' },
+  ])
+  await seedAuthUsers([
     { id: ownerId, displayName: 'TEST_TRIP_CHAPTER_owner' },
     { id: joinerId, displayName: 'TEST_TRIP_CHAPTER_joiner' },
   ])
@@ -366,6 +372,7 @@ describe('trip in a closed chapter', () => {
     // not just for rows a current write path can produce.
     const ownerId = randomUUID()
     await db.insert(profiles).values({ id: ownerId, displayName: 'TEST_TRIP_CHAPTER_stranded' })
+    await seedAuthUsers([{ id: ownerId, displayName: 'TEST_TRIP_CHAPTER_stranded' }])
     const [group] = await db.insert(oikosGroups).values({
       name: 'TEST_TRIP_CHAPTER_stranded_group',
       memberA: ownerId,
@@ -415,6 +422,10 @@ describe('trip writes while pinned to a past chapter', () => {
     const a = randomUUID()
     const b = randomUUID()
     await db.insert(profiles).values([
+      { id: a, displayName: 'TEST_TRIP_PIN_a' },
+      { id: b, displayName: 'TEST_TRIP_PIN_b' },
+    ])
+    await seedAuthUsers([
       { id: a, displayName: 'TEST_TRIP_PIN_a' },
       { id: b, displayName: 'TEST_TRIP_PIN_b' },
     ])

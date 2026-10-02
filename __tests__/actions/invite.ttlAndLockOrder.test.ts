@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── #1288 I2 — 24 h TTL, the clamp migration, and one lock order ─────────
 //
@@ -110,6 +111,7 @@ afterEach(async () => {
     }
     if (created.profiles.length) {
       await db.delete(groupEpochs).where(inArray(groupEpochs.memberAId, created.profiles))
+      await deleteAuthUsers(created.profiles)
       await db.delete(profiles).where(inArray(profiles.id, created.profiles))
     }
   } catch (e) {
@@ -122,6 +124,7 @@ afterEach(async () => {
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1288_I2_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1288_I2_${label}` }])
   created.profiles.push(id)
   return id
 }

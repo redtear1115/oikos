@@ -14,7 +14,8 @@ beforeEach(() => {
 describe('createGroup', () => {
   it('happy path: creates group + balance row', async () => {
     queueDbResult([])  // existing-group lookup → none
-    queueDbResult([])  // #1432 profile row lock (FOR NO KEY UPDATE)
+    queueDbResult([{ id: 'user-a' }])  // #1432 profile row lock (FOR NO KEY UPDATE)
+    queueDbResult([{ live: true }])  // #1449 profile_is_live after the lock
     queueDbResult([])  // #1432 existing-group re-check under the lock → none
     queueDbResult([{ id: 'grp-new', name: '我們家', memberA: 'user-a', memberB: null }])  // insert returning
     // groupBalance insert (no returning) — gets [] from empty queue (default)
@@ -33,7 +34,8 @@ describe('createGroup', () => {
     // member_b_id = null for solo.
     const startedAt = new Date('2026-06-30T00:00:00Z')
     queueDbResult([])  // existing-group lookup → none
-    queueDbResult([])  // #1432 profile row lock
+    queueDbResult([{ id: 'user-a' }])  // #1432 profile row lock
+    queueDbResult([{ live: true }])  // #1449 profile_is_live after the lock
     queueDbResult([])  // #1432 existing-group re-check under the lock → none
     queueDbResult([{ id: 'grp-new', name: '我們家', memberA: 'user-a', memberB: null, currentEpochStartedAt: startedAt }])
 
@@ -67,9 +69,29 @@ describe('createGroup', () => {
     // it, and createGroup returns it without inserting anything.
     queueDbResult([])  // fast-path lookup → none
     queueDbResult([{ id: 'user-a' }])  // profile row lock
+    queueDbResult([{ live: true }])  // #1449 profile_is_live after the lock
     queueDbResult([{ id: 'joined-grp' }])  // re-check under the lock → found
     const g = await createGroup('新家')
     expect(g).toMatchObject({ ok: true, data: { id: 'joined-grp' } })
+    expect(mockBuilder.values).not.toHaveBeenCalled()
+  })
+
+  // #1449 — the account-deletion job ran while createGroup waited for the
+  // profile lock. Real interleavings: __tests__/actions/accountDeletionRescan0071.test.ts.
+  it('the profile row is gone once the lock is granted: profile_not_found, nothing inserted (#1449)', async () => {
+    queueDbResult([])  // fast-path lookup → none
+    queueDbResult([])  // profile row lock → the job deleted the row
+    const g = await createGroup('新家')
+    expect(g).toEqual({ ok: false, code: 'profile_not_found' })
+    expect(mockBuilder.values).not.toHaveBeenCalled()
+  })
+
+  it('the profile is a tombstone once the lock is granted: profile_not_found, nothing inserted (#1449)', async () => {
+    queueDbResult([])  // fast-path lookup → none
+    queueDbResult([{ id: 'user-a' }])  // profile row lock → the tombstone
+    queueDbResult([{ live: false }])  // profile_is_live: the auth account is gone
+    const g = await createGroup('新家')
+    expect(g).toEqual({ ok: false, code: 'profile_not_found' })
     expect(mockBuilder.values).not.toHaveBeenCalled()
   })
 

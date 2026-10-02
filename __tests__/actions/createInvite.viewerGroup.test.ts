@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ActionResult } from '@/lib/action-errors'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── Regression for #1031 (behaviour layer) ───────────────────────────────
 //
@@ -89,6 +90,7 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
         await db.delete(oikosGroups).where(inArray(oikosGroups.id, groups))
       }
       const people = [ids.attacker, ids.victim].filter(Boolean)
+      if (people.length) await deleteAuthUsers(people)
       if (people.length) await db.delete(profiles).where(inArray(profiles.id, people))
     } catch (e) {
       console.error('cleanup failed', e)
@@ -99,6 +101,10 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
     ids.attacker = randomUUID()
     ids.victim = randomUUID()
     await db.insert(profiles).values([
+      { id: ids.attacker, displayName: 'TEST_1031_attacker' },
+      { id: ids.victim, displayName: 'TEST_1031_victim' },
+    ])
+    await seedAuthUsers([
       { id: ids.attacker, displayName: 'TEST_1031_attacker' },
       { id: ids.victim, displayName: 'TEST_1031_victim' },
     ])
@@ -148,6 +154,10 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
       { id: ids.attacker, displayName: 'TEST_1031_groupless' },
       { id: ids.victim, displayName: 'TEST_1031_victim2' },
     ])
+    await seedAuthUsers([
+      { id: ids.attacker, displayName: 'TEST_1031_groupless' },
+      { id: ids.victim, displayName: 'TEST_1031_victim2' },
+    ])
 
     const [victimGroup] = await db.insert(oikosGroups)
       .values({ name: 'TEST_1031_victim_solo2', memberA: ids.victim })
@@ -177,6 +187,7 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
     ids.attacker = randomUUID()
     mockUserId = ids.attacker
     await db.insert(profiles).values([{ id: ids.attacker, displayName: 'TEST_1031_setup' }])
+    await seedAuthUsers([{ id: ids.attacker, displayName: 'TEST_1031_setup' }])
 
     const created = unwrapAction(await createGroup('TEST_1031_setup_group'))
     ids.attackerGroup = created.id

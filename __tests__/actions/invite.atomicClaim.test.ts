@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── Regression for #1288 I1 ──────────────────────────────────────────────
 //
@@ -105,6 +106,7 @@ afterEach(async () => {
     }
     if (created.profiles.length) {
       await db.delete(groupEpochs).where(inArray(groupEpochs.memberAId, created.profiles))
+      await deleteAuthUsers(created.profiles)
       await db.delete(profiles).where(inArray(profiles.id, created.profiles))
     }
   } catch (e) {
@@ -117,6 +119,7 @@ afterEach(async () => {
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1288_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1288_${label}` }])
   created.profiles.push(id)
   return id
 }
