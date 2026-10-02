@@ -49,6 +49,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **新增 function search_path 釘選的靜態護欄測試（#1505）**
+  使用者：無可見變化；避免重新定義函式時漏掉 `SET search_path`，讓釘選悄悄失效。
+  技術：`__tests__/migrations/functionSearchPathPin.test.ts` 掃 `drizzle/*.sql`，public function 最後一次 `CREATE` 必須帶 `SET search_path`，或之後有 `ALTER FUNCTION … SET search_path`（0061 弄丟 0042 的釘選，0077 補回）。
 - **iOS launch smoke 先檢查 Capacitor 版本一致（#1503）**
   使用者：無可見變化；避免本機套件過期時，iOS 建置以看不懂的錯誤失敗。
   技術：`ios-launch-smoke.sh` 比對 package-lock、`node_modules/@capacitor/ios` 與 `CapApp-SPM/Package.swift` 的 Capacitor 版本，不一致就說明要先 `npm ci`／`cap sync`。
