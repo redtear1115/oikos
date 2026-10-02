@@ -41,6 +41,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.6.5] - 2026-10-02
+
+主題：**離開家計簿後舊紀錄留得住愛物**——跨帳本連結改成唯讀副本，加密密文不再送到瀏覽器，並備好較窄的 DB 角色。
+完整 diff：[v1.6.4...v1.6.5](https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5)
+
 ### 使用者可見變化
 
 - **離開家計簿後，跨帳本的愛物連結改成唯讀副本（#1442）**
@@ -1441,7 +1448,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.5...HEAD
+[1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
