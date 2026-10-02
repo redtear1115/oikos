@@ -7,8 +7,9 @@ import Sentry
 /// #1473 "UIScene life cycle is required") never reach the web Sentry SDK. This reports them
 /// from the native side into the same Sentry project, tagged `layer=native`.
 ///
-/// Start point: `main.swift`, before `UIApplicationMain`. #1473 trapped inside UIApplicationMain
-/// before the app delegate was even created, so `AppDelegate.init` is too late for that class.
+/// Start point: `main.swift`, before `UIApplicationMain` — the earliest point the app controls.
+/// The #1473 trap fires ~16 ms after `AppDelegate.init`, so init would also catch it; main.swift
+/// was kept because it is earlier and needs no delegate.
 ///
 /// What it does NOT cover (see docs/app-store-submission-runbook.md §K):
 /// - a crash before `main` (dyld / static initializers) — the SDK is not running yet;
