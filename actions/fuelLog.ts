@@ -9,6 +9,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { writableAsset } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
@@ -28,13 +29,13 @@ export const createFuelLog = action(async (input: FuelLogInputRaw): Promise<{ id
 
   const validated = validateFuelLogInput(input)
 
-  // Asset must belong to the viewer's group and not be soft-deleted.
+  // Asset must belong to the viewer's group, not be a frozen copy (#1442),
+  // and not be soft-deleted (reported separately, as before).
   const [asset] = await db
     .select({ id: assets.id, deletedAt: assets.deletedAt })
     .from(assets)
     .where(and(
-      eq(assets.id, validated.assetId),
-      eq(assets.groupId, group.id),
+      writableAsset(validated.assetId, group.id, { allowDeleted: true }),
       eq(assets.type, 'car'),
     ))
     .limit(1)
@@ -134,24 +135,24 @@ export const editFuelLog = action(async (input: EditFuelLogInput): Promise<{ id:
   // CashTransaction, and plant a replacement txn in the attacker's group
   // carrying the victim's fuelLogId. Same shape as softDeleteFuelLog /
   // getFuelLogById; do not reorder below any write.
+  // #1442 — a fuel log on a frozen copy is read-only: excluded here too.
   const [existingAsset] = await db
     .select({ id: assets.id })
     .from(assets)
     .where(and(
-      eq(assets.id, existingLog.assetId),
-      eq(assets.groupId, group.id),
+      writableAsset(existingLog.assetId, group.id, { allowDeleted: true }),
       eq(assets.type, 'car'),
     ))
     .limit(1)
   if (!existingAsset) throw actionError('linked_asset_not_in_group')
 
-  // Verify the (possibly newly-assigned) asset belongs to viewer's group and is not soft-deleted.
+  // Verify the (possibly newly-assigned) asset belongs to viewer's group, is
+  // not a frozen copy, and is not soft-deleted.
   const [asset] = await db
     .select({ id: assets.id, deletedAt: assets.deletedAt })
     .from(assets)
     .where(and(
-      eq(assets.id, validated.assetId),
-      eq(assets.groupId, group.id),
+      writableAsset(validated.assetId, group.id, { allowDeleted: true }),
       eq(assets.type, 'car'),
     ))
     .limit(1)
@@ -275,13 +276,13 @@ export const softDeleteFuelLog = action(async (fuelLogId: string): Promise<void>
     throw actionError('fuel_log_deleted_or_missing')
   }
 
-  // Verify the fuel log's asset belongs to viewer's group (ownership check).
+  // Verify the fuel log's asset belongs to viewer's group (ownership check)
+  // and is not a frozen copy (#1442: its fuel logs are read-only).
   const [asset] = await db
     .select({ id: assets.id, deletedAt: assets.deletedAt })
     .from(assets)
     .where(and(
-      eq(assets.id, existingLog.assetId),
-      eq(assets.groupId, group.id),
+      writableAsset(existingLog.assetId, group.id, { allowDeleted: true }),
       eq(assets.type, 'car'),
     ))
     .limit(1)

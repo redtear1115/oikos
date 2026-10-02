@@ -157,6 +157,136 @@ prod 目前寫入與儲存用的是輪替後的新 kid；那把新 kid 已經備
 
 ---
 
+## Runtime DB role (futari_app)
+
+> #1467。`drizzle/0072_futari_app_role.sql` 建立角色並授權；`scripts/ops/drop-futari-app-role.sql` 拆掉它。本節是 generic 的操作程序——不含任何連線字串、密碼、主機名稱。
+
+**角色分工**
+
+| 誰 | 連線 | 身分 |
+|---|---|---|
+| app runtime（Vercel、本機 `npm run dev`） | `DATABASE_URL`（pooler） | `futari_app`（逐環境切換完成之後；切換之前仍是 `postgres`） |
+| migrations（`drizzle-kit migrate`） | `DATABASE_URL_DIRECT` | `postgres`，不變 |
+| pg_cron jobs | DB 內部 | `postgres`，不變 |
+| 需要管理權限的整合測試（seed `auth.users`、套 DDL、呼叫 SECURITY DEFINER function，例如 `__tests__/actions/accountDeletion0068.test.ts`） | `DATABASE_URL_DIRECT` | `postgres` |
+
+### 為什麼是 BYPASSRLS
+
+DB session 裡沒有 JWT claims——授權在 app 程式碼裡做（`requireViewerGroup`，見 [authorization-design.md](specs/authorization-design.md)），RLS policy 是給 client 端 anon key 用的。`futari_app` 不帶 BYPASSRLS 的話，policy 看不到任何 `auth.uid()`，每一條 Drizzle 查詢都會被 RLS 過濾掉。
+
+- **失效的樣子**：不是權限錯誤，是**每個查詢都靜默回 0 筆**——dashboard 全空、記帳像沒存進去（INSERT 會被 `WITH CHECK` 擋成 42501，但讀取完全沒有錯誤）。看到「換了連線之後資料全不見」先查 `rolbypassrls`，不要去查資料。
+
+### 擋得住／擋不住
+
+- **擋得住**：建立角色（換掉密碼也還活著的後門）、DDL（`ALTER`／`DROP`／關 RLS／`TRUNCATE`）、改寫 `auth.*`、`cron` 排程加 `net.http_post` 把資料送出去、讀 `vault.decrypted_secrets`、讀 `storage.*`、在 `public` 建 function／table、建 schema。
+- **擋不住**：**`DATABASE_URL` 外洩後，對方仍然讀得到、改得到 app 的每一筆資料**——BYPASSRLS 加上 public 全表的 SELECT／INSERT／UPDATE／DELETE，就是 app 本身能做的全部事情。另外 PUBLIC 預設的 `TEMPORARY` 讓它能建 temp table（session 結束就消失，碰不到其他 schema）。這個角色縮小的是「外洩之後能不能擴權、能不能留下來」，不是「外洩之後看不看得到資料」。
+- **`postgres` 的密碼輪替之前，這份保護只涵蓋「目前這份 runtime env」外洩**：舊的 `postgres` 連線字串還在本機 env 檔與 secrets image 裡，拿到它的人仍有完整權限。輪替 `postgres` 密碼是另一個步驟（#1467 S4b），要等 Production 切換穩定之後。
+- **規則：`futari_app` 的授權永遠只到 public 的 DML（加上 sequence 的 USAGE／SELECT）**。要多給任何東西（別的 schema、function EXECUTE、TRUNCATE）都要先過一次新的安全審查。測試撞到 42501 而那個測試本來就需要管理權限，修法是把測試換到 `DATABASE_URL_DIRECT`，不是加 grant。
+  - **失效的樣子**：一次「順手補個 grant 讓測試過」不會有任何錯誤，只會讓這個角色慢慢長回 `postgres` 的樣子——控制點是 0072 之後每一個含 `futari_app` 的 migration 都要被當成安全變更審查。
+
+### 連線方式：只有一種
+
+所有 `postgres` 與 `futari_app` 的 psql session 都走 **service file + password file**，兩個檔都放在 secrets image 上：
+
+```
+PGSERVICEFILE="<secrets image>/pg_service.conf" PGPASSFILE="<secrets image>/.pgpass" \
+  psql service=futari_dev_admin -f <file>.sql
+```
+
+- Service 名稱：`futari_dev_admin`、`futari_dev_app`、`futari_prod_admin`、`futari_prod_app`。
+- `pg_service.conf` 只放 `host`／`port`／`user`／`dbname`（pooler 的 user 是 `futari_app.<project-ref>` 這種格式）；**密碼只在 `.pgpass`**（`host:port:dbname:user:<secret>` 一行一筆）。
+- `.pgpass` 權限必須是 `600`。**失效的樣子**：權限太寬時 libpq 會印一行 `WARNING: password file … has group or world access` 然後**直接忽略這個檔**，接著改成在提示字元要你輸入密碼——看起來像「密碼錯了」，其實是檔案權限。
+- 需要 psql 的每一步都由使用者自己跑；agent 只寫 SQL 檔、讀輸出（計數／名稱／OK-DENIED），**不經手任何密碼**，也不對 app 角色跑 psql。
+
+### 禁止事項（`futari_app` 與 `postgres` 的密碼都適用）
+
+- **不用直接帶密碼值的 libpq 環境變數**（只用 `PGPASSFILE` 指向檔案）；**不把連線字串或密碼放在指令列參數**（`psql "<url>"`、`-c` 帶密碼）。失效的樣子：兩者都會進 shell history 與進程列表（`ps`），當下什麼錯都沒有。
+- **不把密碼寫進 SQL 文字**（包括自己打 `ALTER ROLE … WITH` 帶明文）。Supabase 對 `postgres` 開了 DDL statement logging，明文會原封不動進 Logs Explorer，任何能開 dashboard 的人都看得到、而且留存。失效的樣子：指令成功、角色能登入，一切正常——密碼只是安靜地躺在 log 裡。
+- **不用 dashboard 的 SQL editor 做任何碰密碼的事**（它會留查詢歷史）。
+- **密碼不進 repo（本 repo 是公開的）、不進任何 log、不進 agent transcript**。`tests/futari-app-role-guard.test.ts` 會掃本節與 `scripts/ops/drop-futari-app-role.sql`／`0072`，出現密碼形狀的字串就失敗；它擋不住 log 與 transcript，那兩個只能靠上面的做法。
+
+### 啟用步驟（每個環境：先 dev，再 prod；全部由使用者執行）
+
+1. **跑 migration**（dev：`npm run db:migrate`；prod：見上方〈Prod：npm script 到不了〉），然後照〈Dev：跑完必須驗證資料效果〉直接查資料確認 0072 真的跑了：`select rolname, rolcanlogin, rolbypassrls from pg_roles where rolname = 'futari_app'` 要有一列、`rolcanlogin = false`、`rolbypassrls = true`。
+2. **確認 `SHOW password_encryption;` 是 `scram-sha-256`**（admin service）。不是就停。失效的樣子：若是 `md5`，下一步 psql 仍會在 client 端雜湊，但存進去的是 md5 驗證值——能登入、不報錯，只是比預期弱。
+0. **工具**：需要 psql（macOS：`brew install libpq`，它是 keg-only，不會進 PATH——用 `/opt/homebrew/opt/libpq/bin/psql` 或自己加 PATH）。指令從文件複製時，留意貼進來的不換行空白（NBSP）。失效的樣子：zsh 回 `command not found: psql service=futari_dev_admin`——整串被當成一個指令名稱，因為中間的「空白」其實是 NBSP；手打一次就好。
+3. **產生密碼並寫好 `.pgpass`**：`python3 scripts/ops/futari-app-pgpass.py "<secrets image>" <env>`（prod 要多帶 `--admin-env-file <存 prod DATABASE_URL_DIRECT 的檔>`，因為 `.env.local` 指向 dev）。它產生 64 hex 的新密碼寫進 `futari_<env>_app.pw`，並把 admin／app 兩行寫進 `.pgpass`，都是 `600`、不印出任何秘密；`futari_<env>_app.pw` 已存在就拒絕執行，避免重跑時產生第二組、跟伺服器上的對不起來。
+4. **設定密碼**：`psql service=futari_<env>_admin` 裡執行 **`\password futari_app`**（一定要帶角色名稱），在提示字元貼上 `pbcopy < "<secrets image>/futari_<env>_app.pw"` 的內容，貼完 `pbcopy < /dev/null` 清掉剪貼簿。psql 在 client 端算好 SCRAM 驗證值才送出。
+   - **失效的樣子（漏了角色名稱）**：`\password` 不帶參數改的是**目前登入的角色**，也就是 `postgres`。Supabase 會擋下來（`permission denied to alter role`），所以不會真的改到——但 `futari_app` 也就沒有密碼，下一步連線測試會得到 `EAUTHQUERY … unsupported or invalid secret format`（Supavisor 的說法是「這個角色沒有可用的密碼」，不是「密碼錯」）。重跑 `\password futari_app` 即可。
+   - **剪貼簿是第二個外洩面**：沒清掉的剪貼簿會在下一次貼上時跟著出去——聊天框、issue、或替 agent 打字的瀏覽器工具（2026-10-01 dev 切換時，一段 terminal 輸出就是這樣被貼進了測試紀錄的描述；那段不含密碼，但下一次可能有）。
+5. **開放登入**：`ALTER ROLE futari_app LOGIN;`
+6. **確認 log 乾淨**：Logs Explorer（`postgres_logs`）搜 `PASSWORD`。Supabase 會把密碼語句記成 `ALTER USER "futari_app" …`，密碼值的位置顯示成 `{REDACTED}`——看到 `{REDACTED}` 或 `SCRAM-SHA-256$…` 都是乾淨的；同時確認被改的角色是 `"futari_app"`，不是 `"postgres"`（那就是步驟 4 漏了角色名稱）。
+7. **連線測試一次**（circuit breaker，見下）：`psql service=futari_<env>_app -c 'select current_user'`，回 `futari_app` 才往下。
+8. **寫進 env**：
+   - dev：`python3 scripts/ops/futari-app-db-url.py "<secrets image>" dev` 從 service file + `.pgpass` 組出 transaction pooler（6543、`?pgbouncer=true`）的 URL，原地改寫 `.env.local` 的 `DATABASE_URL`（worktree 的 symlink 照樣有效），舊的那行備份到 `dev-DATABASE_URL.postgres.bak`（`600`）。退回：同一指令加 `--rollback`。之後重啟 `npm run dev`。
+   - prod：`… prod --pbcopy` 把 URL 放進剪貼簿，貼到 Vercel 的 `DATABASE_URL`（標 **Sensitive**），然後**立刻** `pbcopy < /dev/null`。不寫進任何檔案。
+     - **Vercel 不讓你改 Sensitive 變數的環境勾選**：原本 Production＋Preview 共用一個 Sensitive 的 `DATABASE_URL` 時，取消勾選 Preview 會被擋。做法是刪掉重建成兩個（Production 用舊值、Preview 用新值）。正在跑的部署不受影響，因為環境變數在部署建立時就固定了；但刪掉到重建 Production 之間不能有 Production 部署。Production 的值重貼之後，要等下一次 Production 部署才算驗收。
+     - **驗收時要看 prod 資料庫，不是看 Vercel**：`pg_stat_activity` 要出現 `futari_app`／Supavisor 的連線。閒置連線會被回收，所以要先打一個請求，否則「沒有連線」什麼都說明不了。
+   - **驗收**（dev 2026-10-01 的做法）：`pg_stat_activity` 裡 runtime 連線全是 `futari_app`；dashboard 有資料（BYPASSRLS 生效——沒生效的樣子是畫面空白、不報錯）；新增／編輯／刪除一筆紀錄＋月回顧留言成功；主要頁面 200；`postgres_logs` 從切換時間起沒有 permission denied。這條 log 查詢要先用切換前的時間窗確認抓得到已知錯誤，才能相信它回的「0 筆」。
+
+### Circuit breaker：失敗一次就退回，不重試
+
+Supabase 的 pooler 對同一來源的連續認證失敗會暫時封鎖該 IP（約 150 秒內 10 次失敗 → 封鎖約 120 秒）。
+
+- 改任何 Vercel env 之前，先照步驟 7 從本機用**完全相同**的值連一次。
+- Preview 驗證先只打**一個**請求；失敗就立刻把 env 改回去，不重試、不「再部署一次看看」。
+- **失效的樣子**：錯的密碼進了 Vercel，每個 lambda 都在重試，幾秒內就把 Vercel 出口 IP 送進封鎖名單——之後連**正確**的連線也會連續兩分鐘失敗，看起來像是「改回去也沒用」，其實是還在封鎖期。
+
+### 每次 migration 之後：覆蓋檢查
+
+0072 的 `ALTER DEFAULT PRIVILEGES FOR ROLE postgres` 讓之後 `postgres` 建的 table／sequence 自動授權給 `futari_app`。**只涵蓋 `postgres` 建的物件**——用別的角色建的（例如在 dashboard 以其他身分建表）不會被涵蓋。每次跑完 migration（dev 與 prod 都一樣），用 admin service 跑：
+
+```sql
+-- 必須 0 列：任何一列 = runtime 讀寫不了的 public table
+select c.relname
+from pg_class c join pg_namespace n on n.oid = c.relnamespace
+where n.nspname = 'public' and c.relkind in ('r', 'p')
+  and not (has_table_privilege('futari_app', c.oid, 'SELECT')
+       and has_table_privilege('futari_app', c.oid, 'INSERT')
+       and has_table_privilege('futari_app', c.oid, 'UPDATE')
+       and has_table_privilege('futari_app', c.oid, 'DELETE'));
+
+-- 必須 2 列（objtype r 與 S）：default privileges 還在
+select da.defaclobjtype
+from pg_default_acl da join pg_namespace n on n.oid = da.defaclnamespace, aclexplode(da.defaclacl) a
+where n.nspname = 'public' and pg_get_userbyid(da.defaclrole) = 'postgres'
+  and a.grantee = (select oid from pg_roles where rolname = 'futari_app')
+group by 1;
+```
+
+- **失效的樣子**：新表的 migration 部署後什麼事都沒有，直到 prod 第一次寫那張表時丟 `permission denied for table …`（42501）——在那之前沒有任何東西會失敗。有列就補 `GRANT SELECT, INSERT, UPDATE, DELETE ON "<table>" TO futari_app`（寫成新的 migration），不要改用別的角色。
+
+### 錯誤監看
+
+切換期間與之後，看 Supabase **Logs Explorer 的 `postgres_logs`**，篩 `user_name = 'futari_app'` 且 SQLSTATE `42501`；再加 Sentry（`lib/db/sanitizeError.ts` 清掉值但保留 `code`）。**不用 `pg_stat_statements`**——失敗的語句不會進它的統計，看起來會是「零錯誤」。
+
+- **失效的樣子**：只看 `pg_stat_statements` 或只看 Vercel 回應碼，權限錯誤可能被 server action 轉成一般錯誤訊息，畫面上只是「儲存失敗」，不會有人聯想到 DB 角色。
+
+### 逾時設定（安全網，不是調校）
+
+0072 設了 `statement_timeout = 30s`、`idle_in_transaction_session_timeout = 60s`（只作用在 `futari_app`；migration 與 pg_cron 不受影響）。
+
+- **失效的樣子**：合法的長查詢被砍會丟 57014 `canceling statement due to statement timeout`；交易開著不動超過 60 秒，連線會被終止（25P03）。看到這兩個 code 先確認是不是有 query 真的變慢了，不要直接把逾時調大。
+- `futari_app` 可以對自己 `ALTER ROLE … SET` 改掉這兩個值——所以事故處理要 `RESET ALL` 再重設（見下）。
+
+### 事故處理：懷疑 `futari_app` 的密碼外洩
+
+1. **換密碼**：admin service 裡 `\password futari_app`（照啟用步驟 3–4；步驟 3 的腳本看到舊的 `futari_<env>_app.pw` 會拒絕執行，先把它改名成 `.pw.old`，新密碼上線後再刪；dev 的 `.env.local` 要先 `futari-app-db-url.py … dev --rollback` 再重跑，因為它看到已經是 `futari_app` 會拒絕），更新 `.pgpass` 與各環境 env（Vercel 標 Sensitive），redeploy。需要立刻切斷時先 `ALTER ROLE futari_app NOLOGIN;`（會造成 app 停擺，直到新密碼上線再 `LOGIN`）。
+2. **重設角色設定**：`ALTER ROLE futari_app RESET ALL;` 再重跑 0072 最後兩條 `ALTER ROLE futari_app SET …`。
+3. **踢掉既有連線**：`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'futari_app';`（`postgres` 在 Supabase 上是 `pg_signal_backend` 的成員）。換密碼不會中斷已經登入的 session，這一步不能省。
+4. **唯讀確認沒有留下東西**：`futari_app` 擁有的物件必須是 0（`pg_class`／`pg_proc`／`pg_namespace`／`pg_type`／`pg_largeobject_metadata` 的 owner），`pg_auth_members` 裡它不屬於任何角色，再跑一次上方覆蓋檢查確認沒有多出來的授權。同〈緊急輪替〉：全程唯讀，查完再處置。
+5. **對方可能已經自己改了密碼**：一般角色可以改自己的密碼，症狀是 app 突然全面 28P01（認證失敗）。處理方式一樣是步驟 1，admin 的 `\password` 會蓋過去。
+6. **資料本身已暴露**：這個角色本來就讀得到全部 app 資料（見「擋不住」），是否需要通知使用者是使用者的決定，同〈緊急輪替〉。
+
+### Rollback
+
+1. 把 `DATABASE_URL` 改回原本的 `postgres` pooler URL（原值保留在 secrets image），redeploy／重啟 dev server。
+2. 要不要連角色一起拆：確認**沒有任何環境還在用 `futari_app`**之後，admin service 跑 `scripts/ops/drop-futari-app-role.sql`。
+   - **失效的樣子**：順序反過來（先拆角色再改 env），app 在拆的那一刻開始每個請求都連不上 DB，沒有漸進的徵兆。
+3. 之後要重建：用 admin 身分重跑 `0072` 的內容（idempotent）——`db:migrate` 不會重跑已記錄的 migration——再從〈啟用步驟〉2 開始。
+
+---
+
 ## pg_cron → Edge Function 授權：走 Vault
 
 pg_cron job 要帶 `service_role` bearer token 呼叫 Edge Function 時，**token 存 Supabase Vault，不可用 `ALTER DATABASE postgres SET app.*`**。

@@ -164,9 +164,6 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])                          // group lookup
     queueDbResult([{ displayName: 'Mei' }])              // leaver profile
-    queueDbResult([])                                    // movingHouse rows
-    queueDbResult([])                                    // movingCar rows
-    queueDbResult([])                                    // movingInsurance rows
     // Inside the transaction — locks and the boundary first, then the guards (#943 S-E, #1290):
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // OikosGroups … FOR NO KEY UPDATE
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // open GroupEpochs … FOR NO KEY UPDATE
@@ -177,6 +174,10 @@ describe('leaveGroup', () => {
     queueDbResult([{ id: 'grp-new' }])                   // insert new group .returning
     queueDbResult([])                                    // groupBalance insert (await → .then)
     queueDbResult([{ id: 'epoch-new' }])                 // insert leaver's solo epoch .returning
+    // Moving 愛物 are decided under the lock (#1442), after the new group exists.
+    queueDbResult([])                                    // movingHouse rows
+    queueDbResult([])                                    // movingCar rows
+    queueDbResult([])                                    // movingInsurance rows
 
     const r = await leaveGroup()
     // epochId is what LeaveGroupFlow keys `futari_just_left_` off so
@@ -195,19 +196,17 @@ describe('leaveGroup', () => {
     expect(insertedGroup.memberB).toBeNull()
   })
 
-  // Regression guard for #1440: `sql\`${array}\`` does NOT bind a JS array as
-  // a single array parameter — Drizzle expands it into a parenthesised
-  // parameter list, so `ANY(${ids}::uuid[])` sends `ANY(($1, $2)::uuid[])`,
-  // which Postgres rejects (22P02 / 42846). This never surfaces against the
-  // mocked db above (it doesn't parse SQL), so assert on the *generated*
-  // query text/params directly via the real PgDialect — cheap, no DB needed.
-  it('builds the moving-asset CASE as a flat param list (IN), not an array cast (#1440)', async () => {
+  // #1442 replaced the #1440 `asset_id = CASE …` on moving rows: rows move
+  // with their links untouched, and every link left crossing into the other
+  // ledger is re-pointed at a frozen copy afterwards (freezeCrossLedgerLinks;
+  // real-DB coverage in __tests__/actions/leaveGroup.frozenAssetCopy.test.ts).
+  // The mocked db doesn't parse SQL, so assert on the generated query via the
+  // real PgDialect: no moving UPDATE writes asset_id, the moving-asset ids are
+  // read under the lock, and no JS array is ever bound as one param (#1440).
+  it('moves rows without NULLing asset links; cross-ledger links go to the frozen-copy step (#1442)', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ displayName: 'Mei' }])
-    queueDbResult([])                                    // movingHouse rows
-    queueDbResult([{ assetId: 'car-1' }, { assetId: 'car-2' }]) // movingCar rows (2 ids)
-    queueDbResult([])                                    // movingInsurance rows
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
@@ -217,36 +216,31 @@ describe('leaveGroup', () => {
     queueDbResult([{ id: 'grp-new' }])
     queueDbResult([])
     queueDbResult([{ id: 'epoch-new' }])
+    queueDbResult([])                                    // movingHouse rows
+    queueDbResult([{ assetId: 'car-1' }, { assetId: 'car-2' }]) // movingCar rows (2 ids)
+    queueDbResult([])                                    // movingInsurance rows
 
-    await leaveGroup()
+    expect(await leaveGroup()).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
 
-    // Find the CashTransactions UPDATE among the raw sql`` executes (lock
-    // acquisition, the boundary read and getGroupBalance also go through
-    // mockDb.execute, ahead of it).
     const dialect = new PgDialect()
-    const executeCalls = mockDb.execute.mock.calls as unknown as [SQL][]
-    const cashTxCall = executeCalls
-      .map(([arg]) => dialect.sqlToQuery(arg))
-      .find((q) => q.sql.includes('UPDATE "CashTransactions"'))
-    if (!cashTxCall) throw new Error('CashTransactions UPDATE not found among mockDb.execute calls')
-    const { sql: queryText, params } = cashTxCall
+    const queries = (mockDb.execute.mock.calls as unknown as [SQL][]).map(([arg]) => dialect.sqlToQuery(arg))
+    const moves = queries.filter((q) => /UPDATE "(CashTransactions|IncomeTransactions|RecurringExpenseRules|RecurringIncomeRules)"\s+SET group_id/.test(q.sql))
+    expect(moves).toHaveLength(4)
+    for (const q of moves) expect(q.sql).not.toContain('asset_id')
 
-    expect(queryText).toContain('asset_id IN (')
-    expect(queryText).not.toContain('ANY(')
-    // 2 moving-asset ids + newGroupId + oldGroupId + leaver = 5 scalar params,
-    // never a JS array collapsed into one param.
-    expect(params).toHaveLength(5)
-    for (const p of params) expect(Array.isArray(p)).toBe(false)
-    expect(params).toEqual(expect.arrayContaining(['car-1', 'car-2']))
+    const freeze = queries.find((q) => q.sql.includes('WITH g(row_group, other_group)'))
+    if (!freeze) throw new Error('frozen-copy pair query not found among mockDb.execute calls')
+    expect(freeze.params).toEqual(expect.arrayContaining(['grp-1', 'grp-new']))
+    for (const q of queries) {
+      expect(q.sql).not.toContain('ANY(')
+      for (const p of q.params) expect(Array.isArray(p)).toBe(false)
+    }
   })
 
   it('rejects when balance is not 0 — read inside the transaction, after the group-row lock', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ displayName: 'Mei' }])
-    queueDbResult([])
-    queueDbResult([])
-    queueDbResult([])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -265,9 +259,6 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ displayName: 'Mei' }])
-    queueDbResult([])
-    queueDbResult([])
-    queueDbResult([])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -282,9 +273,6 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ displayName: 'Mei' }])
-    queueDbResult([])
-    queueDbResult([])
-    queueDbResult([])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -297,9 +285,6 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ displayName: 'Mei' }])
-    queueDbResult([])
-    queueDbResult([])
-    queueDbResult([])
     queueDbResult([{ memberA: 'user-a', memberB: null }]) // partner row changed before we got the lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: null }])
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
@@ -328,9 +313,6 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([])                                    // no profile row
-    queueDbResult([])                                    // no house
-    queueDbResult([])                                    // no car
-    queueDbResult([])                                    // no insurance
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary

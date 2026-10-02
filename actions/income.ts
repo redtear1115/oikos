@@ -157,6 +157,7 @@ export const getInsuranceAssets = action(async (): Promise<{ id: string; name: s
       eq(assets.groupId, group.id),
       eq(assets.type, 'insurance'),
       isNull(assets.deletedAt),
+      isNull(assets.frozenAt),  // #1442 — never offer a frozen copy
     ))
   return rows
 })

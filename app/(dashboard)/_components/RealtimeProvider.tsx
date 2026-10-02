@@ -12,6 +12,7 @@ import {
   parseFuelLogRow,
   parseIncomeRow,
   parseBalanceUpdate,
+  rowFromPayload,
 } from '@/lib/realtime/payload-schema'
 
 type PgPayload = RealtimePostgresChangesPayload<Record<string, unknown>>
@@ -215,17 +216,4 @@ export function RealtimeProvider({ groupId, children }: Props) {
   }, [groupId, dispatch])
 
   return <BusContext.Provider value={{ subscribe }}>{children}</BusContext.Provider>
-}
-
-/**
- * Postgres realtime payloads use snake_case column names. Convert to camelCase to
- * match the rest of the app. Timestamps come in as ISO strings already.
- */
-function rowFromPayload(raw: Record<string, unknown>): unknown {
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(raw)) {
-    const camel = k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
-    out[camel] = v
-  }
-  return out
 }

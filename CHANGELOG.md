@@ -43,6 +43,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.5] - 2026-10-02
+
+主題：**離開家計簿後舊紀錄留得住愛物**——跨帳本連結改成唯讀副本，加密密文不再送到瀏覽器，並備好較窄的 DB 角色。
+完整 diff：[v1.6.4...v1.6.5](https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5)
+
+### 使用者可見變化
+
+- **離開家計簿後，跨帳本的愛物連結改成唯讀副本（#1442）**
+  使用者：留下與離開的一方，舊紀錄都還看得到原本的愛物名稱（不再變成沒有愛物）；副本不出現在清單與選單，也不能編輯，連到它的定期規則會先暫停。
+  技術：`0073` 加 `Assets.frozen_at`；`leaveGroup` 在同一個交易裡為七種連結欄位建立只含顯示欄位的副本（油耗紀錄一併複製），寫入路徑一律走 `writableAsset`，靜態 guard test 擋新的寫入點漏掉。
+
+### 技術變更
+
+- **新增較窄的 runtime DB 角色 `futari_app`（#1467）**
+  使用者：無可見變化。
+  技術：`0072` 建立不能登入、只有 public 表 DML 的 `futari_app`（BYPASSRLS，自動涵蓋之後的新表），ops-runbook 補上啟用、事故處理與回退程序；app 仍以 `postgres` 連線，切換環境是之後的步驟。
+
+- **`futari_app` 啟用步驟改成腳本（#1467）**
+  使用者：無可見變化。
+  技術：`scripts/ops/futari-app-pgpass.py`（產生密碼、寫 `.pgpass`）與 `futari-app-db-url.py`（dev 改寫 `.env.local`／prod 放進剪貼簿），全程不印秘密；runbook 補上 dev 切換時踩到的四個坑與驗收做法，guard test 用 Python ast 做污點追蹤，擋改腳本時把密碼印出或傳進子程序的常見寫法（是絆線不是證明，已知缺口寫在檢查器檔頭）。
+
+### Security
+
+- **房子地址的密文不再送到瀏覽器（#1466）**
+  使用者：無可見變化。
+  技術：`getHouseDetails` 在 server 端把 `addressEncrypted` 轉成 `hasAddress`，房子頁 props 不再帶密文；realtime 列先丟掉 `*_encrypted` 欄位才進 app state；新增靜態＋頁面資料路徑兩道測試守住「密文不過 server → client 邊界」。
+
 ## [1.6.4] - 2026-09-29
 
 主題：**iOS 27 上又打得開了**——原生殼改用 iOS 27 要求的新生命週期，另外把欄位加密的金鑰輪替工具收整。
@@ -1421,7 +1448,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.5...HEAD
+[1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3
 [1.6.2]: https://github.com/redtear1115/oikos/compare/v1.6.1...v1.6.2
