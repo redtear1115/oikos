@@ -21,6 +21,10 @@ import { zhTW } from '../lib/i18n/locales/zh-TW'
 import { zhCN } from '../lib/i18n/locales/zh-CN'
 import { en } from '../lib/i18n/locales/en'
 import { ja } from '../lib/i18n/locales/ja'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { createElement } from 'react'
+import { FutariMark } from '../components/FutariMark'
+import { LANTERN_PARTS } from '../lib/lanternMark'
 
 const repoRoot = resolve(__dirname, '..')
 const capacitorConfig = readFileSync(resolve(repoRoot, 'capacitor.config.ts'), 'utf8')
@@ -74,6 +78,32 @@ describe('native offline page — 自我包含', () => {
     expect(renderOfflinePage('http://localhost:3000')).toContain(
       'href="http://localhost:3000"',
     )
+  })
+})
+
+describe('native offline page — 品牌提燈（#1423）', () => {
+  // 離線頁曾留著手寫的舊檯燈 SVG，品牌換成提燈兩週都沒人發現（沒有任何紅燈）。
+  const svg = html.match(/<svg class="lamp"[\s\S]*?<\/svg>/)?.[0] ?? ''
+
+  it('SVG 含 FutariMark 的每一條提燈路徑／矩形', () => {
+    expect(svg).not.toBe('')
+    const ds = LANTERN_PARTS.map((p) => p.attrs.d).filter(Boolean)
+    expect(ds.length).toBe(3)
+    for (const d of ds) expect(svg).toContain(`d="${d}"`)
+    expect(svg.match(/<rect /g)).toHaveLength(2)
+  })
+
+  it('FutariMark 與離線頁渲染出同一組形狀屬性', () => {
+    const react = renderToStaticMarkup(createElement(FutariMark))
+    const geometry = (m: string, skip: number) =>
+      [...m.matchAll(/(?<![-\w])(?:d|x|y|width|height|rx|stroke-width)="([^"]+)"/g)].map((x) => x[1]).slice(skip)
+    // react 先略過 <svg width/height>（FutariMark 的 size）；離線頁的 svg 尺寸走 CSS
+    expect(geometry(svg, 0).join('|')).toBe(geometry(react, 2).join('|'))
+  })
+
+  it('舊檯燈的路徑已移除', () => {
+    expect(svg).not.toContain('M19 9 H29 L36 25 H12 Z')
+    expect(svg).not.toContain('viewBox="0 0 48 48"')
   })
 })
 

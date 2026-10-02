@@ -36,7 +36,7 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite } = await import('@/actions/invite')
-const { generateToken } = await import('@/lib/invite')
+const { generateToken, hashToken } = await import('@/lib/invite')
 const { eq, inArray } = await import('drizzle-orm')
 
 beforeAll(() => {
@@ -50,7 +50,7 @@ describe('acceptInvite — accepter already in a duo (#912)', () => {
 
   afterEach(async () => {
     try {
-      if (ids.token) await db.delete(groupInvites).where(eq(groupInvites.token, ids.token))
+      if (ids.token) await db.delete(groupInvites).where(eq(groupInvites.tokenHash, hashToken(ids.token)))
       for (const gid of [ids.myDuo, ids.target]) {
         if (!gid) continue
         await db.delete(groupBalance).where(eq(groupBalance.groupId, gid))
@@ -85,12 +85,12 @@ describe('acceptInvite — accepter already in a duo (#912)', () => {
     ids.target = target.id
     await db.insert(groupBalance).values({ groupId: target.id, balance: 0, version: 0 })
 
-    // A real token: #1288 I3b rejects anything else before the lookup.
+    // A real token: #1288 I3 rejects anything else before the lookup.
     ids.token = generateToken()
     await db.insert(groupInvites).values({
       groupId: target.id,
       invitedBy: ids.inviter,
-      token: ids.token,
+      tokenHash: hashToken(ids.token),
       expiresAt: new Date(Date.now() + 86_400_000),
     })
 

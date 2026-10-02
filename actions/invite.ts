@@ -92,9 +92,8 @@ export const createInvite = action(async (): Promise<string> => {
       await tx.insert(groupInvites).values({
         groupId: group.id,
         invitedBy: user.id,
-        // #1288 I3b — both columns. Lookups use the hash; `token` is still
-        // written so a rollback to the previous code finds this row.
-        token,
+        // #1288 I3c — only the hash is stored. The token itself exists only
+        // in the URL returned below.
         tokenHash: hashToken(token),
         expiresAt,
       })
@@ -135,16 +134,13 @@ function pgErrorCode(e: unknown): string | undefined {
 }
 
 /**
- * #1288 I3b — the invite a token names. By hash; the plaintext column is
- * consulted only for rows whose hash is still NULL (minted by the previous
- * code after 0070's backfill ran; the backfill is re-run before the next step
- * drops that fallback). Callers check {@link isWellFormedInviteToken} first.
+ * #1288 I3c — the invite a token names: by hash only. The plaintext fallback
+ * of I3b is gone; it was dropped only after every row had a hash (gate G1).
+ * A row without a hash can no longer be found, and its link reads "invalid or
+ * expired". Callers check {@link isWellFormedInviteToken} first.
  */
 function inviteTokenMatches(token: string) {
-  return or(
-    eq(groupInvites.tokenHash, hashToken(token)),
-    and(isNull(groupInvites.tokenHash), eq(groupInvites.token, token)),
-  )
+  return eq(groupInvites.tokenHash, hashToken(token))
 }
 
 /**
@@ -156,7 +152,7 @@ function inviteTokenMatches(token: string) {
 export const previewInvite = action(async (token: string): Promise<InvitePreview> => {
   const { user } = await requireViewer()
 
-  // #1288 I3b — malformed input is answered like an unknown token, before
+  // #1288 I3 — malformed input is answered like an unknown token, before
   // any query.
   if (!isWellFormedInviteToken(token)) {
     await captureServer(user.id, 'invite_preview_failed', { code: 'invalid_or_expired' })
@@ -217,7 +213,7 @@ export const previewInvite = action(async (token: string): Promise<InvitePreview
 export const acceptInvite = action(async (token: string): Promise<string> => {
   const { user } = await requireViewer()
 
-  // #1288 I3b — same guard as previewInvite, before any query.
+  // #1288 I3 — same guard as previewInvite, before any query.
   if (!isWellFormedInviteToken(token)) throw new Error('invalid_or_expired')
 
   const [invite] = await db

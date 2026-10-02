@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── Regression for #1030 ────────────────────────────────────────────────
 //
@@ -86,6 +87,7 @@ const {
 } = await import('@/lib/db/schema')
 const { leaveGroup } = await import('@/actions/membership')
 const { createInvite, acceptInvite } = await import('@/actions/invite')
+const { hashToken } = await import('@/lib/invite')
 const { createTransaction } = await import('@/actions/transaction')
 const { createSettlement } = await import('@/actions/settlement')
 const { getGroupBalance, getGroupPendingBalanceDelta } = await import('@/lib/db/queries/balance')
@@ -121,6 +123,11 @@ async function seedDuoGroup(): Promise<SeedRefs> {
     { id: userBId, displayName: 'TEST_1030_userB' },
     { id: userCId, displayName: 'TEST_1030_userC' },
   ])
+  await seedAuthUsers([
+    { id: userAId, displayName: 'TEST_1030_userA' },
+    { id: userBId, displayName: 'TEST_1030_userB' },
+    { id: userCId, displayName: 'TEST_1030_userC' },
+  ])
 
   const [group] = await db.insert(oikosGroups).values({
     name: 'TEST_1030_duo',
@@ -149,6 +156,11 @@ async function seedRecentDuoGroup(): Promise<SeedRefs> {
   const epochStartedAt = new Date(Date.now() - 60 * 60 * 1000)
 
   await db.insert(profiles).values([
+    { id: userAId, displayName: 'TEST_1030_backdate_userA' },
+    { id: userBId, displayName: 'TEST_1030_backdate_userB' },
+    { id: userCId, displayName: 'TEST_1030_backdate_userC' },
+  ])
+  await seedAuthUsers([
     { id: userAId, displayName: 'TEST_1030_backdate_userA' },
     { id: userBId, displayName: 'TEST_1030_backdate_userB' },
     { id: userCId, displayName: 'TEST_1030_backdate_userC' },
@@ -186,7 +198,7 @@ async function cleanup(refs: SeedRefs) {
     await db.delete(cashTransactions).where(inArray(cashTransactions.id, refs.txIds))
   }
   if (refs.inviteToken) {
-    await db.delete(groupInvites).where(eq(groupInvites.token, refs.inviteToken))
+    await db.delete(groupInvites).where(eq(groupInvites.tokenHash, hashToken(refs.inviteToken)))
   }
   for (const gid of groupIds) {
     await db.delete(cashTransactions).where(eq(cashTransactions.groupId, gid))
@@ -195,6 +207,7 @@ async function cleanup(refs: SeedRefs) {
     await db.delete(groupBalance).where(eq(groupBalance.groupId, gid))
     await db.delete(oikosGroups).where(eq(oikosGroups.id, gid))
   }
+  await deleteAuthUsers([refs.userAId, refs.userBId, refs.userCId])
   await db.delete(profiles).where(inArray(profiles.id, [refs.userAId, refs.userBId, refs.userCId]))
 }
 

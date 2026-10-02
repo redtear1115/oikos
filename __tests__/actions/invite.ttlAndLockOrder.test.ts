@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── #1288 I2 — 24 h TTL, the clamp migration, and one lock order ─────────
 //
@@ -64,7 +65,7 @@ vi.mock('@/lib/analytics/server', () => ({
 const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite, createInvite } = await import('@/actions/invite')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, sql } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 
@@ -110,6 +111,7 @@ afterEach(async () => {
     }
     if (created.profiles.length) {
       await db.delete(groupEpochs).where(inArray(groupEpochs.memberAId, created.profiles))
+      await deleteAuthUsers(created.profiles)
       await db.delete(profiles).where(inArray(profiles.id, created.profiles))
     }
   } catch (e) {
@@ -122,6 +124,7 @@ afterEach(async () => {
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1288_I2_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1288_I2_${label}` }])
   created.profiles.push(id)
   return id
 }
@@ -141,7 +144,7 @@ async function seedInvite(groupId: string, invitedBy: string, over: Partial<type
   const [row] = await db.insert(groupInvites).values({
     groupId,
     invitedBy,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + INVITE_TTL_MS),
     ...over,
   }).returning({ id: groupInvites.id })
@@ -284,20 +287,24 @@ describe('0067 clamp migration (#1288 I2, D2)', () => {
   // Whole-table UPDATE: refuse anything but a local throwaway database.
   it.skipIf(!isLocalDb)('clamps open invites to 24 h, leaves accepted and revoked rows alone, and is idempotent', async () => {
     const inviter = await person('inviter')
-    const groupId = await soloGroup(inviter)
+    // One group per open row: since 0076 (#1288 I1b) a group can hold only
+    // one open invite. 0067 ran on prod before that index existed.
+    const groupIds = [
+      await soloGroup(inviter), await soloGroup(inviter), await soloGroup(inviter), await soloGroup(inviter),
+    ]
     const H = 60 * 60 * 1000
     const now = Date.now()
     const at = (ms: number) => new Date(now + ms)
 
-    const oldOpen = await seedInvite(groupId, inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H) })
-    const youngOpen = await seedInvite(groupId, inviter, { createdAt: at(-1 * H), expiresAt: at(167 * H) })
-    const oldAccepted = await seedInvite(groupId, inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H), acceptedAt: at(-71 * H) })
-    const oldRevoked = await seedInvite(groupId, inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H), revokedAt: at(-70 * H) })
-    const longDead = await seedInvite(groupId, inviter, { createdAt: at(-240 * H), expiresAt: at(-72 * H) })
-    const fresh24h = await seedInvite(groupId, inviter, { createdAt: at(-2 * H), expiresAt: at(22 * H) })
+    const oldOpen = await seedInvite(groupIds[0], inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H) })
+    const youngOpen = await seedInvite(groupIds[1], inviter, { createdAt: at(-1 * H), expiresAt: at(167 * H) })
+    const oldAccepted = await seedInvite(groupIds[0], inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H), acceptedAt: at(-71 * H) })
+    const oldRevoked = await seedInvite(groupIds[0], inviter, { createdAt: at(-72 * H), expiresAt: at(96 * H), revokedAt: at(-70 * H) })
+    const longDead = await seedInvite(groupIds[2], inviter, { createdAt: at(-240 * H), expiresAt: at(-72 * H) })
+    const fresh24h = await seedInvite(groupIds[3], inviter, { createdAt: at(-2 * H), expiresAt: at(22 * H) })
 
     const before = new Map(
-      (await db.select().from(groupInvites).where(eq(groupInvites.groupId, groupId))).map((r) => [r.id, r]),
+      (await db.select().from(groupInvites).where(inArray(groupInvites.groupId, groupIds))).map((r) => [r.id, r]),
     )
 
     const migration = readFileSync(resolve(__dirname, '../../drizzle/0067_invite_ttl_24h_clamp.sql'), 'utf-8')
@@ -307,7 +314,7 @@ describe('0067 clamp migration (#1288 I2, D2)', () => {
     expect(second.count).toBe(0)
 
     const after = new Map(
-      (await db.select().from(groupInvites).where(eq(groupInvites.groupId, groupId))).map((r) => [r.id, r]),
+      (await db.select().from(groupInvites).where(inArray(groupInvites.groupId, groupIds))).map((r) => [r.id, r]),
     )
     const exp = (id: string) => after.get(id)!.expiresAt.getTime()
     const created = (id: string) => after.get(id)!.createdAt.getTime()

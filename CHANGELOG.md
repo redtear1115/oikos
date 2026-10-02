@@ -43,6 +43,53 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.6] - 2026-10-03
+
+主題：**送審前先把殼看牢**——iOS 殼加上原生崩潰回報與上傳前的啟動檢查，帳本之間的資料界線再收緊一層。
+完整 diff：[v1.6.5...v1.6.6](https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6)
+
+### 使用者可見變化
+
+- **離線頁改用品牌提燈（#1423）**
+  使用者：沒有網路冷啟動時看到的「目前沒有連線」頁，圖示從舊檯燈換成提燈；更新 App 後生效。
+  技術：提燈形狀抽到 `lib/lanternMark.ts`，`FutariMark` 與離線頁產生器共用，不會再各自分岔。
+
+### 技術變更
+
+- **新增 function search_path 釘選的靜態護欄測試（#1505）**
+  使用者：無可見變化；避免重新定義函式時漏掉 `SET search_path`，讓釘選悄悄失效。
+  技術：`__tests__/migrations/functionSearchPathPin.test.ts` 掃 `drizzle/*.sql`，public function 最後一次 `CREATE` 必須帶 `SET search_path`，或之後有 `ALTER FUNCTION … SET search_path`（0061 弄丟 0042 的釘選，0077 補回）。
+- **iOS launch smoke 先檢查 Capacitor 版本一致（#1503）**
+  使用者：無可見變化；避免本機套件過期時，iOS 建置以看不懂的錯誤失敗。
+  技術：`ios-launch-smoke.sh` 比對 package-lock、`node_modules/@capacitor/ios` 與 `CapApp-SPM/Package.swift` 的 Capacitor 版本，不一致就說明要先 `npm ci`／`cap sync`。
+- **iOS launch smoke 不再把離線頁當成正常畫面（#1499）**
+  使用者：無可見變化；避免殼連不到 prod 時，送審前的 smoke 仍印 PASS。
+  技術：`ios-launch-smoke.sh` 辨識 `offline.html` 底色（`#FBEDE0` 佔 ≥ 90%），離線頁不算畫出內容，到期仍離線就以明確原因失敗。
+- **月回顧快照函式只讀同一本帳的資料，並收回對外執行權限（#1494）**
+  使用者：無可見變化；萬一出現跨帳本連結，月回顧也不會顯示另一本帳的愛物名稱或交易。
+  技術：`0077` 重新定義 `compute_monthly_review_snapshot`：愛物與定期收支交易的 join 加 `group_id` 條件、補回 0061 弄丟的 `search_path` 釘選，EXECUTE 只留給 `postgres`／`service_role`。
+- **愛物連結只解析同一本帳的愛物（#1485）**
+  使用者：無可見變化；萬一出現跨帳本連結，也不會顯示另一本帳的愛物名稱。
+  技術：統計（依愛物）、愛物清單／單筆、保險明細對 `Assets` 的 join 加上 `group_id` 條件；`getInsuranceDetails` 改為必帶 `groupId`。
+- **iOS 殼加上原生崩潰回報（#1478）**
+  使用者：無可見變化；更新 App 後，殼在 WebView 之前的閃退也會回報（不送帳號、IP 與裝置識別）。
+  技術：SPM 引入 sentry-cocoa 9.27.0（`Sentry-Dynamic`），`main.swift` 在 `UIApplicationMain` 之前啟動（app 能控制的最早位置，涵蓋 #1473 那類 UIKit 啟動檢查的崩潰）、只收崩潰（sessions／效能／breadcrumbs 關），`beforeSend` 去識別化；用專屬 client key `ios-native` 當 kill switch。
+- **iOS 上傳前加 launch smoke（#1476）**
+  使用者：無直接變化；避免再送出一開就閃退的 iOS 殼（1.5.18 (5) 在 iOS 27 閃退）。
+  技術：`scripts/native/ios-launch-smoke.sh` 在最新 runtime 模擬器跑 Release 建置、確認存活與 log、截圖；ship-native 於 archive 後、upload 前呼叫。
+- **刪除帳號排程在重查帳本前先鎖住使用者的 Profiles 列（#1449）**
+  使用者：無可見變化；刪除帳號後不會再以「已離開的夥伴」留在對方帳本或孤兒帳本裡。
+  技術：`0074` 在重查前加 `Profiles … FOR UPDATE`，新增 `profile_is_live()`；`acceptInvite`／`createGroup` 拿到鎖後確認帳號仍在，否則回 `profile_not_found`。須先套 migration 再部署。
+- **新建立的邀請連結只存雜湊，每個帳本最多一條有效邀請（#1288）**
+  使用者：無可見變化；被新連結取代或已過期的舊連結照舊顯示失效。
+  技術：`0076` 先撤銷過期與重複的未用邀請，再以 partial unique index 限定每個帳本一條；建立邀請不再寫入明文 `token`、查找只比對 `token_hash`，Drizzle schema 移除該欄（實體欄位由後續 migration 刪除），guard test 擋新的引用。
+
+### Security
+
+- **加密欄位的密文不再經由 Realtime 與 Data API 送到瀏覽器（#1471）**
+  使用者：無可見變化；寶寶本名、車牌、身分證字號等欄位的密文不再出現在瀏覽器收得到的資料裡。
+  技術：`0075` 收回 `anon`／`authenticated` 在 Assets、各 *Details、InvoiceCredentials 的授權，`authenticated` 只留 Assets 非加密欄位的 SELECT（Realtime 依欄位權限裁切 payload；publication 欄位清單對 wal2json 無效，已在 dev 驗證）。
+
 ## [1.6.5] - 2026-10-02
 
 主題：**離開家計簿後舊紀錄留得住愛物**——跨帳本連結改成唯讀副本，加密密文不再送到瀏覽器，並備好較窄的 DB 角色。
@@ -1448,7 +1495,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.6...HEAD
+[1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
 [1.6.3]: https://github.com/redtear1115/oikos/compare/v1.6.2...v1.6.3

@@ -194,7 +194,7 @@ Futari は、ふたりのための共有家計簿です。
 | 財務交易紀錄（使用者輸入） | 是 | 是 | App 功能 | Financial Info → Other Financial Info | Financial info → 其他財務資訊（**非**信用卡） |
 | 共同財物 / 愛物資訊 | 是 | 是 | App 功能 | User Content | App activity / Personal info |
 | 邀請連結與接受時間 | 是 | 是 | App 功能 | Identifiers / Usage | App info and performance |
-| 崩潰 / 錯誤資訊（Sentry） | 是 | **否（匿名）** | 分析 / 修錯 | Diagnostics → Crash Data | App info and performance → Crash logs / Diagnostics |
+| 崩潰 / 錯誤資訊（Sentry，web＋iOS 原生殼） | 是 | **否（匿名）** | App 功能（修錯） | Diagnostics → Crash Data、Other Diagnostic Data、Performance Data（各項：Not linked、Not used for tracking、App Functionality） | App info and performance → Crash logs / Diagnostics |
 | 操作事件（PostHog） | 是 | **否（匿名）** | 分析 | Usage Data → Product Interaction | App activity → App interactions |
 | 流量分析（GA4，IP 匿名化） | 是 | **否** | 分析 | Usage Data | App activity |
 
@@ -207,6 +207,8 @@ Futari は、ふたりのための共有家計簿です。
 - **使用者可否要求刪除資料？** 是 → 設定頁「刪除帳號」；web 刪除說明 URL：`https://futari.southern-light.dev/zh-TW/privacy`。
 - **資料保留**：帳號存續期間保存；軟刪除交易留標記約 1 年後物理刪除；帳號刪除申請有 14 天（日曆天）緩衝期，期滿由排程執行。
   - **刪除結果依帳本形態分兩種**（`drizzle/0058_account_deletion_processor.sql`）：solo 帳本整組 cascade 刪除；配對帳本保留給對方，只刪 `auth.users`，`Profiles` 留 tombstone（顯示為「已離開的夥伴」），共同交易紀錄不刪。申報「使用者可否要求刪除資料」仍填**是**——使用者自身的帳號與個資確實刪除；共用帳本的內容屬於雙方，不因單方請求移除。隱私頁「資料保留期限」已逐條寫明。
+
+> **iOS 原生殼的 Sentry（#1478）**：殼內建 sentry-cocoa，只回報原生崩潰（不開 session、不送 user／IP／裝置雜湊）。它的隱私清單（`PrivacyInfo.xcprivacy`，隨 `Sentry.framework` 打包）宣告上表 Diagnostics 三類、用途 App Functionality；App Privacy 申報必須含這三類且用途一致，否則與 Privacy Report 對不上。**送出含此 SDK 的 build 前，先確認 App Store Connect 已發布這三項。**
 
 > Apple Sign In 也會收 Email / Name（與 Google OAuth 同類），申報已涵蓋。`/privacy` 的 `sectionThirdPartyItems` 與 `sectionCollectItems` 四語都已列出 Apple（#1251）。
 

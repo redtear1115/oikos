@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── #1438 — accepting an invite ends the INVITER's active trip ───────────
 //
@@ -87,7 +88,7 @@ const { acceptInvite } = await import('@/actions/invite')
 const { createTrip, endTrip, updateTrip } = await import('@/actions/trip')
 const { createTripExpense } = await import('@/actions/tripExpense')
 const { unwrapAction } = await import('@/lib/action-errors')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or, and, isNull } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
@@ -147,6 +148,7 @@ async function cleanup() {
     await db.delete(oikosGroups).where(inArray(oikosGroups.id, groupIds))
   }
   if (created.profiles.length) {
+    await deleteAuthUsers(created.profiles)
     await db.delete(profiles).where(inArray(profiles.id, created.profiles))
   }
   created.profiles = []
@@ -168,6 +170,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1438_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1438_${label}` }])
   created.profiles.push(id)
   return id
 }
@@ -190,7 +193,7 @@ async function seedInvite(groupId: string, invitedBy: string) {
   const [row] = await db.insert(groupInvites).values({
     groupId,
     invitedBy,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + INVITE_TTL_MS),
   }).returning({ id: groupInvites.id })
   return { id: row.id, token }

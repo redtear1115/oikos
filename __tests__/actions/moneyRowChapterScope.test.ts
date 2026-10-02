@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── #1290 — per-row edits and deletes of money rows ─────────────────────
 //
@@ -81,7 +82,7 @@ const { editSettlement, softDeleteSettlement } = await import('@/actions/settlem
 const { editFuelLog, softDeleteFuelLog } = await import('@/actions/fuelLog')
 const { acceptInvite } = await import('@/actions/invite')
 const { leaveGroup, removePartner } = await import('@/actions/membership')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
@@ -143,6 +144,7 @@ afterEach(async () => {
     await db.delete(oikosGroups).where(inArray(oikosGroups.id, groupIds))
   }
   if (created.profiles.length) {
+    await deleteAuthUsers(created.profiles)
     await db.delete(profiles).where(inArray(profiles.id, created.profiles))
   }
   created.profiles = []
@@ -157,6 +159,7 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * HOUR)
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1290_S1_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1290_S1_${label}` }])
   created.profiles.push(id)
   return id
 }
@@ -544,7 +547,7 @@ describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter c
       await group(joiner, null)
       const token = generateToken()
       await db.insert(groupInvites).values({
-        groupId: g, invitedBy: inviter, token, expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+        groupId: g, invitedBy: inviter, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + INVITE_TTL_MS),
       })
       const old = await cashRow(g, inviter)
 

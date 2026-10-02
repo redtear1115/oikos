@@ -1,5 +1,5 @@
 {
-  "originHash" : "d586d4dadbba3c07cb0735465c1d7f7adb1772c28dfcd9668a698af27c8bc69d",
+  "originHash" : "63be10e9af93860c1c6ff0e32747365db2900ddd9caa5c7a2e0aa7803ab87487",
   "pins" : [
     {
       "identity" : "capacitor-swift-pm",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "0b6882e9a3288342aacf36348e5a94e4f1dd7b13",
         "version" : "8.5.2"
+      }
+    },
+    {
+      "identity" : "sentry-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getsentry/sentry-cocoa.git",
+      "state" : {
+        "revision" : "aaf96c4a417d30208b3c25d90910d6156ddc973d",
+        "version" : "9.27.0"
       }
     }
   ],

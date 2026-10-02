@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/schema'
 import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { actionError } from '@/lib/action-errors'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -442,6 +443,8 @@ export interface EpochCloseLock {
  * user's groups and then deletes / updates their Profiles row, so a closer
  * that held the profile and then waited on a group would close a cycle with
  * it (40P01). Groups → chapters → profile keeps one order everywhere.
+ * Throws `profile_not_found` when that user's account was deleted while this
+ * waited for the row (#1449, see {@link lockProfileRow}).
  */
 export async function lockForEpochClose(
   tx: DbTransaction,
@@ -487,20 +490,42 @@ export async function lockForEpochClose(
  * (paid_by, member_a, created_by, …) takes FOR KEY SHARE on this row for its
  * foreign-key check, and only FOR UPDATE conflicts with that. With FOR UPDATE,
  * the partner's ordinary expense insert would queue behind an accept.
+ *
+ * #1449 — once the lock is held, the account must still exist; otherwise this
+ * throws `profile_not_found` and the caller's transaction rolls back. The
+ * account-deletion job takes this row FOR UPDATE before its last re-read of
+ * the user's ledgers, so an action that waited here for the job finds either
+ * no row (profile deleted) or a tombstone (kept because the user is still named
+ * in past chapters). A tombstone looks like an ordinary row — the job clears
+ * `deletion_requested_at` — so liveness is read from `auth.users`, through
+ * `public.profile_is_live` (the runtime role cannot read schema auth).
+ *
+ * The liveness check MUST be its own statement, after the locking one. Inside
+ * the locking SELECT it would read `auth.users` through that statement's
+ * snapshot, taken before the wait, and say "live" for an account the job has
+ * just deleted. Failure looks like: nothing errors; the deleted user's
+ * tombstone is seated in the partner's ledger, or owns a new solo ledger.
  */
 async function lockProfileRow(tx: DbTransaction, userId: string): Promise<void> {
-  await tx
+  const [locked] = await tx
     .select({ id: profiles.id })
     .from(profiles)
     .where(eq(profiles.id, userId))
     .for('no key update')
+  if (!locked) throw actionError('profile_not_found')
+
+  const [{ live }] = await tx.execute<{ live: boolean }>(
+    sql`SELECT public.profile_is_live(${userId}::uuid) AS live`,
+  )
+  if (!live) throw actionError('profile_not_found')
 }
 
 /**
  * The first statement of createGroup's transaction: take the creator's
  * `Profiles` row (see {@link lockProfileRow}), then re-read whether they
  * already have a ledger. Returns that ledger, or `null` when the caller may
- * create one.
+ * create one. Throws `profile_not_found` when the account was deleted while
+ * this waited for the row (#1449, see {@link lockProfileRow}).
  *
  * acceptInvite takes the same row inside {@link lockForEpochClose}. So a
  * createGroup racing an accept by the same person (two tabs) either

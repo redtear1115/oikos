@@ -512,6 +512,34 @@
       "when": 1783100000000,
       "tag": "0073_assets_frozen_at",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1783150000000,
+      "tag": "0074_account_deletion_profile_lock",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1783200000000,
+      "tag": "0075_encrypted_columns_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1783300000000,
+      "tag": "0076_invite_one_open_per_group",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1783400000000,
+      "tag": "0077_monthly_review_snapshot_hardening",
+      "breakpoints": true
     }
   ]
 }

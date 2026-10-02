@@ -23,6 +23,8 @@
  * Failure mode to watch: nothing errors if someone re-introduces a local copy
  * of the path. It just quietly drifts again, exactly as the two components did.
  */
+import { LANTERN_GROUP_TRANSFORM, LANTERN_PARTS, LANTERN_VIEWBOX } from '@/lib/lanternMark'
+
 interface Props {
   size?: number
   className?: string
@@ -39,17 +41,24 @@ export function FutariMark({ size = 32, className, inkColor, accentColor }: Prop
     <svg
       width={size}
       height={size}
-      viewBox="0 0 32 32"
+      viewBox={LANTERN_VIEWBOX}
       fill="none"
       className={className}
       aria-hidden="true"
     >
-      <g transform="translate(16 16.4)">
-        <path d="M -3.5 -8.4 A 3.5 3.5 0 0 1 3.5 -8.4" fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" />
-        <rect x="-5.676" y="-8.5" width="11.352" height="2.75" rx="1.21" fill={ink} />
-        <path d="M -6.6 -6.4 L 6.6 -6.4 L 5.7 6.4 L -5.7 6.4 Z" fill="none" stroke={ink} strokeWidth="2.2" strokeLinejoin="round" />
-        <rect x="-7.128" y="6.07" width="14.256" height="2.97" rx="1.21" fill={ink} />
-        <path d="M 0 -4.62 C 1.995 -2.415, 2.625 -0.63, 2.625 0.945 C 2.625 2.94, 1.418 4.2, 0 4.2 C -1.418 4.2, -2.625 2.94, -2.625 0.945 C -2.625 -0.63, -1.995 -2.415, 0 -4.62 Z" fill={accent} />
+      <g transform={LANTERN_GROUP_TRANSFORM}>
+        {LANTERN_PARTS.map((part, i) => {
+          const color = (c: 'ink' | 'accent') => (c === 'ink' ? ink : accent)
+          const Tag = part.tag
+          return (
+            <Tag
+              key={i}
+              {...part.attrs}
+              fill={part.fill === 'none' ? 'none' : color(part.fill)}
+              {...(part.stroke ? { stroke: color(part.stroke) } : {})}
+            />
+          )
+        })}
       </g>
     </svg>
   )

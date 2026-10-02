@@ -60,7 +60,7 @@ const {
   trips,
 } = await import('@/lib/db/schema')
 const { removePartner } = await import('@/actions/membership')
-const { generateToken } = await import('@/lib/invite')
+const { generateToken, hashToken } = await import('@/lib/invite')
 const { eq, isNull, and, inArray } = await import('drizzle-orm')
 const { unwrapAction } = await import('@/lib/action-errors')
 
@@ -178,7 +178,7 @@ describe('removePartner', () => {
     const [invite] = await db.insert(groupInvites).values({
       groupId: refs.groupId,
       invitedBy: refs.userAId,
-      token: generateToken(), // a well-formed token (#1288 I3b)
+      tokenHash: hashToken(generateToken()), // #1288 I3c — only the hash is stored
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     }).returning({ id: groupInvites.id })
     refs.inviteIds.push(invite.id)
@@ -197,7 +197,7 @@ describe('removePartner', () => {
     const [invite] = await db.insert(groupInvites).values({
       groupId: refs.groupId,
       invitedBy: refs.userAId,
-      token: generateToken(), // a well-formed token (#1288 I3b)
+      tokenHash: hashToken(generateToken()), // #1288 I3c — only the hash is stored
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       acceptedAt: new Date('2026-05-11T00:00:00Z'),
     }).returning({ id: groupInvites.id })

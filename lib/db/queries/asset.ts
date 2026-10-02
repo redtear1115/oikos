@@ -139,7 +139,12 @@ export async function listAssetsForGroup(
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
-    .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
+    // #1485 — the insured child must be in the policy's own group; a link to
+    // another ledger's asset resolves as no name, never as that asset's name.
+    .leftJoin(insuredChildAsset, and(
+      eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
+      eq(insuredChildAsset.groupId, assets.groupId),
+    ))
     .where(and(
       eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
@@ -237,7 +242,12 @@ export async function getAssetById(
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
-    .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
+    // #1485 — the insured child must be in the policy's own group; a link to
+    // another ledger's asset resolves as no name, never as that asset's name.
+    .leftJoin(insuredChildAsset, and(
+      eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
+      eq(insuredChildAsset.groupId, assets.groupId),
+    ))
     .where(and(
       eq(assets.id, id),
       eq(assets.groupId, groupId),
