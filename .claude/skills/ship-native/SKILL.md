@@ -31,6 +31,7 @@ description: >
 
 ## 硬性約束
 
+- **launch smoke 沒過（或沒跑）就不上傳。** 見 §3A-4。
 - **不自動執行上傳。** `archive` / `exportArchive` / `bundleRelease` 可以自己跑；
   `xcrun altool --upload-app`、任何送 Play Console 的動作，**送出前一律停下來給使用者確認**
   （要傳的檔案、版本計數、平台）。使用者說「傳」才傳。
@@ -200,7 +201,23 @@ codesign -d --entitlements :- "$TT/Payload/App.app" | grep applesignin  # 必須
 test -f "$TT/Payload/App.app/public/offline.html" && echo "離線頁 OK"    # #1225，缺了不會報錯
 ```
 
-#### 4) 上傳（**這步需要使用者明講**）
+#### 4) launch smoke（**上傳前必過**，#1476）
+
+archive / export 不會啟動 app。2026-09-29 的 1.5.18 (5) 就是這樣：Xcode 27 / iOS 27 SDK 建出來，三步全綠，
+iOS 27 上一開就閃退（`UIScene life cycle is required`）。從 repo root（已 `cap sync ios`）跑：
+
+```bash
+scripts/native/ios-launch-smoke.sh      # 約 2–4 分鐘；失敗 exit 1 並印原因
+```
+
+它用同一份原始碼建 Release／iphonesimulator，在最新 iOS runtime 的專用模擬器啟動，等 ≥10 秒確認
+process 活著、查 log，再每 5 秒截圖、最多等 90 秒，直到畫面中段不是純色（`$SMOKE_OUT/launch.png`，路徑會印出來）。
+**全新模擬器第一次啟動，WebView 約 60 秒才畫出 prod**（12 秒黑、30 秒灰，build 沒壞），所以整個跑完要幾分鐘；
+90 秒內仍是純色才算失敗。**通過後還是自己開一眼截圖**：要是 prod 的 Futari 落地頁，不是系統錯誤頁／離線頁（這兩種不是純色，腳本分不出來）。
+**非 0 或截圖不對就停，不要上傳**，回報原因。失敗樣子與前置（`xcodebuild -downloadPlatform iOS`、
+DeviceHub、log 查法）見 [runbook §K](../../../docs/app-store-submission-runbook.md#k-原生-build-雷點)。
+
+#### 5) 上傳（**這步需要使用者明講**）
 
 ```bash
 xcrun altool --validate-app -f "$IPA" -t ios --apiKey LRB54C7D5X --apiIssuer <ISSUER>
@@ -262,6 +279,10 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 ### 4. 收尾 checklist（印給使用者）
 
 ```
+上傳前（iOS）
+  □ scripts/native/ios-launch-smoke.sh 通過（exit 0）且截圖是 prod 落地頁（腳本已確認非純色）
+    ※ 1.5.18(5) 沒跑這步，iOS 27 上開機即閃退
+
 實機 / TestFlight 驗證（iOS 上傳後必做）
   □ 原生 Apple 登入 sheet 真的彈出來（不是 web OAuth 轉頁）
     ※ 1.5.5(2) 從建檔起就缺 com.apple.developer.applesignin，
@@ -303,6 +324,8 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 | AAB 出來了但 `jarsigner -verify` 不過 | `.env` 沒 source 進來；`build.gradle` 的密碼有 `?: ""` fallback，不會讓 build 失敗 | `set -a; . ./.env; set +a` 後重跑 |
 | ASC 回「build number 已存在」 | 同一 `MARKETING_VERSION` 下 build number 必須唯一遞增，TestFlight 也吃這規則 | 計數再 +1 重傳。**不要**改 `MARKETING_VERSION` 繞過 |
 | 要送審時發現版本沒有可用的 build | TestFlight build 90 天過期（1.5.1(1) 踩過：06-11 傳、09-09 過期、09-10 要送審） | 重新 archive 上傳；之後別提早卡位 |
+| smoke：`SMOKE FAIL ... UIScene life cycle is required` | 殼沒採用 UIScene，用新 SDK 建就開機閃退（#1473） | 修殼再重跑；不要上傳 |
+| smoke：只測到舊 iOS runtime | 新 runtime 沒下載 | `xcodebuild -downloadPlatform iOS`（約 8 GB） |
 | 升 Capacitor 後 iOS 整個編不起來 | 薄殼平常不 build iOS，衝突會潛伏到下次送審（Cap 8 升級 2026-07-12，2026-09-10 才炸） | **升 Capacitor 大版本後立刻實跑一次 archive** |
 
 ### 改動 SPM / patch 後的驗收（缺一不可）
