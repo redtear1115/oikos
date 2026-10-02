@@ -68,7 +68,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：無可見變化。
   技術：`scripts/ops/futari-app-pgpass.py`（產生密碼、寫 `.pgpass`）與 `futari-app-db-url.py`（dev 改寫 `.env.local`／prod 放進剪貼簿），全程不印秘密；runbook 補上 dev 切換時踩到的四個坑與驗收做法，guard test 用 Python ast 做污點追蹤，擋改腳本時把密碼印出或傳進子程序的常見寫法（是絆線不是證明，已知缺口寫在檢查器檔頭）。
 
-### 技術變更
+### Security
 
 - **房子地址的密文不再送到瀏覽器（#1466）**
   使用者：無可見變化。
@@ -129,7 +129,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **邀請連結的查找改用雜湊，明文欄位留待後續步驟清除（#1288）**
   技術：`GroupInvites` 新增 `token_hash`（SHA-256），`0070` 新增欄位並回填既有資料、程式同時雙寫，查找改成以雜湊比對，只有尚未回填雜湊的舊列才比對明文；格式不符的 token 在查資料庫前就直接判定無效。明文 token 仍保留，資料暴露面沒有變化，所以不放進 Security（見門檻說明）。
 
-### 技術變更
+### Security
 
 - **多項寫入操作限定在目前章節（#1290）**
   使用者：操作流程不變（接受邀請時的拒絕見上方使用者可見變化）。
@@ -192,7 +192,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **簡體中文專用的分享預覽圖（#1367）**
   技術：新增 `public/og-image-zh-CN.png`，`/zh-CN` 的 og:image 改指向它；`scripts/og/` 支援 zh-CN，字體使用 Noto Sans SC。
 
-### 技術變更
+### Security
 
 - **邀請連結改為 24 小時內有效（#1288）**
   使用者：邀請連結從產生當下起算 24 小時後失效，需要時再產生一次；已經產生超過一天的舊連結會在這次更新後失效。
@@ -235,7 +235,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **加密改用金鑰環，並支援綁定欄位的新密文格式（#1287）**
   技術：新增 `v1:<kid>:…` 格式與 AAD；寫入仍然是舊格式，所以上線後行為不變（#1387）。
 
-### 技術變更
+### Security
 
 - **接受邀請改成在 transaction 內原子地認領；建立新邀請時，舊的邀請會失效（#1288）**
   使用者：邀請流程不變。
@@ -263,7 +263,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **GA 的已知風險寫進文件，新增 SECURITY.md（#1300、#1291）**
   技術：`observability-design.md` 記下 GA 會收到邀請 token 與篩選值、為什麼接受這個風險、什麼情況要重新決定；新增 SECURITY.md，說明漏洞的私密回報管道，也寫清楚加密的範圍：伺服器持有金鑰、只加密指定欄位，不是端對端（#1381）。
 
-### 技術變更
+### Security
 
 - **編輯旅行時，伺服器只寫入允許的欄位（#1290）**
   使用者：旅行的編輯流程不變。
@@ -379,7 +379,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **商店圖改成插畫故事版型，並用乾淨帳本重截 16 張截圖（#1334）**
   技術：新增故事圖產線與預設 dry-run 的 ASC 上傳腳本（`scripts/og/`）。
 
-### 技術變更
+### Security
 
 - **可以隱藏自己的頭貼，改用名字的第一個字（#1328）**
   使用者：在設定裡關掉「顯示我的頭貼」之後，自己和伴侶的畫面上都改顯示首字，重新登入也不會跑回來。
@@ -448,7 +448,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：main 寫回 iOS 1.5.15 (4)／Android 1.5.15 (105012)，下一顆 binary 才不會撞號。
 - **忽略 Supabase CLI 的本機狀態目錄（#1302）**
 
-### 技術變更
+### Security
 
 - **分析與錯誤回報工具不再收到邀請 token 與帳務篩選金額（#1274）**
   使用者：PostHog、Sentry、Vercel Analytics 看到的網址裡，邀請連結與記帳篩選值都已遮蔽。
