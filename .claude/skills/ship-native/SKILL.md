@@ -346,7 +346,7 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 | ASC 回「build number 已存在」 | 同一 `MARKETING_VERSION` 下 build number 必須唯一遞增，TestFlight 也吃這規則 | 計數再 +1 重傳。**不要**改 `MARKETING_VERSION` 繞過 |
 | 要送審時發現版本沒有可用的 build | TestFlight build 90 天過期（1.5.1(1) 踩過：06-11 傳、09-09 過期、09-10 要送審） | 重新 archive 上傳；之後別提早卡位 |
 | smoke：`SMOKE FAIL ... UIScene life cycle is required` | 殼沒採用 UIScene，用新 SDK 建就開機閃退（#1473） | 修殼再重跑；不要上傳 |
-| Sentry 一直沒有 `futari-ios@*` 事件 | 可能真的沒崩，也可能 `dsn` 為空／`ios-native` key 被停用／崩在 `AppDelegate.init` 之前／使用者崩完沒再開 App（事件在下一次啟動才送）。sessions 關閉，沒有心跳可分辨 | 看裝置 log 有沒有 `[SentryBootstrap] native crash reporting started`；見 runbook §K |
+| Sentry 一直沒有 `futari-ios@*` 事件 | 可能真的沒崩，也可能 `dsn` 為空／`ios-native` key 被停用／崩在 `main` 之前（dyld／static initializer）／使用者崩完沒再開 App（事件在下一次啟動才送）。sessions 關閉，沒有心跳可分辨 | 看裝置 log 有沒有 `[SentryBootstrap] native crash reporting started`；見 runbook §K |
 | smoke：只測到舊 iOS runtime | 新 runtime 沒下載 | `xcodebuild -downloadPlatform iOS`（約 8 GB） |
 | 升 Capacitor 後 iOS 整個編不起來 | 薄殼平常不 build iOS，衝突會潛伏到下次送審（Cap 8 升級 2026-07-12，2026-09-10 才炸） | **升 Capacitor 大版本後立刻實跑一次 archive** |
 

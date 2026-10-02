@@ -63,7 +63,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：統計（依愛物）、愛物清單／單筆、保險明細對 `Assets` 的 join 加上 `group_id` 條件；`getInsuranceDetails` 改為必帶 `groupId`。
 - **iOS 殼加上原生崩潰回報（#1478）**
   使用者：無可見變化；更新 App 後，殼在 WebView 之前的閃退也會回報（不送帳號、IP 與裝置識別）。
-  技術：SPM 引入 sentry-cocoa 9.27.0（`Sentry-Dynamic`），`AppDelegate.init` 啟動、只收崩潰（sessions／效能／breadcrumbs 關），`beforeSend` 去識別化；用專屬 client key `ios-native` 當 kill switch。
+  技術：SPM 引入 sentry-cocoa 9.27.0（`Sentry-Dynamic`），`main.swift` 在 `UIApplicationMain` 之前啟動（才收得到 #1473 那類 delegate 建立前的啟動崩潰）、只收崩潰（sessions／效能／breadcrumbs 關），`beforeSend` 去識別化；用專屬 client key `ios-native` 當 kill switch。
 - **iOS 上傳前加 launch smoke（#1476）**
   使用者：無直接變化；避免再送出一開就閃退的 iOS 殼（1.5.18 (5) 在 iOS 27 閃退）。
   技術：`scripts/native/ios-launch-smoke.sh` 在最新 runtime 模擬器跑 Release 建置、確認存活與 log、截圖；ship-native 於 archive 後、upload 前呼叫。
