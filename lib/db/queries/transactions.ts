@@ -814,7 +814,8 @@ export async function monthlyStatsByCategory(
  * Same as monthlyStatsByCategory but grouped by asset_id. Includes a row with
  * key=null for transactions without an asset (rendered as "其他支出"). Asset names
  * are read from Assets without filtering deletedAt so soft-deleted assets still
- * show their original name instead of "未命名".
+ * show their original name instead of "未命名". The join is scoped to the
+ * record's own group (#1485): an asset in another ledger yields a NULL name.
  *
  * Pinning the asset filter on this query is still allowed but the caller
  * normally avoids it — the breakdown would degenerate to one bar. The
@@ -847,7 +848,9 @@ export async function monthlyStatsByAsset(
       SUM(ct.amount)::int AS total,
       COUNT(*)::int AS count
     FROM "CashTransactions" ct
-    LEFT JOIN "Assets" a ON a.id = ct.asset_id
+    -- #1485 — the joined asset must be in the record's own group: a link to
+    -- another ledger's asset resolves as no name, never as that asset's name.
+    LEFT JOIN "Assets" a ON a.id = ct.asset_id AND a.group_id = ct.group_id
     WHERE ct.group_id = ${groupId}
       AND ct.deleted_at IS NULL
       ${scope}
