@@ -19,6 +19,7 @@ import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
 import { hasActiveTrip } from '@/lib/db/queries/trips'
 import { hasActiveOuting } from '@/lib/db/queries/outing'
 import { boundarySql, lockForEpochClose } from '@/lib/db/queries/epoch'
+import { freezeCrossLedgerLinks } from '@/lib/db/queries/frozenAssetCopy'
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
@@ -196,8 +197,10 @@ export const confirmSwap = action(async (): Promise<{ ok: true }> => {
  *   - FuelLogs: follow car via asset_id (no group_id column)
  *   - InvoiceCredentials: by user_id; Snapshots / Runs stay (group records)
  *   - MonthlyReviewMessages: by member_id; Snapshots stay (group analytics)
- *   - Transactions / rules whose asset_id points to a staying asset: set NULL
- *     to preserve same-group invariant
+ *   - Any row left referencing a 愛物 in the other ledger (either direction:
+ *     asset_id on records / rules, fuel_log_id by the fuel log's car,
+ *     insurance vehicle / insured child): re-pointed at a frozen copy in the
+ *     row's own ledger; such rules are paused (#1442, freezeCrossLedgerLinks)
  *   - GroupInvites with no acceptedAt: revoke
  *   - current_epoch_started_at: bumped on both groups (new chapters)
  *
@@ -233,52 +236,6 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
   const newGroupName = leaverProfile?.displayName
     ? `${leaverProfile.displayName} 的家計簿`
     : '我的家計簿'
-
-  // Determine which assets follow the leaver. We do this up-front so we can
-  // also figure out which asset_id references on moving txs/rules must be
-  // nulled out (those pointing to staying assets).
-  const movingHouseRows = await db
-    .select({ assetId: houseDetails.assetId })
-    .from(houseDetails)
-    .innerJoin(assets, eq(assets.id, houseDetails.assetId))
-    .where(and(
-      eq(assets.groupId, oldGroupId),
-      eq(houseDetails.owner, leaver),
-    ))
-  const movingCarRows = await db
-    .select({ assetId: carDetails.assetId })
-    .from(carDetails)
-    .innerJoin(assets, eq(assets.id, carDetails.assetId))
-    .where(and(
-      eq(assets.groupId, oldGroupId),
-      eq(carDetails.primaryUserId, leaver),
-    ))
-  const movingInsuranceRows = await db
-    .select({ assetId: insuranceDetails.assetId })
-    .from(insuranceDetails)
-    .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
-    .where(and(
-      eq(assets.groupId, oldGroupId),
-      eq(insuranceDetails.insuredUserId, leaver),
-    ))
-
-  const movingAssetIds = [
-    ...movingHouseRows.map((r) => r.assetId),
-    ...movingCarRows.map((r) => r.assetId),
-    ...movingInsuranceRows.map((r) => r.assetId),
-  ]
-
-  // Empty array would interpolate as `IN ()` (invalid SQL), so short-circuit
-  // to NULL when nothing is moving with the leaver. Note: `sql\`${array}\``
-  // does NOT bind a single array param — Drizzle expands a JS array into a
-  // parenthesised parameter list (`$1, $2, …`), so `= ANY(${ids}::uuid[])`
-  // sends `ANY(($1, $2)::uuid[])`, which Postgres rejects as a malformed
-  // array literal (22P02) whenever the array has 2+ elements (#1440). Build
-  // an explicit `IN (...)` list instead, matching the pattern already used
-  // elsewhere in lib/db/queries/ (e.g. asset.ts, _predicates.ts).
-  const assetIdCase = movingAssetIds.length > 0
-    ? sql`CASE WHEN asset_id IN (${sql.join(movingAssetIds.map((id) => sql`${id}::uuid`), sql`, `)}) THEN asset_id ELSE NULL END`
-    : sql`NULL`
 
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
     // 0. Lock the group row and its open chapter row, take the chapter
@@ -341,7 +298,40 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
       })
       .returning({ id: groupEpochs.id })
 
-    // 2. Move assets owned by the leaver
+    // 2. Move assets owned by the leaver. Decided here, under the epoch-close
+    //    lock (#1442 — it used to run before the transaction, so an asset
+    //    created or re-owned in between could be missed).
+    const movingHouseRows = await tx
+      .select({ assetId: houseDetails.assetId })
+      .from(houseDetails)
+      .innerJoin(assets, eq(assets.id, houseDetails.assetId))
+      .where(and(
+        eq(assets.groupId, oldGroupId),
+        eq(houseDetails.owner, leaver),
+      ))
+    const movingCarRows = await tx
+      .select({ assetId: carDetails.assetId })
+      .from(carDetails)
+      .innerJoin(assets, eq(assets.id, carDetails.assetId))
+      .where(and(
+        eq(assets.groupId, oldGroupId),
+        eq(carDetails.primaryUserId, leaver),
+      ))
+    const movingInsuranceRows = await tx
+      .select({ assetId: insuranceDetails.assetId })
+      .from(insuranceDetails)
+      .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
+      .where(and(
+        eq(assets.groupId, oldGroupId),
+        eq(insuranceDetails.insuredUserId, leaver),
+      ))
+
+    const movingAssetIds = [
+      ...movingHouseRows.map((r) => r.assetId),
+      ...movingCarRows.map((r) => r.assetId),
+      ...movingInsuranceRows.map((r) => r.assetId),
+    ]
+
     if (movingAssetIds.length > 0) {
       await tx
         .update(assets)
@@ -349,22 +339,19 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         .where(inArray(assets.id, movingAssetIds))
     }
 
-    // 3. Move CashTransactions where paid_by = leaver. asset_id stays put if
-    // it points to a moving asset; otherwise it's nulled to preserve the
-    // application invariant that a tx's group_id matches its asset's group_id.
-    // Uses CASE so each row's asset_id is decided in one pass.
+    // 3. Move CashTransactions where paid_by = leaver. asset_id / fuel_log_id
+    // are left as they are here; step 9a re-points any that now cross into
+    // the other ledger at a frozen copy (#1442).
     await tx.execute(sql`
       UPDATE "CashTransactions"
-      SET group_id = ${newGroup.id},
-          asset_id = ${assetIdCase}
+      SET group_id = ${newGroup.id}
       WHERE group_id = ${oldGroupId} AND paid_by = ${leaver}
     `)
 
     // 4. Move IncomeTransactions where recipient_id = leaver
     await tx.execute(sql`
       UPDATE "IncomeTransactions"
-      SET group_id = ${newGroup.id},
-          asset_id = ${assetIdCase}
+      SET group_id = ${newGroup.id}
       WHERE group_id = ${oldGroupId} AND recipient_id = ${leaver}
     `)
 
@@ -383,8 +370,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
       UPDATE "RecurringExpenseRules"
       SET group_id = ${newGroup.id},
           split_type = 'all_mine',
-          split_ratio_a = NULL,
-          asset_id = ${assetIdCase}
+          split_ratio_a = NULL
       WHERE group_id = ${oldGroupId} AND paid_by = ${leaver}
     `)
 
@@ -407,8 +393,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
     // 8. Move RecurringIncomeRules where recipient_id = leaver
     await tx.execute(sql`
       UPDATE "RecurringIncomeRules"
-      SET group_id = ${newGroup.id},
-          asset_id = ${assetIdCase}
+      SET group_id = ${newGroup.id}
       WHERE group_id = ${oldGroupId} AND recipient_id = ${leaver}
     `)
 
@@ -421,6 +406,12 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
           SELECT id FROM "RecurringIncomeRules" WHERE group_id = ${newGroup.id}
         )
     `)
+
+    // 9a. #1442 — both directions: any row (record, rule, insurance link,
+    // fuel log link) left pointing at a 愛物 in the other ledger is re-pointed
+    // at a frozen copy in its own ledger; re-pointed rules are paused. Replaces
+    // the old NULLing of asset_id on moving rows, which lost the link.
+    await freezeCrossLedgerLinks(tx, oldGroupId, newGroup.id, boundary)
 
     // 10. Move the leaver's live InvoiceCredentials. Snapshots and Runs stay
     // (group共同記錄, per design). Soft-deleted credentials stay too: they

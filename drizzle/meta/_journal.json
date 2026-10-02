@@ -505,6 +505,13 @@
       "when": 1783000000000,
       "tag": "0072_futari_app_role",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1783100000000,
+      "tag": "0073_assets_frozen_at",
+      "breakpoints": true
     }
   ]
 }

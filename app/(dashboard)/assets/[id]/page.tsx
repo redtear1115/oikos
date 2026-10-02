@@ -135,7 +135,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const createdBefore = nonMemberPinCutoff(context, user.id)
 
   const asset = await getAssetById(id, group.id, createdBefore)
-  if (!asset || asset.deletedAt) notFound()
+  // #1442 — a frozen copy has no detail view yet (polish pass); not found.
+  if (!asset || asset.deletedAt || asset.frozenAt) notFound()
 
   // #221/#227 — Guardian beta gate. Insurance asset detail pages live behind
   // the Guardian module; when beta is off, direct URL access (bookmark /
@@ -455,7 +456,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     listTransactionsPagedForAsset(id, group.id, null, PAGE_SIZE, epochWindow),
     listFuelLogsWithPrev(id, epochWindow),
     fuelStatsForAsset(id, epochWindow),
-    getLinkedInsurancesForVehicle(id),
+    getLinkedInsurancesForVehicle(id, group.id),
   ])
   // Same cut-off for the car's linked-insurance chips: keep only insurances
   // that are in the (already cut-off) asset list.

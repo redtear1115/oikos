@@ -244,13 +244,22 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
   return rows[0] ?? null
 }
 
-export async function getLinkedInsurancesForVehicle(vehicleId: string): Promise<{ id: string; name: string }[]> {
+/**
+ * Insurance policies in `groupId` linked to the car. Group-scoped (#1442): a
+ * policy in another ledger that still points at this car is not this
+ * viewer's to list.
+ */
+export async function getLinkedInsurancesForVehicle(
+  vehicleId: string,
+  groupId: string,
+): Promise<{ id: string; name: string }[]> {
   return db
     .select({ id: assets.id, name: assets.name })
     .from(assets)
     .innerJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .where(and(
       eq(insuranceDetails.vehicleId, vehicleId),
+      eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
     ))
 }

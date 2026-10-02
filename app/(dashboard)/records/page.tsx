@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { assets } from '@/lib/db/schema'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { listFilterAssetsForGroup } from '@/lib/db/queries/asset'
 import { listFeedAllPaged, listFeedAllMonthSummaries, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
@@ -112,12 +113,8 @@ export default async function RecordsPage({
   // a deleted asset shouldn't appear as a fresh filter option (existing
   // selections that reference a deleted asset still survive via the
   // `__none__`-style sentinel handling on the server, but the UI doesn't
-  // surface them).
-  const filterAssets = await db
-    .select({ id: assets.id, name: assets.name, type: assets.type })
-    .from(assets)
-    .where(and(eq(assets.groupId, group.id), isNull(assets.deletedAt)))
-    .orderBy(assets.createdAt)
+  // surface them). Frozen copies (#1442) are not offered either.
+  const filterAssets = await listFilterAssetsForGroup(group.id)
 
   // Feed rows + per-month summaries in parallel, both scoped identically
   // (same filter/drill/date-range/epoch) so the feed's month headers agree

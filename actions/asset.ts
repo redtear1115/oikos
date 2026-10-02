@@ -7,8 +7,9 @@ import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { randomUUID } from 'crypto'
 import { encrypt, decrypt, aadFor, type AadContext } from '@/lib/crypto'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { writableAsset } from '@/lib/auth/asset'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
@@ -187,10 +188,8 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
       .update(assets)
       .set({ name: validated.name, notes: validated.notes })
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'car'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('asset_not_found')
@@ -265,10 +264,8 @@ export const softDeleteCar = action(async (id: string): Promise<void> => {
     .update(assets)
     .set({ deletedAt: new Date() })
     .where(and(
-      eq(assets.id, id),
-      eq(assets.groupId, group.id),
+      writableAsset(id, group.id),
       eq(assets.type, 'car'),
-      isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
   if (updated.length === 0) throw actionError('asset_not_found')
@@ -316,9 +313,7 @@ export const editLifeEntity = action(async (input: EditLifeEntityInput): Promise
     .update(assets)
     .set({ name })
     .where(and(
-      eq(assets.id, input.id),
-      eq(assets.groupId, group.id),
-      isNull(assets.deletedAt),
+      writableAsset(input.id, group.id),
     ))
     .returning({ id: assets.id })
   if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -333,9 +328,7 @@ export const softDeleteAsset = action(async (assetId: string): Promise<void> => 
     .update(assets)
     .set({ deletedAt: new Date() })
     .where(and(
-      eq(assets.id, assetId),
-      eq(assets.groupId, group.id),
-      isNull(assets.deletedAt),
+      writableAsset(assetId, group.id),
     ))
     .returning({ id: assets.id })
   if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -535,10 +528,8 @@ export const editChild = action(async (input: EditChildInput): Promise<void> => 
       .update(assets)
       .set(assetUpdates)
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'child'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -768,10 +759,8 @@ export const editPet = action(async (input: EditPetInput): Promise<void> => {
       .update(assets)
       .set({ name: validated.name, notes: validated.notes })
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'pet'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -861,10 +850,8 @@ export const editPlant = action(async (input: EditPlantInput): Promise<void> => 
       .update(assets)
       .set({ name: validated.name, notes: validated.notes })
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'plant'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -925,15 +912,41 @@ export interface EditInsuranceInput extends CreateInsuranceInput {
 /**
  * #167 — verifies that `insured_child_id` points at a non-deleted Child 愛物
  * belonging to the viewer's group. Mirrors the vehicleId guard pattern.
+ *
+ * #1442 — a frozen copy is rejected unless it is `keepFrozenId`, the value
+ * editInsurance read from the policy's own stored row (never the client's).
  */
-async function assertInsuredChildInGroup(childId: string, groupId: string): Promise<void> {
+async function assertInsuredChildInGroup(
+  childId: string,
+  groupId: string,
+  keepFrozenId: string | null = null,
+): Promise<void> {
   const [child] = await db
-    .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
+    .select({ id: assets.id, type: assets.type })
     .from(assets)
-    .where(and(eq(assets.id, childId), eq(assets.groupId, groupId)))
+    .where(writableAsset(childId, groupId, { keepFrozenId }))
     .limit(1)
-  if (!child || child.type !== 'child' || child.deletedAt) {
+  if (!child || child.type !== 'child') {
     throw actionError('insured_child_invalid')
+  }
+}
+
+/**
+ * Optional vehicle link on an insurance policy: a non-deleted car in the
+ * viewer's group. Same `keepFrozenId` exemption as assertInsuredChildInGroup.
+ */
+async function assertVehicleInGroup(
+  vehicleId: string,
+  groupId: string,
+  keepFrozenId: string | null = null,
+): Promise<void> {
+  const [vehicle] = await db
+    .select({ id: assets.id, type: assets.type })
+    .from(assets)
+    .where(writableAsset(vehicleId, groupId, { keepFrozenId }))
+    .limit(1)
+  if (!vehicle || vehicle.type !== 'car') {
+    throw actionError('linked_vehicle_invalid')
   }
 }
 
@@ -975,14 +988,7 @@ export const createInsurance = action(async (input: CreateInsuranceInput): Promi
   }
 
   if (input.vehicleId) {
-    const [vehicle] = await db
-      .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
-      .from(assets)
-      .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
-      .limit(1)
-    if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
-      throw actionError('linked_vehicle_invalid')
-    }
+    await assertVehicleInGroup(input.vehicleId, group.id)
   }
 
   if (validated.policyHolderUserId) {
@@ -1041,15 +1047,24 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
   const validated = validateInsuranceInput(input)
   const { group } = await requireViewerGroup()
 
+  // #1442 — the links this policy already has, read from its own stored row
+  // in the viewer's group (only when there is a link to check). A frozen copy
+  // may be *kept* (leaveGroup re-pointed the link at it), never newly chosen.
+  const [stored] = !input.vehicleId && !validated.insuredChildId ? [] : await db
+    .select({
+      vehicleId: insuranceDetails.vehicleId,
+      insuredChildId: insuranceDetails.insuredChildId,
+    })
+    .from(insuranceDetails)
+    .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
+    .where(and(
+      eq(insuranceDetails.assetId, input.id),
+      writableAsset(input.id, group.id),
+    ))
+    .limit(1)
+
   if (input.vehicleId) {
-    const [vehicle] = await db
-      .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
-      .from(assets)
-      .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
-      .limit(1)
-    if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
-      throw actionError('linked_vehicle_invalid')
-    }
+    await assertVehicleInGroup(input.vehicleId, group.id, stored?.vehicleId ?? null)
   }
 
   if (validated.policyHolderUserId) {
@@ -1057,7 +1072,7 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
   }
 
   if (validated.insuredChildId) {
-    await assertInsuredChildInGroup(validated.insuredChildId, group.id)
+    await assertInsuredChildInGroup(validated.insuredChildId, group.id, stored?.insuredChildId ?? null)
   }
   if (validated.insuredUserId) {
     assertInsuredUserInGroup(validated.insuredUserId, group)
@@ -1070,10 +1085,8 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
       .update(assets)
       .set({ name: validated.name, notes: validated.notes })
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'insurance'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -1150,10 +1163,8 @@ export const renewInsurance = action(async (input: {
     .select({ id: assets.id })
     .from(assets)
     .where(and(
-      eq(assets.id, input.id),
-      eq(assets.groupId, group.id),
+      writableAsset(input.id, group.id),
       eq(assets.type, 'insurance'),
-      isNull(assets.deletedAt),
     ))
     .limit(1)
   if (!asset) throw actionError('policy_not_found')
@@ -1197,10 +1208,8 @@ export const lapseInsurance = action(async (input: { id: string }): Promise<void
     .update(assets)
     .set({ deletedAt: new Date() })
     .where(and(
-      eq(assets.id, input.id),
-      eq(assets.groupId, group.id),
+      writableAsset(input.id, group.id),
       eq(assets.type, 'insurance'),
-      isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
   if (result.length === 0) throw actionError('policy_not_found')
@@ -1302,10 +1311,8 @@ export const editHouse = action(async (input: EditHouseInput): Promise<void> => 
       .update(assets)
       .set({ name: validated.name, notes: validated.notes })
       .where(and(
-        eq(assets.id, input.id),
-        eq(assets.groupId, group.id),
+        writableAsset(input.id, group.id),
         eq(assets.type, 'house'),
-        isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
@@ -1412,10 +1419,8 @@ export const editTemplateAsset = action(async (input: EditTemplateAssetInput): P
       templateFields: fields,
     })
     .where(and(
-      eq(assets.id, input.id),
-      eq(assets.groupId, group.id),
+      writableAsset(input.id, group.id),
       eq(assets.type, 'item'),
-      isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
   if (updated.length === 0) throw actionError('aibutsu_not_found')
