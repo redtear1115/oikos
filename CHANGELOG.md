@@ -55,6 +55,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **iOS launch smoke 不再把離線頁當成正常畫面（#1499）**
   使用者：無可見變化；避免殼連不到 prod 時，送審前的 smoke 仍印 PASS。
   技術：`ios-launch-smoke.sh` 辨識 `offline.html` 底色（`#FBEDE0` 佔 ≥ 90%），離線頁不算畫出內容，到期仍離線就以明確原因失敗。
+- **月回顧快照函式只讀同一本帳的資料，並收回對外執行權限（#1494）**
+  使用者：無可見變化；萬一出現跨帳本連結，月回顧也不會顯示另一本帳的愛物名稱或交易。
+  技術：`0077` 重新定義 `compute_monthly_review_snapshot`：愛物與定期收支交易的 join 加 `group_id` 條件、補回 0061 弄丟的 `search_path` 釘選，EXECUTE 只留給 `postgres`／`service_role`。
 - **愛物連結只解析同一本帳的愛物（#1485）**
   使用者：無可見變化；萬一出現跨帳本連結，也不會顯示另一本帳的愛物名稱。
   技術：統計（依愛物）、愛物清單／單筆、保險明細對 `Assets` 的 join 加上 `group_id` 條件；`getInsuranceDetails` 改為必帶 `groupId`。
