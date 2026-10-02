@@ -206,7 +206,10 @@ export interface InsuranceDetailsRow {
   accountValue: number | null
 }
 
-export async function getInsuranceDetails(assetId: string): Promise<InsuranceDetailsRow | null> {
+export async function getInsuranceDetails(
+  assetId: string,
+  groupId: string,
+): Promise<InsuranceDetailsRow | null> {
   // #167 — LEFT JOIN the linked Child asset so the detail page can show the
   // child's name without an extra round-trip. NULL when insured_child_id is
   // unset or the child was hard-deleted (FK is RESTRICT but soft-delete
@@ -237,9 +240,19 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       accountValue: insuranceDetails.accountValue,
     })
     .from(insuranceDetails)
-    .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
+    // #1485 — group-scoped: the policy row must be in `groupId`, and the
+    // insured child must be in that same group. A link to another ledger's
+    // asset resolves as no name, never as that asset's name.
+    .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
+    .leftJoin(insuredChildAsset, and(
+      eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
+      eq(insuredChildAsset.groupId, assets.groupId),
+    ))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
-    .where(eq(insuranceDetails.assetId, assetId))
+    .where(and(
+      eq(insuranceDetails.assetId, assetId),
+      eq(assets.groupId, groupId),
+    ))
     .limit(1)
   return rows[0] ?? null
 }

@@ -333,7 +333,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   }
 
   if (asset.type === 'insurance') {
-    const insuranceDetailsData = await getInsuranceDetails(asset.id)
+    const insuranceDetailsData = await getInsuranceDetails(asset.id, group.id)
 
     // Resolve linked vehicle name if vehicleId is set (allAssetsData already excludes deleted)
     let linkedVehicle: { id: string; name: string } | null = null
