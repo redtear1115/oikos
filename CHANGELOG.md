@@ -41,6 +41,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 使用者可見變化
+
+- **離線頁改用品牌提燈（#1423）**
+  使用者：沒有網路冷啟動時看到的「目前沒有連線」頁，圖示從舊檯燈換成提燈；更新 App 後生效。
+  技術：提燈形狀抽到 `lib/lanternMark.ts`，`FutariMark` 與離線頁產生器共用，不會再各自分岔。
+
 ### 技術變更
 
 - **愛物連結只解析同一本帳的愛物（#1485）**

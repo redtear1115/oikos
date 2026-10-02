@@ -47,6 +47,11 @@ import { zhTW } from '../lib/i18n/locales/zh-TW.ts'
 import { zhCN } from '../lib/i18n/locales/zh-CN.ts'
 import { en } from '../lib/i18n/locales/en.ts'
 import { ja } from '../lib/i18n/locales/ja.ts'
+import {
+  LANTERN_GROUP_TRANSFORM,
+  LANTERN_PARTS,
+  LANTERN_VIEWBOX,
+} from '../lib/lanternMark.ts'
 
 /** 必須與 `capacitor.config.ts` 的 `server.errorPath` 一致（測試會比對）。 */
 export const OFFLINE_PAGE_FILENAME = 'offline.html'
@@ -236,13 +241,8 @@ export function renderOfflinePage(serverUrl: string): string {
 </head>
 <body>
   <main>
-    <!-- The Warm Lamp。純 inline SVG：離線頁拿不到任何外部資源，連 favicon 都不行。 -->
-    <svg class="lamp" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="M19 9 H29 L36 25 H12 Z" fill="#F8D9C2" stroke="#E08856" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M24 25 V33" stroke="#7A5848" stroke-width="2" stroke-linecap="round"/>
-      <path d="M16 40 H32" stroke="#7A5848" stroke-width="2" stroke-linecap="round"/>
-      <path d="M24 33 L18 40 M24 33 L30 40" stroke="#7A5848" stroke-width="2" stroke-linecap="round"/>
-    </svg>
+    <!-- 品牌提燈（#1423）。形狀資料與 FutariMark 共用 lib/lanternMark.ts；純 inline SVG：離線頁拿不到任何外部資源，連 favicon 都不行。 -->
+    ${lanternSvg()}
     ${localizedBlock('h1', 'title', '    ')}
     ${localizedBlock('p', 'body', '    ')}
     <a class="retry" href="${escapeHtml(serverUrl)}">
@@ -252,6 +252,27 @@ export function renderOfflinePage(serverUrl: string): string {
 </body>
 </html>
 `
+}
+
+// 色票同上方 :root（--ink / --accent 的寫死值）。
+const LANTERN_COLORS = { ink: '#3A2419', accent: '#E08856' } as const
+
+function kebab(name: string): string {
+  return name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+}
+
+export function lanternSvg(): string {
+  const parts = LANTERN_PARTS.map((p) => {
+    const attrs = Object.entries(p.attrs).map(([k, v]) => `${kebab(k)}="${v}"`)
+    attrs.push(`fill="${p.fill === 'none' ? 'none' : LANTERN_COLORS[p.fill]}"`)
+    if (p.stroke) attrs.push(`stroke="${LANTERN_COLORS[p.stroke]}"`)
+    return `<${p.tag} ${attrs.join(' ')}/>`
+  })
+  return `<svg class="lamp" viewBox="${LANTERN_VIEWBOX}" fill="none" aria-hidden="true">
+      <g transform="${LANTERN_GROUP_TRANSFORM}">
+        ${parts.join('\n        ')}
+      </g>
+    </svg>`
 }
 
 function main(): void {
