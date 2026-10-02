@@ -49,6 +49,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **iOS launch smoke 先檢查 Capacitor 版本一致（#1503）**
+  使用者：無可見變化；避免本機套件過期時，iOS 建置以看不懂的錯誤失敗。
+  技術：`ios-launch-smoke.sh` 比對 package-lock、`node_modules/@capacitor/ios` 與 `CapApp-SPM/Package.swift` 的 Capacitor 版本，不一致就說明要先 `npm ci`／`cap sync`。
 - **iOS launch smoke 不再把離線頁當成正常畫面（#1499）**
   使用者：無可見變化；避免殼連不到 prod 時，送審前的 smoke 仍印 PASS。
   技術：`ios-launch-smoke.sh` 辨識 `offline.html` 底色（`#FBEDE0` 佔 ≥ 90%），離線頁不算畫出內容，到期仍離線就以明確原因失敗。

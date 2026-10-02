@@ -210,10 +210,14 @@ iOS 27 上一開就閃退（`UIScene life cycle is required`）。從 repo root�
 scripts/native/ios-launch-smoke.sh      # 約 2–4 分鐘；失敗 exit 1 並印原因
 ```
 
+開跑前先比對 Capacitor 版本：package-lock、`node_modules/@capacitor/ios`、`CapApp-SPM/Package.swift` 的 capacitor-swift-pm
+三者不一致就直接失敗並說要先 `npm ci`／`cap sync`（#1503：node_modules 過期時 Xcode 只報
+`cannot find 'SceneDelegateProxy' in scope`，看不出是版本問題；不要用 `SWIFT_ENABLE_EXPLICIT_MODULES=NO` 繞過）。
+
 它用同一份原始碼建 Release／iphonesimulator，在最新 iOS runtime 的專用模擬器啟動，等 ≥10 秒確認
 process 活著、查 log，再每 5 秒截圖、最多等 90 秒，直到畫面中段不是純色（`$SMOKE_OUT/launch.png`，路徑會印出來）。
 **全新模擬器第一次啟動，WebView 約 60 秒才畫出 prod**（12 秒黑、30 秒灰，build 沒壞），所以整個跑完要幾分鐘；
-90 秒內仍是純色才算失敗。**通過後還是自己開一眼截圖**：要是 prod 的 Futari 落地頁，不是系統錯誤頁／離線頁（這兩種不是純色，腳本分不出來）。
+90 秒內仍是純色才算失敗。**通過後還是自己開一眼截圖**：要是 prod 的 Futari 落地頁。殼內離線頁腳本會辨識並失敗（#1499），但系統錯誤頁或 prod 回的錯誤頁不是純色，腳本分不出來。
 **非 0 或截圖不對就停，不要上傳**，回報原因。失敗樣子與前置（`xcodebuild -downloadPlatform iOS`、
 DeviceHub、log 查法）見 [runbook §K](../../../docs/app-store-submission-runbook.md#k-原生-build-雷點)。
 

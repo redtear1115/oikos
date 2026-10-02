@@ -36,6 +36,17 @@ trap cleanup EXIT
 
 [ -d "$ROOT/ios/App/App/public" ] || fail "ios/App/App/public 不存在——先跑 \`npx cap sync ios\`（否則 build 會失敗於 'The file \"public\" couldn't be opened'）"
 
+# Capacitor 版本要一致（#1503）：`cap sync` 依「當下 node_modules 的 @capacitor/ios」把 capacitor-swift-pm 的
+# exact 版本寫進 CapApp-SPM/Package.swift。node_modules 過期（例如 main checkout 沒重跑 npm ci，worktree 又解到它）
+# 時，build 會用到舊 Capacitor，錯誤只說 `cannot find 'SceneDelegateProxy' in scope`，看不出是版本問題。
+LOCK_CAP=$(node -p "require('$ROOT/package-lock.json').packages['node_modules/@capacitor/ios'].version" 2>/dev/null)
+NM_CAP=$(node -p "require('$ROOT/node_modules/@capacitor/ios/package.json').version" 2>/dev/null)
+SPM_CAP=$(sed -n 's/.*capacitor-swift-pm.git", exact: "\([^"]*\)".*/\1/p' "$ROOT/ios/App/CapApp-SPM/Package.swift")
+[ -n "$LOCK_CAP" ] || fail "讀不到 package-lock.json 的 @capacitor/ios 版本"
+[ "$NM_CAP" = "$LOCK_CAP" ] || fail "node_modules 的 @capacitor/ios 是 ${NM_CAP:-（沒有）}，package-lock 要 ${LOCK_CAP}——先 \`npm ci\`（worktree 的 node_modules 若是 symlink，要在它指向的 checkout 跑），再 \`npx cap sync ios\`"
+[ "$SPM_CAP" = "$LOCK_CAP" ] || fail "CapApp-SPM/Package.swift 的 capacitor-swift-pm 是 ${SPM_CAP:-（讀不到）}，package-lock 要 ${LOCK_CAP}——node_modules 對了之後重跑 \`npx cap sync ios\`"
+echo "OK Capacitor ${LOCK_CAP}（package-lock = node_modules = CapApp-SPM）"
+
 # --- 1. 最新已安裝 iOS runtime + 最新的 iPhone 機型 ---
 PICK=$(xcrun simctl list runtimes -j | python3 -c '
 import json,sys,re
