@@ -65,7 +65,7 @@ vi.mock('@/lib/analytics/server', () => ({
 const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite, createInvite } = await import('@/actions/invite')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, sql } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 
@@ -144,7 +144,7 @@ async function seedInvite(groupId: string, invitedBy: string, over: Partial<type
   const [row] = await db.insert(groupInvites).values({
     groupId,
     invitedBy,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + INVITE_TTL_MS),
     ...over,
   }).returning({ id: groupInvites.id })

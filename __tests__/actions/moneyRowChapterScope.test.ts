@@ -82,7 +82,7 @@ const { editSettlement, softDeleteSettlement } = await import('@/actions/settlem
 const { editFuelLog, softDeleteFuelLog } = await import('@/actions/fuelLog')
 const { acceptInvite } = await import('@/actions/invite')
 const { leaveGroup, removePartner } = await import('@/actions/membership')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
@@ -547,7 +547,7 @@ describe.skipIf(!isLocalDb)('an edit holding the chapter row against a chapter c
       await group(joiner, null)
       const token = generateToken()
       await db.insert(groupInvites).values({
-        groupId: g, invitedBy: inviter, token, expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+        groupId: g, invitedBy: inviter, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + INVITE_TTL_MS),
       })
       const old = await cashRow(g, inviter)
 

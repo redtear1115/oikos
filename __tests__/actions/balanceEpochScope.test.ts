@@ -87,6 +87,7 @@ const {
 } = await import('@/lib/db/schema')
 const { leaveGroup } = await import('@/actions/membership')
 const { createInvite, acceptInvite } = await import('@/actions/invite')
+const { hashToken } = await import('@/lib/invite')
 const { createTransaction } = await import('@/actions/transaction')
 const { createSettlement } = await import('@/actions/settlement')
 const { getGroupBalance, getGroupPendingBalanceDelta } = await import('@/lib/db/queries/balance')
@@ -197,7 +198,7 @@ async function cleanup(refs: SeedRefs) {
     await db.delete(cashTransactions).where(inArray(cashTransactions.id, refs.txIds))
   }
   if (refs.inviteToken) {
-    await db.delete(groupInvites).where(eq(groupInvites.token, refs.inviteToken))
+    await db.delete(groupInvites).where(eq(groupInvites.tokenHash, hashToken(refs.inviteToken)))
   }
   for (const gid of groupIds) {
     await db.delete(cashTransactions).where(eq(cashTransactions.groupId, gid))

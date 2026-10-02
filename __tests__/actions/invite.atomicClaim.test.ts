@@ -80,7 +80,7 @@ vi.mock('@/lib/db/queries/group', async (importOriginal) => {
 const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite, previewInvite, createInvite } = await import('@/actions/invite')
-const { generateToken } = await import('@/lib/invite')
+const { generateToken, hashToken } = await import('@/lib/invite')
 const { and, eq, inArray, isNull, sql } = await import('drizzle-orm')
 
 const as = <T>(userId: string, fn: () => Promise<T>) => viewerStore.run(userId, fn)
@@ -139,7 +139,7 @@ async function seedInvite(groupId: string, invitedBy: string, over: Partial<type
   const [row] = await db.insert(groupInvites).values({
     groupId,
     invitedBy,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + 86_400_000),
     ...over,
   }).returning({ id: groupInvites.id })
@@ -318,7 +318,7 @@ describe('createInvite — one open invite per group (#1288)', () => {
     expect(rows).toHaveLength(2)
     const open = rows.filter((r) => r.acceptedAt === null && r.revokedAt === null)
     expect(open).toHaveLength(1)
-    expect(open[0].token).toBe(t2)
+    expect(open[0].tokenHash).toBe(hashToken(t2))
 
     const superseded = captured.filter((c) => c.event === 'invite_superseded')
     expect(superseded).toHaveLength(1)

@@ -82,7 +82,7 @@ const {
 } = await import('@/actions/tripExpense')
 const { createTransaction, editTransaction } = await import('@/actions/transaction')
 const { acceptInvite } = await import('@/actions/invite')
-const { generateToken } = await import('@/lib/invite')
+const { generateToken, hashToken } = await import('@/lib/invite')
 const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
 const { unwrapAction } = await import('@/lib/action-errors')
 const { eq, and, isNull, inArray } = await import('drizzle-orm')
@@ -176,7 +176,7 @@ async function seedSoloTripThenAccept() {
   await db.insert(groupInvites).values({
     groupId: group.id,
     invitedBy: ownerId,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + 86_400_000),
   })
   mockUserId = joinerId

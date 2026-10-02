@@ -97,12 +97,16 @@ export const groupInvites = pgTable('GroupInvites', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   invitedBy: uuid('invited_by').notNull().references(() => profiles.id),
-  // #1288 I3 — nullable since 0070. Still written by createInvite and read by
-  // the lookup's fallback (rows whose token_hash is NULL); a later step stops
-  // writing it and a later migration drops it.
-  token: text('token').unique(),
-  // #1288 I3 — hashToken(token) (lib/invite.ts). The invite lookup key.
-  // Nullable until every row is backfilled; unique index added by 0070.
+  // #1288 I3c — the plaintext `token` column is deliberately NOT declared.
+  // It still exists in the database (nullable since 0070, no longer written)
+  // until the I3d migration drops it. Declaring it here would make every
+  // `db.select().from(groupInvites)` name it, and that build would break the
+  // moment I3d runs. `__tests__/inviteTokenColumnGuard.test.ts` keeps it out.
+  //
+  // #1288 I3 — hashToken(token) (lib/invite.ts): the only thing stored about
+  // the token, and the lookup key. Nullable in the database until I3d sets NOT
+  // NULL; every row minted since I3b has it, older rows were backfilled by
+  // 0070. Unique index added by 0070.
   tokenHash: text('token_hash'),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
