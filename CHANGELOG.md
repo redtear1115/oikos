@@ -49,6 +49,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **iOS launch smoke 不再把離線頁當成正常畫面（#1499）**
+  使用者：無可見變化；避免殼連不到 prod 時，送審前的 smoke 仍印 PASS。
+  技術：`ios-launch-smoke.sh` 辨識 `offline.html` 底色（`#FBEDE0` 佔 ≥ 90%），離線頁不算畫出內容，到期仍離線就以明確原因失敗。
 - **愛物連結只解析同一本帳的愛物（#1485）**
   使用者：無可見變化；萬一出現跨帳本連結，也不會顯示另一本帳的愛物名稱。
   技術：統計（依愛物）、愛物清單／單筆、保險明細對 `Assets` 的 join 加上 `group_id` 條件；`getInsuranceDetails` 改為必帶 `groupId`。
