@@ -221,6 +221,21 @@ process 活著、查 log，再每 5 秒截圖、最多等 90 秒，直到畫面�
 **非 0 或截圖不對就停，不要上傳**，回報原因。失敗樣子與前置（`xcodebuild -downloadPlatform iOS`、
 DeviceHub、log 查法）見 [runbook §K](../../../docs/app-store-submission-runbook.md#k-原生-build-雷點)。
 
+#### 4b) 原生崩潰回報（sentry-cocoa，#1478）確認
+
+殼內建 sentry-cocoa（`ios/App/App/SentryBootstrap.swift`，Release 才啟動），崩潰在**下一次啟動**送到 Sentry `prj-futari`
+（release `futari-ios@<版本>+<build>`、tag `layer:native`）。上傳前確認兩件事：
+
+```bash
+grep -n 'static let dsn' ios/App/App/SentryBootstrap.swift   # 不能是 ""——空字串＝SDK 不啟動，而且沒有任何紅燈
+test -f "$TT/Payload/App.app/Frameworks/Sentry.framework/PrivacyInfo.xcprivacy" && echo "Sentry 隱私清單 OK"
+```
+
+sessions 關閉，所以 Sentry 沒有心跳：**收不到原生事件不代表沒崩**。涵蓋／不涵蓋、kill switch（停用 `ios-native` client key，
+只停送達、不停裝置上的 SDK）、dSYM 未上傳見 [runbook §K](../../../docs/app-store-submission-runbook.md#k-原生-build-雷點)。
+App Store Connect 的 App Privacy 要已發布 Diagnostics 三類（Crash Data／Other Diagnostic Data／Performance Data，用途 App Functionality），
+見 `docs/app-store-listing.md` §6。
+
 #### 5) 上傳（**這步需要使用者明講**）
 
 ```bash
@@ -286,6 +301,8 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 上傳前（iOS）
   □ scripts/native/ios-launch-smoke.sh 通過（exit 0）且截圖是 prod 落地頁（腳本已確認非純色）
     ※ 1.5.18(5) 沒跑這步，iOS 27 上開機即閃退
+  □ SentryBootstrap.swift 的 dsn 不是空字串；IPA 內 Sentry.framework 帶 PrivacyInfo.xcprivacy
+  □ App Store Connect App Privacy 已發布 Diagnostics 三類（Crash／Other Diagnostic／Performance，App Functionality）
 
 實機 / TestFlight 驗證（iOS 上傳後必做）
   □ 原生 Apple 登入 sheet 真的彈出來（不是 web OAuth 轉頁）
@@ -329,6 +346,7 @@ LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | g
 | ASC 回「build number 已存在」 | 同一 `MARKETING_VERSION` 下 build number 必須唯一遞增，TestFlight 也吃這規則 | 計數再 +1 重傳。**不要**改 `MARKETING_VERSION` 繞過 |
 | 要送審時發現版本沒有可用的 build | TestFlight build 90 天過期（1.5.1(1) 踩過：06-11 傳、09-09 過期、09-10 要送審） | 重新 archive 上傳；之後別提早卡位 |
 | smoke：`SMOKE FAIL ... UIScene life cycle is required` | 殼沒採用 UIScene，用新 SDK 建就開機閃退（#1473） | 修殼再重跑；不要上傳 |
+| Sentry 一直沒有 `futari-ios@*` 事件 | 可能真的沒崩，也可能 `dsn` 為空／`ios-native` key 被停用／崩在 `AppDelegate.init` 之前／使用者崩完沒再開 App（事件在下一次啟動才送）。sessions 關閉，沒有心跳可分辨 | 看裝置 log 有沒有 `[SentryBootstrap] native crash reporting started`；見 runbook §K |
 | smoke：只測到舊 iOS runtime | 新 runtime 沒下載 | `xcodebuild -downloadPlatform iOS`（約 8 GB） |
 | 升 Capacitor 後 iOS 整個編不起來 | 薄殼平常不 build iOS，衝突會潛伏到下次送審（Cap 8 升級 2026-07-12，2026-09-10 才炸） | **升 Capacitor 大版本後立刻實跑一次 archive** |
 

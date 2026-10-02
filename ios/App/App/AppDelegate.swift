@@ -6,6 +6,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    // Earliest point we control: start native crash reporting before any launch callback
+    // (willFinishLaunching / scene connection) can crash (#1478). Release builds only.
+    override init() {
+        super.init()
+        SentryBootstrap.start()
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         return true
