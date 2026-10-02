@@ -526,6 +526,13 @@
       "when": 1783200000000,
       "tag": "0075_encrypted_columns_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1783300000000,
+      "tag": "0076_invite_one_open_per_group",
+      "breakpoints": true
     }
   ]
 }

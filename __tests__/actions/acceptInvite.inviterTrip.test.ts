@@ -88,7 +88,7 @@ const { acceptInvite } = await import('@/actions/invite')
 const { createTrip, endTrip, updateTrip } = await import('@/actions/trip')
 const { createTripExpense } = await import('@/actions/tripExpense')
 const { unwrapAction } = await import('@/lib/action-errors')
-const { generateToken, INVITE_TTL_MS } = await import('@/lib/invite')
+const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray, or, and, isNull } = await import('drizzle-orm')
 const postgres = (await import('postgres')).default
 type Sql = ReturnType<typeof postgres>
@@ -193,7 +193,7 @@ async function seedInvite(groupId: string, invitedBy: string) {
   const [row] = await db.insert(groupInvites).values({
     groupId,
     invitedBy,
-    token,
+    tokenHash: hashToken(token),
     expiresAt: new Date(Date.now() + INVITE_TTL_MS),
   }).returning({ id: groupInvites.id })
   return { id: row.id, token }

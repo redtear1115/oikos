@@ -61,6 +61,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **加密欄位的密文不再經由 Realtime 與 Data API 送到瀏覽器（#1471）**
   使用者：無可見變化；寶寶本名、車牌、身分證字號等欄位的密文不再出現在瀏覽器收得到的資料裡。
   技術：`0075` 收回 `anon`／`authenticated` 在 Assets、各 *Details、InvoiceCredentials 的授權，`authenticated` 只留 Assets 非加密欄位的 SELECT（Realtime 依欄位權限裁切 payload；publication 欄位清單對 wal2json 無效，已在 dev 驗證）。
+- **新建立的邀請連結只存雜湊，每個帳本最多一條有效邀請（#1288）**
+  使用者：無可見變化；被新連結取代或已過期的舊連結照舊顯示失效。
+  技術：`0076` 先撤銷過期與重複的未用邀請，再以 partial unique index 限定每個帳本一條；建立邀請不再寫入明文 `token`、查找只比對 `token_hash`，Drizzle schema 移除該欄（實體欄位由後續 migration 刪除），guard test 擋新的引用。
 
 ## [1.6.5] - 2026-10-02
 

@@ -4,38 +4,36 @@ import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
-// ─── #1288 I3 — invite lookups by token hash (I3a migration + I3b code) ───
+// ─── #1288 I3c — only a hash of the invite token reaches the database ─────
 //
-// I3a (`drizzle/0070_invite_token_hash_expand.sql`) adds a nullable
-// `token_hash`, makes `token` nullable, backfills the hash and indexes it.
-// I3b mints rows with both columns and finds an invite with
-//   token_hash = $h OR (token_hash IS NULL AND token = $t)
-// so rows minted by the previous code (hash still NULL until the backfill is
-// re-run) keep working.
+// I3a (`drizzle/0070`) added `token_hash` and backfilled it; I3b wrote both
+// columns and looked up by hash with a plaintext fallback. I3c stops writing
+// the plaintext `token`, drops the fallback, and removes `token` from the
+// Drizzle schema. The column itself stays in the database (nullable, no
+// longer written) until the I3d migration drops it.
 //
-// Failure looks like: nothing errors. A link that should work opens on
-// "invalid or expired", and `invite_preview_failed{code:invalid_or_expired}`
+// Failure looks like: nothing errors. If the token write comes back, the raw
+// join link sits in the table again for anyone who can read it (backups,
+// dumps, a leaked DATABASE_URL). If the lookup breaks, every link opens on
+// "invalid or expired" and `invite_preview_failed{code:invalid_or_expired}`
 // rises.
 //
 // What this file proves:
-//   - mint → preview → accept round trip; the stored hash equals the one
-//     Postgres computes from the stored token;
-//   - a row with only `token` (what the previous code writes) can be previewed
-//     and accepted;
-//   - a row with only `token_hash` (what the next step, I3c, will write) can
-//     be previewed and accepted;
-//   - the fallback applies only while the hash is NULL;
-//   - the migration: backfill hash = Node hash, a second run changes 0 rows,
-//     the unique index holds, `token` accepts NULL; and the rollback script
-//     restores the previous shape.
+//   - no parameter or query text the driver sends while minting carries the
+//     raw token (observed at the postgres.js boundary, not assumed);
+//   - the stored row has token_hash = hashToken(token) = Postgres' sha256 of
+//     it, the raw token appears in no column, and `token` (where the column
+//     still exists) is NULL;
+//   - mint → preview → accept round trip by hash alone;
+//   - a row whose hash is someone else's is not found by this token.
+// The malformed-token guard (rejected before any DB call) is proven in
+// `__tests__/inviteTokenHash.test.ts`; the "no `token` column reference"
+// guard in `__tests__/inviteTokenColumnGuard.test.ts`.
 //
-// Local throwaway database only: the migration block rewrites the whole
-// table and drops a column, and these tests need 0070 applied, which dev and
-// prod may not have yet. Run this file on its own (another file running at
-// the same time would see the column come and go):
-//   docker run -d --name pg-1288i3 -e POSTGRES_PASSWORD=pg -p 127.0.0.1:55550:5432 postgres:17
-//   DATABASE_URL_DIRECT=postgres://postgres:pg@127.0.0.1:55550/postgres npx drizzle-kit push --force
-//   DATABASE_URL=postgres://postgres:pg@127.0.0.1:55550/postgres npx vitest run __tests__/actions/invite.tokenHash.test.ts
+// Local throwaway database only:
+//   docker run -d --name pg-1288 -e POSTGRES_PASSWORD=pg -p 127.0.0.1:55288:5432 postgres:17
+//   DATABASE_URL_DIRECT=postgres://postgres:pg@127.0.0.1:55288/postgres npx drizzle-kit push --force
+//   DATABASE_URL=postgres://postgres:pg@127.0.0.1:55288/postgres npx vitest run __tests__/actions/invite.tokenHash.test.ts
 //
 // No token value is printed or snapshotted: comparisons run in SQL or as
 // booleans.
@@ -60,6 +58,37 @@ function loadEnvLocal() {
 }
 loadEnvLocal()
 
+// Every query the app's postgres.js client sends — on the pool and inside
+// transactions — is recorded while `wire.on` is set.
+const wire = { on: false, sent: [] as string[] }
+vi.mock('postgres', async (importOriginal) => {
+  const real = (await importOriginal<{ default: (...a: unknown[]) => unknown }>()).default
+  type Sql = ((...a: unknown[]) => unknown) & Record<string, unknown>
+  const record = (query: unknown, params: unknown) => {
+    if (wire.on) wire.sent.push(`${String(query)}\n${JSON.stringify(params ?? null)}`)
+  }
+  const wrap = (sql: Sql): Sql => new Proxy(sql, {
+    get(target, prop) {
+      if (prop === 'unsafe') {
+        return (query: unknown, params: unknown, opts: unknown) => {
+          record(query, params)
+          return (target.unsafe as (...a: unknown[]) => unknown)(query, params, opts)
+        }
+      }
+      if (prop === 'begin' || prop === 'savepoint') {
+        return (...args: unknown[]) => {
+          const fn = args[args.length - 1] as (tx: Sql) => unknown
+          return (target[prop] as (...a: unknown[]) => unknown)(...args.slice(0, -1), (tx: Sql) => fn(wrap(tx)))
+        }
+      }
+      const v = Reflect.get(target, prop)
+      return typeof v === 'function' ? v.bind(target) : v
+    },
+  })
+  const wrapped = (...args: unknown[]) => wrap(real(...args) as Sql)
+  return { default: Object.assign(wrapped, real) }
+})
+
 const { AsyncLocalStorage } = await import('node:async_hooks')
 const viewerStore = new AsyncLocalStorage<string>()
 vi.mock('@/lib/supabase/server', () => ({
@@ -76,7 +105,7 @@ vi.mock('@/lib/analytics/server', () => ({
 }))
 
 const { db } = await import('@/lib/db/client')
-const { profiles, oikosGroups, groupBalance, groupEpochs } = await import('@/lib/db/schema')
+const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites } = await import('@/lib/db/schema')
 const { acceptInvite, createInvite, previewInvite } = await import('@/actions/invite')
 const { generateToken, hashToken, INVITE_TTL_MS } = await import('@/lib/invite')
 const { eq, inArray } = await import('drizzle-orm')
@@ -107,10 +136,12 @@ afterAll(async () => {
 const created = { profiles: [] as string[], groups: [] as string[] }
 
 afterEach(async () => {
+  wire.on = false
+  wire.sent.length = 0
   if (!isLocalDb) return
   try {
     if (created.groups.length) {
-      await raw`DELETE FROM "GroupInvites" WHERE group_id = ANY(${created.groups}::uuid[])`
+      await db.delete(groupInvites).where(inArray(groupInvites.groupId, created.groups))
       await db.delete(groupEpochs).where(inArray(groupEpochs.groupId, created.groups))
       await db.delete(groupBalance).where(inArray(groupBalance.groupId, created.groups))
       await db.delete(oikosGroups).where(inArray(oikosGroups.id, created.groups))
@@ -145,36 +176,7 @@ async function soloGroup(memberA: string): Promise<string> {
   return g.id
 }
 
-const expiresAt = () => new Date(Date.now() + INVITE_TTL_MS)
-
-/** The INSERT the code before I3b runs: `token` only, no hash. */
-async function seedTokenOnly(groupId: string, invitedBy: string) {
-  const token = generateToken()
-  const [row] = await raw`
-    INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-    VALUES (${groupId}, ${invitedBy}, ${token}, ${expiresAt()})
-    RETURNING id`
-  return { id: row.id as string, token }
-}
-
-/** The INSERT I3c will run: hash only, `token` NULL. */
-async function seedHashOnly(groupId: string, invitedBy: string) {
-  const token = generateToken()
-  const [row] = await raw`
-    INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at)
-    VALUES (${groupId}, ${invitedBy}, NULL, ${hashToken(token)}, ${expiresAt()})
-    RETURNING id`
-  return { id: row.id as string, token }
-}
-
-async function inviteState(id: string) {
-  const [r] = await raw`
-    SELECT token IS NULL AS token_null,
-           token_hash IS NULL AS hash_null,
-           accepted_at IS NOT NULL AS accepted
-    FROM "GroupInvites" WHERE id = ${id}`
-  return r as unknown as { token_null: boolean; hash_null: boolean; accepted: boolean }
-}
+const tokenOf = (url: string) => url.slice(url.lastIndexOf('/invite/') + '/invite/'.length)
 
 async function expectPreviewAndAccept(joiner: string, groupId: string, token: string) {
   const preview = await as(joiner, () => previewInvite(token))
@@ -184,178 +186,76 @@ async function expectPreviewAndAccept(joiner: string, groupId: string, token: st
   expect(g.memberB).toBe(joiner)
 }
 
-describe.skipIf(!isLocalDb)('invite lookup by token hash (#1288 I3b)', () => {
-  it('mint → preview → accept; the row carries both columns and the hash matches Postgres', async () => {
+describe.skipIf(!isLocalDb)('invite tokens: only the hash is stored (#1288 I3c)', () => {
+  it('minting sends the raw token in no query or parameter', async () => {
+    const inviter = await person('inviter')
+    await soloGroup(inviter)
+
+    wire.on = true
+    const minted = await as(inviter, () => createInvite())
+    wire.on = false
+    expect(minted.ok).toBe(true)
+    const token = tokenOf((minted as { ok: true; data: string }).data)
+
+    // The recorder saw the mint's INSERT (so "nothing found" is not vacuous)...
+    expect(wire.sent.some((q) => q.includes('insert into "GroupInvites"'))).toBe(true)
+    // ...and its hash, but never the token itself.
+    expect(wire.sent.some((q) => q.includes(hashToken(token)))).toBe(true)
+    expect(wire.sent.some((q) => q.includes(token))).toBe(false)
+  })
+
+  it('the stored row carries the hash and nowhere the raw token; mint → preview → accept works by hash', async () => {
     const inviter = await person('inviter')
     const joiner = await person('joiner')
     const groupId = await soloGroup(inviter)
 
     const minted = await as(inviter, () => createInvite())
     expect(minted.ok).toBe(true)
-    const token = (minted as { ok: true; data: string }).data.split('/invite/')[1]
+    const token = tokenOf((minted as { ok: true; data: string }).data)
 
     const [row] = await raw`
-      SELECT id,
-             token_hash = ${hashToken(token)} AS hash_is_node_hash,
-             token_hash = encode(sha256(convert_to(token, 'UTF8')), 'hex') AS hash_is_pg_hash,
-             token IS NOT NULL AS has_token
-      FROM "GroupInvites" WHERE group_id = ${groupId}`
+      SELECT g.id,
+             g.token_hash = ${hashToken(token)} AS hash_is_node_hash,
+             g.token_hash = encode(sha256(convert_to(${token}::text, 'UTF8')), 'hex') AS hash_is_pg_hash,
+             position(${token}::text IN to_jsonb(g)::text) = 0 AS raw_token_nowhere,
+             (to_jsonb(g) ->> 'token') IS NULL AS plaintext_null
+      FROM "GroupInvites" g WHERE g.group_id = ${groupId}`
     expect({ ...row, id: undefined }).toEqual({
-      id: undefined, hash_is_node_hash: true, hash_is_pg_hash: true, has_token: true,
+      id: undefined,
+      hash_is_node_hash: true,
+      hash_is_pg_hash: true,
+      raw_token_nowhere: true,
+      plaintext_null: true,
     })
 
     await expectPreviewAndAccept(joiner, groupId, token)
-    expect((await inviteState(row.id as string)).accepted).toBe(true)
+    const [after] = await db.select().from(groupInvites).where(eq(groupInvites.id, row.id as string))
+    expect(after.acceptedAt).not.toBeNull()
   })
 
-  it('a row with token only (NULL token_hash, as the previous code mints it) can be previewed and accepted', async () => {
+  it('a row is found only by its own hash', async () => {
     const inviter = await person('inviter')
     const joiner = await person('joiner')
     const groupId = await soloGroup(inviter)
-    const invite = await seedTokenOnly(groupId, inviter)
-    expect(await inviteState(invite.id)).toEqual({ token_null: false, hash_null: true, accepted: false })
+    const token = generateToken()
+    const [row] = await db.insert(groupInvites).values({
+      groupId,
+      invitedBy: inviter,
+      tokenHash: hashToken(generateToken()), // another token's hash
+      expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+    }).returning({ id: groupInvites.id })
 
-    await expectPreviewAndAccept(joiner, groupId, invite.token)
-    expect((await inviteState(invite.id)).accepted).toBe(true)
-  })
-
-  it('a row with token_hash only (NULL token, as I3c will mint it) can be previewed and accepted', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const groupId = await soloGroup(inviter)
-    const invite = await seedHashOnly(groupId, inviter)
-    expect(await inviteState(invite.id)).toEqual({ token_null: true, hash_null: false, accepted: false })
-
-    await expectPreviewAndAccept(joiner, groupId, invite.token)
-    expect((await inviteState(invite.id)).accepted).toBe(true)
-  })
-
-  it('the plaintext fallback applies only while token_hash is NULL', async () => {
-    const inviter = await person('inviter')
-    const joiner = await person('joiner')
-    const groupId = await soloGroup(inviter)
-    const invite = await seedTokenOnly(groupId, inviter)
-    // A hash that is not this token's: the row must no longer be found by
-    // its plaintext column.
-    await raw`UPDATE "GroupInvites" SET token_hash = ${hashToken(generateToken())} WHERE id = ${invite.id}`
-
-    expect(await as(joiner, () => previewInvite(invite.token)))
+    expect(await as(joiner, () => previewInvite(token)))
       .toEqual({ ok: true, data: { ok: false, error: 'invalid_or_expired' } })
-    expect(await as(joiner, () => acceptInvite(invite.token)))
+    expect(await as(joiner, () => acceptInvite(token)))
       .toEqual({ ok: false, code: 'invalid_or_expired' })
-    expect((await inviteState(invite.id)).accepted).toBe(false)
+    const [after] = await db.select().from(groupInvites).where(eq(groupInvites.id, row.id))
+    expect(after.acceptedAt).toBeNull()
   })
 
   it('an unknown well-formed token is invalid_or_expired', async () => {
     const joiner = await person('joiner')
     expect(await as(joiner, () => acceptInvite(generateToken())))
       .toEqual({ ok: false, code: 'invalid_or_expired' })
-  })
-})
-
-// ─── the migration ────────────────────────────────────────────────────────
-
-const root = resolve(__dirname, '../..')
-const up = readFileSync(resolve(root, 'drizzle/0070_invite_token_hash_expand.sql'), 'utf-8')
-const down = readFileSync(resolve(root, 'scripts/rollback/0070_invite_token_hash_expand.down.sql'), 'utf-8')
-
-/** Run the migration the way drizzle-kit does: statement by statement. */
-async function runUp(): Promise<{ backfilled: number }> {
-  let backfilled = -1
-  for (const stmt of up.split('--> statement-breakpoint')) {
-    const res = await raw.unsafe(stmt)
-    if (/^\s*UPDATE/m.test(stmt.replace(/^--.*$/gm, ''))) backfilled = res.count
-  }
-  return { backfilled }
-}
-
-async function runDown() {
-  // The rollback also deletes 0070's bookkeeping row; the throwaway database
-  // was built with `drizzle-kit push`, which has no bookkeeping table.
-  await raw.unsafe(`CREATE SCHEMA IF NOT EXISTS drizzle;
-    CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (id serial PRIMARY KEY, hash text NOT NULL, created_at bigint)`)
-  await raw.begin((t) => t.unsafe(down))
-}
-
-async function shape() {
-  const cols = await raw`
-    SELECT column_name, is_nullable FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'GroupInvites' AND column_name IN ('token', 'token_hash')
-    ORDER BY column_name`
-  const [idx] = await raw`
-    SELECT count(*)::int AS n FROM pg_indexes
-    WHERE schemaname = 'public' AND tablename = 'GroupInvites'
-      AND indexname = 'GroupInvites_token_hash_unique' AND indexdef LIKE 'CREATE UNIQUE INDEX%'`
-  return {
-    columns: Object.fromEntries(cols.map((c) => [c.column_name, c.is_nullable])),
-    uniqueHashIndex: idx.n === 1,
-  }
-}
-
-function sqlstate(e: unknown): string | undefined {
-  let cur: unknown = e
-  for (let d = 0; cur && d < 4; d++) {
-    const code = (cur as { code?: unknown }).code
-    if (typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code)) return code
-    cur = (cur as { cause?: unknown }).cause
-  }
-  return undefined
-}
-
-describe.skipIf(!isLocalDb)('0070 migration (#1288 I3a)', () => {
-  it('backfills the Node hash, is idempotent, indexes uniquely, and the rollback restores the old shape', async () => {
-    const inviter = await person('inviter')
-    const groupId = await soloGroup(inviter)
-
-    // Start from the shape before 0070, as prod has it now.
-    await runDown()
-    expect(await shape()).toEqual({ columns: { token: 'NO' }, uniqueHashIndex: false })
-
-    const tokens = [generateToken(), generateToken(), generateToken()]
-    for (const t of tokens) {
-      await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-                VALUES (${groupId}, ${inviter}, ${t}, ${expiresAt()})`
-    }
-
-    const first = await runUp()
-    const second = await runUp()
-    expect(first.backfilled).toBeGreaterThanOrEqual(tokens.length) // every row in the table
-    expect(second.backfilled).toBe(0)
-    expect(await shape()).toEqual({ columns: { token: 'YES', token_hash: 'YES' }, uniqueHashIndex: true })
-
-    const [{ n: unhashed }] = await raw`SELECT count(*)::int AS n FROM "GroupInvites" WHERE token_hash IS NULL`
-    expect(unhashed).toBe(0)
-
-    // Postgres's backfill equals Node's hashToken for every row.
-    const matches = await Promise.all(tokens.map(async (t) => {
-      const [r] = await raw`SELECT count(*)::int AS n FROM "GroupInvites"
-                            WHERE group_id = ${groupId} AND token = ${t} AND token_hash = ${hashToken(t)}`
-      return r.n as number
-    }))
-    expect(matches).toEqual([1, 1, 1])
-
-    // Unique: a second row with an existing hash is refused.
-    const dup = await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at)
-      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(tokens[0])}, ${expiresAt()})`.catch((e) => e)
-    expect(sqlstate(dup)).toBe('23505')
-
-    // `token` accepts NULL now (I3c will rely on it); NULL hashes don't collide.
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, token_hash, expires_at)
-      VALUES (${groupId}, ${inviter}, NULL, ${hashToken(generateToken())}, ${expiresAt()})`
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()})`
-    await raw`INSERT INTO "GroupInvites" (group_id, invited_by, token, expires_at)
-      VALUES (${groupId}, ${inviter}, ${generateToken()}, ${expiresAt()})`
-
-    // A re-run (gate G1) hashes the two rows minted "by old code" above.
-    expect((await runUp()).backfilled).toBe(2)
-
-    // Rollback, then forward again. The rollback needs every row to still have
-    // a token, which holds until I3c ships; drop the one hash-only row first.
-    await raw`DELETE FROM "GroupInvites" WHERE group_id = ${groupId} AND token IS NULL`
-    await runDown()
-    expect(await shape()).toEqual({ columns: { token: 'NO' }, uniqueHashIndex: false })
-    await runUp()
-    expect(await shape()).toEqual({ columns: { token: 'YES', token_hash: 'YES' }, uniqueHashIndex: true })
   })
 })
