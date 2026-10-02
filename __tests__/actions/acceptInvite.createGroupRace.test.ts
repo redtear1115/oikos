@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { seedAuthUsers, deleteAuthUsers } from './_authUser'
 
 // ─── #1432 — acceptInvite vs the same user's createGroup (two tabs) ───────
 //
@@ -118,6 +119,7 @@ afterEach(async () => {
     await db.delete(oikosGroups).where(inArray(oikosGroups.id, groupIds))
   }
   if (created.profiles.length) {
+    await deleteAuthUsers(created.profiles)
     await db.delete(profiles).where(inArray(profiles.id, created.profiles))
   }
   created.profiles = []
@@ -132,6 +134,7 @@ const longAgo = () => new Date(Date.now() - 48 * HOUR)
 async function person(label: string): Promise<string> {
   const id = randomUUID()
   await db.insert(profiles).values({ id, displayName: `TEST_1432_${label}` })
+  await seedAuthUsers([{ id, displayName: `TEST_1432_${label}` }])
   created.profiles.push(id)
   return id
 }

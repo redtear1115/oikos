@@ -56,6 +56,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：無直接變化；避免再送出一開就閃退的 iOS 殼（1.5.18 (5) 在 iOS 27 閃退）。
   技術：`scripts/native/ios-launch-smoke.sh` 在最新 runtime 模擬器跑 Release 建置、確認存活與 log、截圖；ship-native 於 archive 後、upload 前呼叫。
 
+- **刪除帳號排程在重查帳本前先鎖住使用者的 Profiles 列（#1449）**
+  使用者：無可見變化；刪除帳號後不會再以「已離開的夥伴」留在對方帳本或孤兒帳本裡。
+  技術：`0074` 在重查前加 `Profiles … FOR UPDATE`，新增 `profile_is_live()`；`acceptInvite`／`createGroup` 拿到鎖後確認帳號仍在，否則回 `profile_not_found`。須先套 migration 再部署。
+
 ## [1.6.5] - 2026-10-02
 
 主題：**離開家計簿後舊紀錄留得住愛物**——跨帳本連結改成唯讀副本，加密密文不再送到瀏覽器，並備好較窄的 DB 角色。
