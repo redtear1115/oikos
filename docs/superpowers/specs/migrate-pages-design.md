@@ -1,16 +1,18 @@
 ---
-last_updated: 2026-09-14
+last_updated: 2026-10-03
 status: shipped
 first_shipped_in: v1.3.0
 updates:
   - v1.3.2 — CMS/data-driven refactor (sources.ts + [source]/page.tsx); Taiwan pages + screenshot→ChatGPT→CSV (#839 #852)
   - v1.5.4 — /migrate hub/index page; landing + footer cross-links to lift per-source pages out of "discovered, not indexed" (#939)
+  - Unreleased — comparison table fully translated: feature names and verdict labels join the conditional cells in `migrate.comparisonText` ×4 locales; the "verdict-only labels stay literal" rule is withdrawn (#1538)
   - v1.5.14 — comparison-table cells that carry a condition (all △ cells + `未說明` + the interface-language row) moved into `migrate.comparisonText` ×4 locales; verdict-only ✓/✕ labels stay literal (#1185)
 related_issues:
   - https://github.com/redtear1115/oikos/issues/852
   - https://github.com/redtear1115/oikos/issues/839
   - https://github.com/redtear1115/oikos/issues/939
   - https://github.com/redtear1115/oikos/issues/1185
+  - https://github.com/redtear1115/oikos/issues/1538
 related_specs:
   - csv-import-design.md
 ---
@@ -39,13 +41,11 @@ Engineering only. No user-facing behaviour changes — pages render identically 
 
 Central source of truth for competitor facts（每個 source 的 slug / 品牌名 / comparison rows / optional 特殊區塊如 cwmoney 的 Excel template download）。實作見 [lib/migrate/sources.ts](../../../lib/migrate/sources.ts)。
 
-**Comparison table text** is split by what the cell carries (#1185):
+**Comparison table text is fully translated (#1538).** Every string in the table — row headers (feature names), verdict labels (`支援`, `永久`, `無`, `單人設計`…) and the conditional cells — is an `{ i18n: key }` reference into `migrate.comparisonText` (×4 locales, `Record<ComparisonTextKey, string>`, so a missing key fails `tsc`). `ComparisonText` has no string form, so a Chinese literal in `sources.ts` does not type-check. Labels are plain text; the ✓ / △ / ✕ mark is derived from `tone` and rendered once by `MigrateComparison` (#1519). zh-TW pages render the same visible text as before. zh-CN is written, not converted (`即時雲端同步` → `即时云端同步`, `支援` → `支持`, `資料` → `数据`); the brand-name column header (`def.name`, e.g. 簡單記帳) is a proper noun and is not translated. `tests/migrate-comparison-i18n.test.tsx` renders every source × locale and fails on Han characters in an `en` cell, on Traditional-only characters in a `zh-CN` cell, and on a `ja` cell that is identical to the zh-TW text.
 
-- **Verdict-only labels stay literal Chinese in `sources.ts`** — `✓ 支援`, `✓ 永久`, `✕ 無`, `✕ 單人設計`… The ✓/✕ glyph (plus the tone glyph `MigrateComparison` adds) already carries the verdict, so a reader who can't read the text still gets the answer. Feature names (row headers) stay literal too.
-- **Cells that carry a condition or a specific claim are translated** — they are `{ i18n: key }` references into `migrate.comparisonText` (×4 locales, `Record<ComparisonTextKey, string>`, so a missing key fails `tsc`). That is: **every `partial` (△) cell** (the glyph only says "partly"; the condition after it, e.g. `△ 免費版每日 4 筆`, is the information), the glyph-less `未說明`, and the whole interface-language row (`介面語言` / `✓ 中英日四語` / `△ 以英文為主`). The △ rule is enforced by the `ComparisonCell` type: a `partial` cell cannot take a string literal.
-- zh-TW locale strings are byte-identical to the old literals, so zh-TW pages render unchanged.
+**撤回紀錄 (#1538, owner decision 2026-10-03).** v1.5.14 (#1185) translated only the cells that carry a condition and kept verdict-only labels and feature names as literal Chinese, on the argument that `支援 / 永久 / 無` are short, symbol-backed phrases the ✓/✕ mark already explains. Reversed: on `/en/migrate/*` and `/ja/migrate/*` the table still showed `雙人共同帳本 | 支援 | 無`, i.e. Chinese row headers on a page whose heading, hero and FAQ are English or Japanese. The mark does carry the verdict, but not the *row* — a reader who cannot read `費用分攤模式` does not know what is being compared. The failure is silent as before (build, types and parity checks pass; the only symptom is Chinese text in a translated page), which is why the fix is a type that refuses literals plus a render test, not a convention. Any other doc that still says "verdict-only labels stay literal" predates this and is wrong.
 
-**Withdrawn reasoning (kept so it isn't re-derived):** this section used to say the labels are "not translated … the labels are mostly symbol-based (✓/△/✕) with short phrases that don't meaningfully differ across languages." That held for ✓/✕ verdicts but not for △ cells, which are factual statements, and it produced a self-contradiction on `/ja` and `/en`: a row about *language support* claiming `✓ 中英日四語` in a language the reader may not read. The failure mode is silent — build, types and i18n parity checks all pass, because the strings live outside `lib/i18n/locales/`; the only symptom is Chinese text inside an otherwise translated `/en/migrate/*` or `/ja/migrate/*` page. GSC at decision time (3 months): zh-TW 980 impressions / 65 clicks; en 65 / 0 (avg position 5–7); ja 3 / 1; zh-CN 22 / 0 — non-zh-TW traffic is small but ranking, which is why the middle route (translate the substantive cells only) was chosen over full translation or none.
+**Earlier withdrawn reasoning (#1185, kept so it isn't re-derived):** this section used to say the labels are "not translated … the labels are mostly symbol-based (✓/△/✕) with short phrases that don't meaningfully differ across languages." That held for ✓/✕ verdicts in the reader's mind but not for △ cells, which are factual statements, and it produced a self-contradiction on `/ja` and `/en`: a row about *language support* claiming `✓ 中英日四語` in a language the reader may not read. GSC at decision time (3 months): zh-TW 980 impressions / 65 clicks; en 65 / 0 (avg position 5–7); ja 3 / 1; zh-CN 22 / 0. The "middle route" chosen then (translate the substantive cells only) is itself withdrawn by #1538.
 
 **Special sections**（例如 cwmoney 的 Excel template download）表達成 `SourceDef` 上的 optional 欄位，而不是頁面 template 裡的 per-source if-branch。Template 檢查欄位是否存在，不檢查 source 是誰——這樣新增一個「有特殊區塊」的 source 不需要改 template 的分支邏輯。
 

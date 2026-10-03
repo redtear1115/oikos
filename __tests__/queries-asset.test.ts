@@ -24,7 +24,7 @@ describe('listAssetsForGroup', () => {
         purchasePrice: 800000,
       },
     ])
-    const rows = await listAssetsForGroup('grp-1')
+    const rows = await listAssetsForGroup('grp-1', 'user-1')
     expect(rows).toHaveLength(1)
     expect(rows[0].name).toBe('我的 Tesla')
     // #837 — legacy plaintext `plate` dropped; only the encrypted presence
@@ -49,13 +49,13 @@ describe('getAssetById', () => {
         purchasePrice: null,
       },
     ])
-    const row = await getAssetById('asset-1', 'grp-1')
+    const row = await getAssetById('asset-1', 'grp-1', 'user-1')
     expect(row?.deletedAt).not.toBeNull()
   })
 
   it('returns null when not found', async () => {
     queueDbResult([])
-    const row = await getAssetById('missing', 'grp-1')
+    const row = await getAssetById('missing', 'grp-1', 'user-1')
     expect(row).toBeNull()
   })
 })

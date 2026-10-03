@@ -66,8 +66,9 @@ export interface ExportLabels {
 
 function categoryLabel(raw: string, t: Translations['category']): string {
   // CategoryId values map 1:1 to t.category keys; unknown values pass through.
+  // Own keys only, or 'constructor' would export function source (#1534).
   const key = raw as CategoryId
-  return t[key] ?? raw
+  return Object.hasOwn(t, key) ? t[key] : raw
 }
 
 function splitTypeLabel(raw: SplitType, t: Translations['splitType']): string {

@@ -1,4 +1,5 @@
 import { LandingCtaLink } from '../../_landing/LandingCtaLink'
+import { Phrase } from '../../_components/Phrase'
 
 /**
  * Standalone sign-up CTA for /migrate/<source> (#1011).
@@ -28,7 +29,7 @@ export function MigratePrimaryCta({
   return (
     <section className="rounded-card bg-surface-alt border border-hairline px-5 py-6 md:px-8 md:py-7 flex flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
       <div className="space-y-2">
-        <h2 className="m-0 text-xl md:text-title font-medium text-ink">{title}</h2>
+        <h2 className="m-0 text-xl md:text-title font-medium text-ink"><Phrase text={title} /></h2>
         <p className="m-0 text-sm md:text-base leading-[1.7] text-ink-2">{body}</p>
       </div>
       <LandingCtaLink
@@ -36,7 +37,7 @@ export function MigratePrimaryCta({
         fromParam={source}
         ctaLocation="migrate_primary"
         target="sign_in"
-        className="shrink-0 self-start md:self-auto inline-flex items-center justify-center h-12 px-6 rounded-xl text-[var(--on-fill)] text-base font-medium"
+        className="fc-edge shrink-0 self-start md:self-auto inline-flex items-center justify-center h-12 px-6 rounded-xl text-[var(--on-fill)] text-base font-medium"
         style={{ background: 'var(--btn-primary-bg)', letterSpacing: '1.2px', textDecoration: 'none' }}
       >
         {button}

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import { PROTECTED_ROOT_SEGMENTS } from "./lib/auth/protectedPaths";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -19,6 +20,79 @@ const withSerwist = withSerwistInit({
   register: false,
   reloadOnOnline: false,
 });
+
+// #1535 — signed-in surfaces refuse to be framed (clickjacking defence in
+// depth; SameSite=Lax already keeps cross-site frames signed out). Roots are
+// derived from PROTECTED_ROOT_SEGMENTS so a new dashboard page is covered the
+// moment the #1275 drift guard forces it into that list; `api` and `invite`
+// are listed here because they are signed-in but not page roots there
+// (`/invite/[token]` is a one-click accept button). `:path*` matches zero
+// segments too, so `/dashboard` and `/dashboard/a/b` are both covered.
+//
+// Only `frame-ancestors` — no default-src/frame-src — so Ko-fi, PostHog and
+// Sentry are untouched. Public brand pages, /sign-in, /auth/callback and
+// /offline are deliberately NOT matched.
+//
+// Set in next.config `headers()` like the Cache-Control rules above (proxy.ts
+// notes that Cache-Control set there was overridden by dynamic rendering,
+// #314; that note is about Cache-Control only). If a CSP is ever added from
+// proxy.ts, vercel.json or anywhere else, it MUST carry `frame-ancestors
+// 'none'` for these paths too: a response that ends up with a single CSP
+// header lacking the directive is frameable again. Failure looks like
+// nothing — pages render normally — and tests/frame-ancestors-1535.test.ts
+// only checks this config, so check `curl -sI` on a deploy.
+export const FRAME_DENY_ROOTS = [...PROTECTED_ROOT_SEGMENTS, "api", "invite"] as const;
+
+export const FRAME_DENY_HEADERS = [
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+  { key: "X-Frame-Options", value: "DENY" },
+];
+
+// Exported unwrapped (no Sentry/Serwist/analyzer) so tests can match paths
+// with Next's own matcher.
+export const headerRules = [
+  {
+    // Service workers must never be served from CDN cache — the browser
+    // needs a fresh byte-comparison on every load to detect updates and to
+    // complete initial registration. Without this, Vercel returns 304 and
+    // navigator.serviceWorker.register() silently fails.
+    source: "/sw.js",
+    headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+  },
+  {
+    // SVG favicon never changes in practice; serve immutable for a year.
+    source: "/favicon.svg",
+    headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+  },
+  {
+    // PWA icons are part of the manifest; only ever change when we rev
+    // filenames. Safe to cache immutably for a year.
+    source: "/icons/:path*",
+    headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+  },
+  {
+    // Self-hosted woff2 (#978). next/font used to emit these under
+    // /_next/static/media/, which Next serves immutable for us; serving them
+    // from public/ means we have to say so ourselves, or every repeat visit
+    // revalidates 105 font chunks. Filenames come from Google and change
+    // whenever the font revision does, so a regeneration ships new names
+    // rather than new bytes under an old name.
+    source: "/fonts/:path*",
+    headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+  },
+  {
+    // OG images change occasionally (rendered by scripts/og/); a week of
+    // CDN caching is enough — most social crawlers re-fetch on share anyway.
+    // Enumerated because path-to-regexp can't repeat a param without
+    // a prefix segment (i.e. `/og-:path*` errors at build time).
+    source: "/:file(og-image|og-image-2x|og-line|og-square).png",
+    headers: [{ key: "Cache-Control", value: "public, max-age=604800" }],
+  },
+  {
+    source: `/:root(${FRAME_DENY_ROOTS.join("|")})/:path*`,
+    headers: FRAME_DENY_HEADERS,
+  },
+];
 
 const nextConfig: NextConfig = {
   // Acknowledge Turbopack so `next dev` (Turbopack default) doesn't error on
@@ -64,45 +138,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [
-      {
-        // Service workers must never be served from CDN cache — the browser
-        // needs a fresh byte-comparison on every load to detect updates and to
-        // complete initial registration. Without this, Vercel returns 304 and
-        // navigator.serviceWorker.register() silently fails.
-        source: "/sw.js",
-        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
-      },
-      {
-        // SVG favicon never changes in practice; serve immutable for a year.
-        source: "/favicon.svg",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        // PWA icons are part of the manifest; only ever change when we rev
-        // filenames. Safe to cache immutably for a year.
-        source: "/icons/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        // Self-hosted woff2 (#978). next/font used to emit these under
-        // /_next/static/media/, which Next serves immutable for us; serving them
-        // from public/ means we have to say so ourselves, or every repeat visit
-        // revalidates 105 font chunks. Filenames come from Google and change
-        // whenever the font revision does, so a regeneration ships new names
-        // rather than new bytes under an old name.
-        source: "/fonts/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-      {
-        // OG images change occasionally (rendered by scripts/og/); a week of
-        // CDN caching is enough — most social crawlers re-fetch on share anyway.
-        // Enumerated because path-to-regexp can't repeat a param without
-        // a prefix segment (i.e. `/og-:path*` errors at build time).
-        source: "/:file(og-image|og-image-2x|og-line|og-square).png",
-        headers: [{ key: "Cache-Control", value: "public, max-age=604800" }],
-      },
-    ];
+    return headerRules;
   },
 };
 

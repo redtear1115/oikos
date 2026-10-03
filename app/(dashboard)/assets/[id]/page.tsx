@@ -134,7 +134,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   // lib/pinnedChapterScope.ts.
   const createdBefore = nonMemberPinCutoff(context, user.id)
 
-  const asset = await getAssetById(id, group.id, createdBefore)
+  const asset = await getAssetById(id, group.id, user.id, createdBefore)
   // #1442 — a frozen copy has no detail view yet (polish pass); not found.
   if (!asset || asset.deletedAt || asset.frozenAt) notFound()
 
@@ -147,7 +147,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     return <InsuranceGatedClient />
   }
 
-  const allAssetsData = await listAssetsForGroup(group.id, createdBefore)
+  const allAssetsData = await listAssetsForGroup(group.id, user.id, createdBefore)
   const today = new Date()
   const t = await getTranslations()
 
@@ -333,7 +333,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   }
 
   if (asset.type === 'insurance') {
-    const insuranceDetailsData = await getInsuranceDetails(asset.id, group.id)
+    const insuranceDetailsData = await getInsuranceDetails(asset.id, group.id, user.id)
 
     // Resolve linked vehicle name if vehicleId is set (allAssetsData already excludes deleted)
     let linkedVehicle: { id: string; name: string } | null = null

@@ -11,6 +11,11 @@
  * tests/protected-paths-allowlist.test.ts 會比對目錄，新增 dashboard 頁卻漏改
  * 這裡時會紅燈。沒擋住的話，失效的樣子不是錯誤，而是那一頁登入後
  * 靜默地落到 /dashboard、不回原頁。
+ *
+ * 第二個消費者（#1535）：next.config.ts 用這份清單（再加 `api`、`invite`）
+ * 對登入後路徑送 `frame-ancestors 'none'` 與 `X-Frame-Options: DENY`。
+ * 從清單移除某個 segment，那一區也會跟著失去防嵌入 header；失效的樣子
+ * 不是錯誤，是頁面照常顯示、只是又能被其他網站用 iframe 嵌入。
  */
 export const PROTECTED_ROOT_SEGMENTS = [
   'dashboard',

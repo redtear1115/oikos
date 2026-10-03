@@ -1,8 +1,8 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
-import { createClient } from '@/lib/supabase/client'
-import { track, getAnonId } from '@/lib/analytics/track'
+import type { createClient } from '@/lib/supabase/client'
+import { whenIdle } from '@/lib/whenIdle'
+import { track, getAnonId, analyticsReady } from '@/lib/analytics/track'
 import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attribution'
 import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
@@ -81,12 +81,23 @@ export async function importWithRetry<T>(load: () => Promise<T>): Promise<T> {
 
 const loadBrowser = () => importWithRetry(() => import('@capacitor/browser'))
 const loadApp = () => importWithRetry(() => import('@capacitor/app'))
+// #1520 — the Supabase client and Sentry are not in the sign-in page's initial
+// bundle. Same chunk-fetch hazard as the native plugins above, so same retry.
+const loadSupabase = () =>
+  importWithRetry(() => import('@/lib/supabase/client')).then((m) => m.createClient())
+const loadSentry = () => importWithRetry(() => import('@/lib/observability/sentryClient'))
 const loadAppleSignIn = () => importWithRetry(() => import('@capacitor-community/apple-sign-in'))
 
 /** Warm the native sign-in chunks on mount. No-op outside the native shells. */
 export function preloadNativeAuthModules(): void {
-  if (!isCapacitor()) return
   const ignore = () => {}
+  // Supabase is needed by every tap, native or web. In a shell, fetch it now
+  // (the first-tap ChunkLoadError of #1314 applies to it just as much); in a
+  // browser, after idle, so it stays out of first paint (#1520). Either way the
+  // tap awaits the same module, so a tap before the warm-up still works.
+  if (isCapacitor()) import('@/lib/supabase/client').catch(ignore)
+  else whenIdle(() => void import('@/lib/supabase/client').catch(ignore))
+  if (!isCapacitor()) return
   import('@capacitor/browser').catch(ignore)
   import('@capacitor/app').catch(ignore)
   if (getPlatform() === 'ios') import('@capacitor-community/apple-sign-in').catch(ignore)
@@ -110,7 +121,10 @@ function reportUnexpected(err: unknown, provider: Provider): void {
   const safe = new Error(stripQueries(err instanceof Error ? err.message : String(err)))
   safe.name = name
   if (err instanceof Error && err.stack) safe.stack = stripQueries(err.stack)
-  Sentry.captureException(safe, { tags: { area: 'auth', op: 'sign_in_unexpected', provider } })
+  // Loading the module also initialises the client SDK if it has not run yet.
+  void loadSentry()
+    .then((m) => m.captureException(safe, { tags: { area: 'auth', op: 'sign_in_unexpected', provider } }))
+    .catch(() => {})
   console.error('[sign-in] unexpected failure', err)
 }
 
@@ -298,11 +312,19 @@ export function SignInButton({
 
     track('sign_in_started', { entry_source: entrySourceFromParam(from), provider })
 
-    const supabase = createClient()
     const ctx = { next, from }
     let outcome: SignInOutcome = 'aborted'
 
     try {
+      // #1520 — PostHog and Supabase load lazily on the public pages. The anon
+      // id handed to the OAuth callback for aliasing needs a live PostHog (a
+      // missing one is silent: the sign-up just stops being attributed), so
+      // wait for it, briefly; this also pulls its load forward from idle. Both
+      // sit inside the try: a failed chunk must reach `finally`, or the
+      // curtain stays up with nothing under it. Listener registration in the
+      // native flows still happens after this, in the same order as before.
+      await analyticsReady(800)
+      const supabase = await loadSupabase()
       if (provider === 'apple' && getPlatform() === 'ios') {
         try {
           outcome = await appleNativeSignIn(supabase, ctx)

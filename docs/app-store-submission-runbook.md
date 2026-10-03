@@ -374,8 +374,9 @@ codesign -d --entitlements :- "$TT/Payload/App.app" | grep applesignin   # 必�
 test -f "$TT/Payload/App.app/public/offline.html"                        # #1225 的離線頁
 ```
 
-**Issuer ID**：altool 需要它，而它不在 dmg 也不在 repo。
-ASC → 使用者與存取權 → 整合 → App Store Connect API，頁面最上方那串 UUID。
+**Issuer ID**：altool 需要它。在 dmg 的 `env/.env`（`ASC_ISSUER_ID`），不在 repo。
+讀法：`grep '^ASC_ISSUER_ID=' "/Volumes/Futari Secrets/env/.env" | cut -d= -f2-`。dmg 沒有時，從 ASC → 使用者與存取權 → 整合 → App Store Connect API，頁面最上方那串 UUID。
+（2026-10-02 前這裡寫「不在 dmg」，已過時；v1.6.6 送審時從 dmg 讀到。）
 
 ## I. 用 ASC API 填上架資料（比點表單快，且可逐項回查）
 

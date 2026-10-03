@@ -411,7 +411,7 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
     // fuel log link) left pointing at a 愛物 in the other ledger is re-pointed
     // at a frozen copy in its own ledger; re-pointed rules are paused. Replaces
     // the old NULLing of asset_id on moving rows, which lost the link.
-    await freezeCrossLedgerLinks(tx, oldGroupId, newGroup.id, boundary)
+    await freezeCrossLedgerLinks(tx, oldGroupId, newGroup.id, boundary, leaver)
 
     // 10. Move the leaver's live InvoiceCredentials. Snapshots and Runs stay
     // (group共同記錄, per design). Soft-deleted credentials stay too: they

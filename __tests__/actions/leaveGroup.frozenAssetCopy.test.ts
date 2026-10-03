@@ -461,7 +461,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — frozen copies for cross-ledger links
   // ── read surfaces ─────────────────────────────────────────────────────
   it('copies are absent from lists, pickers and the records filter; present via getAssetById', async () => {
     const oldCopies = [copyIn('old', `${T} B car`), copyIn('old', `${T} B policy`)]
-    const listed = (await listAssetsForGroup(ids.oldGroup)).map((a) => a.id)
+    const listed = (await listAssetsForGroup(ids.oldGroup, ids.A)).map((a) => a.id)
     for (const c of oldCopies) expect(listed).not.toContain(c)
     expect(listed).toContain(ids.carA)
     const filter = (await listFilterAssetsForGroup(ids.oldGroup)).map((a) => a.id)
@@ -475,7 +475,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — frozen copies for cross-ledger links
     expect(unwrapAction(await getInsuranceAssets()).map((a) => a.id)).not.toContain(oldCopies[1])
     expect(unwrapAction(await getInsuranceAssets()).map((a) => a.id)).toContain(ids.insA)
 
-    const byId = await getAssetById(oldCopies[0], ids.oldGroup)
+    const byId = await getAssetById(oldCopies[0], ids.oldGroup, ids.A)
     expect(byId?.frozenAt).not.toBeNull()
     expect(byId?.name).toBe(`${T} B car`)
     expect(unwrapAction(await assetActions.loadAsset(oldCopies[0]))?.name).toBe(`${T} B car`)
@@ -483,7 +483,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — frozen copies for cross-ledger links
     mockUserId = ids.B
     const childCopy = copyIn('new', `${T} nickname`)
     expect(unwrapAction(await assetActions.getChildAssets()).map((a) => a.id)).not.toContain(childCopy)
-    expect((await listAssetsForGroup(ids.newGroup)).map((a) => a.id)).not.toContain(childCopy)
+    expect((await listAssetsForGroup(ids.newGroup, ids.B)).map((a) => a.id)).not.toContain(childCopy)
   })
 
   // ── read-only: writes to a copy ───────────────────────────────────────

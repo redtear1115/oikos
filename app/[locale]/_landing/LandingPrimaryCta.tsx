@@ -29,7 +29,7 @@ const FOCUS_RING_CLASS = 'outline-none focus-visible:oik-focus-ring'
 
 /**
  * Primary landing CTA whose destination depends on the visitor's device and
- * auth state (#920 Phase 1, extended by #1413):
+ * auth state (#920 Phase 1, extended by #1413, reworked by #1521):
  *
  *   session (any platform)          → /dashboard
  *   Capacitor shell / installed PWA → sign-in (never App Store — Apple 3.1.1)
@@ -38,19 +38,30 @@ const FOCUS_RING_CLASS = 'outline-none focus-visible:oik-focus-ring'
  *   everything else                 → sign-in
  *
  * Platform is runtime-only (see `lib/visitorPlatform.ts`), so
- * `useVisitorPlatformTarget` starts `'pending'` and this renders a visible
- * placeholder until it resolves: the exact box the resolved CTA will occupy
- * (every variant shares the same `className`/`style` from the caller, so the
- * box never needs to change size or position), with its label text made
- * `text-transparent` rather than the button being hidden outright. A
- * verifier flagged the earlier fully-hidden version as a worse trade — an
- * invisible primary CTA reads as a broken page for that beat, and on a slow
- * connection that beat isn't always short. The placeholder is `aria-hidden`,
- * `tabIndex=-1`, and (via `LandingCtaLink`'s `inert` prop) `pointer-events-none`
- * as a plain CSS class — not just an `onClick` guard — because `onClick` only
- * runs after React hydrates, and the whole pre-hydration window is exactly
- * when a shell webview or a slow mobile connection can catch a stray tap; a
- * class-based guard blocks it before any JS runs.
+ * `useVisitorPlatformTarget` starts `'pending'`. #1521: while pending, this
+ * renders the sign-in default as an ordinary labelled, focusable, clickable
+ * link — the same element the "everything else" branch renders — and re-points
+ * it after hydration. Every variant shares the caller's `className`/`style`, so
+ * the box never changes; only the label text (and href) swap. Desktop, where
+ * the resolved target stays sign-in, renders identical markup before and after.
+ *
+ * Why not the earlier invisible/inert placeholder (#1413): it left the CTA an
+ * empty dark bar with JS off and for the whole slow-connection window, and
+ * failed the "primary action must work" bar. The failure it guarded against —
+ * a shell webview or an iPhone tap before hydration reaching the wrong
+ * destination — now degrades safely: sign-in is correct for a shell (Apple
+ * 3.1.1 forbids the App Store link there), and the only accepted cost is an
+ * iPhone *browser* user who taps before hydration landing on sign-in instead
+ * of the App Store (owner decision, 2026-10-03). The App Store / beta-form
+ * anchors below are only ever rendered once `target` has resolved, and
+ * `resolveVisitorPlatform` never returns `app_store` for a Capacitor shell or
+ * standalone PWA, so no shell can reach `APP_STORE_URL`.
+ *
+ * Analytics: `landing_cta_clicked` is fired from `onClick`, which needs React
+ * hydrated. A pre-hydration (or no-JS) tap is a plain navigation, so the event
+ * cannot fire for it — expect those clicks to be missing from the funnel, not
+ * mis-attributed (the `?from=landing` tag on the href still carries sign-up
+ * attribution). Post-hydration taps report the resolved destination.
  */
 export function LandingPrimaryCta({
   signInHref,
@@ -63,24 +74,6 @@ export function LandingPrimaryCta({
   androidBetaLabel,
 }: Props) {
   const target = useVisitorPlatformTarget()
-
-  if (target === 'pending') {
-    return (
-      <LandingCtaLink
-        href={signInHref}
-        ctaLocation={ctaLocation}
-        target="sign_in"
-        className={className}
-        style={style}
-        inert
-      >
-        {/* Text only — the box itself (background/size/shape from `style` +
-            `className` above) stays visible so the primary action's position
-            never jumps once the real variant resolves. */}
-        <span className="text-transparent">{children}</span>
-      </LandingCtaLink>
-    )
-  }
 
   if (target === 'app_store') {
     return (

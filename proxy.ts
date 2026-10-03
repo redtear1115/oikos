@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { isAuthApiError, isAuthSessionMissingError } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 import {
   LOCALE_COOKIE,
@@ -21,6 +22,68 @@ function copyCookies(from: NextResponse, to: NextResponse): NextResponse {
     to.cookies.set(cookie)
   }
   return to
+}
+
+// #1540 — getUser() failures that mean "this session cookie will never work
+// again", as opposed to "Supabase could not answer right now". Only these make
+// the proxy expire the auth cookie itself (on top of whatever auth-js removed).
+// - AuthSessionMissingError: no session, or `session_not_found` (signed out
+//   elsewhere / global sign-out). auth-js already removes the cookie here.
+// - bad_jwt: the token is malformed, or signed by a key the project no longer
+//   trusts. auth-js does NOT remove the cookie, so without this the browser
+//   keeps it and the sign-in page bounces to /dashboard and back forever.
+//   Trade-off: revoking a JWT signing key signs out everyone whose access token
+//   it signed — never revoke a key before those tokens expire (~1 h, see
+//   docs/superpowers/ops-runbook.md).
+// Matched by auth-js's own `code`, never by HTTP status: a codeless 401/403 is
+// an API-key incident, 429/5xx are outages — expiring cookies on those would
+// sign out every user at once. Retryable fetch errors, AuthUnknownError and
+// every other code fall through to "no explicit expiry".
+const DEFINITIVE_REJECTION_CODES = new Set([
+  'bad_jwt',
+  'user_not_found',
+  'session_expired',
+  'user_banned',
+])
+
+function isDefinitiveRejection(error: unknown): boolean {
+  if (isAuthSessionMissingError(error)) return true
+  return isAuthApiError(error)
+    && typeof error.code === 'string'
+    && DEFINITIVE_REJECTION_CODES.has(error.code)
+}
+
+/**
+ * The `@supabase/ssr` session cookie name: `sb-<ref>-auth-token`, split into
+ * `.0`, `.1`, … when large — the same key supabase-js derives from the URL.
+ * `sb-<ref>-auth-token-code-verifier` (an OAuth attempt in flight) does not
+ * match and is never expired by the proxy.
+ */
+function isSessionCookieName(name: string, storageKey: string): boolean {
+  return name === storageKey
+    || (name.startsWith(`${storageKey}.`) && /^\d+$/.test(name.slice(storageKey.length + 1)))
+}
+
+function expireSessionCookies(request: NextRequest, response: NextResponse): void {
+  let storageKey: string
+  try {
+    storageKey = `sb-${new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname.split('.')[0]}-auth-token`
+  } catch {
+    return
+  }
+  // request.cookies: what the browser sent (setAll() blanks removed ones but
+  // keeps the names). response.cookies: anything auth-js just wrote, e.g.
+  // chunks of a refreshed session.
+  const names = new Set(
+    [...request.cookies.getAll(), ...response.cookies.getAll()]
+      .map(({ name }) => name)
+      .filter((name) => isSessionCookieName(name, storageKey)),
+  )
+  for (const name of names) {
+    // path / sameSite match @supabase/ssr's DEFAULT_COOKIE_OPTIONS, so the
+    // removal hits the cookie the browser actually stored.
+    response.cookies.set(name, '', { path: '/', maxAge: 0, sameSite: 'lax' })
+  }
 }
 
 export async function proxy(request: NextRequest) {
@@ -93,7 +156,7 @@ export async function proxy(request: NextRequest) {
     || pathname === '/offline'
 
   if (!isPublic) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error } = await supabase.auth.getUser()
 
     if (!user) {
       // 未登入訪問 auth-walled 頁 → redirect 到 sign-in；
@@ -109,7 +172,19 @@ export async function proxy(request: NextRequest) {
       if (isKnownProtectedPath(pathname)) {
         target.searchParams.set('next', pathname)
       }
-      return NextResponse.redirect(target)
+      // #1540: a NEW response, so Supabase's cookie writes (removals on
+      // sign-out-elsewhere, a refreshed session) must be copied onto it —
+      // returning the bare redirect dropped them, the browser kept the dead
+      // cookie, and /sign-in bounced to /dashboard and back forever. The copy
+      // is unconditional and passes auth-js's own removals through unchanged
+      // (Supabase's default; it also removes the session when a refresh fails
+      // non-retryably). Then, only for a definitive rejection, expire the
+      // session cookie ourselves — auth-js leaves e.g. a bad_jwt cookie alone.
+      const redirect = copyCookies(supabaseResponse, NextResponse.redirect(target))
+      if (isDefinitiveRejection(error)) {
+        expireSessionCookies(request, redirect)
+      }
+      return redirect
     }
   }
 

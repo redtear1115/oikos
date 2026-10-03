@@ -113,6 +113,19 @@ describe('mapCategory', () => {
     expect(mapCategory(undefined)).toBe('other')
     expect(mapCategory('Cryptocurrency')).toBe('other')
   })
+
+  // #1534 — both the id check (the `in` operator) and the synonym table (a plain
+  // object) matched Object.prototype keys: 'constructor' passed through as a
+  // category, and 'Constructor' (lower-cased to 'constructor') returned the
+  // Object function itself from CATEGORY_SYNONYMS.
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf', 'Constructor'])(
+    'falls back to other for inherited key %s (#1534)',
+    (raw) => {
+      const out = mapCategory(raw)
+      expect(typeof out).toBe('string')
+      expect(out).toBe('other')
+    },
+  )
 })
 
 describe('mapHoneydue', () => {

@@ -1,5 +1,9 @@
 -- #1288 I3a — store a hash of the invite token next to the token (expand step).
 --
+-- SUPERSEDED BY 0078 (drizzle/0078_invite_drop_plaintext_token.sql), which
+-- drops the `token` column. Once 0078 has run, this file fails if re-run
+-- (steps 2 and 3 name `token`). Do not re-apply it by hand.
+--
 -- Invite lookups move from the raw `token` to `token_hash`
 -- (= lowercase hex SHA-256 of the token's UTF-8 bytes; `hashToken()` in
 -- lib/invite.ts computes the same value). This migration only adds room for

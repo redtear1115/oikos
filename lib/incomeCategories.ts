@@ -58,12 +58,13 @@ export const SAVINGS_RETURN_CATEGORIES: IncomeCategoryId[] = [
 const BY_ID = Object.fromEntries(INCOME_CATEGORIES.map(c => [c.id, c])) as Record<IncomeCategoryId, IncomeCategory>
 const OTHER = BY_ID.other
 
+// Own keys only — see getCategory in lib/categories.ts (#1534).
 export function getIncomeCategory(id: string): IncomeCategory {
-  return BY_ID[id as IncomeCategoryId] ?? OTHER
+  return Object.hasOwn(BY_ID, id) ? BY_ID[id as IncomeCategoryId] : OTHER
 }
 
 export function isValidIncomeCategoryId(id: string): boolean {
-  return id in BY_ID
+  return Object.hasOwn(BY_ID, id)
 }
 
 export const PICKABLE_INCOME_CATEGORIES = INCOME_CATEGORIES

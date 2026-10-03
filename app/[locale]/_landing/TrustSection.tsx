@@ -1,5 +1,6 @@
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { ShieldOutlineGlyph } from './FutariMark'
+import { Phrase } from '../_components/Phrase'
 
 type LandingStrings = Translations['landing']
 
@@ -60,7 +61,7 @@ function FullTrustSection({ t }: { t: LandingStrings }) {
             letterSpacing: '-0.3px',
           }}
         >
-          {t.trust.narrative}
+          <Phrase text={t.trust.narrative} />
         </p>
 
         <ul

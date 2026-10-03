@@ -5,9 +5,12 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
+import { BrandBreadcrumb } from '../_components/BrandBreadcrumb'
 import { UseCaseHero } from './_components/UseCaseHero'
 import { UseCaseCard } from './_components/UseCaseCard'
 import { UseCaseCta } from './_components/UseCaseCta'
+import { Phrase } from '../_components/Phrase'
+import { s } from '../_components/brand-inner'
 
 type Params = Promise<{ locale: string }>
 
@@ -77,25 +80,31 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="space-y-10 md:space-y-14">
+    <div className={s.flow}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
-      <UseCaseHero
-        kicker={hub.heroKicker}
-        title={hub.heroTitle}
-        subtitle={hub.heroSubtitle}
-      />
+      <div className={s.hero}>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: hub.breadcrumbLabel },
+          ]}
+        />
+        <UseCaseHero
+          kicker={hub.heroKicker}
+          title={hub.heroTitle}
+          subtitle={hub.heroSubtitle}
+        />
+      </div>
 
-      <section className="space-y-5">
-        <h2
-          className="m-0 text-xl md:text-title font-medium"
-          style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-        >
-          {hub.heading}
+      <section className={s.band}>
+        <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
+          <Phrase text={hub.heading} />
         </h2>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
+        <ul className={s.rows}>
           {USE_CASE_SLUGS.map((slug) => (
             <UseCaseCard
               key={slug}

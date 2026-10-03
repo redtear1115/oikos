@@ -4,7 +4,7 @@ import { assets, carDetails, childDetails, insuranceDetails, profiles } from '@/
 import { and, eq, isNull, lt, sql } from 'drizzle-orm'
 import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
-import { andClause, cursorClause, epochClause } from './_predicates'
+import { andClause, cursorClause, epochClause, frozenCopyVisibleClause } from './_predicates'
 import type { AssetType } from '@/lib/assets'
 import type { FuelType } from '@/lib/fuel'
 
@@ -83,9 +83,13 @@ export interface AssetWithCar {
  * instant — set by the /assets read paths when the viewer is on a closed
  * chapter of a group they are no longer in (see lib/pinnedChapterScope.ts).
  * Omitted / null → no cut-off.
+ *
+ * `viewerId` scopes the one place a frozen copy can still surface here: a
+ * policy's insured child (#1484, see `frozenCopyVisibleClause`).
  */
 export async function listAssetsForGroup(
   groupId: string,
+  viewerId: string,
   createdBefore: Date | null = null,
 ): Promise<AssetWithCar[]> {
   const rows = await db
@@ -141,9 +145,11 @@ export async function listAssetsForGroup(
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
     // #1485 — the insured child must be in the policy's own group; a link to
     // another ledger's asset resolves as no name, never as that asset's name.
+    // #1484 — a frozen copy resolves only for members at freeze time.
     .leftJoin(insuredChildAsset, and(
       eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
       eq(insuredChildAsset.groupId, assets.groupId),
+      frozenCopyVisibleClause('insured_child_asset', viewerId),
     ))
     .where(and(
       eq(assets.groupId, groupId),
@@ -172,6 +178,30 @@ export async function listFilterAssetsForGroup(
 }
 
 /**
+ * Name of the asset behind a records drill-down chip (`drillAsset`). Not
+ * filtered by deletedAt — a soft-deleted asset keeps its original name in
+ * stats, and the chip matches that. Group-scoped. A frozen copy (#1442)
+ * resolves only for members of the ledger at freeze time (#1484); anyone
+ * else gets null, as for another ledger's asset.
+ */
+export async function getDrillAssetName(
+  assetId: string,
+  groupId: string,
+  viewerId: string,
+): Promise<string | null> {
+  const [a] = await db
+    .select({ name: assets.name })
+    .from(assets)
+    .where(and(
+      eq(assets.id, assetId),
+      eq(assets.groupId, groupId),
+      frozenCopyVisibleClause('Assets', viewerId),
+    ))
+    .limit(1)
+  return a?.name ?? null
+}
+
+/**
  * Get a single asset by id, **including soft-deleted** ones (so the AddSheet
  * can show "(已刪除)" labels on zombie asset references) and frozen copies
  * (#1442 — a record's linked-asset name still resolves). Returns null if not
@@ -179,10 +209,15 @@ export async function listFilterAssetsForGroup(
  *
  * `createdBefore` (optional): same cut-off as `listAssetsForGroup` — an asset
  * created at or after it resolves to null.
+ *
+ * #1484 — a frozen copy resolves only for `viewerId` if they were a member of
+ * its ledger at the freeze moment; otherwise null, like an asset of another
+ * ledger. Same for the insured child's name.
  */
 export async function getAssetById(
   id: string,
   groupId: string,
+  viewerId: string,
   createdBefore: Date | null = null,
 ): Promise<AssetWithCar | null> {
   const rows = await db
@@ -244,13 +279,16 @@ export async function getAssetById(
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
     // #1485 — the insured child must be in the policy's own group; a link to
     // another ledger's asset resolves as no name, never as that asset's name.
+    // #1484 — a frozen copy resolves only for members at freeze time.
     .leftJoin(insuredChildAsset, and(
       eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
       eq(insuredChildAsset.groupId, assets.groupId),
+      frozenCopyVisibleClause('insured_child_asset', viewerId),
     ))
     .where(and(
       eq(assets.id, id),
       eq(assets.groupId, groupId),
+      frozenCopyVisibleClause('Assets', viewerId),
       createdBefore ? lt(assets.createdAt, createdBefore) : undefined,
     ))
     .limit(1)

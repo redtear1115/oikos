@@ -131,7 +131,7 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
             x={xOf(day - 1)}
             y={VB_H - 4}
             textAnchor="middle"
-            className="text-mini tnum"
+            className="text-xs tnum"
             style={{ fill: 'var(--ink-3)' }}
           >
             {day}
