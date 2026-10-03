@@ -1,5 +1,6 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
 import { SCHEMA_LANG } from '@/lib/i18n/seo'
+import { Phrase } from '../../_components/Phrase'
 
 type FaqItem = { question: string; answer: string }
 
@@ -38,7 +39,7 @@ export function MigrateFaq({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <dl className="m-0 space-y-3">
         {items.map(({ question, answer }) => (

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ShieldOutlineGlyph } from '../../_landing/FutariMark'
+import { Phrase } from '../../_components/Phrase'
 
 type TrustItem = { title: string; body: string }
 
@@ -24,7 +25,7 @@ export function MigrateTrustBlock({
         className="m-0 text-xl md:text-title font-medium text-center md:text-left"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 m-0 p-0 list-none">
         {items.map(({ title, body }) => (

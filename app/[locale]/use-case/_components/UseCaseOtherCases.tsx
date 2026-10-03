@@ -3,6 +3,7 @@ import type { Locale } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
 import { USE_CASES, type UseCaseSlug } from '@/lib/use-case/cases'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { Phrase } from '../../_components/Phrase'
 
 export function UseCaseOtherCases({
   locale,
@@ -25,7 +26,7 @@ export function UseCaseOtherCases({
         className="m-0 text-lg font-medium"
         style={{ color: 'var(--ink-2)', letterSpacing: '-0.1px' }}
       >
-        {copy.heading}
+        <Phrase text={copy.heading} />
       </h2>
       <ul className="m-0 list-none p-0 flex flex-wrap gap-3">
         {others.map((slug) => (

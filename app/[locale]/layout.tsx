@@ -12,6 +12,9 @@ const FRAUNCES_LATIN =
 // pushed /zh-TW's simulated mobile LCP from 2.47 s to 2.62 s (#1522). Inline
 // <style> keeps the cost to the brand pages' own HTML, where the same budget
 // applies (landing gzip ~29.1 KB): keep this string short.
+// - .ph: heading phrases (Phrase.tsx / lib/i18n/phrase.ts) are separated by
+//   <wbr>; keep-all stops WebKit breaking anywhere else. Safari and the iOS
+//   shell have no `auto-phrase`, so without it zh / ja headings split mid-word.
 // - .skip: the skip link is off-screen until it takes keyboard focus (#1523).
 // - forced-colors: filled CTAs are `border-0` fills; under forced colors the
 //   fill becomes Canvas and the control loses its edge entirely (no error, the
@@ -20,6 +23,7 @@ const FRAUNCES_LATIN =
 //   buttons get theirs from the sign-in page (SignInButton.tsx is a native
 //   contract file and is not edited for this).
 const BRAND_CSS =
+  '.ph{word-break:keep-all;overflow-wrap:anywhere}' +
   '.skip{position:fixed;left:8px;top:8px;z-index:60;padding:12px 16px;border-radius:var(--radius-bubble);background:var(--ink);color:var(--on-fill);transform:translateY(-200%)}' +
   '.skip:focus{transform:none}' +
   '@media(forced-colors:active){.skip,.fc-edge{border:1px solid ButtonText}}'

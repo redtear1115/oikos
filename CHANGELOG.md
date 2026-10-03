@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **Safari 與 iOS 殼的品牌頁標題也不再把詞拆開（#1522）**
+  使用者：首頁、登入頁、情境頁、搬遷頁的大標、小標與標語在 Safari、iPhone 與 iOS 殼裡，不再於「資／料」「ありませ／ん。」這種詞中間換行；Chrome 本來就正常。
+  技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`（ja 依字種、zh 依 `Intl.Segmenter`），標題以 `.ph`（`keep-all`）渲染；規則放品牌 layout 的 inline `<style>`，`globals.css` 位元組不變，/zh-TW LCP 2.47 s。
+
 - **英文、日文、简中的搬遷比較表整張翻譯（#1538）**
   使用者：`/en/migrate/*`、`/ja/migrate/*`、`/zh-CN/migrate/*` 的比較表不再出現「雙人共同帳本」「支援」「無」「多種模式」這些中文列名與判定字，4 語各自完整；繁中頁文字不變。
   技術：列名與判定字全部移進 `migrate.comparisonText`（35 個新 key），`ComparisonText` 不再接受字串、寫中文字面值會 `tsc` 失敗；新增 `tests/migrate-comparison-i18n.test.tsx` 逐來源×語系擋漏譯；各來源 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。

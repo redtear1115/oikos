@@ -1,3 +1,5 @@
+import { Phrase } from '../../_components/Phrase'
+
 /**
  * "Why Futari" block — answers the migrating visitor's "why switch?"
  * before they upload anything (#581). Same three-card shape on every
@@ -16,7 +18,7 @@ export function MigrateDifferentiators({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 m-0 p-0 list-none">
         {items.map(({ title, body }, i) => (
@@ -43,7 +45,7 @@ export function MigrateDifferentiators({
               className="m-0 text-base md:text-base font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
-              {title}
+              <Phrase text={title} />
             </p>
             <p
               className="m-0 text-sm md:text-sm leading-[1.65]"

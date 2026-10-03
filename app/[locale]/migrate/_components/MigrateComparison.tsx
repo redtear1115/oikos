@@ -1,3 +1,5 @@
+import { Phrase } from '../../_components/Phrase'
+
 type Cell = { label: string; tone: 'yes' | 'partial' | 'no' }
 type Row = { feature: string; futari: Cell; other: Cell }
 
@@ -36,7 +38,7 @@ export function MigrateComparison({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <div
         className="rounded-tile overflow-hidden"

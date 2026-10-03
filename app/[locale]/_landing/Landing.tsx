@@ -17,6 +17,8 @@ import { LandingSecondaryCta } from './LandingSecondaryCta'
 import { LandingStandaloneRedirect } from './LandingStandaloneRedirect'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
+import { Phrase } from '../_components/Phrase'
+import { phraseHtml } from '@/lib/i18n/phrase'
 
 type LandingStrings = Translations['landing']
 
@@ -178,21 +180,21 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                   even though per-character it's smaller; lh 1.15 keeps
                   the block tight, letter-spacing -1px tightens CJK rhythm. */}
               <span
-                className="md:hidden block text-display-tagline"
+                className="ph md:hidden block text-display-tagline"
                 style={{
                   fontWeight: 400,
                   lineHeight: 1.15,
                   letterSpacing: '-1px',
                 }}
-                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+                dangerouslySetInnerHTML={{ __html: phraseHtml(t.taglineHtml) }}
               />
               {/* desktop: tagline as the giant headline */}
               <span
-                className="hidden md:inline text-display-tagline-lg"
+                className="ph hidden md:inline text-display-tagline-lg"
                 style={{
                   letterSpacing: '-3.5px',
                 }}
-                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+                dangerouslySetInnerHTML={{ __html: phraseHtml(t.taglineHtml) }}
               />
             </h1>
 
@@ -310,7 +312,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                   letterSpacing: '-0.5px',
                 }}
               >
-                {t.featuresTitle}
+                <Phrase text={t.featuresTitle} />
               </h2>
             </div>
             <p
@@ -471,7 +473,7 @@ function MigrateLinksSection({
                 letterSpacing: '-0.3px',
               }}
             >
-              {t.migrateSection.title}
+              <Phrase text={t.migrateSection.title} />
             </h2>
           </div>
           <p
@@ -590,7 +592,7 @@ function UseCaseLinksSection({
                 letterSpacing: '-0.3px',
               }}
             >
-              {t.useCaseSection.title}
+              <Phrase text={t.useCaseSection.title} />
             </h2>
           </div>
           <p

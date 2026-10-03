@@ -13,6 +13,7 @@ import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
 import { BlogSection } from './BlogSection'
+import { Phrase } from '../_components/Phrase'
 
 type AboutStrings = Translations['signIn']['about']
 
@@ -192,7 +193,7 @@ export default async function SignInPage({
               ふたり
             </p>
             <p className="mt-6 max-w-70 text-base text-ink-2 leading-relaxed">
-              {t.signIn.tagline}
+              <Phrase text={t.signIn.tagline} />
             </p>
             <p className="sr-only">{t.signIn.srDescription}</p>
           </div>
@@ -290,7 +291,7 @@ function AboutNarrative({
             the same reasoning DESIGN.md §3 gives for the landing page's
             one-offs. -0.3px is the Display tier's documented tracking. (#1160) */}
         <h2 className="m-0 font-serif font-medium text-ink text-lg lg:text-title leading-snug tracking-[-0.3px]">
-          {featured.heading}
+          <Phrase text={featured.heading} />
         </h2>
         {featured.body.map((p, j) => {
           const isPunchline = featured.punchlineLast && j === lastIdx

@@ -1,5 +1,6 @@
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { UseCaseDef } from '@/lib/use-case/cases'
+import { Phrase } from '../../_components/Phrase'
 
 type FeatureKey = keyof Translations['useCase']['features']
 
@@ -27,7 +28,7 @@ export function UseCaseFeatures({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <ul className="m-0 list-none p-0 grid grid-cols-1 md:grid-cols-2 gap-3">
         {featureKeys.map((key) => {

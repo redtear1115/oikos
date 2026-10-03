@@ -3,6 +3,7 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
 import { MigrateSourceCard } from './MigrateSourceCard'
+import { Phrase } from '../../_components/Phrase'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -52,7 +53,7 @@ export function MigrateOtherSources({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {copy.heading}
+        <Phrase text={copy.heading} />
       </h2>
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
         {others.map((source) => {

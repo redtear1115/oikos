@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Phrase } from '../../_components/Phrase'
 
 /**
  * Numbered 3-step walkthrough shared by every /migrate/<source> page.
@@ -18,7 +19,7 @@ export function MigrateSteps({
         className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
-        {heading}
+        <Phrase text={heading} />
       </h2>
       <ol className="m-0 list-none p-0 divide-y" style={{ borderColor: 'var(--hairline)' }}>
         {steps.map((node, i) => (
@@ -77,7 +78,7 @@ export function MigrateHero({
           letterSpacing: '3.5px',
         }}
       >
-        {kicker}
+        <Phrase text={kicker} />
       </p>
       <h1
         className="text-page md:text-amount-md text-balance m-0"
@@ -89,7 +90,7 @@ export function MigrateHero({
           lineHeight: 1.18,
         }}
       >
-        {title}
+        <Phrase text={title} />
       </h1>
       <p
         className="text-base leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"

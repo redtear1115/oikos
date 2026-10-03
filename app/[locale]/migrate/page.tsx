@@ -9,6 +9,7 @@ import { BrandBreadcrumb } from '../_components/BrandBreadcrumb'
 import { MigrateHero } from './_components/MigrateSteps'
 import { MigrateSourceCard } from './_components/MigrateSourceCard'
 import { MigrateTrustBlock, MigrateFooter } from './_components/MigrateTrustFooter'
+import { Phrase } from '../_components/Phrase'
 
 type Params = Promise<{ locale: string }>
 
@@ -100,7 +101,7 @@ export default async function MigrateHubPage({ params }: { params: Params }) {
           className="m-0 text-xl md:text-title font-medium"
           style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
         >
-          {hub.heading}
+          <Phrase text={hub.heading} />
         </h2>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
           {ALL_SOURCES.map((source) => {
