@@ -50,6 +50,7 @@ Not time-driven: no clock states. No data fixture (public pages are static). Vie
 
 - 2026-10-03: scope = landing + sign-in + use-case + migrate; direction = Warm Lamp deepened; brand pages unfrozen, dashboard frozen; purpose = trust + CTA conversion. (owner)
 - 2026-10-03 (after round 1): fix in two phases — A = bugs, LCP/G1, line breaks, a11y, wayfinding, de-carding inner pages (one PR); B = point-of-light signature concept, prototype first and owner decides before shipping. Landing CTA: SSR a labelled sign-in default, re-point after hydration (native-contract file → real-device check). Sign-in story + dev log: keep content, restyle as hairline list, shorten. Ko-fi on brand pages: appears only after scrolling past the hero, with clearance from content. (owner)
+- 2026-10-03 (#1520): LCP root cause = Lantern charges the JS chain (Sentry + PostHog + Supabase, ~600 KB raw) and the Fraunces font chain to text LCP. Blocking all three → LCP 2.40 s / P98 stable on landing and sign-in; any one alone is not enough. Owner: defer all three until after first paint (idle) **on brand pages only**; dashboard unchanged. (owner)
 
 ## Issues (v1.6.7)
 
