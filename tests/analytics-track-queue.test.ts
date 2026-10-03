@@ -9,9 +9,9 @@ const h = vi.hoisted(() => ({
   capture: vi.fn(),
 }))
 
-vi.mock('posthog-js', () => ({
-  default: { capture: h.capture },
-}))
+// posthog-js is no longer imported by track.ts (#1520): the provider hands the
+// loaded instance to flushQueue(), so the test does the same.
+const ph = { capture: h.capture, get_distinct_id: () => 'anon-1' }
 
 vi.mock('@/lib/analytics/enabled', () => ({
   POSTHOG_ENABLED: true,
@@ -37,7 +37,7 @@ describe('track() pre-init queue (#1014)', () => {
 
     track('event_a', { x: 1 })
     track('event_b', { y: 2 })
-    flushQueue()
+    flushQueue(ph as never)
 
     expect(h.capture).toHaveBeenNthCalledWith(1, 'event_a', { x: 1 })
     expect(h.capture).toHaveBeenNthCalledWith(2, 'event_b', { y: 2 })
@@ -48,7 +48,7 @@ describe('track() pre-init queue (#1014)', () => {
     const { track, flushQueue } = await import('@/lib/analytics/track')
 
     track('before_flush')
-    flushQueue()
+    flushQueue(ph as never)
     expect(h.capture).toHaveBeenCalledTimes(1)
 
     track('after_flush')
@@ -62,7 +62,7 @@ describe('track() pre-init queue (#1014)', () => {
     for (let i = 0; i < 55; i++) {
       track(`event_${i}`)
     }
-    flushQueue()
+    flushQueue(ph as never)
 
     expect(h.capture).toHaveBeenCalledTimes(50)
     // Oldest 5 (event_0..event_4) were dropped; the first flushed call should
@@ -75,11 +75,36 @@ describe('track() pre-init queue (#1014)', () => {
     const { track, flushQueue } = await import('@/lib/analytics/track')
 
     track('event_a')
-    flushQueue()
+    flushQueue(ph as never)
     expect(h.capture).toHaveBeenCalledTimes(1)
 
-    flushQueue()
-    flushQueue()
+    flushQueue(ph as never)
+    flushQueue(ph as never)
     expect(h.capture).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('analyticsReady() / getAnonId() with lazy PostHog (#1520)', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    h.capture.mockClear()
+  })
+
+  it('asks the provider to start loading and resolves once flushQueue() runs', async () => {
+    const { analyticsReady, registerAnalyticsInit, flushQueue, getAnonId } = await import('@/lib/analytics/track')
+    const start = vi.fn()
+    registerAnalyticsInit(start)
+
+    expect(getAnonId()).toBeUndefined()
+    const ready = analyticsReady(5000)
+    expect(start).toHaveBeenCalledTimes(1)
+    flushQueue(ph as never)
+    await ready
+    expect(getAnonId()).toBe('anon-1')
+  })
+
+  it('gives up after the timeout rather than blocking the tap', async () => {
+    const { analyticsReady } = await import('@/lib/analytics/track')
+    await expect(analyticsReady(10)).resolves.toBeUndefined()
   })
 })

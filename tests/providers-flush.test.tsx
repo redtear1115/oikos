@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 
 // Regression for #1014: `flushQueue()` must run even when `detectPlatform()`
 // returns null — the pre-existing `if (!platform) return` early-return would
@@ -15,10 +15,6 @@ const h = vi.hoisted(() => ({
 
 vi.mock('posthog-js', () => ({
   default: { init: h.init, register: h.register, capture: h.capture },
-}))
-
-vi.mock('posthog-js/react', () => ({
-  PostHogProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
 
 vi.mock('@/lib/platform', () => ({
@@ -46,7 +42,8 @@ describe('PostHogProvider flush ordering (#1014)', () => {
     const { PostHogProvider } = await import('@/app/providers')
     render(<PostHogProvider>{null}</PostHogProvider>)
 
-    expect(h.init).toHaveBeenCalledTimes(1)
+    // posthog-js is a dynamic import now (#1520), so init lands a tick later.
+    await waitFor(() => expect(h.init).toHaveBeenCalledTimes(1))
     // detectPlatform() is null, so register() must NOT have been called...
     expect(h.register).not.toHaveBeenCalled()
     // ...but the queued event must still have been flushed regardless.

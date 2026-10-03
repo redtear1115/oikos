@@ -1,92 +1,117 @@
 'use client'
 
-import posthog from 'posthog-js'
-import { PostHogProvider as PHProvider } from 'posthog-js/react'
+import type { PostHog } from 'posthog-js'
 import { useEffect } from 'react'
 import { detectPlatform, isNativeApp } from '@/lib/platform'
-import { flushQueue } from '@/lib/analytics/track'
+import { flushQueue, registerAnalyticsInit } from '@/lib/analytics/track'
 import { POSTHOG_ENABLED } from '@/lib/analytics/enabled'
 import { POSTHOG_PRIVACY_OPTIONS } from '@/lib/analytics/posthogPrivacy'
+import { isPublicLocalizedPath } from '@/lib/i18n/path'
+import { whenIdle } from '@/lib/whenIdle'
+
+let started = false
+
+/**
+ * posthog-js is a dynamic import (#1520): statically imported it sat in the
+ * initial bundle of every page and cost the public brand pages ~0.5 s of
+ * simulated LCP. Events fired before it loads wait in `track()`'s queue
+ * (#1014) and are sent by `flushQueue()` below — including `$pageview`, which
+ * goes through `track()` for that reason.
+ *
+ * Timing: public brand pages load it after load + idle (`analyticsReady()` can
+ * pull it forward when a sign-in tap needs the anonymous id); every other route
+ * loads it immediately, as before.
+ */
+function startPostHog() {
+  if (started) return
+  started = true
+  void import('posthog-js').then(({ default: posthog }) => initPostHog(posthog))
+}
+
+function initPostHog(posthog: PostHog) {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    // Route ingestion through our managed reverse proxy so ad/tracker
+    // blockers don't drop events. Falls back to the proxy domain if the env
+    // var is unset, so prod is correct-by-default even before Vercel is set.
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://e.southern-light.dev',
+    // Required whenever api_host is a proxy: tells PostHog where the real app
+    // lives so dashboard deep-links (toolbar, replay) point back correctly.
+    ui_host: 'https://us.posthog.com',
+    person_profiles: 'identified_only',
+    // Cookieless mode — no consent banner needed
+    persistence: 'memory',
+    capture_pageview: false, // manual pageview below
+    capture_pageleave: true,
+    // We don't use PostHog Surveys — the partner quiz is our own PartnerQuiz
+    // feature, not a PostHog survey. Leaving surveys on makes PostHog fetch
+    // the ~25 KiB /static/surveys.js bundle on first remote-config load
+    // (PageSpeed flagged it as unused JS on the landing page). Off = the
+    // surveys extension never loads. (#922)
+    disable_surveys: true,
+    // We don't analyze dead clicks (clicks that hit nothing actionable), so
+    // opt out of that autocapture path — keeps regular autocapture +
+    // pageview/pageleave intact while skipping the dead-click listener work.
+    // (#922)
+    capture_dead_clicks: false,
+    // #1267 — autocapture stays on, but must not carry ledger content.
+    // Deliberately spread LAST so nothing above can quietly win: the
+    // guardrail test asserts this spread is present and that none of its
+    // keys is also written literally in this file. Rationale, and what it
+    // looks like when it comes off, live in the module.
+    ...POSTHOG_PRIVACY_OPTIONS,
+  })
+
+  // #1002 — the platform dimension, as super properties so all 18 existing
+  // `track()` callsites (and autocapture) inherit it without being touched.
+  //
+  // Registration sits inline right after `init()` on purpose. Super
+  // properties are stored in the persistence layer, and ours is `'memory'`
+  // (cookieless), so they are cleared on every page load — the *only* safe
+  // place to register is the same synchronous path that initializes PostHog,
+  // and anything conditional or route-scoped would leave some page loads
+  // reporting no platform at all.
+  const platform = detectPlatform()
+  if (platform) {
+    posthog.register({ platform, is_native: isNativeApp(platform) })
+  }
+
+  // #1014 — flush any events queued by `track()` before this effect ran
+  // (child components' on-mount effects fire before this parent one, so a
+  // child's on-mount `track()` call would otherwise hit an uninitialized
+  // PostHog instance and silently no-op). Must run unconditionally, after
+  // `register()`: queued events must inherit `platform` / `is_native` like
+  // every other event, not go out missing that dimension. Keeping this as
+  // its own statement (not nested inside the `if (platform)` block above)
+  // is what guarantees that — a bare `return` on `!platform` would skip the
+  // flush entirely on any page load where platform detection comes back
+  // null.
+  flushQueue(posthog)
+
+  // Shell version, so any event can be sliced by installed shell — not just
+  // the one-shot `shell_version_seen` in ShellUpdateNotice, which stays as it
+  // is. Reading it needs `@capacitor/app`, so it is (a) gated on actually
+  // being native and (b) behind a dynamic import, keeping the plugin chunk
+  // out of the web bundle entirely (same discipline as #991). Late by design:
+  // a round-trip to the native bridge must not sit in front of init, so the
+  // first few events of a shell session simply carry no `shell_version`.
+  if (platform && isNativeApp(platform)) {
+    void import('@capacitor/app')
+      .then(({ App }) => App.getInfo())
+      .then((info) => posthog.register({ shell_version: info.version }))
+      .catch(() => {
+        // A shell too old to answer getInfo(), or a plugin load failure. The
+        // platform property is already registered; the version is a bonus.
+      })
+  }
+}
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!POSTHOG_ENABLED) return
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      // Route ingestion through our managed reverse proxy so ad/tracker
-      // blockers don't drop events. Falls back to the proxy domain if the env
-      // var is unset, so prod is correct-by-default even before Vercel is set.
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://e.southern-light.dev',
-      // Required whenever api_host is a proxy: tells PostHog where the real app
-      // lives so dashboard deep-links (toolbar, replay) point back correctly.
-      ui_host: 'https://us.posthog.com',
-      person_profiles: 'identified_only',
-      // Cookieless mode — no consent banner needed
-      persistence: 'memory',
-      capture_pageview: false, // manual pageview below
-      capture_pageleave: true,
-      // We don't use PostHog Surveys — the partner quiz is our own PartnerQuiz
-      // feature, not a PostHog survey. Leaving surveys on makes PostHog fetch
-      // the ~25 KiB /static/surveys.js bundle on first remote-config load
-      // (PageSpeed flagged it as unused JS on the landing page). Off = the
-      // surveys extension never loads. (#922)
-      disable_surveys: true,
-      // We don't analyze dead clicks (clicks that hit nothing actionable), so
-      // opt out of that autocapture path — keeps regular autocapture +
-      // pageview/pageleave intact while skipping the dead-click listener work.
-      // (#922)
-      capture_dead_clicks: false,
-      // #1267 — autocapture stays on, but must not carry ledger content.
-      // Deliberately spread LAST so nothing above can quietly win: the
-      // guardrail test asserts this spread is present and that none of its
-      // keys is also written literally in this file. Rationale, and what it
-      // looks like when it comes off, live in the module.
-      ...POSTHOG_PRIVACY_OPTIONS,
-    })
-
-    // #1002 — the platform dimension, as super properties so all 18 existing
-    // `track()` callsites (and autocapture) inherit it without being touched.
-    //
-    // Registration sits inline right after `init()` on purpose. Super
-    // properties are stored in the persistence layer, and ours is `'memory'`
-    // (cookieless), so they are cleared on every page load — the *only* safe
-    // place to register is the same synchronous path that initializes PostHog,
-    // and anything conditional or route-scoped would leave some page loads
-    // reporting no platform at all.
-    const platform = detectPlatform()
-    if (platform) {
-      posthog.register({ platform, is_native: isNativeApp(platform) })
-    }
-
-    // #1014 — flush any events queued by `track()` before this effect ran
-    // (child components' on-mount effects fire before this parent one, so a
-    // child's on-mount `track()` call would otherwise hit an uninitialized
-    // PostHog instance and silently no-op). Must run unconditionally, after
-    // `register()`: queued events must inherit `platform` / `is_native` like
-    // every other event, not go out missing that dimension. Keeping this as
-    // its own statement (not nested inside the `if (platform)` block above)
-    // is what guarantees that — a bare `return` on `!platform` would skip the
-    // flush entirely on any page load where platform detection comes back
-    // null.
-    flushQueue()
-
-    // Shell version, so any event can be sliced by installed shell — not just
-    // the one-shot `shell_version_seen` in ShellUpdateNotice, which stays as it
-    // is. Reading it needs `@capacitor/app`, so it is (a) gated on actually
-    // being native and (b) behind a dynamic import, keeping the plugin chunk
-    // out of the web bundle entirely (same discipline as #991). Late by design:
-    // a round-trip to the native bridge must not sit in front of init, so the
-    // first few events of a shell session simply carry no `shell_version`.
-    if (platform && isNativeApp(platform)) {
-      void import('@capacitor/app')
-        .then(({ App }) => App.getInfo())
-        .then((info) => posthog.register({ shell_version: info.version }))
-        .catch(() => {
-          // A shell too old to answer getInfo(), or a plugin load failure. The
-          // platform property is already registered; the version is a bonus.
-        })
-    }
+    registerAnalyticsInit(startPostHog)
+    if (isPublicLocalizedPath(window.location.pathname)) whenIdle(startPostHog)
+    else startPostHog()
   }, [])
 
-  if (!POSTHOG_ENABLED) return <>{children}</>
-  return <PHProvider client={posthog}>{children}</PHProvider>
+  return <>{children}</>
 }

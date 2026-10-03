@@ -1,6 +1,6 @@
 'use client'
 
-import posthog from 'posthog-js'
+import type { PostHog } from 'posthog-js'
 import { POSTHOG_ENABLED } from '@/lib/analytics/enabled'
 
 /** Hard cap on the pre-init queue. See `track()` for the reasoning. */
@@ -14,6 +14,36 @@ type QueuedEvent = { event: string; properties?: Record<string, unknown> }
 // hitting an uninitialized `posthog.capture()`, which silently no-ops (#1014).
 let queue: QueuedEvent[] = []
 let initialized = false
+// Set by `flushQueue()`. posthog-js is NOT imported here: it is loaded lazily by
+// `PostHogProvider` (#1520) so it stays out of the initial bundle of the public
+// brand pages, and this module is imported by nearly every component.
+let client: PostHog | null = null
+let requestInit: (() => void) | null = null
+let ready: Promise<void>
+let markReady: () => void
+const resetReady = () => {
+  ready = new Promise<void>((resolve) => {
+    markReady = resolve
+  })
+}
+resetReady()
+
+/** `PostHogProvider` registers how to start loading posthog-js, for `analyticsReady()`. */
+export function registerAnalyticsInit(start: () => void): void {
+  requestInit = start
+}
+
+/**
+ * Resolves once PostHog is initialized, or after `timeoutMs`, whichever is
+ * first — and asks for the load to start now if it was still waiting for idle.
+ * For the one caller that needs a live instance on a user action (`getAnonId()`
+ * at OAuth start); everything else just uses the queue.
+ */
+export function analyticsReady(timeoutMs: number): Promise<void> {
+  if (!POSTHOG_ENABLED || initialized) return Promise.resolve()
+  requestInit?.()
+  return Promise.race([ready, new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))])
+}
 
 /**
  * Single client capture seam. No-op unless PostHog is enabled (prod + key), so
@@ -36,11 +66,11 @@ export function track(event: string, properties?: Record<string, unknown>): void
     return
   }
 
-  posthog.capture(event, properties)
+  client?.capture(event, properties)
 }
 
 /**
- * Flushes any events queued before PostHog finished initializing, in the
+ * Hands over the initialized PostHog instance and flushes any events queued before, in the
  * order they were recorded. Must be called by `PostHogProvider` *after*
  * `posthog.init()` and `posthog.register()` — flushing before `register()`
  * would send the queued events without the `platform` / `is_native` super
@@ -60,8 +90,10 @@ export function track(event: string, properties?: Record<string, unknown>): void
  * killing the proxy request) to 50 in-memory objects for the tab's lifetime.
  * A timer would add a moving part without reducing that already-bounded risk.
  */
-export function flushQueue(): void {
+export function flushQueue(posthog: PostHog): void {
+  client = posthog
   initialized = true
+  markReady()
   if (queue.length === 0) return
 
   const pending = queue
@@ -85,5 +117,5 @@ export function flushQueue(): void {
  */
 export function getAnonId(): string | undefined {
   if (!POSTHOG_ENABLED) return undefined
-  return posthog.get_distinct_id()
+  return client?.get_distinct_id()
 }

@@ -16,8 +16,8 @@ const h = vi.hoisted(() => ({
   closed: 0,
 }))
 
-vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }))
-vi.mock('@/lib/analytics/track', () => ({ track: vi.fn(), getAnonId: () => 'anon-1' }))
+vi.mock('@/lib/observability/sentryClient', () => ({ captureException: vi.fn() }))
+vi.mock('@/lib/analytics/track', () => ({ track: vi.fn(), getAnonId: () => 'anon-1', analyticsReady: async () => {} }))
 vi.mock('@/actions/auth', () => ({ recordNativeAuthConversion: vi.fn() }))
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({

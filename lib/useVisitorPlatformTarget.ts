@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import { loadSupabaseClient } from '@/lib/supabase/lazyClient'
+import { hasStoredSessionCookie } from '@/lib/auth/storedSession'
 import { isStandalone } from '@/lib/install-guide'
 import { resolveVisitorPlatform, type VisitorPlatformTarget } from '@/lib/visitorPlatform'
 
@@ -29,10 +30,7 @@ export function useVisitorPlatformTarget(): VisitorPlatformTarget | 'pending' {
 
   useEffect(() => {
     let active = true
-    const supabase = createClient()
-    // getSession() is cookie/storage-local — no Auth API round-trip — matching
-    // LandingPrimaryCta's existing session check.
-    void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+    const resolve = (hasSession: boolean) => {
       if (!active) return
       setTarget(
         resolveVisitorPlatform({
@@ -40,10 +38,23 @@ export function useVisitorPlatformTarget(): VisitorPlatformTarget | 'pending' {
           maxTouchPoints: navigator.maxTouchPoints,
           isCapacitor: isCapacitorShell(),
           isStandalone: isStandalone(),
-          hasSession: Boolean(data.session),
+          hasSession,
         }),
       )
-    })
+    }
+    // #1520 — the Supabase client is ~0.5 s of LCP on the landing, and the
+    // browser client keeps its session in a cookie only, so a device without
+    // one cannot have a session: answer without loading the SDK. With a cookie
+    // (a returning signed-in visitor) load it and ask, as before.
+    if (!hasStoredSessionCookie(document.cookie)) {
+      resolve(false)
+    } else {
+      // getSession() is cookie/storage-local — no Auth API round-trip — matching
+      // LandingPrimaryCta's existing session check.
+      void loadSupabaseClient()
+        .then((supabase) => supabase.auth.getSession())
+        .then(({ data }: { data: { session: Session | null } }) => resolve(Boolean(data.session)))
+    }
     return () => {
       active = false
     }

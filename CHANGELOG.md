@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **首頁、登入頁、情境頁與搬遷頁載入更快（#1520）**
+  使用者：開啟這些公開頁時，首屏不再等記錄與登入用的程式，手機上最大內容出現時間約快 0.4–0.8 秒。
+  技術：登入前品牌頁的 Sentry、posthog-js、Supabase 改在載入完 1 秒後（或第一次需要時）才載入；dashboard 與其他路由時機不變。這 1 秒內的錯誤與提早離開的訪客不會被記到。
+
 - **設定頁的咖啡不再浮在畫面上，改成「應用」最後一列（#1516）**
   使用者：設定頁右下角的浮動咖啡按鈕拿掉，「應用」區塊最後多一列「請喝杯咖啡」，點了在新分頁開啟 Ko-fi；iOS App 內不顯示這一列。
   技術：新增 `SupportRow`（掛載後才依 `Capacitor.getPlatform()` 決定顯示）；設定頁不再載入 Ko-fi 第三方 script，`kofi_widget_click` 事件與 `source` 不變。

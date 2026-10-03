@@ -1,6 +1,5 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
 import { useEffect, useState } from 'react'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locales-meta'
 import { globalErrorCopy, pickGlobalErrorLocale } from '@/lib/i18n/globalErrorCopy'
@@ -27,7 +26,11 @@ export default function GlobalError({
   const [locale, setLocale] = useState(DEFAULT_LOCALE)
 
   useEffect(() => {
-    Sentry.captureException(error)
+    // Dynamic (#1520): Next lists this entry in every page's HTML, so a static
+    // Sentry import here put the whole SDK back in the public pages' first load.
+    // The module is the same one instrumentation-client loads, so it is not
+    // initialised twice.
+    void import('@/lib/observability/sentryClient').then((m) => m.captureException(error))
     setLocale(pickGlobalErrorLocale())
   }, [error])
 

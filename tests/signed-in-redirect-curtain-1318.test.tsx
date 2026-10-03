@@ -68,7 +68,10 @@ describe('SignedInRedirect curtain (#1318)', () => {
     getSession.mockResolvedValue({ data: { session: null } })
     render(<SignedInRedirect checkingLabel="正在帶你進去" />)
     expect(screen.queryByRole('status')).toBeNull()
-    await waitFor(() => expect(getSession).toHaveBeenCalled())
+    // #1520 — and no Supabase SDK load / getSession for such a device at all.
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(getSession).not.toHaveBeenCalled()
     expect(screen.queryByRole('status')).toBeNull()
     expect(replace).not.toHaveBeenCalled()
   })

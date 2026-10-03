@@ -49,11 +49,15 @@ const renderCta = () =>
 describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #1413)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // #1520 — the Supabase SDK is only loaded when the device holds a session
+    // cookie; these tests are about a device that does.
+    document.cookie = 'sb-test-auth-token=abc; path=/'
     stubUserAgent(WINDOWS_UA)
     delete (window as { Capacitor?: unknown }).Capacitor
   })
 
   afterEach(() => {
+    document.cookie = 'sb-test-auth-token=; Max-Age=0; path=/'
     delete (window as { Capacitor?: unknown }).Capacitor
   })
 
@@ -176,5 +180,18 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
       expect(anchor.getAttribute('href')).toBe('https://forms.gle/MriV1rL3upL4SgVt5')
     })
     expect(screen.queryByText('開始')).not.toBeInTheDocument()
+  })
+})
+
+describe('LandingPrimaryCta without a session cookie (#1520)', () => {
+  it('resolves to the sign-in CTA without loading the Supabase client', async () => {
+    delete (window as { Capacitor?: unknown }).Capacitor
+    stubUserAgent(WINDOWS_UA)
+    getSession.mockClear()
+    renderCta()
+    await waitFor(() => {
+      expect(screen.getByText('開始').closest('a')).not.toHaveAttribute('aria-hidden')
+    })
+    expect(getSession).not.toHaveBeenCalled()
   })
 })
