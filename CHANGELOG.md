@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **登入頁的分頁標題與搜尋摘要不再用「開始」（#1526）**
+  使用者：登入頁在瀏覽器分頁與搜尋結果裡的標題與說明，改成說明登入後會進到你們共用的帳本，不再說「開始兩個人的記帳生活」；4 語同步。
+  技術：只改 `meta.signIn` 的 title／description／ogDescription ×4 語；en／ja 譯文待確認。
+
 - **搬遷頁比較表每格只剩一個符號（#1519）**
   使用者：`/migrate/<來源>` 的比較表不再出現「✓ ✓ 支援」「◐ △ 基本對半」這種雙符號，每格只有一個 ✓／△／✕，4 語一致。
   技術：符號改由 `MigrateComparison` 依 `tone` 單獨負責，`sources.ts` 與 `comparisonText` 的字串回到純文字；新增 `tests/migrate-comparison-marks.test.tsx` 逐來源×語系擋重複符號；各來源 `contentUpdatedAt` 一併更新。

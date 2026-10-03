@@ -2999,9 +2999,9 @@ I will upload the screenshots once you confirm.`,
       ogDescription: 'Futari（ふたり）は、カップル・夫婦のための共同家計簿アプリ。一緒に記録して、ふたりの暮らしを見える化。',
     },
     signIn: {
-      title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
-      description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までふたりで一緒に整える PWA。',
-      ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
+      title: 'Futari にサインイン · ふたりの家計簿へ',
+      description: 'Google アカウントでサインインすると、ふたりで共有する家計簿に入ります。日常の支出や燃費、保険、資産までパートナーと一緒に整える PWA。',
+      ogDescription: 'Google でワンタップサインインして、ふたりの家計簿を開きます。',
       invite: {
         // TODO(i18n): native review pending (#1016) — MT-quality draft.
         title: '二人で家計簿をつけませんか · Futari',

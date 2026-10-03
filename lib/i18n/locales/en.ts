@@ -3000,9 +3000,9 @@ I will upload the screenshots once you confirm.`,
       ogDescription: 'Futari is a couple-first shared budgeting app: log together, auto-split, settle, and see your life as a pair.',
     },
     signIn: {
-      title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger: log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
-      ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
+      title: 'Sign in to Futari · A shared ledger for two',
+      description: 'Sign in with Google and you land in your shared ledger, where partners log spending and fuel costs together and look after insurance and shared things.',
+      ogDescription: 'One tap to sign in with Google and open your shared household ledger.',
       invite: {
         // TODO(i18n): native review pending (#1016) — MT-quality draft.
         title: 'Someone invited you to a shared ledger · Futari',

@@ -2930,9 +2930,9 @@ export const zhCN: Translations = {
       ogDescription: 'Futari 是为夫妻、情侣设计的共同账本——一起记账、自动分摊、AA 结算，看见两个人的生活全貌。',
     },
     signIn: {
-      title: '登录 Futari · 开始两个人的记账生活',
-      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
-      ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+      title: '登录 Futari · 两个人的双人记账',
+      description: '用 Google 账号登录后，会进入你们共用的账本——伴侣一起记下日常开销与爱车油耗，也照看保险与爱物的双人记账 PWA。',
+      ogDescription: '用 Google 一键登录，进入两个人的家计簿。',
       invite: {
         title: '有人邀请你一起记账 · Futari',
         description: '有人邀请你加入一本两个人共用的账本。登录后就能加入。',

@@ -5960,9 +5960,9 @@ export const zhTW: Translations = {
       ogDescription: 'Futari 是為夫妻、伴侶設計的共同帳本——一起記帳、自動分攤、AA 結算，看見兩個人的生活全貌。',
     },
     signIn: {
-      title: '登入 Futari · 開始兩個人的記帳生活',
-      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
-      ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+      title: '登入 Futari · 兩個人的雙人記帳',
+      description: '用 Google 帳號登入後，會進到你們共用的帳本——伴侶一起記下日常開銷與愛車油耗，也照看保險與愛物的雙人記帳 PWA。',
+      ogDescription: '用 Google 一鍵登入，進到兩個人的家計簿。',
       /** Keep in sync with `invite.meta` — see the note there. (#1016) */
       invite: {
         title: '有人邀請你一起記帳 · Futari',
