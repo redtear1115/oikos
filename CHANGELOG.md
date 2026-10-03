@@ -109,6 +109,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：無可見變化；邀請連結照常運作，資料庫只留下 token 的雜湊。
   技術：`0078` 先確認每列都有 `token_hash` 且唯一索引有效，再設 `token_hash` NOT NULL、刪除 `GroupInvites.token`；之後回退下限為 v1.6.6。
 
+- **直接開啟的登入後頁面與邀請連結不能再被其他網站嵌入（#1535）**
+  使用者：無可見變化。
+  技術：next.config `headers()` 對登入後路徑、`/invite/*`、`/api/*` 加 `frame-ancestors 'none'` 與 `X-Frame-Options: DENY`；公開頁不變。
+
 ### Security
 
 - **離開時留下的愛物副本，只給當時在帳本裡的人看（#1484）**
