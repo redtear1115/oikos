@@ -26,14 +26,14 @@ beforeEach(() => resetDbMocks())
 
 describe('with a cut-off', () => {
   it('listAssetsForGroup keeps only assets created before it', async () => {
-    await listAssetsForGroup('g1', CUTOFF)
+    await listAssetsForGroup('g1', 'u1', CUTOFF)
     const { sql, params } = lastWhere()
     expect(sql).toContain('"Assets"."created_at" < $')
     expect(params).toContain(CUTOFF.toISOString())
   })
 
   it('getAssetById resolves nothing created at or after it', async () => {
-    await getAssetById('a1', 'g1', CUTOFF)
+    await getAssetById('a1', 'g1', 'u1', CUTOFF)
     const { sql, params } = lastWhere()
     expect(sql).toContain('"Assets"."created_at" < $')
     expect(params).toContain(CUTOFF.toISOString())
@@ -49,9 +49,9 @@ describe('with a cut-off', () => {
 
 describe('without a cut-off (current members)', () => {
   it.each([
-    ['listAssetsForGroup', () => listAssetsForGroup('g1')],
-    ['listAssetsForGroup(null)', () => listAssetsForGroup('g1', null)],
-    ['getAssetById', () => getAssetById('a1', 'g1')],
+    ['listAssetsForGroup', () => listAssetsForGroup('g1', 'u1')],
+    ['listAssetsForGroup(null)', () => listAssetsForGroup('g1', 'u1', null)],
+    ['getAssetById', () => getAssetById('a1', 'g1', 'u1')],
     ['listRulesForAsset', () => listRulesForAsset('g1', 'a1')],
   ])('%s adds no created_at predicate', async (_name, run) => {
     await run()

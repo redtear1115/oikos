@@ -161,6 +161,59 @@ export function viewerChaptersClause(
   )`
 }
 
+const SQL_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/
+
+/**
+ * #1484 — the Assets row `assetAlias` resolves for `viewerId`: it is not a
+ * frozen copy, or the viewer was a member of the copy's ledger AT the freeze
+ * moment (some GroupEpochs row of that ledger lists them and its
+ * `[started_at, ended_at]` contains `frozen_at`; both ends inclusive).
+ *
+ * Who passes, for a copy frozen when B left the A+B ledger:
+ *   - A (the A+B chapter ends exactly at the boundary) and B in the old
+ *     ledger; B in B's own new ledger (its solo chapter starts exactly at the
+ *     boundary — same literal, see freezeCrossLedgerLinks).
+ *   - NOT a partner who joined A later, NOT an earlier ex-partner of A (pinned
+ *     on, or rejoined from, a chapter that ended before the boundary).
+ * A member swap relabels roles without a new chapter, so it changes nothing.
+ * A ledger with no GroupEpochs rows resolves no copy (fails closed).
+ *
+ * Use it wherever a read outputs a frozen copy's name or row: as part of the
+ * WHERE of a by-id read (ineligible ⇒ not found) or inside the ON of a LEFT
+ * JOIN that supplies a linked 愛物's name (ineligible ⇒ the name is NULL,
+ * resolving exactly like a link to another ledger's asset, #1485). Lists and
+ * pickers exclude frozen copies outright (`isNull(assets.frozenAt)`) and do
+ * not need it. The DB side of the same rule is public.frozen_copy_visible
+ * (drizzle/0079), used by the Assets RLS policy for the Data API / Realtime.
+ *
+ * `assetAlias` is the table name or alias of the Assets row as it appears in
+ * the statement (`'Assets'`, `'a'`, `'insured_child_asset'`); every outer
+ * column is written table-qualified. Inside the subquery an unqualified
+ * `group_id` would bind to GroupEpochs' own column and the check would pass
+ * or fail for every row, with no error (see `openChapterCreatedClause`).
+ *
+ * Failure looks like: nothing errors. Too loose, a later partner sees the
+ * name of the leaver's car / child on old records; too tight, a legitimate
+ * member's record shows no 愛物 name, exactly like a deleted link.
+ *
+ * Known residual (accepted, #1484 F5): the monthly review snapshot
+ * (drizzle/0077) stores asset names without ids. In-app review is chapter-
+ * gated (review/[month]/page.tsx), so a later partner only reaches a stored
+ * name through a duo-chapter record dated (`transacted_at`) into a month
+ * wholly inside their own chapter.
+ */
+export function frozenCopyVisibleClause(assetAlias: string, viewerId: string): SQL {
+  if (!SQL_IDENTIFIER.test(assetAlias)) throw new Error('frozenCopyVisibleClause: invalid alias')
+  const a = sql.raw(`"${assetAlias}"`)
+  return sql`(${a}."frozen_at" IS NULL OR EXISTS (
+    SELECT 1 FROM "GroupEpochs" fce
+    WHERE fce."group_id" = ${a}."group_id"
+      AND (fce."member_a_id" = ${viewerId}::uuid OR fce."member_b_id" = ${viewerId}::uuid)
+      AND fce."started_at" <= ${a}."frozen_at"
+      AND (fce."ended_at" IS NULL OR fce."ended_at" >= ${a}."frozen_at")
+  ))`
+}
+
 /**
  * Build the SQL bounds for a timestamptz column scoped to a calendar window in
  * Asia/Taipei local time. Used by CashTransactions (`transacted_at`) and

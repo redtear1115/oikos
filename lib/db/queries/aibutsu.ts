@@ -2,6 +2,7 @@ import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets, profiles } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
+import { frozenCopyVisibleClause } from './_predicates'
 
 export interface PetListDetail {
   species: string | null
@@ -209,6 +210,7 @@ export interface InsuranceDetailsRow {
 export async function getInsuranceDetails(
   assetId: string,
   groupId: string,
+  viewerId: string,
 ): Promise<InsuranceDetailsRow | null> {
   // #167 — LEFT JOIN the linked Child asset so the detail page can show the
   // child's name without an extra round-trip. NULL when insured_child_id is
@@ -244,9 +246,12 @@ export async function getInsuranceDetails(
     // insured child must be in that same group. A link to another ledger's
     // asset resolves as no name, never as that asset's name.
     .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
+    // #1484 — a frozen copy of the child resolves only for members of this
+    // ledger at freeze time (frozenCopyVisibleClause); otherwise no name.
     .leftJoin(insuredChildAsset, and(
       eq(insuredChildAsset.id, insuranceDetails.insuredChildId),
       eq(insuredChildAsset.groupId, assets.groupId),
+      frozenCopyVisibleClause('insured_child_asset', viewerId),
     ))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
     .where(and(

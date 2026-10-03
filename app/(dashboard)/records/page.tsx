@@ -1,9 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
-import { db } from '@/lib/db/client'
-import { assets } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { listFilterAssetsForGroup } from '@/lib/db/queries/asset'
+import { getDrillAssetName, listFilterAssetsForGroup } from '@/lib/db/queries/asset'
 import { listFeedAllPaged, listFeedAllMonthSummaries, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
@@ -99,14 +96,11 @@ export default async function RecordsPage({
   // soft-deleted asset still keeps its original name in stats, and the chip
   // should match that. `null` assetId is the「其他支出」(no-asset) bar; we
   // use a sentinel name so the chip / RecordsList prop type stays simple.
+  // A frozen copy (#1442) resolves only for members of the ledger at freeze
+  // time (#1484); anyone else gets no name, as for another ledger's asset.
   let drillAssetName: string | null = null
   if (drill?.kind === 'asset' && drill.assetId !== null) {
-    const [a] = await db
-      .select({ name: assets.name })
-      .from(assets)
-      .where(and(eq(assets.id, drill.assetId), eq(assets.groupId, group.id)))
-      .limit(1)
-    drillAssetName = a?.name ?? null
+    drillAssetName = await getDrillAssetName(drill.assetId, group.id, user.id)
   }
 
   // Asset list for the FilterSheet's 愛物 multi-select. Active assets only —

@@ -65,8 +65,8 @@ vi.mock('@/lib/i18n/t', () => ({
   }),
 }))
 vi.mock('@/lib/db/queries/asset', () => ({
-  listAssetsForGroup: vi.fn(async (_g: string, cutoff?: Date | null) => before(ASSETS, cutoff)),
-  getAssetById: vi.fn(async (id: string, _g: string, cutoff?: Date | null) =>
+  listAssetsForGroup: vi.fn(async (_g: string, _viewer: string, cutoff?: Date | null) => before(ASSETS, cutoff)),
+  getAssetById: vi.fn(async (id: string, _g: string, _viewer: string, cutoff?: Date | null) =>
     before(ASSETS, cutoff).find((a) => a.id === id) ?? null),
   getAssetSummariesBatch: async () => new Map(),
   getAssetSummary: async () => ({ monthAmount: 0, totalAmount: 0 }),
@@ -124,12 +124,12 @@ describe('removed member B, pinned to chapter 1', () => {
 
   it('the list excludes an asset created after the chapter closed', async () => {
     expect(await listIds()).toEqual(['car-old', 'ins-old'])
-    expect(assetQueries.listAssetsForGroup).toHaveBeenCalledWith('g1', ENDED)
+    expect(assetQueries.listAssetsForGroup).toHaveBeenCalledWith('g1', 'user-b', ENDED)
   })
 
   it('the newer asset is not found by URL', async () => {
     await expect(detail('ins-new')).rejects.toThrow('NEXT_NOT_FOUND')
-    expect(assetQueries.getAssetById).toHaveBeenCalledWith('ins-new', 'g1', ENDED)
+    expect(assetQueries.getAssetById).toHaveBeenCalledWith('ins-new', 'g1', 'user-b', ENDED)
   })
 
   it("an old asset's detail excludes a rule created after the chapter closed", async () => {
@@ -157,8 +157,8 @@ describe('control: A, a current member', () => {
       it('reads with no cut-off', async () => {
         await listIds()
         await detail('ins-old')
-        expect(assetQueries.listAssetsForGroup).toHaveBeenCalledWith('g1', null)
-        expect(assetQueries.getAssetById).toHaveBeenCalledWith('ins-old', 'g1', null)
+        expect(assetQueries.listAssetsForGroup).toHaveBeenCalledWith('g1', 'user-a', null)
+        expect(assetQueries.getAssetById).toHaveBeenCalledWith('ins-old', 'g1', 'user-a', null)
         expect(ruleQueries.listRulesForAsset).toHaveBeenCalledWith('g1', 'ins-old', null)
       })
 

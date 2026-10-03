@@ -159,7 +159,7 @@ describe.skipIf(!isLocalDb)('Assets joins are group-scoped (#1485)', () => {
   })
 
   it('monthlyStatsByAsset: a record on another ledger\'s asset gets no name', async () => {
-    const rows = await monthlyStatsByAsset(ids.gA, '2026-05', undefined, undefined, allTime)
+    const rows = await monthlyStatsByAsset(ids.gA, '2026-05', undefined, undefined, allTime, ids.A)
     const cross = rows.find((r) => r.key === ids.carB)
     expect(cross).toBeDefined()
     expect(cross!.name).toBeNull()
@@ -168,7 +168,7 @@ describe.skipIf(!isLocalDb)('Assets joins are group-scoped (#1485)', () => {
   })
 
   it('listAssetsForGroup: a policy\'s insured child in another ledger resolves as no name', async () => {
-    const list = await listAssetsForGroup(ids.gA)
+    const list = await listAssetsForGroup(ids.gA, ids.A)
     const cross = list.find((a) => a.id === ids.insCross)
     expect(cross).toBeDefined()
     expect(cross!.insuranceInsuredChildId).toBe(ids.childB)
@@ -178,19 +178,19 @@ describe.skipIf(!isLocalDb)('Assets joins are group-scoped (#1485)', () => {
   })
 
   it('getAssetById: same, for the single-asset read', async () => {
-    const cross = await getAssetById(ids.insCross, ids.gA)
+    const cross = await getAssetById(ids.insCross, ids.gA, ids.A)
     expect(cross?.insuranceInsuredChildName).toBeNull()
-    expect((await getAssetById(ids.insOwn, ids.gA))?.insuranceInsuredChildName).toBe(OWN_CHILD)
+    expect((await getAssetById(ids.insOwn, ids.gA, ids.A))?.insuranceInsuredChildName).toBe(OWN_CHILD)
   })
 
   it('getInsuranceDetails: foreign insured child resolves as no name; base row is group-scoped', async () => {
-    const cross = await getInsuranceDetails(ids.insCross, ids.gA)
+    const cross = await getInsuranceDetails(ids.insCross, ids.gA, ids.A)
     expect(cross).not.toBeNull()
     expect(cross!.insuredChildId).toBe(ids.childB)
     expect(cross!.insuredChildName).toBeNull()
-    expect((await getInsuranceDetails(ids.insOwn, ids.gA))?.insuredChildName).toBe(OWN_CHILD)
+    expect((await getInsuranceDetails(ids.insOwn, ids.gA, ids.A))?.insuredChildName).toBe(OWN_CHILD)
     // The policy itself is ledger A's: asking for it under ledger B returns nothing.
-    expect(await getInsuranceDetails(ids.insCross, ids.gB)).toBeNull()
+    expect(await getInsuranceDetails(ids.insCross, ids.gB, ids.A)).toBeNull()
   })
 
   it('getLinkedInsurancesForVehicle: ledger B\'s car does not list ledger A\'s policy', async () => {
