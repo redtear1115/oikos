@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **設定頁的咖啡不再浮在畫面上，改成「應用」最後一列（#1516）**
+  使用者：設定頁右下角的浮動咖啡按鈕拿掉，「應用」區塊最後多一列「請喝杯咖啡」，點了在新分頁開啟 Ko-fi；iOS App 內不顯示這一列。
+  技術：新增 `SupportRow`（掛載後才依 `Capacitor.getPlatform()` 決定顯示）；設定頁不再載入 Ko-fi 第三方 script，`kofi_widget_click` 事件與 `source` 不變。
+
 - **iOS 文字大小跟著系統設定，主要畫面的小字放大（#1490）**
   使用者：iOS 的「顯示與亮度 → 文字大小」調大後，記錄、新增、回顧等頁面的內文會跟著放大（上限 2 倍）；預設大小下，標籤與輔助文字從 10／12 號提高到 12／14 號，列表裡較長的描述改成換行顯示、不再以刪節號截斷。
   技術：`--text-scale` 只乘 `text-xs`～`text-xl`／`text-mini`，標題與金額不放大、間距不變；僅 iOS WebKit 量測，Android 沿用系統字體縮放。
