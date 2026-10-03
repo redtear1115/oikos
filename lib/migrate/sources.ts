@@ -1,10 +1,11 @@
 // lib/migrate/sources.ts
 // Central source of truth for /migrate/<source> page competitor data (#852).
 //
-// Comparison table text is split in two (#1185): verdict-only labels (支援 /
-// 無 …) stay as Chinese literals here; labels that carry a condition or a
-// specific claim are `{ i18n: key }` references into `migrate.comparisonText`
-// in the four locale files. The rule and the reasoning live in
+// Every comparison-table string — feature names, verdict labels and the
+// conditional cells — is an `{ i18n: key }` reference into `migrate.comparisonText`
+// in the four locale files, so /en, /ja and /zh-CN render no Traditional Chinese
+// (#1538). Withdrawn: the #1185 rule that kept verdict-only labels as Chinese
+// literals here. The reasoning, and why it was reversed, are in
 // docs/superpowers/specs/migrate-pages-design.md — not restated here, so there
 // is only one copy to keep true.
 
@@ -49,17 +50,50 @@ export type ComparisonTextKey =
   | 'sharedLedgerSetupRequired'
   | 'adsOrMembership'
   | 'requiresMembership'
+  | 'featSharedLedger'
+  | 'featSplitModes'
+  | 'featMaintained'
+  | 'featMultiCurrency'
+  | 'featRealtimeSync'
+  | 'featFree'
+  | 'featCsvImport'
+  | 'featCsvExport'
+  | 'featCloudSync'
+  | 'featRealtimeCloudSync'
+  | 'featDataExport'
+  | 'featCrossPlatform'
+  | 'featDailyEntries'
+  | 'verdictSupported'
+  | 'verdictNone'
+  | 'verdictMultipleModes'
+  | 'verdictBiweekly'
+  | 'verdictFreeBuiltIn'
+  | 'verdictNoNativeSupport'
+  | 'verdictForever'
+  | 'verdictDirectUpload'
+  | 'verdictDefaultMode'
+  | 'verdictInstant'
+  | 'verdictSingleUser'
+  | 'verdictSubscriptionModel'
+  | 'verdictFree'
+  | 'verdictCanExport'
+  | 'verdictNoExport'
+  | 'verdictGroupSupport'
+  | 'verdictUnlimited'
+  | 'verdictBuiltInConversion'
+  | 'verdictSpreadsheetExport'
+  | 'verdictCsvExport'
+  | 'verdictPlatforms'
 
-/** A literal (untranslated, verdict-only) string or a locale-dictionary key. */
-export type ComparisonText = string | { i18n: ComparisonTextKey }
+/** A reference into the locale dictionary. There is deliberately no string
+ *  form: a literal here is rendered verbatim on every locale, which is how
+ *  /en/migrate/* came to show 支援 / 無 / 多種模式 (#1538). `tsc` rejects it, and
+ *  `tests/migrate-comparison-i18n.test.tsx` checks the rendered table. */
+export type ComparisonText = { i18n: ComparisonTextKey }
 
-/** `partial` cells must be translated: the mark alone says "partly", and
- *  the condition after it (e.g. 免費版每日 4 筆) is the whole point of the cell.
- *  Enforced structurally so a new source can't reintroduce a Chinese-only partial cell. Labels are plain text; the ✓ / △ / ✕ mark
- *  comes from the tone, rendered by MigrateComparison (#1519). */
-export type ComparisonCell =
-  | { label: ComparisonText; tone: 'yes' | 'no' }
-  | { label: { i18n: ComparisonTextKey }; tone: 'partial' }
+/** Labels are plain text; the ✓ / △ / ✕ mark comes from the tone, rendered by
+ *  MigrateComparison (#1519). */
+export type ComparisonCell = { label: ComparisonText; tone: CellTone }
 
 export type ComparisonRow = {
   feature: ComparisonText
@@ -74,13 +108,12 @@ export type ResolvedComparisonRow = {
 }
 
 /** Swap `{ i18n }` references for the locale's `migrate.comparisonText`
- *  strings. Literals pass through, so zh-TW output is byte-identical to the
- *  pre-#1185 hard-coded table. */
+ *  strings. The zh-TW output is byte-identical to the pre-#1538 table. */
 export function resolveComparisonRows(
   rows: readonly ComparisonRow[],
   text: Record<ComparisonTextKey, string>,
 ): ResolvedComparisonRow[] {
-  const r = (v: ComparisonText) => (typeof v === 'string' ? v : text[v.i18n])
+  const r = (v: ComparisonText) => text[v.i18n]
   return rows.map((row) => ({
     feature: r(row.feature),
     futari: { label: r(row.futari.label), tone: row.futari.tone },
@@ -108,204 +141,204 @@ export const MIGRATE_SOURCES = {
   honeydue: {
     slug: 'honeydue',
     name: 'Honeydue',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本',   futari: { label: '支援',      tone: 'yes'     }, other: { label: '支援',      tone: 'yes'     } },
-        { feature: '費用分攤模式',   futari: { label: '多種模式',  tone: 'yes'     }, other: { label: { i18n: 'basicHalfSplit' },  tone: 'partial' } },
-        { feature: '持續維護更新',   futari: { label: '每兩週發版', tone: 'yes'    }, other: { label: { i18n: 'updatesSlowed' },  tone: 'partial' } },
-        { feature: '多幣別記帳',     futari: { label: '支援',      tone: 'yes'     }, other: { label: '無',        tone: 'no'      } },
+        { feature: { i18n: 'featSharedLedger' },   futari: { label: { i18n: 'verdictSupported' },      tone: 'yes'     }, other: { label: { i18n: 'verdictSupported' },      tone: 'yes'     } },
+        { feature: { i18n: 'featSplitModes' },   futari: { label: { i18n: 'verdictMultipleModes' },  tone: 'yes'     }, other: { label: { i18n: 'basicHalfSplit' },  tone: 'partial' } },
+        { feature: { i18n: 'featMaintained' },   futari: { label: { i18n: 'verdictBiweekly' }, tone: 'yes'    }, other: { label: { i18n: 'updatesSlowed' },  tone: 'partial' } },
+        { feature: { i18n: 'featMultiCurrency' },     futari: { label: { i18n: 'verdictSupported' },      tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },        tone: 'no'      } },
       ],
     },
   },
   spendee: {
     slug: 'spendee',
     name: 'Spendee',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '免費內建',   tone: 'yes'     }, other: { label: { i18n: 'paidUnlock' },   tone: 'partial' } },
-        { feature: '費用分攤模式', futari: { label: '多種模式',   tone: 'yes'     }, other: { label: '無原生支援',   tone: 'no'      } },
-        { feature: '即時同步',     futari: { label: '支援',       tone: 'yes'     }, other: { label: { i18n: 'paidPlanOnly' },     tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',       tone: 'yes'     }, other: { label: { i18n: 'basicPlanLimited' }, tone: 'partial' } },
-        { feature: 'CSV 資料匯入', futari: { label: '直接上傳',   tone: 'yes'     }, other: { label: { i18n: 'manualCleanup' },     tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictFreeBuiltIn' },   tone: 'yes'     }, other: { label: { i18n: 'paidUnlock' },   tone: 'partial' } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' },   tone: 'yes'     }, other: { label: { i18n: 'verdictNoNativeSupport' },   tone: 'no'      } },
+        { feature: { i18n: 'featRealtimeSync' },     futari: { label: { i18n: 'verdictSupported' },       tone: 'yes'     }, other: { label: { i18n: 'paidPlanOnly' },     tone: 'partial' } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },       tone: 'yes'     }, other: { label: { i18n: 'basicPlanLimited' }, tone: 'partial' } },
+        { feature: { i18n: 'featCsvImport' }, futari: { label: { i18n: 'verdictDirectUpload' },   tone: 'yes'     }, other: { label: { i18n: 'manualCleanup' },     tone: 'partial' } },
       ],
     },
   },
   cwmoney: {
     slug: 'cwmoney',
     name: 'CWMoney',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     templateDownload: { href: '/cwmoney-template.xlsx' },
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: { i18n: 'requiresVip' },   tone: 'partial' } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',       tone: 'no'      } },
-        { feature: '多幣別記帳',   futari: { label: '支援',     tone: 'yes'     }, other: { label: '支援',     tone: 'yes'     } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'vipUnlock' }, tone: 'partial' } },
-        { feature: '即時雲端同步', futari: { label: '即時',     tone: 'yes'     }, other: { label: { i18n: 'requiresVip' },   tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'requiresVip' },   tone: 'partial' } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },       tone: 'no'      } },
+        { feature: { i18n: 'featMultiCurrency' },   futari: { label: { i18n: 'verdictSupported' },     tone: 'yes'     }, other: { label: { i18n: 'verdictSupported' },     tone: 'yes'     } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'vipUnlock' }, tone: 'partial' } },
+        { feature: { i18n: 'featRealtimeCloudSync' }, futari: { label: { i18n: 'verdictInstant' },     tone: 'yes'     }, other: { label: { i18n: 'requiresVip' },   tone: 'partial' } },
       ],
     },
   },
   moneybook: {
     slug: 'moneybook',
     name: 'Moneybook',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本',   futari: { label: '預設模式', tone: 'yes'     }, other: { label: '單人設計',   tone: 'no'      } },
-        { feature: '費用分攤模式',   futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',         tone: 'no'      } },
-        { feature: 'CSV 資料匯出',   futari: { label: '免費',     tone: 'yes'     }, other: { label: { i18n: 'requiresSubscription' },     tone: 'partial' } },
-        { feature: '完全免費',       futari: { label: '永久',     tone: 'yes'     }, other: { label: '訂閱制',     tone: 'no'      } },
+        { feature: { i18n: 'featSharedLedger' },   futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' },   tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' },   futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },         tone: 'no'      } },
+        { feature: { i18n: 'featCsvExport' },   futari: { label: { i18n: 'verdictFree' },     tone: 'yes'     }, other: { label: { i18n: 'requiresSubscription' },     tone: 'partial' } },
+        { feature: { i18n: 'featFree' },       futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'verdictSubscriptionModel' },     tone: 'no'      } },
       ],
     },
   },
   andromoney: {
     slug: 'andromoney',
     name: 'AndroMoney',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: '單人設計',       tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',             tone: 'no'      } },
-        { feature: '即時雲端同步', futari: { label: '即時',     tone: 'yes'     }, other: { label: { i18n: 'manualBackup' },     tone: 'partial' } },
-        { feature: '多幣別記帳',   futari: { label: '支援',     tone: 'yes'     }, other: { label: '支援',           tone: 'yes'     } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'adsOrPaidPlan' }, tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' },       tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },             tone: 'no'      } },
+        { feature: { i18n: 'featRealtimeCloudSync' }, futari: { label: { i18n: 'verdictInstant' },     tone: 'yes'     }, other: { label: { i18n: 'manualBackup' },     tone: 'partial' } },
+        { feature: { i18n: 'featMultiCurrency' },   futari: { label: { i18n: 'verdictSupported' },     tone: 'yes'     }, other: { label: { i18n: 'verdictSupported' },           tone: 'yes'     } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'adsOrPaidPlan' }, tone: 'partial' } },
       ],
     },
   },
   mobills: {
     slug: 'mobills',
     name: 'Mobills',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式',  tone: 'yes'     }, other: { label: '單人設計',   tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式',  tone: 'yes'     }, other: { label: '無',         tone: 'no'      } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' },  tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' },   tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' },  tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },         tone: 'no'      } },
         { feature: { i18n: 'interfaceLanguage' },     futari: { label: { i18n: 'fourLanguages' }, tone: 'yes'    }, other: { label: { i18n: 'mostlyEnglish' }, tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',      tone: 'yes'     }, other: { label: { i18n: 'advancedNeedsSubscription' }, tone: 'partial' } },
-        { feature: 'CSV 資料匯入', futari: { label: '直接上傳',  tone: 'yes'     }, other: { label: '可匯出',     tone: 'yes'     } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },      tone: 'yes'     }, other: { label: { i18n: 'advancedNeedsSubscription' }, tone: 'partial' } },
+        { feature: { i18n: 'featCsvImport' }, futari: { label: { i18n: 'verdictDirectUpload' },  tone: 'yes'     }, other: { label: { i18n: 'verdictCanExport' },     tone: 'yes'     } },
       ],
     },
   },
   manebo: {
     slug: 'manebo',
     name: 'Manebo',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     comparison: {
       rows: [
-        { feature: '雙人共同帳本',   futari: { label: '預設模式', tone: 'yes'     }, other: { label: { i18n: 'sharingSetupRequired' },      tone: 'partial' } },
-        { feature: '費用分攤模式',   futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',              tone: 'no'      } },
-        { feature: 'CSV 資料匯出',   futari: { label: '免費',     tone: 'yes'     }, other: { label: { i18n: 'premiumOnly' },    tone: 'partial' } },
-        { feature: '完全免費',       futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'someFeaturesPaid' },    tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' },   futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'sharingSetupRequired' },      tone: 'partial' } },
+        { feature: { i18n: 'featSplitModes' },   futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },              tone: 'no'      } },
+        { feature: { i18n: 'featCsvExport' },   futari: { label: { i18n: 'verdictFree' },     tone: 'yes'     }, other: { label: { i18n: 'premiumOnly' },    tone: 'partial' } },
+        { feature: { i18n: 'featFree' },       futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'someFeaturesPaid' },    tone: 'partial' } },
       ],
     },
   },
   'simple-daily-money': {
     slug: 'simple-daily-money',
     name: '簡單記帳',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: { i18n: 'viewOnly' }, tone: 'partial' } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',       tone: 'no'      } },
-        { feature: '雲端同步',     futari: { label: '即時',     tone: 'yes'     }, other: { label: { i18n: 'dependsOnVersion' },   tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'advancedSubscription' }, tone: 'partial' } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出', tone: 'yes'     }, other: { label: { i18n: 'vipOnly' }, tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'viewOnly' }, tone: 'partial' } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },       tone: 'no'      } },
+        { feature: { i18n: 'featCloudSync' },     futari: { label: { i18n: 'verdictInstant' },     tone: 'yes'     }, other: { label: { i18n: 'dependsOnVersion' },   tone: 'partial' } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'advancedSubscription' }, tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' }, tone: 'yes'     }, other: { label: { i18n: 'vipOnly' }, tone: 'partial' } },
       ],
     },
   },
   'fortune-city': {
     slug: 'fortune-city',
     name: '記帳城市',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: '單人設計', tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',       tone: 'no'      } },
-        { feature: '雲端同步',     futari: { label: '即時',     tone: 'yes'     }, other: { label: { i18n: 'dependsOnAccount' },   tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'inAppPurchases' },   tone: 'partial' } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出', tone: 'yes'     }, other: { label: { i18n: 'subscriptionOnly' }, tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' }, tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },       tone: 'no'      } },
+        { feature: { i18n: 'featCloudSync' },     futari: { label: { i18n: 'verdictInstant' },     tone: 'yes'     }, other: { label: { i18n: 'dependsOnAccount' },   tone: 'partial' } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'inAppPurchases' },   tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' }, tone: 'yes'     }, other: { label: { i18n: 'subscriptionOnly' }, tone: 'partial' } },
       ],
     },
   },
   cashman: {
     slug: 'cashman',
     name: 'CashMan',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: '單人設計', tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',       tone: 'no'      } },
-        { feature: '雲端同步',     futari: { label: '即時',     tone: 'yes'     }, other: { label: { i18n: 'mostlyLocal' }, tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: '免費',     tone: 'yes'     } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出', tone: 'yes'     }, other: { label: '無匯出',   tone: 'no'      } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' }, tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },       tone: 'no'      } },
+        { feature: { i18n: 'featCloudSync' },     futari: { label: { i18n: 'verdictInstant' },     tone: 'yes'     }, other: { label: { i18n: 'mostlyLocal' }, tone: 'partial' } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'verdictFree' },     tone: 'yes'     } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNoExport' },   tone: 'no'      } },
       ],
     },
   },
   '1money': {
     slug: '1money',
     name: '1Money',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: '單人設計', tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',       tone: 'no'      } },
-        { feature: '多幣別記帳',   futari: { label: '支援',     tone: 'yes'     }, other: { label: '支援',     tone: 'yes'     } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'advancedPaid' }, tone: 'partial' } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出', tone: 'yes'     }, other: { label: { i18n: 'partialExport' }, tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' }, tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },       tone: 'no'      } },
+        { feature: { i18n: 'featMultiCurrency' },   futari: { label: { i18n: 'verdictSupported' },     tone: 'yes'     }, other: { label: { i18n: 'verdictSupported' },     tone: 'yes'     } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'advancedPaid' }, tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' }, tone: 'yes'     }, other: { label: { i18n: 'partialExport' }, tone: 'partial' } },
       ],
     },
   },
   icost: {
     slug: 'icost',
     name: 'iCost',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式',        tone: 'yes'     }, other: { label: '單人設計',  tone: 'no'      } },
-        { feature: '費用分攤模式', futari: { label: '多種模式',        tone: 'yes'     }, other: { label: '無',        tone: 'no'      } },
-        { feature: '跨平台',       futari: { label: 'iOS／Android／Web', tone: 'yes'   }, other: { label: { i18n: 'iosOnly' },  tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '永久',            tone: 'yes'     }, other: { label: { i18n: 'inAppPurchases' },    tone: 'partial' } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出',        tone: 'yes'     }, other: { label: '無匯出',    tone: 'no'      } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' },        tone: 'yes'     }, other: { label: { i18n: 'verdictSingleUser' },  tone: 'no'      } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' },        tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },        tone: 'no'      } },
+        { feature: { i18n: 'featCrossPlatform' },       futari: { label: { i18n: 'verdictPlatforms' }, tone: 'yes'   }, other: { label: { i18n: 'iosOnly' },  tone: 'partial' } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },            tone: 'yes'     }, other: { label: { i18n: 'inAppPurchases' },    tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' },        tone: 'yes'     }, other: { label: { i18n: 'verdictNoExport' },    tone: 'no'      } },
       ],
     },
   },
   splitwise: {
     slug: 'splitwise',
     name: 'Splitwise',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     // No screenshotWorkflow: Splitwise exports a spreadsheet per group /
     // friendship (kb.splitwise.com "How can I double check my balances?"),
     // so users arrive holding a real CSV. Headers don't match any dedicated
     // sniff signature, so the file routes to the generic mapping wizard.
     comparison: {
       rows: [
-        { feature: '雙人共同帳本',   futari: { label: '預設模式',   tone: 'yes'     }, other: { label: '群組支援',      tone: 'yes'     } },
-        { feature: '費用分攤模式',   futari: { label: '多種模式',   tone: 'yes'     }, other: { label: '多種模式',      tone: 'yes'     } },
-        { feature: '每日記帳筆數',   futari: { label: '不限',       tone: 'yes'     }, other: { label: { i18n: 'freePlanFourPerDay' }, tone: 'partial' } },
-        { feature: '多幣別記帳',     futari: { label: '內建換算',   tone: 'yes'     }, other: { label: { i18n: 'conversionNeedsPro' },    tone: 'partial' } },
-        { feature: '資料匯出帶走',   futari: { label: 'CSV 匯出',   tone: 'yes'     }, other: { label: '試算表匯出',    tone: 'yes'     } },
+        { feature: { i18n: 'featSharedLedger' },   futari: { label: { i18n: 'verdictDefaultMode' },   tone: 'yes'     }, other: { label: { i18n: 'verdictGroupSupport' },      tone: 'yes'     } },
+        { feature: { i18n: 'featSplitModes' },   futari: { label: { i18n: 'verdictMultipleModes' },   tone: 'yes'     }, other: { label: { i18n: 'verdictMultipleModes' },      tone: 'yes'     } },
+        { feature: { i18n: 'featDailyEntries' },   futari: { label: { i18n: 'verdictUnlimited' },       tone: 'yes'     }, other: { label: { i18n: 'freePlanFourPerDay' }, tone: 'partial' } },
+        { feature: { i18n: 'featMultiCurrency' },     futari: { label: { i18n: 'verdictBuiltInConversion' },   tone: 'yes'     }, other: { label: { i18n: 'conversionNeedsPro' },    tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' },   futari: { label: { i18n: 'verdictCsvExport' },   tone: 'yes'     }, other: { label: { i18n: 'verdictSpreadsheetExport' },    tone: 'yes'     } },
       ],
     },
   },
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-04',
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '預設模式', tone: 'yes'     }, other: { label: { i18n: 'sharedLedgerSetupRequired' }, tone: 'partial' } },
-        { feature: '費用分攤模式', futari: { label: '多種模式', tone: 'yes'     }, other: { label: '無',           tone: 'no'      } },
-        { feature: '多幣別記帳',   futari: { label: '支援',     tone: 'yes'     }, other: { label: '支援',         tone: 'yes'     } },
-        { feature: '完全免費',     futari: { label: '永久',     tone: 'yes'     }, other: { label: { i18n: 'adsOrMembership' }, tone: 'partial' } },
-        { feature: '資料匯出帶走', futari: { label: 'CSV 匯出', tone: 'yes'     }, other: { label: { i18n: 'requiresMembership' },       tone: 'partial' } },
+        { feature: { i18n: 'featSharedLedger' }, futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'sharedLedgerSetupRequired' }, tone: 'partial' } },
+        { feature: { i18n: 'featSplitModes' }, futari: { label: { i18n: 'verdictMultipleModes' }, tone: 'yes'     }, other: { label: { i18n: 'verdictNone' },           tone: 'no'      } },
+        { feature: { i18n: 'featMultiCurrency' },   futari: { label: { i18n: 'verdictSupported' },     tone: 'yes'     }, other: { label: { i18n: 'verdictSupported' },         tone: 'yes'     } },
+        { feature: { i18n: 'featFree' },     futari: { label: { i18n: 'verdictForever' },     tone: 'yes'     }, other: { label: { i18n: 'adsOrMembership' }, tone: 'partial' } },
+        { feature: { i18n: 'featDataExport' }, futari: { label: { i18n: 'verdictCsvExport' }, tone: 'yes'     }, other: { label: { i18n: 'requiresMembership' },       tone: 'partial' } },
       ],
     },
   },

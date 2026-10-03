@@ -2736,9 +2736,9 @@ export type Translations = {
     /** Heading template for the comparison table. Contains `{other}` —
      *  replaced with the source brand name per page. e.g. "Futari vs {other}". */
     comparisonHeading: string
-    /** Comparison-table cells that carry a condition or specific claim (#1185).
-     *  Verdict-only labels (支援 / 無) stay as literals in
-     *  lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
+    /** Every string in the comparison table: feature names, verdict labels and
+     *  conditional cells (#1185, completed by #1538). Nothing is left as a literal
+     *  in lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
      *  Values are plain text: the ✓ / △ / ✕ mark is owned by MigrateComparison (#1519). */
     comparisonText: Record<import('@/lib/migrate/sources').ComparisonTextKey, string>
     /** HowToStep `name` in the HowTo JSON-LD (not rendered). Contains `{n}`. */
@@ -5257,6 +5257,40 @@ export const zhTW: Translations = {
       sharedLedgerSetupRequired: '需設共享帳本',
       adsOrMembership: '含廣告／會員',
       requiresMembership: '需會員',
+      featSharedLedger: '雙人共同帳本',
+      featSplitModes: '費用分攤模式',
+      featMaintained: '持續維護更新',
+      featMultiCurrency: '多幣別記帳',
+      featRealtimeSync: '即時同步',
+      featFree: '完全免費',
+      featCsvImport: 'CSV 資料匯入',
+      featCsvExport: 'CSV 資料匯出',
+      featCloudSync: '雲端同步',
+      featRealtimeCloudSync: '即時雲端同步',
+      featDataExport: '資料匯出帶走',
+      featCrossPlatform: '跨平台',
+      featDailyEntries: '每日記帳筆數',
+      verdictSupported: '支援',
+      verdictNone: '無',
+      verdictMultipleModes: '多種模式',
+      verdictBiweekly: '每兩週發版',
+      verdictFreeBuiltIn: '免費內建',
+      verdictNoNativeSupport: '無原生支援',
+      verdictForever: '永久',
+      verdictDirectUpload: '直接上傳',
+      verdictDefaultMode: '預設模式',
+      verdictInstant: '即時',
+      verdictSingleUser: '單人設計',
+      verdictSubscriptionModel: '訂閱制',
+      verdictFree: '免費',
+      verdictCanExport: '可匯出',
+      verdictNoExport: '無匯出',
+      verdictGroupSupport: '群組支援',
+      verdictUnlimited: '不限',
+      verdictBuiltInConversion: '內建換算',
+      verdictSpreadsheetExport: '試算表匯出',
+      verdictCsvExport: 'CSV 匯出',
+      verdictPlatforms: 'iOS／Android／Web',
     },
     howToStepName: '步驟 {n}',
     trust: {

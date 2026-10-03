@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **英文、日文、简中的搬遷比較表整張翻譯（#1538）**
+  使用者：`/en/migrate/*`、`/ja/migrate/*`、`/zh-CN/migrate/*` 的比較表不再出現「雙人共同帳本」「支援」「無」「多種模式」這些中文列名與判定字，4 語各自完整；繁中頁文字不變。
+  技術：列名與判定字全部移進 `migrate.comparisonText`（35 個新 key），`ComparisonText` 不再接受字串、寫中文字面值會 `tsc` 失敗；新增 `tests/migrate-comparison-i18n.test.tsx` 逐來源×語系擋漏譯；各來源 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+
 - **品牌頁的連結夠大、能跳到內文、能回首頁（#1523）**
   使用者：首頁、登入頁、情境頁、搬遷頁的頁尾連結、語言切換與「看全部情境」都放大到 44px 可點；鍵盤第一下 Tab 是「跳到主要內容」；登入頁左上多了回首頁的 Futari；情境與搬遷詳情頁在手機上也有「Futari / 情境 / 同居」這樣的導覽可回上層；高對比（forced colors）模式下登入與主要按鈕不再失去邊框。
   技術：`<style>` 與 `#main` 放在品牌頁自己的 layout，`globals.css` 位元組不變（/zh-TW LCP 2.475 s）；搬遷頁 BreadcrumbList 隨可見導覽補上 `/migrate` 中間層；新增 `brand.*` 與 `migrate.hub.breadcrumbLabel` ×4 語，en／ja 譯文待確認。
