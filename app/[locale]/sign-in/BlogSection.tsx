@@ -4,6 +4,7 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { BlogPost } from '@/lib/blog-feed'
 import { withUtm } from '@/lib/utm'
 import { Ember } from '../_components/Ember'
+import { AfterPaint } from '../_components/AfterPaint'
 import { s } from '../_components/brand-inner'
 
 const VISIBLE = 5
@@ -12,13 +13,16 @@ const VISIBLE = 5
  * Dev-log section pinned below the 3-column sign-in grid (issue #460).
  *
  * Build-time render — `posts` is fetched in the parent Server Component
- * with `next.revalidate`, so this is plain static HTML with no client JS.
+ * with `next.revalidate`, so this is static HTML; the only client JS is the
+ * tiny `AfterPaint` island around the illustration.
  * Each row is an external `<a>` to southern-light.dev; we do NOT mirror
  * the article body into Futari — this is an index + traffic referral only.
  *
  * #1524: a hairline list, latest five visible, the rest behind a native
- * <details> (no JS; every entry stays in the DOM). Above it, a lazily loaded
- * crop of the hero illustration is the page's lamp structure.
+ * <details> (no JS; every entry stays in the DOM). Above it, a crop of the
+ * hero illustration is the page's lamp structure, mounted after first paint
+ * (`AfterPaint`) because plain lazy loading still fetched it in time to cost
+ * the page its LCP gate.
  */
 export function BlogSection({
   posts,
@@ -65,15 +69,17 @@ export function BlogSection({
       aria-labelledby="blog-section-heading"
     >
       <div className={s.window} aria-hidden="true">
-        <Image
-          src="/illustration-hero.png"
-          alt=""
-          width={1376}
-          height={768}
-          loading="lazy"
-          sizes="(min-width: 1280px) 1216px, 100vw"
-          className={s.windowImg}
-        />
+        {/* Mounted after the page settles, not just lazy: see AfterPaint. */}
+        <AfterPaint>
+          <Image
+            src="/illustration-hero.png"
+            alt=""
+            width={1376}
+            height={768}
+            sizes="(min-width: 1280px) 1216px, 100vw"
+            className={s.windowImg}
+          />
+        </AfterPaint>
       </div>
       <h2 id="blog-section-heading" className="mb-4 text-sm text-ink-2 tracking-[2px] uppercase">
         {t.signIn.blog.heading}
