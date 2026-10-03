@@ -43,15 +43,17 @@ Not time-driven: no clock states. No data fixture (public pages are static). Vie
 
 ## Owner questions (open)
 
-- Sign-in page carries a long story block + 「開發日誌」 list below the buttons. Keep, trim, or move? (Not deducted until answered.)
-- Landing CTA is blank + inert until hydration (and dead without JS) because its destination is platform-dependent (shell → sign-in, never App Store; iPhone browser → App Store; Android → beta form). Accept an SSR'd sign-in default that is re-pointed after hydration? Touches a native-contract file (`Landing.tsx` family) → real-device check needed.
 - U1 wording assumes desktop → sign-in; on phone browsers the CTA goes to App Store / beta form. Re-word U1 per platform?
 - Use-case CTA says 「免費開始記帳」; sign-in `<title>`/meta say 「開始兩個人的記帳生活」 (sign-in bans 「開始」). Intended?
-- Ko-fi widget: OK to reposition / hide while it overlaps hero and feature rows on brand pages?
 
 ## Decisions log
 
 - 2026-10-03: scope = landing + sign-in + use-case + migrate; direction = Warm Lamp deepened; brand pages unfrozen, dashboard frozen; purpose = trust + CTA conversion. (owner)
+- 2026-10-03 (after round 1): fix in two phases — A = bugs, LCP/G1, line breaks, a11y, wayfinding, de-carding inner pages (one PR); B = point-of-light signature concept, prototype first and owner decides before shipping. Landing CTA: SSR a labelled sign-in default, re-point after hydration (native-contract file → real-device check). Sign-in story + dev log: keep content, restyle as hairline list, shorten. Ko-fi on brand pages: appears only after scrolling past the hero, with clearance from content. (owner)
+
+## Issues (v1.6.7)
+
+Tracker #1528. Phase A: #1519 table marks, #1520 LCP/G1, #1521 CTA pre-hydration, #1522 line breaks, #1523 a11y + wayfinding, #1524 de-card inner pages, #1525 Ko-fi placement, #1526 sign-in copy. Phase B: #1527 point-of-light prototype.
 
 ## Rounds
 
