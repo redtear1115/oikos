@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **品牌頁文案拿掉「管理」「追蹤」與 track／manage 字眼（#1528）**
+  使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如「怎麼和伴侶一起追蹤？」改成「怎麼一起記？」；英文「expense tracking」只留在搜尋標題當品類名。
+  技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 區塊四個語系共約 140 句；9 個情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+
 - **情境、搬遷、登入頁改成同一個暖燈世界，不再是一堆白卡片（#1524）**
   使用者：情境與搬遷頁的卡片網格換成細線列表，序號與圖示換成同一顆小小的暖光點；情境頁標題後有一片燈光、搬遷頁有一條光帶、登入頁開發日誌上方是插畫的一格窗景；電腦寬度下標題在左、列表在右；登入頁開發日誌先顯示最新 5 篇、其餘收在「更多日誌」，頁首重複的小 Futari 拿掉、改成大 Futari 本身就是回首頁連結。
   技術：樣式以 inline `<style>`（`brand-inner.ts`）隨頁送出，不開新 CSS 檔也不長 `globals.css`（獨立檔讓登入頁 LCP 2.32→2.55 s）；/zh-TW LCP 2.476 s、各頁 ≤ 2.48 s；新增 `signIn.blog.more` ×4 語，en／ja 譯文待確認。

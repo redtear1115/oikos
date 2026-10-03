@@ -3080,7 +3080,7 @@ export const zhCN: Translations = {
       newlyweds: {
         title: '新婚家计分摊｜夫妻记账怎么记？Futari',
         description: '新婚生活费怎么分摊？Futari 是为夫妻、情侣设计的共同账本，日常开销、爱物、旅行，两个人的生活全都在一本账里。',
-        ogDescription: '新婚夫妻的家计管理首选——Futari 双人账本，从日常到爱物，一起记。',
+        ogDescription: '新婚夫妻的家计首选——Futari 双人账本，从日常到爱物，一起记。',
       },
       'pet-owners': {
         title: '宠物费用记账｜猫咪医疗费、日常开销怎么记？Futari',
@@ -3100,20 +3100,20 @@ export const zhCN: Translations = {
       'monthly-bills': {
         title: '每月固定开销记账｜房租水电怎么一起管？Futari',
         description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起记？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、只开放给你们俩。',
-        ogDescription: '两个人的固定开销管理——Futari，每月必要支出一起看，不再只靠其中一人记。',
+        ogDescription: '两个人的固定开销——Futari，每月必要支出一起看，不再只靠其中一人记。',
       },
       'big-purchases': {
-        title: '大笔支出计划｜购车换机怎么和伴侣一起追踪？Futari',
+        title: '大笔支出计划｜购车换机怎么和伴侣一起记？Futari',
         description: '购车、换电脑、旅游基金——大笔支出怎么和伴侣一起规划记账？Futari 让每笔大额费用关联到对应爱物，清楚看见这项支出的完整样貌。',
         ogDescription: '大笔支出不再说不清——Futari，把每项重要花费记清楚、两个人一起看到。',
       },
       dining: {
-        title: '外食费用记账｜吃饭开销怎么和另一半一起追踪？Futari',
+        title: '外食费用记账｜吃饭开销怎么和另一半一起记？Futari',
         description: '每天吃饭、外卖、咖啡——饮食开销最容易不知不觉累积。Futari 让两个人的外食费用一起记、一起看，轻松知道这个月吃了多少。',
         ogDescription: '外食账不再算不清——Futari，把两个人的饮食开销一起记清楚。',
       },
       parenting: {
-        title: '育儿费用记账｜宝宝花费怎么和另一半一起追踪？Futari',
+        title: '育儿费用记账｜宝宝花费怎么和另一半一起记？Futari',
         description: '奶粉、尿布、回诊、保险——育儿开销零碎又频繁，两个人一起记才不漏。Futari 让每笔育儿费用关联到小孩，清楚看见宝贝的每一笔支出。',
         ogDescription: '育儿记账首选——Futari，把每笔宝宝费用记下来，两个人一起看见。',
       },
@@ -3139,7 +3139,7 @@ export const zhCN: Translations = {
         body: '出游的钱和日常账分开记，回来之后清楚看见这趟谁出了多少，不需要在群组里对账。',
       },
       asset: {
-        title: '爱物费用追踪',
+        title: '爱物费用记账',
         body: '每笔支出可以关联到你们共同照顾的对象——车、房、小孩、宠物、植物，费用自动归类。',
       },
       realtime: {
@@ -3243,7 +3243,7 @@ export const zhCN: Translations = {
         ],
       },
       newlyweds: {
-        heroKicker: '新婚夫妻家计管理',
+        heroKicker: '新婚夫妻家计记账',
         heroTitle: '结婚之后，账要怎么一起管？',
         heroSubtitle: '新婚生活的第一本账，从日常开销到爱物、旅行，Futari 让两个人的生活费用都有地方安放。',
         painPoints: [
@@ -3252,7 +3252,7 @@ export const zhCN: Translations = {
             body: '新婚家计没有标准答案。有人全合、有人部分合、有人维持各自 AA。Futari 支援各种模式，不管你们怎么决定，账本都能配合。',
           },
           {
-            heading: '「车子、保险、未来买房——这些费用怎么一起追踪？」',
+            heading: '「车子、保险、未来买房——这些费用怎么一起记？」',
             body: '婚后的费用不只是日常开销，还有爱物、保险、大笔支出。Futari 让每笔支出可以关联到具体的爱物，车的费用、保险费——各自归位，不混在一起。',
           },
           {
@@ -3289,7 +3289,7 @@ export const zhCN: Translations = {
             body: '两个人一起养，费用却可能都由某一方先垫。Futari 的分摊功能让每笔支出都清楚标记，余额自动累计，不需要特别去问「这次谁出比较多」。',
           },
           {
-            heading: '「多猫家庭的费用怎么分开追踪？」',
+            heading: '「多猫家庭的费用怎么分开记？」',
             body: 'Futari 支援多个爱物——每只猫、每只狗都可以是一个独立的记录对象，医疗费直接关联到对应的毛孩，不会混在一起。',
           },
         ],
@@ -3304,7 +3304,7 @@ export const zhCN: Translations = {
           },
           {
             question: '如果养了两只以上，可以分开记吗？',
-            answer: '可以。Futari 支援多个爱物，每只毛孩都可以独立建立，各自的费用分开追踪，不会混在一起。',
+            answer: '可以。Futari 支援多个爱物，每只毛孩都可以独立建立，各自的费用分开记，不会混在一起。',
           },
         ],
       },
@@ -3375,7 +3375,7 @@ export const zhCN: Translations = {
         ],
       },
       'monthly-bills': {
-        heroKicker: '每月固定开销管理',
+        heroKicker: '每月固定开销记账',
         heroTitle: '房租、水电、网络——每个月的固定账，一起看才安心。',
         heroSubtitle: '固定支出最容易被忽略，因为感觉「都差不多」。Futari 让两个人把每月固定账放在一起，清楚看见谁在负担什么。',
         painPoints: [
@@ -3394,7 +3394,7 @@ export const zhCN: Translations = {
         ],
         faq: [
           {
-            question: '每月固定支出要怎么和伴侣一起追踪？',
+            question: '每月固定支出要怎么和伴侣一起记？',
             answer: '在 Futari 记下每笔固定支出，标记谁付的、怎么分摊。两个人都能即时看到每笔账，不需要另外说明。',
           },
           {
@@ -3441,7 +3441,7 @@ export const zhCN: Translations = {
         ],
       },
       dining: {
-        heroKicker: '外食费用追踪',
+        heroKicker: '外食费用记账',
         heroTitle: '吃饭的账，最容易不知不觉多出来。',
         heroSubtitle: '每天外食、外卖、咖啡、聚餐——饮食开销很分散，很容易月底才发现多了很多。Futari 让两个人把吃饭的账一起记清楚。',
         painPoints: [
@@ -3460,7 +3460,7 @@ export const zhCN: Translations = {
         ],
         faq: [
           {
-            question: '外食费用要怎么和另一半一起追踪？',
+            question: '外食费用要怎么和另一半一起记？',
             answer: 'Futari 让每笔外食费用即时记下来，标记谁付的、怎么分，两个人都即时看到。月底可以看这个月饮食类的累计，不需要另外整理。',
           },
           {
@@ -3487,8 +3487,8 @@ export const zhCN: Translations = {
             body: '育儿费用常由某一方先垫，另一方感觉不到重量。Futari 让每笔育儿账都进入共同账本，两个人都即时看到，不需要特别说明。',
           },
           {
-            heading: '「有两个孩子，费用要分开追踪。」',
-            body: 'Futari 支援多个爱物，每个孩子都可以独立建立，各自的费用分开追踪，清楚知道每个孩子的开销。',
+            heading: '「有两个孩子，费用要分开记。」',
+            body: 'Futari 支援多个爱物，每个孩子都可以独立建立，各自的费用分开记，清楚知道每个孩子的开销。',
           },
         ],
         faq: [
