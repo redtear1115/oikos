@@ -43,7 +43,7 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   travel: {
     slug: 'travel',
-    contentUpdatedAt: '2026-09-15',
+    contentUpdatedAt: '2026-10-03',
     features: ['trip', 'split', 'realtime', 'history'],
   },
   roommates: {

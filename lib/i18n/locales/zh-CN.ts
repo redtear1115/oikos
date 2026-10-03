@@ -2218,7 +2218,7 @@ export const zhCN: Translations = {
       featSharedLedger: '双人共同账本',
       featSplitModes: '费用分摊模式',
       featMaintained: '持续维护更新',
-      featMultiCurrency: '多币别记账',
+      featMultiCurrency: '多币种记账',
       featRealtimeSync: '即时同步',
       featFree: '完全免费',
       featCsvImport: 'CSV 数据导入',
@@ -2811,8 +2811,8 @@ export const zhCN: Translations = {
             body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
           },
           {
-            title: '多币别也记得清楚',
-            body: '出国或跨币别的支出照样记，回头看账目一样清楚。',
+            title: '多币种也记得清楚',
+            body: '出国或跨币种的支出照样记，回头看账目一样清楚。',
           },
         ],
         stepsHeading: '搬迁三步',
@@ -2833,8 +2833,8 @@ export const zhCN: Translations = {
             answer: 'Futari 完全免费，没有隐藏费用。',
           },
           {
-            question: '多币别的记录会跑掉吗？',
-            answer: '币别会一起整理进 CSV；非台币的会照原数字先导入，换算可以在导入后逐笔调整。',
+            question: '多币种的记录会跑掉吗？',
+            answer: '币种会一起整理进 CSV；非台币的会照原数字先导入，换算可以在导入后逐笔调整。',
           },
         ],
       },
@@ -3322,8 +3322,8 @@ export const zhCN: Translations = {
             body: '旅行是特殊支出，不应该跟日常开销混在一起。Futari 让旅行账独立存在，平常看不干扰，想回顾就清楚。',
           },
           {
-            heading: '「多币别消费，换算起来很麻烦。」',
-            body: 'Futari 旅行子账本支援多币别记账，出国刷日元、港币都可以记，回来自动换算成主币别，不用手动算汇率。',
+            heading: '「多币种消费，换算起来很麻烦。」',
+            body: 'Futari 旅行子账本支援多币种记账，出国刷日元、港币都可以记，回来自动换算成主币种，不用手动算汇率。',
           },
         ],
         faq: [
@@ -3332,8 +3332,8 @@ export const zhCN: Translations = {
             answer: '建议旅行期间用 Futari 旅行子账本即时记账——每笔消费记下是谁付的，回来之后直接看结算，不用在群组里翻聊天记录。',
           },
           {
-            question: 'Futari 旅行子账本支援多币别吗？',
-            answer: '支援。旅行子账本可以设定旅行主币别，每笔费用记下原始金额，系统依汇率换算成主账本币别，方便结算。',
+            question: 'Futari 旅行子账本支援多币种吗？',
+            answer: '支援。旅行子账本可以设定旅行主币种，每笔费用记下原始金额，系统依汇率换算成主账本币种，方便结算。',
           },
           {
             question: 'Futari 要收费吗？',
