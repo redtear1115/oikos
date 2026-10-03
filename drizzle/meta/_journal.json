@@ -540,6 +540,13 @@
       "when": 1783400000000,
       "tag": "0077_monthly_review_snapshot_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1783500000000,
+      "tag": "0078_invite_drop_plaintext_token",
+      "breakpoints": true
     }
   ]
 }
