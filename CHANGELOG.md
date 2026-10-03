@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **相對日期在 iOS App 不再造成水合錯誤（#1515）**
+  使用者：首頁與記錄列表的「N 天前」在所有裝置上一致顯示為「12 天前」（數字與單位間固定一個空格，原本部分裝置顯示「12天前」）。
+  技術：`formatDateRelative` / `formatPickerSubtitle` 把 `Intl.RelativeTimeFormat` 輸出正規化（NBSP 轉空格、數字與 CJK 單位間固定一個空格），消除 Node 與 WebKit ICU 的差異。
+
 - **設定頁的咖啡不再浮在畫面上，改成「應用」最後一列（#1516）**
   使用者：設定頁右下角的浮動咖啡按鈕拿掉，「應用」區塊最後多一列「請喝杯咖啡」，點了在新分頁開啟 Ko-fi；iOS App 內不顯示這一列。
   技術：新增 `SupportRow`（掛載後才依 `Capacitor.getPlatform()` 決定顯示）；設定頁不再載入 Ko-fi 第三方 script，`kofi_widget_click` 事件與 `source` 不變。
