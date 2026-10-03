@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **品牌頁的連結夠大、能跳到內文、能回首頁（#1523）**
+  使用者：首頁、登入頁、情境頁、搬遷頁的頁尾連結、語言切換與「看全部情境」都放大到 44px 可點；鍵盤第一下 Tab 是「跳到主要內容」；登入頁左上多了回首頁的 Futari；情境與搬遷詳情頁在手機上也有「Futari / 情境 / 同居」這樣的導覽可回上層；高對比（forced colors）模式下登入與主要按鈕不再失去邊框。
+  技術：`<style>` 與 `#main` 放在品牌頁自己的 layout，`globals.css` 位元組不變（/zh-TW LCP 2.475 s）；搬遷頁 BreadcrumbList 隨可見導覽補上 `/migrate` 中間層；新增 `brand.*` 與 `migrate.hub.breadcrumbLabel` ×4 語，en／ja 譯文待確認。
+
 - **首頁的咖啡按鈕等捲過首屏才出現，也不再壓在內容上（#1525）**
   使用者：捲過首屏之後才會出現請喝杯咖啡的按鈕（改成只有圖示、靠左緊貼邊緣，電腦與平板寬度下不壓標題與功能列），回到首屏時先收起來；一直沒捲動的訪客不會載入它。
   技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 看首屏區塊，離開視窗上緣才載入 Ko-fi script；iOS 殼內不載入、GA `kofi_widget_click` 與 `SOURCE` 不變，也省掉首屏載入期的 Ko-fi 請求。

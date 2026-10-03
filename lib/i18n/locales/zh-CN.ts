@@ -189,6 +189,12 @@ export const zhCN: Translations = {
     phoneMockFeed3Sub: '5/11',
   },
 
+  brand: {
+    skipToMain: '跳到主要内容',
+    homeLabel: 'Futari 首页',
+    breadcrumbLabel: '面包屑导航',
+  },
+
   common: {
     cancel: '取消',
     save: '保存',
@@ -2291,6 +2297,7 @@ export const zhCN: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: '搬家指南',
       heroKicker: '搬家不用从头来过',
       heroTitle: '把记过的账，一起搬到 Futari',
       heroSubtitle: '你现在用的记账工具，这里大多都有对应的迁移指南。挑一个开始，几分钟就能把过去的记录带过来。',

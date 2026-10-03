@@ -264,6 +264,17 @@ export type Translations = {
     phoneMockFeed3Sub: string
   }
 
+  /** Wayfinding strings shared by every brand page (landing, sign-in,
+   *  use-case, migrate, legal) — #1523. */
+  brand: {
+    /** First focusable element: skip link to <main id="main">. */
+    skipToMain: string
+    /** Accessible name of the wordmark link back to the locale home. */
+    homeLabel: string
+    /** aria-label of the visible breadcrumb <nav>. */
+    breadcrumbLabel: string
+  }
+
   common: {
     cancel: string
     save: string
@@ -2776,6 +2787,8 @@ export type Translations = {
      *  reuse otherSources.items; only the hub's own hero + section heading
      *  live here. */
     hub: {
+      /** Breadcrumb label for the hub node itself (#1523). */
+      breadcrumbLabel: string
       heroKicker: string
       heroTitle: string
       heroSubtitle: string
@@ -3217,6 +3230,12 @@ export const zhTW: Translations = {
     phoneMockFeed2Sub: '昨天',
     phoneMockFeed3Title: '小白看醫生',
     phoneMockFeed3Sub: '5/11',
+  },
+
+  brand: {
+    skipToMain: '跳到主要內容',
+    homeLabel: 'Futari 首頁',
+    breadcrumbLabel: '麵包屑導覽',
   },
 
   common: {
@@ -5321,6 +5340,7 @@ export const zhTW: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: '搬家指南',
       heroKicker: '搬家不用從頭來過',
       heroTitle: '把記過的帳，一起搬到 Futari',
       heroSubtitle: '你現在用的記帳工具，這裡多半都有對應的搬遷指南。挑一個開始，幾分鐘就能把過去的紀錄帶過來。',

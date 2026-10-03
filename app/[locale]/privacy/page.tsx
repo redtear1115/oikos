@@ -44,6 +44,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
 
   return (
     <main
+      id="main"
       className="min-h-screen px-6 py-12"
       style={{ background: 'var(--bg-committed)' }}
     >

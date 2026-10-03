@@ -90,9 +90,9 @@ export function MigrateFooter({
           className="flex flex-wrap items-center justify-center gap-3 text-xs"
           style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
         >
-          <Link href={legalLinks.termsHref} className="underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
+          <Link href={legalLinks.termsHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
           <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-          <Link href={legalLinks.privacyHref} className="underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
+          <Link href={legalLinks.privacyHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
         </div>
         {/* Deliberately not translated (#1185): an origin mark set as a
             tracked-caps badge, identical on all 4 locales and on the Landing

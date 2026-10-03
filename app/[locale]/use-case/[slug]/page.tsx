@@ -5,6 +5,7 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { USE_CASES, USE_CASE_SLUGS, type UseCaseSlug } from '@/lib/use-case/cases'
+import { BrandBreadcrumb } from '../../_components/BrandBreadcrumb'
 import { UseCaseHero } from '../_components/UseCaseHero'
 import { UseCasePainPoints } from '../_components/UseCasePainPoints'
 import { UseCaseFeatures } from '../_components/UseCaseFeatures'
@@ -64,11 +65,21 @@ export default async function UseCasePage({ params }: { params: Params }) {
   return (
     <div className="space-y-10 md:space-y-14">
       <UseCaseBreadcrumbJsonLd locale={locale} slug={useCaseSlug} />
-      <UseCaseHero
-        kicker={page.heroKicker}
-        title={page.heroTitle}
-        subtitle={page.heroSubtitle}
-      />
+      <div>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: t.hub.breadcrumbLabel, href: localizedHref('/use-case', locale) },
+            { label: t.hub.items[useCaseSlug].name },
+          ]}
+        />
+        <UseCaseHero
+          kicker={page.heroKicker}
+          title={page.heroTitle}
+          subtitle={page.heroSubtitle}
+        />
+      </div>
 
       <UseCasePainPoints items={page.painPoints} />
 

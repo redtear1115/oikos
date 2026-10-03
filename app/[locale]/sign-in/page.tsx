@@ -7,6 +7,7 @@ import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
+import { BrandHome } from '../_components/BrandHome'
 import { SignInActions } from './SignInActions'
 import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
@@ -120,9 +121,28 @@ export default async function SignInPage({
 
   return (
     <main
-      className="flex min-h-screen flex-col"
+      id="main"
+      className="relative flex min-h-screen flex-col"
       style={{ background: 'var(--bg-committed)' }}
     >
+      {/* The only way home from here (#1523). Absolutely positioned so the
+          sign-in column keeps its place: the page has its own 48px top padding
+          and this adds no height. */}
+      <div className="absolute left-0 top-0 z-10 px-6 pt-3 lg:px-12">
+        <BrandHome href={localizedHref('/', locale)} label={t.brand.homeLabel} />
+      </div>
+      {/* Legal links sit inside a sentence, so they can't be 44px tall in flow.
+          The hit area grows with padding and cancels it with margin: the line
+          box, and so the text, doesn't move. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            '.legal-link{display:inline-block;padding:14px 4px;margin:-14px -4px}' +
+            // forced colors: the provider buttons are `border-0` fills, and
+            // .oik-btn's focus ring is a box-shadow; both vanish there.
+            '@media(forced-colors:active){.oik-btn.w-full{border:1px solid ButtonText}.oik-btn:focus-visible{outline:2px solid Highlight}}',
+        }}
+      />
       {/* Already-signed-in viewers get bounced to /dashboard client-side (#920
           Phase 1) — the proxy no longer verifies auth on this public path. */}
       <SignedInRedirect checkingLabel={t.signIn.signingIn} />
@@ -195,9 +215,9 @@ export default async function SignInPage({
             <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-ink-2 text-center">
               {t.signIn.termsPrefix}{' '}
-              <Link href={localizedHref('/terms', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
+              <Link href={localizedHref('/terms', locale)} className="legal-link underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
               {' '}{t.signIn.termsAnd}{' '}
-              <Link href={localizedHref('/privacy', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.privacyLink}</Link>
+              <Link href={localizedHref('/privacy', locale)} className="legal-link underline focus-visible:oik-focus-ring">{t.signIn.privacyLink}</Link>
               {t.signIn.termsSuffix}
             </p>
           </div>

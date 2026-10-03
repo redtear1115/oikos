@@ -37,7 +37,7 @@ export function UseCaseOtherCases({
               // 既不是本地化標題，也讓 accessible name 不包含可見文字，
               // 撞上 WCAG 2.5.3 Label in Name（label-content-name-mismatch，#1059）。
               // 與 Landing 的 migrate 卡片同一個解法（#919）。
-              className="inline-flex items-center px-4 py-2 rounded-[10px] text-sm"
+              className="inline-flex items-center min-h-11 px-4 py-2 rounded-[10px] text-sm"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',

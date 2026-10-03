@@ -191,6 +191,12 @@ export const en: Translations = {
     phoneMockFeed3Sub: '5/11',
   },
 
+  brand: {
+    skipToMain: 'Skip to main content',
+    homeLabel: 'Futari home',
+    breadcrumbLabel: 'Breadcrumb',
+  },
+
   common: {
     cancel: 'Cancel',
     save: 'Save',
@@ -2315,6 +2321,7 @@ export const en: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: 'Moving over',
       heroKicker: 'Bring it all with you',
       heroTitle: 'Move your records to a ledger built for two',
       heroSubtitle:

@@ -5,6 +5,7 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
+import { BrandBreadcrumb } from '../_components/BrandBreadcrumb'
 import { MigrateHero } from './_components/MigrateSteps'
 import { MigrateSourceCard } from './_components/MigrateSourceCard'
 import { MigrateTrustBlock, MigrateFooter } from './_components/MigrateTrustFooter'
@@ -83,7 +84,16 @@ export default async function MigrateHubPage({ params }: { params: Params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
-      <MigrateHero kicker={hub.heroKicker} title={hub.heroTitle} subtitle={hub.heroSubtitle} />
+      <div>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: hub.breadcrumbLabel },
+          ]}
+        />
+        <MigrateHero kicker={hub.heroKicker} title={hub.heroTitle} subtitle={hub.heroSubtitle} />
+      </div>
 
       <section className="space-y-5">
         <h2

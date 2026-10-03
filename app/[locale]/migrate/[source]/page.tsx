@@ -12,6 +12,7 @@ import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateChatgptWorkflow } from '../_components/MigrateChatgptWorkflow'
 import { MigratePrimaryCta } from '../_components/MigratePrimaryCta'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
+import { BrandBreadcrumb } from '../../_components/BrandBreadcrumb'
 import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
 import { MigrateHowToJsonLd } from '../_components/MigrateHowToJsonLd'
 import { MigrateFaq } from '../_components/MigrateFaq'
@@ -138,7 +139,17 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         steps={[page.step1, page.step2, page.step3]}
         stepName={t.howToStepName}
       />
-      <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
+      <div>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: t.hub.breadcrumbLabel, href: localizedHref('/migrate', locale) },
+            { label: def.name },
+          ]}
+        />
+        <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
+      </div>
 
       {page.intro && <MigrateIntroCallout text={page.intro} />}
 

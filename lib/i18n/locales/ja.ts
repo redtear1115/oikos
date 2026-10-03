@@ -192,6 +192,12 @@ export const ja: Translations = {
     phoneMockFeed3Sub: '5/11',
   },
 
+  brand: {
+    skipToMain: 'メインコンテンツへ移動',
+    homeLabel: 'Futari ホーム',
+    breadcrumbLabel: 'パンくずリスト',
+  },
+
   common: {
     cancel: 'キャンセル',
     save: '保存',
@@ -2315,6 +2321,7 @@ export const ja: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: '乗り換えガイド',
       heroKicker: '記録ごと、引っ越せる',
       heroTitle: 'これまでの記録を、ふたりの家計簿へ',
       heroSubtitle: '今お使いの家計簿アプリにも、たいてい移行ガイドがあります。ひとつ選べば、数分で過去の記録を持ってこられます。',

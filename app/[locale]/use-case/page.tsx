@@ -5,6 +5,7 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
+import { BrandBreadcrumb } from '../_components/BrandBreadcrumb'
 import { UseCaseHero } from './_components/UseCaseHero'
 import { UseCaseCard } from './_components/UseCaseCard'
 import { UseCaseCta } from './_components/UseCaseCta'
@@ -82,11 +83,20 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
-      <UseCaseHero
-        kicker={hub.heroKicker}
-        title={hub.heroTitle}
-        subtitle={hub.heroSubtitle}
-      />
+      <div>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: hub.breadcrumbLabel },
+          ]}
+        />
+        <UseCaseHero
+          kicker={hub.heroKicker}
+          title={hub.heroTitle}
+          subtitle={hub.heroSubtitle}
+        />
+      </div>
 
       <section className="space-y-5">
         <h2

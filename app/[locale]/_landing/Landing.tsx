@@ -66,6 +66,7 @@ type Props = {
 export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
+      id="main"
       className="relative min-h-dvh overflow-hidden"
       style={{
         background: 'var(--bg-committed)',
@@ -113,7 +114,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
           signInHref={signInHref}
           dashboardHref={dashboardHref}
           ctaLocation="desktop_header"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
+          className="fc-edge hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
           style={{
             background: 'var(--ink)',
             color: 'var(--on-fill)',
@@ -211,7 +212,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                 signInHref={signInHref}
                 dashboardHref={dashboardHref}
                 ctaLocation="hero"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
+                className="fc-edge flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
                 style={{
                   background: 'var(--ink)',
                   color: 'var(--on-fill)',
@@ -392,11 +393,11 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
             className="flex flex-wrap items-center justify-center gap-3 text-xs"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
-            <Link href={migrateHrefs.hub} className="underline whitespace-nowrap">{t.migrateSection.seeAll}</Link>
+            <Link href={migrateHrefs.hub} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{t.migrateSection.seeAll}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.termsHref} className="underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
+            <Link href={legalLinks.termsHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.privacyHref} className="underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
+            <Link href={legalLinks.privacyHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {languageSwitcher}
@@ -515,7 +516,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -646,7 +647,7 @@ function UseCaseLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={useCaseHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',

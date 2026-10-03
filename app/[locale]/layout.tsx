@@ -7,6 +7,23 @@ import { dictionaries } from '@/lib/i18n/t'
 const FRAUNCES_LATIN =
   '/fonts/fraunces/6NUu8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib14c7qv8oRcTn.woff2'
 
+// Brand-page-only CSS, rendered here rather than in globals.css: that file is
+// the render-blocking stylesheet of every route, and ~230 extra bytes in it
+// pushed /zh-TW's simulated mobile LCP from 2.47 s to 2.62 s (#1522). Inline
+// <style> keeps the cost to the brand pages' own HTML, where the same budget
+// applies (landing gzip ~29.1 KB): keep this string short.
+// - .skip: the skip link is off-screen until it takes keyboard focus (#1523).
+// - forced-colors: filled CTAs are `border-0` fills; under forced colors the
+//   fill becomes Canvas and the control loses its edge entirely (no error, the
+//   button just looks like loose text). The media query gives them a border the
+//   UA does render and changes nothing outside forced-colors. The sign-in
+//   buttons get theirs from the sign-in page (SignInButton.tsx is a native
+//   contract file and is not edited for this).
+const BRAND_CSS =
+  '.skip{position:fixed;left:8px;top:8px;z-index:60;padding:12px 16px;border-radius:var(--radius-bubble);background:var(--ink);color:var(--on-fill);transform:translateY(-200%)}' +
+  '.skip:focus{transform:none}' +
+  '@media(forced-colors:active){.skip,.fc-edge{border:1px solid ButtonText}}'
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
 export function generateStaticParams() {
@@ -77,6 +94,10 @@ export default async function LocaleLayout({
       {/* `display: contents` wrapper: carries the brand-only line-breaking
           rules in globals.css (.brand, #1522) without adding a box. */}
       <div className="brand">
+        <style dangerouslySetInnerHTML={{ __html: BRAND_CSS }} />
+        <a href="#main" className="skip text-sm no-underline">
+          {t.brand.skipToMain}
+        </a>
         {children}
       </div>
     </>
