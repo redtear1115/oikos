@@ -1,60 +1,60 @@
 {
   "migrateSources": {
     "honeydue": {
-      "contentHash": "5f367096a3ec5f47540b66b76685e9bbb808668dbe59bd3b6672bd819c538cf1",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "85618a1ba00aecf35bd2c4f8323166753e1bcc4df5d82447801404cc166dd65e",
+      "contentUpdatedAt": "2026-10-03"
     },
     "spendee": {
-      "contentHash": "2b4b4bf41b52eb678da0b2320efe4efad47a766b07883e6c9b1a4c22145696d1",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "565c7c3816b7e9c89690e64f71db0349d634cc4e2a1d85a12d9d1363b0913634",
+      "contentUpdatedAt": "2026-10-03"
     },
     "cwmoney": {
-      "contentHash": "5c0bbca5ce52365acaad2cdd413e123f8c0232d1ad43e08266f3f1017f143161",
-      "contentUpdatedAt": "2026-09-20"
+      "contentHash": "9a0d6fed21278876c295245d9d777c6c3005bf48ccd1389ae4b41acd9409024a",
+      "contentUpdatedAt": "2026-10-03"
     },
     "moneybook": {
-      "contentHash": "8c2fe765e46902e2ebaef8e36f0ea3c4c022ece63be3cbae18cbe56e5668111b",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "2d54d810438aa85b0fc8753d61d8eb85357d9b2a73a3b1520b6d9ad78e10c3bd",
+      "contentUpdatedAt": "2026-10-03"
     },
     "andromoney": {
-      "contentHash": "3144b7164af7923c069066c1710d1133a160c3e12a80e41b8443986aa7d658fe",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "ed949587cdae6cc797fbe3551232beaadd266472de9104e9a48be2b1079c9220",
+      "contentUpdatedAt": "2026-10-03"
     },
     "mobills": {
-      "contentHash": "ff69e920af084516ce59a26fb7bda62c290926442c2b33cc0a44fec77276dc8f",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "03cf7e57ef75ab71a440919989b865686735aceeeadd604aebee698d4a604764",
+      "contentUpdatedAt": "2026-10-03"
     },
     "manebo": {
-      "contentHash": "7645acdace89666d7aaeb1e5937e6ee03ac35155d0ff131a3a86817f927d0227",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "696316008b97af48eb3bd6fe2cb2e1bb13a12257abb0f6605b3634160bf3131a",
+      "contentUpdatedAt": "2026-10-03"
     },
     "simple-daily-money": {
-      "contentHash": "6819b899a620a281938e49430b97d12e7eb9641e5bfaf7a9c63d9f5bf44696d2",
-      "contentUpdatedAt": "2026-09-26"
+      "contentHash": "2c3725553bdb72b11f69d1c7c683dcbed8ac3649001702d808b10e17310371ea",
+      "contentUpdatedAt": "2026-10-03"
     },
     "fortune-city": {
-      "contentHash": "d0e8f1d8902c900ee1b6a09e3e74ca8e1e57fc9b54c4e474156e20b5acc994a1",
-      "contentUpdatedAt": "2026-09-26"
+      "contentHash": "2195bfb0b576a958822b135f48b45a7671bb95b2a11c6299e5d32802ac9fc46f",
+      "contentUpdatedAt": "2026-10-03"
     },
     "cashman": {
-      "contentHash": "d5a2a437ac889f73f967b34c6c4f6c0afebbce7665008332673faf6c940de00d",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "f216c1da29a9f0955528f7b39488392edac252dabc51a089583ef0d2721eb785",
+      "contentUpdatedAt": "2026-10-03"
     },
     "1money": {
-      "contentHash": "06e7271ecb6f422aee1ba8b7e2d61c6f93218cd998f53bd0f21750f0b0ab9a31",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "f3127eedb6836f0f7c09594b3743572d4e7d71f1997b095259a9c0abfb9128fe",
+      "contentUpdatedAt": "2026-10-03"
     },
     "icost": {
-      "contentHash": "71372676d17401a128e5397b0b74026d26a2dcf9ad023fe1092a1a7501a77673",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "3a9ab0f2ab2c29cc20b288babff336ff2a7cc258bebe632134b8251c05810cb2",
+      "contentUpdatedAt": "2026-10-03"
     },
     "splitwise": {
-      "contentHash": "48532c21c33126512d31561976598320d2a50049b9274398b1c7d76233b27006",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "59464474c9d129f1fe5c309cd8a3a70188daf4c049413917aae7912dc039b908",
+      "contentUpdatedAt": "2026-10-03"
     },
     "suishouji": {
-      "contentHash": "5d78712019ec27f35202147731b838627987e1c5bf0aa7eaf0124f44f3669051",
-      "contentUpdatedAt": "2026-09-15"
+      "contentHash": "10fdecd0df6473c971c6f260467d962e2129acec42755aaefa7918ce0e7f8189",
+      "contentUpdatedAt": "2026-10-03"
     }
   },
   "useCases": {

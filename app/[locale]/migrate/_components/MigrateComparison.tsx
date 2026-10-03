@@ -3,11 +3,14 @@ type Row = { feature: string; futari: Cell; other: Cell }
 
 // Non-color cue per tone (PRODUCT.md commits to non-color cues for the
 // sage/clay distinction; same care applies here). Cell text stays in --ink
-// for AA contrast; the leading glyph carries the visual signal redundantly.
+// for AA contrast; the leading mark carries the visual signal redundantly.
+// This component owns the mark (#1519): labels in sources.ts / comparisonText
+// are plain text, so a cell shows exactly one mark. Marks match the ✓ / △ / ✕
+// the labels used to carry.
 const TONE_GLYPH: Record<Cell['tone'], { mark: string; color: string }> = {
   yes:     { mark: '✓', color: 'var(--saving)' },
-  partial: { mark: '◐', color: 'var(--ink-2)' },
-  no:      { mark: '—', color: 'var(--ink-3)' },
+  partial: { mark: '△', color: 'var(--ink-2)' },
+  no:      { mark: '✕', color: 'var(--ink-3)' },
 }
 
 /**

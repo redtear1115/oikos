@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **搬遷頁比較表每格只剩一個符號（#1519）**
+  使用者：`/migrate/<來源>` 的比較表不再出現「✓ ✓ 支援」「◐ △ 基本對半」這種雙符號，每格只有一個 ✓／△／✕，4 語一致。
+  技術：符號改由 `MigrateComparison` 依 `tone` 單獨負責，`sources.ts` 與 `comparisonText` 的字串回到純文字；新增 `tests/migrate-comparison-marks.test.tsx` 逐來源×語系擋重複符號；各來源 `contentUpdatedAt` 一併更新。
+
 - **首頁、登入頁、情境頁與搬遷頁載入更快（#1520）**
   使用者：開啟這些公開頁時，首屏不再等記錄與登入用的程式，手機上最大內容出現時間約快 0.4–0.8 秒。
   技術：登入前品牌頁的 Sentry、posthog-js、Supabase 改在 load 後再等 1 秒、主執行緒閒下來（最多再等 3 秒）才開始下載，或第一次點擊／按鍵、第一次需要時就提前載入；dashboard 與其他路由時機不變。從開始導覽到載入完成的這段空窗（加 chunk 下載時間）內的錯誤與提早離開的訪客不會被記到；空窗內的點擊事件會先留在記憶體，分頁撐到載入完成才補送。
