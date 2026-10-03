@@ -3199,7 +3199,7 @@ I will upload the screenshots once you confirm.`,
     },
   },
   useCase: {
-    backToHome: 'Back to home',
+    backToHome: '← Back to Futari',
     featuresHeading: 'How Futari helps',
     faqHeading: 'Common questions',
     ctaLabel: 'Start tracking for free',

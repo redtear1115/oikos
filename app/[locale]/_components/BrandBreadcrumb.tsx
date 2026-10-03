@@ -21,7 +21,7 @@ export function BrandBreadcrumb({ label, crumbs }: { label: string; crumbs: Crum
               </span>
             )}
             {c.href ? (
-              <Link href={c.href} className="inline-flex items-center min-h-11 min-w-11 underline">
+              <Link href={c.href} className="inline-flex items-center justify-center min-h-11 min-w-11 underline">
                 {c.label}
               </Link>
             ) : (

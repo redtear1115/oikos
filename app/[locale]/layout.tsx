@@ -99,7 +99,7 @@ export default async function LocaleLayout({
           rules in globals.css (.brand, #1522) without adding a box. */}
       <div className="brand">
         <style dangerouslySetInnerHTML={{ __html: BRAND_CSS }} />
-        <a href="#main" className="skip text-sm no-underline">
+        <a href="#main" className="skip text-sm no-underline focus-visible:oik-focus-ring">
           {t.brand.skipToMain}
         </a>
         {children}

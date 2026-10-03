@@ -6171,7 +6171,7 @@ export const zhTW: Translations = {
     },
   },
   useCase: {
-    backToHome: '回首頁',
+    backToHome: '← 回 Futari 首頁',
     featuresHeading: 'Futari 怎麼幫到你們',
     faqHeading: '常見問題',
     ctaLabel: '免費開始記帳',

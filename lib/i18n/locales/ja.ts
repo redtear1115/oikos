@@ -3197,7 +3197,7 @@ I will upload the screenshots once you confirm.`,
     },
   },
   useCase: {
-    backToHome: 'ホームに戻る',
+    backToHome: '← Futari へ戻る',
     featuresHeading: 'Futari でできること',
     faqHeading: 'よくある質問',
     ctaLabel: '無料で記録をはじめる',

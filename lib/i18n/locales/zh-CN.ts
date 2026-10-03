@@ -3125,7 +3125,7 @@ export const zhCN: Translations = {
     },
   },
   useCase: {
-    backToHome: '回首页',
+    backToHome: '← 回 Futari 首页',
     featuresHeading: 'Futari 怎么帮到你们',
     faqHeading: '常见问题',
     ctaLabel: '免费开始记账',
