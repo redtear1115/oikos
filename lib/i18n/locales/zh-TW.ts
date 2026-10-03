@@ -108,6 +108,8 @@ export type Translations = {
     blog: {
       /** Section heading above the dev-log article list (issue #460). */
       heading: string
+      /** Disclosure label that reveals the dev-log entries past the first five (#1524). */
+      more: string
     }
     /** sr-only suffix appended to the "Futari" H1 for screen-reader / SEO context (#467). */
     srTagline: string
@@ -3113,6 +3115,7 @@ export const zhTW: Translations = {
     },
     blog: {
       heading: '開發日誌',
+      more: '更多日誌',
     },
     srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
     srDescription:

@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **情境、搬遷、登入頁改成同一個暖燈世界，不再是一堆白卡片（#1524）**
+  使用者：情境與搬遷頁的卡片網格換成細線列表，序號與圖示換成同一顆小小的暖光點；情境頁標題後有一片燈光、搬遷頁有一條光帶、登入頁開發日誌上方是插畫的一格窗景；電腦寬度下標題在左、列表在右；登入頁開發日誌先顯示最新 5 篇、其餘收在「更多日誌」，頁首重複的小 Futari 拿掉、改成大 Futari 本身就是回首頁連結。
+  技術：樣式以 inline `<style>`（`brand-inner.ts`）隨頁送出，不開新 CSS 檔也不長 `globals.css`（獨立檔讓登入頁 LCP 2.32→2.55 s）；/zh-TW LCP 2.476 s、各頁 ≤ 2.48 s；新增 `signIn.blog.more` ×4 語，en／ja 譯文待確認。
+
 - **Safari 與 iOS 殼的品牌頁標題也不再把詞拆開（#1522）**
   使用者：首頁、登入頁、情境頁、搬遷頁的大標、小標與標語在 Safari、iPhone 與 iOS 殼裡，不再於「資／料」「ありませ／ん。」這種詞中間換行；Chrome 本來就正常。
   技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`（ja 依字種、zh 依 `Intl.Segmenter`），標題以 `.ph`（`keep-all`）渲染；規則放品牌 layout 的 inline `<style>`，`globals.css` 位元組不變，/zh-TW LCP 2.47 s。

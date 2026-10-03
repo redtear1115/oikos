@@ -18,6 +18,8 @@ import { MigrateHowToJsonLd } from '../_components/MigrateHowToJsonLd'
 import { MigrateFaq } from '../_components/MigrateFaq'
 import { MigrateComparison } from '../_components/MigrateComparison'
 import { MigrateOtherSources } from '../_components/MigrateOtherSources'
+import { s } from '../../_components/brand-inner'
+import { LightRibbon } from '../../_components/LightRibbon'
 
 type Params = Promise<{ locale: string; source: string }>
 
@@ -129,7 +131,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
     )
 
   return (
-    <div className="space-y-10 md:space-y-14">
+    <div className={s.flow}>
       <MigrateBreadcrumbJsonLd locale={locale} source={slug} />
       <MigrateHowToJsonLd
         locale={locale}
@@ -139,7 +141,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         steps={[page.step1, page.step2, page.step3]}
         stepName={t.howToStepName}
       />
-      <div>
+      <div className={s.hero}>
         <BrandBreadcrumb
           label={dictionaries[locale].brand.breadcrumbLabel}
           crumbs={[
@@ -149,6 +151,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
           ]}
         />
         <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
+        <LightRibbon />
       </div>
 
       {page.intro && <MigrateIntroCallout text={page.intro} />}

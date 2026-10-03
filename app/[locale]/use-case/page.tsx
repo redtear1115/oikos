@@ -10,6 +10,7 @@ import { UseCaseHero } from './_components/UseCaseHero'
 import { UseCaseCard } from './_components/UseCaseCard'
 import { UseCaseCta } from './_components/UseCaseCta'
 import { Phrase } from '../_components/Phrase'
+import { s } from '../_components/brand-inner'
 
 type Params = Promise<{ locale: string }>
 
@@ -79,12 +80,12 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="space-y-10 md:space-y-14">
+    <div className={s.flow}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
-      <div>
+      <div className={s.hero}>
         <BrandBreadcrumb
           label={dictionaries[locale].brand.breadcrumbLabel}
           crumbs={[
@@ -99,14 +100,11 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
         />
       </div>
 
-      <section className="space-y-5">
-        <h2
-          className="m-0 text-xl md:text-title font-medium"
-          style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-        >
+      <section className={s.band}>
+        <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
           <Phrase text={hub.heading} />
         </h2>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
+        <ul className={s.rows}>
           {USE_CASE_SLUGS.map((slug) => (
             <UseCaseCard
               key={slug}

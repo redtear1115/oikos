@@ -71,6 +71,7 @@ export const ja: Translations = {
     },
     blog: {
       heading: '開発ログ',
+      more: 'ほかの記事',
     },
     srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
     srDescription:

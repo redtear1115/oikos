@@ -1,30 +1,19 @@
+import { Ember } from '../../_components/Ember'
+import { s } from '../../_components/brand-inner'
+
 type PainPoint = { heading: string; body: string }
 
 export function UseCasePainPoints({ items }: { items: readonly PainPoint[] }) {
   return (
-    <section className="space-y-4">
-      <ul className="m-0 list-none p-0 space-y-4">
+    <section>
+      <ul className={s.rows}>
         {items.map(({ heading, body }) => (
-          <li
-            key={heading}
-            className="rounded-[16px] px-5 md:px-6 py-4 md:py-5"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--hairline)',
-            }}
-          >
-            <p
-              className="m-0 text-base font-medium"
-              style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-            >
-              {heading}
-            </p>
-            <p
-              className="m-0 mt-2 text-sm md:text-sm leading-[1.7]"
-              style={{ color: 'var(--ink-2)' }}
-            >
-              {body}
-            </p>
+          <li key={heading} className={s.row}>
+            <Ember />
+            <div>
+              <p className={`${s.rowTitle} text-base font-medium`}>{heading}</p>
+              <p className={`${s.rowBody} text-sm`}>{body}</p>
+            </div>
           </li>
         ))}
       </ul>

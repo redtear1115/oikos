@@ -13,6 +13,7 @@ import { UseCaseFaq } from '../_components/UseCaseFaq'
 import { UseCaseCta } from '../_components/UseCaseCta'
 import { UseCaseOtherCases } from '../_components/UseCaseOtherCases'
 import { UseCaseBreadcrumbJsonLd } from '../_components/UseCaseBreadcrumbJsonLd'
+import { s } from '../../_components/brand-inner'
 
 type Params = Promise<{ locale: string; slug: string }>
 
@@ -63,9 +64,9 @@ export default async function UseCasePage({ params }: { params: Params }) {
   const signInHref = localizedHref('/sign-in', locale)
 
   return (
-    <div className="space-y-10 md:space-y-14">
+    <div className={s.flow}>
       <UseCaseBreadcrumbJsonLd locale={locale} slug={useCaseSlug} />
-      <div>
+      <div className={s.hero}>
         <BrandBreadcrumb
           label={dictionaries[locale].brand.breadcrumbLabel}
           crumbs={[

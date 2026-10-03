@@ -70,6 +70,7 @@ export const zhCN: Translations = {
     },
     blog: {
       heading: '开发日志',
+      more: '更多日志',
     },
     srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
     srDescription:

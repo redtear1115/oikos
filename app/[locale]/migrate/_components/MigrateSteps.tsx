@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Phrase } from '../../_components/Phrase'
+import { Ember } from '../../_components/Ember'
+import { s } from '../../_components/brand-inner'
 
 /**
  * Numbered 3-step walkthrough shared by every /migrate/<source> page.
@@ -14,39 +16,28 @@ export function MigrateSteps({
   steps: readonly ReactNode[]
 }) {
   return (
-    <section className="space-y-4">
-      <h2
-        className="m-0 text-xl md:text-title font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
+    <section className={s.band}>
+      <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
         <Phrase text={heading} />
       </h2>
-      <ol className="m-0 list-none p-0 divide-y" style={{ borderColor: 'var(--hairline)' }}>
+      <ol className={s.rows}>
         {steps.map((node, i) => (
           <li
             key={i}
             // Anchor target for the HowToStep JSON-LD url (`...#step-N`, 1-based)
             // emitted by MigrateHowToJsonLd (#702) — keeps those anchors live.
             id={`step-${i + 1}`}
-            className="flex gap-5 items-start text-sm md:text-base leading-[1.75] py-4 first:pt-2"
-            style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
+            className={`${s.row} text-sm md:text-base`}
+            style={{ color: 'var(--ink-2)' }}
           >
-            <span
-              className="shrink-0 inline-block text-base md:text-lg"
-              style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontStyle: 'italic',
-                // --ink-3 只有 4.02:1 on --bg-committed（#1059）。序號的「退後感」
-                // 本來就主要由 italic Fraunces + letterSpacing 承擔，不靠更淺的色階。
-                color: 'var(--ink-2)',
-                letterSpacing: '0.8px',
-                minWidth: 28,
-              }}
-              aria-hidden
-            >
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <div className="flex-1 min-w-0">{node}</div>
+            <Ember />
+            <div className="min-w-0 leading-[1.75]">
+              {/* --ink-2 not --ink-3: 4.02:1 on --bg-committed (#1059). */}
+              <span className={`${s.num} text-base md:text-lg`} aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div>{node}</div>
+            </div>
           </li>
         ))}
       </ol>

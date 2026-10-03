@@ -70,6 +70,7 @@ export const en: Translations = {
     },
     blog: {
       heading: 'Dev log',
+      more: 'More entries',
     },
     srTagline: " · A shared ledger for couples · Two-person finance PWA",
     srDescription:

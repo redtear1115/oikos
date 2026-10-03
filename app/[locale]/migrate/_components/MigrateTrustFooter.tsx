@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { ShieldOutlineGlyph } from '../../_landing/FutariMark'
 import { Phrase } from '../../_components/Phrase'
+import { Ember } from '../../_components/Ember'
+import { s } from '../../_components/brand-inner'
 
 type TrustItem = { title: string; body: string }
 
 /**
- * Closing trust block — narrative-free three-card row, mounted between
+ * Closing trust block — narrative-free three-row list, mounted between
  * steps and the slim footer on every /migrate/<source> page (#578).
  * Companions, not duplicates, of `cta.privacyNote` inline above the upload.
  */
@@ -17,35 +19,18 @@ export function MigrateTrustBlock({
   items: readonly TrustItem[]
 }) {
   return (
-    <section
-      className="rounded-card px-5 md:px-8 py-7 md:py-9 space-y-5"
-      style={{ background: 'var(--surface-alt)' }}
-    >
-      <h2
-        className="m-0 text-xl md:text-title font-medium text-center md:text-left"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
+    <section className={s.band}>
+      <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
         <Phrase text={heading} />
       </h2>
-      <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 m-0 p-0 list-none">
+      <ul className={s.rows}>
         {items.map(({ title, body }) => (
-          <li
-            key={title}
-            className="p-4 md:p-5 rounded-bubble"
-            style={{ background: 'var(--surface)' }}
-          >
-            <p
-              className="m-0 text-sm md:text-base font-medium"
-              style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-            >
-              {title}
-            </p>
-            <p
-              className="m-0 mt-1.5 text-xs md:text-sm leading-[1.65]"
-              style={{ color: 'var(--ink-2)' }}
-            >
-              {body}
-            </p>
+          <li key={title} className={s.row}>
+            <Ember />
+            <div>
+              <p className={`${s.rowTitle} text-base font-medium`}>{title}</p>
+              <p className={`${s.rowBody} text-sm`}>{body}</p>
+            </div>
           </li>
         ))}
       </ul>

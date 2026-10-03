@@ -1,8 +1,10 @@
 import { Phrase } from '../../_components/Phrase'
+import { Ember } from '../../_components/Ember'
+import { s } from '../../_components/brand-inner'
 
 /**
  * "Why Futari" block — answers the migrating visitor's "why switch?"
- * before they upload anything (#581). Same three-card shape on every
+ * before they upload anything (#581). Same three-row shape on every
  * /migrate/<source> page; per-source copy supplies the substance.
  */
 export function MigrateDifferentiators({
@@ -13,46 +15,23 @@ export function MigrateDifferentiators({
   items: readonly { title: string; body: string }[]
 }) {
   return (
-    <section className="space-y-5">
-      <h2
-        className="m-0 text-xl md:text-title font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
+    <section className={s.band}>
+      <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
         <Phrase text={heading} />
       </h2>
-      <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 m-0 p-0 list-none">
+      <ul className={s.rows}>
         {items.map(({ title, body }, i) => (
-          <li
-            key={i}
-            className="p-5 md:p-6 rounded-tile flex flex-col gap-2"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--hairline)',
-            }}
-          >
-            <span
-              className="text-sm md:text-base tracking-label"
-              style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontStyle: 'italic',
-                color: 'var(--ink-3)',
-              }}
-              aria-hidden
-            >
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <p
-              className="m-0 text-base md:text-base font-medium"
-              style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-            >
-              <Phrase text={title} />
-            </p>
-            <p
-              className="m-0 text-sm md:text-sm leading-[1.65]"
-              style={{ color: 'var(--ink-2)' }}
-            >
-              {body}
-            </p>
+          <li key={i} className={s.row}>
+            <Ember />
+            <div>
+              <p className={`${s.rowTitle} text-base font-medium`}>
+                <span className={`${s.num} text-sm`} aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>{' '}
+                <Phrase text={title} />
+              </p>
+              <p className={`${s.rowBody} text-sm`}>{body}</p>
+            </div>
           </li>
         ))}
       </ul>
