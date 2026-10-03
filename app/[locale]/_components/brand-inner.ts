@@ -184,6 +184,25 @@ export const BRAND_INNER_CSS = `.bi-container {
 .bi-link:active {
   background-color: color-mix(in srgb, var(--accent-soft) 45%, transparent);
 }
+/* Below 1024 the row has three tracks but four children (ember, title, body,
+ * arrow), so auto-placement drops the body into the 24px arrow track: one
+ * character per line, rows 600px tall, and no overflow for a width check to
+ * catch. Place the body under the title explicitly. (.bi-stack rows have
+ * three children and auto-place fine.) */
+@media (max-width: 1023.98px) {
+  .bi-link:not(.bi-stack) > .bi-rowTitle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .bi-link:not(.bi-stack) > .bi-rowBody {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .bi-link:not(.bi-stack) > .bi-arrow {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
 @media (min-width: 1024px) {
   .bi-link {
     grid-template-columns: 26px 200px minmax(0, 1fr) 24px;
