@@ -68,7 +68,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：伺服器端讀取（關聯愛物、統計、油耗、被保人）共用 `frozenCopyVisibleClause` 依凍結當下的章節成員判斷；`0079` 收緊 Assets 的 RLS（FuelLogs 經子查詢一併套用），只涵蓋副本，其他帳本資料表在 Data API 的章節範圍另由 #1518 處理。
 - **登入後直接讀資料庫，範圍收到自己在場的章節（#1518）**
   使用者：App 畫面沒有變化；之後才加入帳本的夥伴，用自己的登入直接呼叫資料庫 API 或即時同步時，不再拿得到加入前章節的支出、收入、結清與油耗紀錄，章節、個人資料、邀請、匯入、回顧、問答與旅程等資料表也不再開放直接讀取。修補前這種讀取在少數帳本上是可能的，沒有存取紀錄可查，無法確認是否發生過。
-  技術：`0080` 以 `viewer_in_chapter` 讓這四張表的 RLS 依章節成員判斷，收回 anon 的全部權限與 authenticated 在 15 張未訂閱表的權限，即時同步用的表只留需要的欄位；回退分 `policies.down`（prod 可用）與 `grants.down`（僅 dev）。
+  技術：`0080` 以 `viewer_in_chapter` 讓這四張表的 RLS 依章節成員判斷，收回 anon 在所有資料表的權限與 authenticated 在 15 張未訂閱表的權限，即時同步用的表只留需要的欄位；回退分 `policies.down`（prod 可用）與 `grants.down`（僅 dev）。
 
 ## [1.6.6] - 2026-10-03
 
