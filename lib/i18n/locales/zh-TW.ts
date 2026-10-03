@@ -1725,7 +1725,8 @@ export type Translations = {
   }
 
   /** Ko-fi floating-chat widget (#893) — button label shown on the bottom-right
-   *  floating button. The widget mounts on landing and settings pages. */
+   *  floating button. The widget mounts on the landing page; Settings renders
+   *  the same label as a plain link row (#1516). */
   support: {
     buttonText: string
     /** Accessible title for the Ko-fi floating widget iframe (frame-title, #919). */

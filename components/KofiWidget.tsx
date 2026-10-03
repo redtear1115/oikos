@@ -24,9 +24,9 @@ import { useCallback, useEffect, useState } from 'react'
 // server.url), so only `Capacitor.getPlatform()` can tell iOS apart at render
 // time. Google Play is lenient for donation-framed widgets, so Android keeps it.
 // ============================================================================
-const SOURCE = 'futari'
+export const SOURCE = 'futari'
 
-const KOFI_USERNAME = 'ray19841115'
+export const KOFI_USERNAME = 'ray19841115'
 
 declare global {
   interface Window {
@@ -49,7 +49,7 @@ const KOFI_INJECTED_SELECTOR =
  * Capacitor's platform string ('ios' | 'android' | 'web'), read from the global
  * the native webview injects. Returns 'web' off-shell (browser, SSR, jsdom).
  */
-function getCapacitorPlatform(): string {
+export function getCapacitorPlatform(): string {
   if (typeof window === 'undefined') return 'web'
   const cap = (window as { Capacitor?: { getPlatform?: () => string } }).Capacitor
   return cap?.getPlatform?.() ?? 'web'
@@ -142,8 +142,8 @@ export function attachKofiClickListeners(source: string): void {
  * donation completes without leaving the site.
  *
  * Scope (#917): the widget lives only where this component is mounted — the
- * public landing and, when signed in, the Settings page. On unmount (e.g.
- * navigating away from /settings) the effect cleanup removes the injected DOM
+ * public landing only (Settings uses a plain link row instead, #1516). On
+ * unmount (e.g. client navigation away from the landing) the effect cleanup removes the injected DOM
  * (iframes included, so any click listener bound inside them goes with it),
  * so it doesn't bleed into the rest of the app or accumulate listeners across
  * visits.
