@@ -322,7 +322,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
           {/* Editorial column: hanging Fraunces numeral + glyph-accented title
               + body. No card chrome; rhythm comes from hairline dividers and
               vertical spacing. 2 columns on desktop, single column on mobile. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-y-0 md:gap-x-12 lg:gap-x-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-x-12 lg:gap-x-20">
             <FeatureEntry
               kicker="01"
               glyphColor="var(--accent)"
@@ -379,7 +379,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
         }}
       >
         <div
-          className="flex items-center gap-2 md:gap-2 text-center md:text-left"
+          className="flex items-center gap-2 text-center md:text-left"
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
@@ -389,19 +389,19 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
           <div
-            className="flex items-center gap-3 text-xs"
+            className="flex flex-wrap items-center justify-center gap-3 text-xs"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
-            <Link href={migrateHrefs.hub} className="underline">{t.migrateSection.seeAll}</Link>
+            <Link href={migrateHrefs.hub} className="underline whitespace-nowrap">{t.migrateSection.seeAll}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+            <Link href={legalLinks.termsHref} className="underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+            <Link href={legalLinks.privacyHref} className="underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {languageSwitcher}
             <span
-              className="text-xs"
+              className="text-xs whitespace-nowrap"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               © 2026 · MADE IN TAIWAN

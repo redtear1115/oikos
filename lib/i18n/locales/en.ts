@@ -86,7 +86,7 @@ export const en: Translations = {
   landing: {
     heroKicker: "A COUPLE'S LEDGER",
     taglineHtml: 'Two of you,<br />one ledger.',
-    bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
+    bodyHtml: 'A shared ledger for partners and couples. Day by day, looking back will feel warm.',
     cta: 'Record together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
@@ -117,7 +117,7 @@ export const en: Translations = {
     },
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'One ledger, four kinds of light',
-    featuresSubtitleHtml: 'From the first shared receipt to the house, car, and yearly policies you look after together,<br />all in one place.',
+    featuresSubtitleHtml: 'From the first shared receipt to the house, car, and yearly policies you look after together, all in one place.',
     f1Title: 'Keep the books together',
     f1Body: 'Log every expense together. Auto-split 50/50 or by ratio. Settle monthly without ever doing the math.',
     f2Title: 'Loved things',

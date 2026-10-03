@@ -87,19 +87,19 @@ export function MigrateFooter({
       </div>
       <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
         <div
-          className="flex items-center gap-3 text-xs"
+          className="flex flex-wrap items-center justify-center gap-3 text-xs"
           style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
         >
-          <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+          <Link href={legalLinks.termsHref} className="underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
           <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-          <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+          <Link href={legalLinks.privacyHref} className="underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
         </div>
         {/* Deliberately not translated (#1185): an origin mark set as a
             tracked-caps badge, identical on all 4 locales and on the Landing
             footer (_landing/Landing.tsx). Translating it here alone would make
             the two brand footers disagree. */}
         <span
-          className="text-xs"
+          className="text-xs whitespace-nowrap"
           style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
         >
           © 2026 · MADE IN TAIWAN

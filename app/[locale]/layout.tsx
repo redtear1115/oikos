@@ -74,7 +74,11 @@ export default async function LocaleLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
-      {children}
+      {/* `display: contents` wrapper: carries the brand-only line-breaking
+          rules in globals.css (.brand, #1522) without adding a box. */}
+      <div className="brand">
+        {children}
+      </div>
     </>
   )
 }

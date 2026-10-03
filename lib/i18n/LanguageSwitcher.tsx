@@ -136,7 +136,7 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
   if (variant === 'footer') {
     return (
       <div
-        className="flex items-center gap-3"
+        className="flex flex-wrap items-center gap-3"
         aria-busy={pending}
         style={{
           fontSize: 'var(--fs-xs)',
@@ -154,7 +154,10 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
                 value,
                 active,
                 children: label,
-                className: active ? undefined : 'cursor-pointer disabled:cursor-default',
+                // whitespace-nowrap：CJK 標籤沒有空白，窄螢幕下 flex 把項目壓到
+                // 最小寬度就是一字一行（「日本語」變三行，#1522）。整個項目不可斷，
+                // 空間不夠時改由外層 flex-wrap 把整個項目換行。
+                className: `whitespace-nowrap ${active ? '' : 'cursor-pointer disabled:cursor-default'}`,
                 style: {
                   // 每一階都往下沉一格（--ink-2 / --ink），因為 --ink-3 (#82654F)
                   // 在 brand 底色 --bg-committed (#EFDDC4) 上只有 4.02:1，12px/400

@@ -354,6 +354,20 @@ body {
   font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
 }
+/* Brand pages only (#1522): CJK / Latin line breaking. `.brand` is the
+ * display:contents wrapper in app/[locale]/layout.tsx, so none of this reaches
+ * the dashboard. `auto-phrase` (Chrome 119+; other engines keep per-character
+ * breaks) rather than `keep-all`, which would make a whole CJK sentence one
+ * unbreakable word and overflow at 320px. `balance` rather than `pretty`:
+ * pretty leaves a 2-3 character last line like 「什麼。」 alone. No synthetic
+ * italic: Fraunces has no italic and no CJK glyphs.
+ * Keep this block minimal. This file is the render-blocking stylesheet of
+ * every route, and ~230 extra bytes here (13.06 -> 13.30 KB) pushed /zh-TW's
+ * simulated mobile LCP from 2.47 s to 2.62 s: one extra round trip, no error,
+ * no visual change. The same goes for the landing HTML (gzip ~29.1 KB). */
+.brand{display:contents}
+.brand:lang(zh),.brand:lang(ja){line-break:strict;word-break:auto-phrase;font-synthesis-style:none}
+.brand :is(h1,h2,h3,dt,p,li,dd){text-wrap:balance}
 /* Kill the grey tap flash Android Chrome paints over tapped controls. (#713) */
 * { -webkit-tap-highlight-color: transparent; }
 *::-webkit-scrollbar { display: none; }

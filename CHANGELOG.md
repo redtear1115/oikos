@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **品牌頁換行不再把詞拆開，語言切換不再一字一行（#1522）**
+  使用者：首頁、登入頁、情境頁、搬遷頁在手機上不再出現「資／料」「什／麼。」「ありませ／ん。」這類把詞切開或只剩一兩字的換行；頁尾的語言切換在窄螢幕不再直排，中日文的斜體標語改為正體；英文首頁副標不再被強制斷行。
+  技術：`app/[locale]/layout.tsx` 加 `display: contents` 的 `.brand-surface`，`globals.css` 只對它啟用 zh／ja 的 `word-break: auto-phrase`（Chrome 119+，其他引擎退回逐字換行）、`line-break: strict`、`font-synthesis-style: none` 與 `text-wrap: balance`；zh／ja 比較表改固定欄寬（樣式放在 `MigrateComparison` 自己，不進 `globals.css`）；dashboard 不受影響。`globals.css` 與首頁 HTML 刻意只多幾十 bytes：再多就讓 /zh-TW 模擬 LCP 從 2.47 s 跳到 2.62 s（多一個 RTT）。
+
 - **登入頁的分頁標題與搜尋摘要不再用「開始」（#1526）**
   使用者：登入頁在瀏覽器分頁與搜尋結果裡的標題與說明，改成說明登入後會進到你們共用的帳本，不再說「開始兩個人的記帳生活」；4 語同步。
   技術：只改 `meta.signIn` 的 title／description／ogDescription ×4 語；en／ja 譯文待確認。
