@@ -128,7 +128,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
       </header>
 
       {/* HERO — single column on mobile, two columns on md+ */}
-      <section className="relative z-10 px-6 md:px-16 pt-10 md:pt-12 pb-12 md:pb-20 max-w-md md:max-w-none mx-auto">
+      <section id="landing-hero" className="relative z-10 px-6 md:px-16 pt-10 md:pt-12 pb-12 md:pb-20 max-w-md md:max-w-none mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:gap-10 md:max-w-[1280px] md:mx-auto">
           {/* Copy block */}
           <div className="text-center md:text-left md:w-[520px] md:shrink-0">

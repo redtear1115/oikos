@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **首頁的咖啡按鈕等捲過首屏才出現，也不再壓在內容上（#1525）**
+  使用者：捲過首屏之後才會出現請喝杯咖啡的按鈕（改成只有圖示、靠左緊貼邊緣，電腦與平板寬度下不壓標題與功能列），回到首屏時先收起來；一直沒捲動的訪客不會載入它。
+  技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 看首屏區塊，離開視窗上緣才載入 Ko-fi script；iOS 殼內不載入、GA `kofi_widget_click` 與 `SOURCE` 不變，也省掉首屏載入期的 Ko-fi 請求。
+
 - **首頁的主按鈕一開始就能點，關掉 JS 也能登入（#1521）**
   使用者：首頁的主按鈕與「已經有帳號」從頁面一出現就是有字、可點的登入連結，不再先是一條空白的深色按鈕；載入完成後 iPhone 瀏覽器改指向 App Store、Android 改指向測試版報名，App 殼內與已安裝的 PWA 仍一律是登入。
   技術：移除 `LandingCtaLink` 的 `inert` 與 pending 佔位，pending 直接渲染登入預設；載入完成前的點擊是一般導覽，不會送 `landing_cta_clicked`（iPhone 瀏覽器在載入完成前點到會進登入而不是 App Store，已接受）。
