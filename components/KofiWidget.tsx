@@ -137,6 +137,54 @@ export function attachKofiClickListeners(source: string): void {
   })
 }
 
+// #1525 placement (brand pages only, i.e. when `revealAfterId` is passed).
+// Ko-fi positions its own wrapper `position: fixed; left: 16px; bottom: 16px`,
+// and the landing's content gutter is 64px (80px at 1440). A 167px "Support me"
+// pill therefore sat on the section headings and feature rows (failure looks
+// like: the pill covers "01 雙人記帳" or an H2 at 1440x900). We draw
+// icon-only at every width, trim the pill's padding, and from `md` up pull it
+// to left: 8px so it ends at ~63px, inside the gutter. Below `md` the gutter is 24px and a fixed
+// button always crosses scrolling content briefly; that is the same trade-off
+// as any floating action button.
+const KOFI_STYLE_ID = 'futari-kofi-style'
+const KOFI_HERO_ATTR = 'data-kofi-hero'
+const KOFI_BRAND_CSS = [
+  // Hidden while the hero is in view, so the pill never sits on hero copy when
+  // the visitor scrolls back up. `visibility` also drops pointer events.
+  `html[${KOFI_HERO_ATTR}] .floatingchat-container-wrap,html[${KOFI_HERO_ATTR}] .floatingchat-container-wrap-mobi{visibility:hidden}`,
+  '@media (min-width:768px){.floatingchat-container-wrap,.floatingchat-container-wrap-mobi{left:8px!important}}',
+  // Ko-fi animates its wrappers (transition: all .6s); no entrance motion for
+  // people who ask for none. The in-iframe button gets the same in handleLoad.
+  '@media (prefers-reduced-motion:reduce){.floatingchat-container-wrap,.floatingchat-container-wrap *,.floatingchat-container-wrap-mobi,.floatingchat-container-wrap-mobi *{transition:none!important;animation:none!important}}',
+].join('')
+const KOFI_IFRAME_COMPACT_CSS =
+  '.floatingchat-donate-button{padding:0 4px!important}' +
+  '@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}'
+
+function installKofiBrandStyle(): () => void {
+  if (document.getElementById(KOFI_STYLE_ID)) return () => {}
+  const style = document.createElement('style')
+  style.id = KOFI_STYLE_ID
+  style.textContent = KOFI_BRAND_CSS
+  document.head.appendChild(style)
+  return () => {
+    style.remove()
+    document.documentElement.removeAttribute(KOFI_HERO_ATTR)
+  }
+}
+
+/** Trim the icon-only donate button's padding inside every Ko-fi iframe. */
+function compactKofiDonateButtons(): void {
+  document.querySelectorAll<HTMLIFrameElement>(KOFI_IFRAME_SELECTOR).forEach((iframe) => {
+    const doc = iframe.contentDocument
+    if (!doc || doc.getElementById(KOFI_STYLE_ID)) return
+    const style = doc.createElement('style')
+    style.id = KOFI_STYLE_ID
+    style.textContent = KOFI_IFRAME_COMPACT_CSS
+    doc.head.appendChild(style)
+  })
+}
+
 /**
  * Bottom-right floating Ko-fi widget. Click opens a Ko-fi-hosted modal so the
  * donation completes without leaving the site.
@@ -157,9 +205,19 @@ export function attachKofiClickListeners(source: string): void {
 export function KofiWidget({
   buttonText,
   frameTitle,
+  revealAfterId,
 }: {
   buttonText: string
   frameTitle: string
+  /**
+   * #1525: id of the hero element. When set, nothing Ko-fi (script, its Google
+   * Fonts CSS, its own CSS) is requested until that element has scrolled out of
+   * the top of the viewport; omitted → load right away (the old behaviour).
+   * Failure looks like: the donate pill sitting on the hero copy at first
+   * paint, and Ko-fi's requests competing with LCP. Visitors who never scroll
+   * never load Ko-fi — accepted by the owner.
+   */
+  revealAfterId?: string
 }) {
   // Apple Guideline 3.1.1 (#848): hide the tip jar inside the iOS native shell.
   // Detected via the `Capacitor` global the webview injects (same approach as
@@ -168,6 +226,44 @@ export function KofiWidget({
   // Starts false to match SSR (which always renders the <Script>); the effect
   // flips it on the iOS shell after mount, avoiding a hydration mismatch.
   const [isIosNative, setIsIosNative] = useState(false)
+  // #1525: SSR and first client render never include the <Script> when
+  // `revealAfterId` is set; once armed it stays armed (never un-loaded).
+  const [armed, setArmed] = useState(!revealAfterId)
+
+  useEffect(() => {
+    if (!revealAfterId) return
+    // Never arm inside the iOS shell (Apple 3.1.1): the Ko-fi script must not
+    // even be requested there, not merely hidden.
+    if (getCapacitorPlatform() === 'ios') return
+    const hero = document.getElementById(revealAfterId)
+    // No hero element or no IntersectionObserver: fall back to always-available
+    // rather than a donate button that can never appear.
+    if (!hero || typeof IntersectionObserver === 'undefined') {
+      setArmed(true)
+      return
+    }
+    const removeStyle = installKofiBrandStyle()
+    const root = document.documentElement
+    // IntersectionObserver, not a scroll listener: no main-thread work per
+    // scroll. `top < 0` distinguishes "scrolled past" from "not yet reached".
+    // Armed is one-way (once loaded it stays loaded); the attribute follows
+    // the hero so the pill is only hidden while the hero is on screen.
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[entries.length - 1]
+      const past = !e.isIntersecting && e.boundingClientRect.top < 0
+      if (past) {
+        setArmed(true)
+        root.removeAttribute(KOFI_HERO_ATTR)
+      } else {
+        root.setAttribute(KOFI_HERO_ATTR, '')
+      }
+    })
+    io.observe(hero)
+    return () => {
+      io.disconnect()
+      removeStyle()
+    }
+  }, [revealAfterId])
 
   useEffect(() => {
     if (getCapacitorPlatform() === 'ios') {
@@ -215,10 +311,12 @@ export function KofiWidget({
     // text at the CSS layer, because Ko-fi sizes/positions the pill from this
     // config at draw time, not from later layout.
     const isMobileViewport = window.matchMedia(KOFI_MOBILE_MEDIA_QUERY).matches
+    // #1525: brand-page placement is icon-only at every width (see above).
+    const iconOnly = isMobileViewport || !!revealAfterId
 
     window.kofiWidgetOverlay.draw(KOFI_USERNAME, {
       'type': 'floating-chat',
-      'floating-chat.donateButton.text': isMobileViewport ? '' : buttonText,
+      'floating-chat.donateButton.text': iconOnly ? '' : buttonText,
       // --color-warm-base (#FBEDE0) / --ink (#322B23) — keep the lamp warm,
       // not Ko-fi default cobalt which collides with the brand palette.
       'floating-chat.donateButton.background-color': '#FBEDE0',
@@ -233,10 +331,11 @@ export function KofiWidget({
 
     // Icon-only button has no accessible name from Ko-fi's own markup (empty
     // span, alt-less <img>) — restore one from the full label we would have shown.
-    if (isMobileViewport) labelKofiDonateButtons(buttonText)
-  }, [buttonText])
+    if (iconOnly) labelKofiDonateButtons(buttonText)
+    if (revealAfterId) compactKofiDonateButtons()
+  }, [buttonText, revealAfterId])
 
-  if (isIosNative) return null
+  if (isIosNative || !armed) return null
 
   return (
     <Script

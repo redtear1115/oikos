@@ -1,3 +1,5 @@
+import { Phrase } from '../../_components/Phrase'
+
 export function UseCaseHero({
   kicker,
   title,
@@ -18,7 +20,7 @@ export function UseCaseHero({
           letterSpacing: '3.5px',
         }}
       >
-        {kicker}
+        <Phrase text={kicker} />
       </p>
       <h1
         className="text-page md:text-amount-md text-balance m-0"
@@ -30,7 +32,7 @@ export function UseCaseHero({
           lineHeight: 1.18,
         }}
       >
-        {title}
+        <Phrase text={title} />
       </h1>
       <p
         className="text-base leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"

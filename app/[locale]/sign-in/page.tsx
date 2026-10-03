@@ -12,6 +12,8 @@ import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
 import { BlogSection } from './BlogSection'
+import { Phrase } from '../_components/Phrase'
+import { BrandInnerStyle } from '../_components/BrandInnerStyle'
 
 type AboutStrings = Translations['signIn']['about']
 
@@ -120,9 +122,23 @@ export default async function SignInPage({
 
   return (
     <main
-      className="flex min-h-screen flex-col"
+      id="main"
+      className="relative flex min-h-screen flex-col"
       style={{ background: 'var(--bg-committed)' }}
     >
+      <BrandInnerStyle />
+      {/* Legal links sit inside a sentence, so they can't be 44px tall in flow.
+          The hit area grows with padding and cancels it with margin: the line
+          box, and so the text, doesn't move. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            '.legal-link{display:inline-block;padding:14px 4px;margin:-14px -4px}' +
+            // forced colors: the provider buttons are `border-0` fills, and
+            // .oik-btn's focus ring is a box-shadow; both vanish there.
+            '@media(forced-colors:active){.oik-btn.w-full{border:1px solid ButtonText}.oik-btn:focus-visible{outline:2px solid Highlight}}',
+        }}
+      />
       {/* Already-signed-in viewers get bounced to /dashboard client-side (#920
           Phase 1) — the proxy no longer verifies auth on this public path. */}
       <SignedInRedirect checkingLabel={t.signIn.signingIn} />
@@ -164,15 +180,24 @@ export default async function SignInPage({
           data-shell-slot="center"
         >
           <div className="flex flex-col items-center text-center gap-3">
+            {/* The wordmark is the way home (#1523, #1524): one wordmark on the
+                page, not a small one above the big one. The sr-only suffix stays
+                outside the link so the link's name is just "Futari". */}
             <h1 className="font-serif font-medium text-ink text-amount-md leading-none tracking-[-1px] m-0">
-              Futari
+              <Link
+                href={localizedHref('/', locale)}
+                aria-label={t.brand.homeLabel}
+                className="inline-flex items-center min-h-11"
+              >
+                Futari
+              </Link>
               <span className="sr-only">{t.signIn.srTagline}</span>
             </h1>
             <p className="text-sm text-ink-2 tracking-[3px] m-0">
               ふたり
             </p>
             <p className="mt-6 max-w-70 text-base text-ink-2 leading-relaxed">
-              {t.signIn.tagline}
+              <Phrase text={t.signIn.tagline} />
             </p>
             <p className="sr-only">{t.signIn.srDescription}</p>
           </div>
@@ -195,9 +220,9 @@ export default async function SignInPage({
             <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-ink-2 text-center">
               {t.signIn.termsPrefix}{' '}
-              <Link href={localizedHref('/terms', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
+              <Link href={localizedHref('/terms', locale)} className="legal-link underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
               {' '}{t.signIn.termsAnd}{' '}
-              <Link href={localizedHref('/privacy', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.privacyLink}</Link>
+              <Link href={localizedHref('/privacy', locale)} className="legal-link underline focus-visible:oik-focus-ring">{t.signIn.privacyLink}</Link>
               {t.signIn.termsSuffix}
             </p>
           </div>
@@ -270,7 +295,7 @@ function AboutNarrative({
             the same reasoning DESIGN.md §3 gives for the landing page's
             one-offs. -0.3px is the Display tier's documented tracking. (#1160) */}
         <h2 className="m-0 font-serif font-medium text-ink text-lg lg:text-title leading-snug tracking-[-0.3px]">
-          {featured.heading}
+          <Phrase text={featured.heading} />
         </h2>
         {featured.body.map((p, j) => {
           const isPunchline = featured.punchlineLast && j === lastIdx

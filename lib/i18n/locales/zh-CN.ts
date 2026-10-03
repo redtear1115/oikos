@@ -70,6 +70,7 @@ export const zhCN: Translations = {
     },
     blog: {
       heading: '开发日志',
+      more: '更多日志',
     },
     srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
     srDescription:
@@ -187,6 +188,12 @@ export const zhCN: Translations = {
     phoneMockFeed2Sub: '昨天',
     phoneMockFeed3Title: '小白看医生',
     phoneMockFeed3Sub: '5/11',
+  },
+
+  brand: {
+    skipToMain: '跳到主要内容',
+    homeLabel: 'Futari 首页',
+    breadcrumbLabel: '面包屑导航',
   },
 
   common: {
@@ -2174,40 +2181,74 @@ export const zhCN: Translations = {
     comparisonHeading: 'Futari vs {other}',
     comparisonText: {
       interfaceLanguage: '界面语言',
-      fourLanguages: '✓ 中英日四语',
+      fourLanguages: '中英日四语',
       notStated: '未说明',
-      basicHalfSplit: '△ 基本对半',
-      updatesSlowed: '△ 节奏放缓',
-      paidUnlock: '△ 需付费解锁',
-      paidPlanOnly: '△ 限付费版',
-      basicPlanLimited: '△ 基础版有限制',
+      basicHalfSplit: '基本对半',
+      updatesSlowed: '节奏放缓',
+      paidUnlock: '需付费解锁',
+      paidPlanOnly: '限付费版',
+      basicPlanLimited: '基础版有限制',
       manualCleanup: '需自行整理',
-      requiresVip: '△ 需 VIP',
-      vipUnlock: '△ VIP 解锁',
-      requiresSubscription: '△ 需订阅',
-      manualBackup: '△ 需手动备份',
-      adsOrPaidPlan: '△ 含广告／付费版',
-      mostlyEnglish: '△ 以英文为主',
-      advancedNeedsSubscription: '△ 高级功能需订阅',
-      sharingSetupRequired: '△ 需设置共享',
-      premiumOnly: '△ Premium 限定',
-      someFeaturesPaid: '△ 部分功能付费',
-      viewOnly: '△ 仅能查看',
-      dependsOnVersion: '△ 视版本',
-      advancedSubscription: '△ 高级订阅',
-      vipOnly: '△ VIP 限定',
-      dependsOnAccount: '△ 视账号',
-      inAppPurchases: '△ 含内购',
-      subscriptionOnly: '△ 订阅限定',
-      mostlyLocal: '△ 本地为主',
-      advancedPaid: '△ 高级功能付费',
-      partialExport: '△ 部分导出',
-      iosOnly: '△ iOS 限定',
-      freePlanFourPerDay: '△ 免费版每日 4 笔',
-      conversionNeedsPro: '△ 换算需 Pro',
-      sharedLedgerSetupRequired: '△ 需设共享账本',
-      adsOrMembership: '△ 含广告／会员',
-      requiresMembership: '△ 需会员',
+      requiresVip: '需 VIP',
+      vipUnlock: 'VIP 解锁',
+      requiresSubscription: '需订阅',
+      manualBackup: '需手动备份',
+      adsOrPaidPlan: '含广告／付费版',
+      mostlyEnglish: '以英文为主',
+      advancedNeedsSubscription: '高级功能需订阅',
+      sharingSetupRequired: '需设置共享',
+      premiumOnly: 'Premium 限定',
+      someFeaturesPaid: '部分功能付费',
+      viewOnly: '仅能查看',
+      dependsOnVersion: '视版本',
+      advancedSubscription: '高级订阅',
+      vipOnly: 'VIP 限定',
+      dependsOnAccount: '视账号',
+      inAppPurchases: '含内购',
+      subscriptionOnly: '订阅限定',
+      mostlyLocal: '本地为主',
+      advancedPaid: '高级功能付费',
+      partialExport: '部分导出',
+      iosOnly: 'iOS 限定',
+      freePlanFourPerDay: '免费版每日 4 笔',
+      conversionNeedsPro: '换算需 Pro',
+      sharedLedgerSetupRequired: '需设共享账本',
+      adsOrMembership: '含广告／会员',
+      requiresMembership: '需会员',
+      featSharedLedger: '双人共同账本',
+      featSplitModes: '费用分摊模式',
+      featMaintained: '持续维护更新',
+      featMultiCurrency: '多币种记账',
+      featRealtimeSync: '即时同步',
+      featFree: '完全免费',
+      featCsvImport: 'CSV 数据导入',
+      featCsvExport: 'CSV 数据导出',
+      featCloudSync: '云端同步',
+      featRealtimeCloudSync: '即时云端同步',
+      featDataExport: '数据导出带走',
+      featCrossPlatform: '跨平台',
+      featDailyEntries: '每日记账笔数',
+      verdictSupported: '支持',
+      verdictNone: '无',
+      verdictMultipleModes: '多种模式',
+      verdictBiweekly: '每两周发版',
+      verdictFreeBuiltIn: '免费内置',
+      verdictNoNativeSupport: '无原生支持',
+      verdictForever: '永久',
+      verdictDirectUpload: '直接上传',
+      verdictDefaultMode: '默认模式',
+      verdictInstant: '实时',
+      verdictSingleUser: '单人设计',
+      verdictSubscriptionModel: '订阅制',
+      verdictFree: '免费',
+      verdictCanExport: '可导出',
+      verdictNoExport: '无导出',
+      verdictGroupSupport: '支持群组',
+      verdictUnlimited: '不限',
+      verdictBuiltInConversion: '内置换算',
+      verdictSpreadsheetExport: '表格导出',
+      verdictCsvExport: 'CSV 导出',
+      verdictPlatforms: 'iOS／Android／Web',
     },
     howToStepName: '步骤 {n}',
     trust: {
@@ -2291,6 +2332,7 @@ export const zhCN: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: '搬家指南',
       heroKicker: '搬家不用从头来过',
       heroTitle: '把记过的账，一起搬到 Futari',
       heroSubtitle: '你现在用的记账工具，这里大多都有对应的迁移指南。挑一个开始，几分钟就能把过去的记录带过来。',
@@ -2769,8 +2811,8 @@ export const zhCN: Translations = {
             body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
           },
           {
-            title: '多币别也记得清楚',
-            body: '出国或跨币别的支出照样记，回头看账目一样清楚。',
+            title: '多币种也记得清楚',
+            body: '出国或跨币种的支出照样记，回头看账目一样清楚。',
           },
         ],
         stepsHeading: '搬迁三步',
@@ -2791,8 +2833,8 @@ export const zhCN: Translations = {
             answer: 'Futari 完全免费，没有隐藏费用。',
           },
           {
-            question: '多币别的记录会跑掉吗？',
-            answer: '币别会一起整理进 CSV；非台币的会照原数字先导入，换算可以在导入后逐笔调整。',
+            question: '多币种的记录会跑掉吗？',
+            answer: '币种会一起整理进 CSV；非台币的会照原数字先导入，换算可以在导入后逐笔调整。',
           },
         ],
       },
@@ -2930,9 +2972,9 @@ export const zhCN: Translations = {
       ogDescription: 'Futari 是为夫妻、情侣设计的共同账本——一起记账、自动分摊、AA 结算，看见两个人的生活全貌。',
     },
     signIn: {
-      title: '登录 Futari · 开始两个人的记账生活',
-      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
-      ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+      title: '登录 Futari · 两个人的双人记账',
+      description: '用 Google 账号登录后，会进入你们共用的账本——伴侣一起记下日常开销与爱车油耗，也照看保险与爱物的双人记账 PWA。',
+      ogDescription: '用 Google 一键登录，进入两个人的家计簿。',
       invite: {
         title: '有人邀请你一起记账 · Futari',
         description: '有人邀请你加入一本两个人共用的账本。登录后就能加入。',
@@ -3038,7 +3080,7 @@ export const zhCN: Translations = {
       newlyweds: {
         title: '新婚家计分摊｜夫妻记账怎么记？Futari',
         description: '新婚生活费怎么分摊？Futari 是为夫妻、情侣设计的共同账本，日常开销、爱物、旅行，两个人的生活全都在一本账里。',
-        ogDescription: '新婚夫妻的家计管理首选——Futari 双人账本，从日常到爱物，一起记。',
+        ogDescription: '新婚夫妻的家计首选——Futari 双人账本，从日常到爱物，一起记。',
       },
       'pet-owners': {
         title: '宠物费用记账｜猫咪医疗费、日常开销怎么记？Futari',
@@ -3058,20 +3100,20 @@ export const zhCN: Translations = {
       'monthly-bills': {
         title: '每月固定开销记账｜房租水电怎么一起管？Futari',
         description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起记？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、只开放给你们俩。',
-        ogDescription: '两个人的固定开销管理——Futari，每月必要支出一起看，不再只靠其中一人记。',
+        ogDescription: '两个人的固定开销——Futari，每月必要支出一起看，不再只靠其中一人记。',
       },
       'big-purchases': {
-        title: '大笔支出计划｜购车换机怎么和伴侣一起追踪？Futari',
+        title: '大笔支出计划｜购车换机怎么和伴侣一起记？Futari',
         description: '购车、换电脑、旅游基金——大笔支出怎么和伴侣一起规划记账？Futari 让每笔大额费用关联到对应爱物，清楚看见这项支出的完整样貌。',
         ogDescription: '大笔支出不再说不清——Futari，把每项重要花费记清楚、两个人一起看到。',
       },
       dining: {
-        title: '外食费用记账｜吃饭开销怎么和另一半一起追踪？Futari',
+        title: '外食费用记账｜吃饭开销怎么和另一半一起记？Futari',
         description: '每天吃饭、外卖、咖啡——饮食开销最容易不知不觉累积。Futari 让两个人的外食费用一起记、一起看，轻松知道这个月吃了多少。',
         ogDescription: '外食账不再算不清——Futari，把两个人的饮食开销一起记清楚。',
       },
       parenting: {
-        title: '育儿费用记账｜宝宝花费怎么和另一半一起追踪？Futari',
+        title: '育儿费用记账｜宝宝花费怎么和另一半一起记？Futari',
         description: '奶粉、尿布、回诊、保险——育儿开销零碎又频繁，两个人一起记才不漏。Futari 让每笔育儿费用关联到小孩，清楚看见宝贝的每一笔支出。',
         ogDescription: '育儿记账首选——Futari，把每笔宝宝费用记下来，两个人一起看见。',
       },
@@ -3083,7 +3125,7 @@ export const zhCN: Translations = {
     },
   },
   useCase: {
-    backToHome: '回首页',
+    backToHome: '← 回 Futari 首页',
     featuresHeading: 'Futari 怎么帮到你们',
     faqHeading: '常见问题',
     ctaLabel: '免费开始记账',
@@ -3097,7 +3139,7 @@ export const zhCN: Translations = {
         body: '出游的钱和日常账分开记，回来之后清楚看见这趟谁出了多少，不需要在群组里对账。',
       },
       asset: {
-        title: '爱物费用追踪',
+        title: '爱物费用记账',
         body: '每笔支出可以关联到你们共同照顾的对象——车、房、小孩、宠物、植物，费用自动归类。',
       },
       realtime: {
@@ -3201,7 +3243,7 @@ export const zhCN: Translations = {
         ],
       },
       newlyweds: {
-        heroKicker: '新婚夫妻家计管理',
+        heroKicker: '新婚夫妻家计记账',
         heroTitle: '结婚之后，账要怎么一起管？',
         heroSubtitle: '新婚生活的第一本账，从日常开销到爱物、旅行，Futari 让两个人的生活费用都有地方安放。',
         painPoints: [
@@ -3210,7 +3252,7 @@ export const zhCN: Translations = {
             body: '新婚家计没有标准答案。有人全合、有人部分合、有人维持各自 AA。Futari 支援各种模式，不管你们怎么决定，账本都能配合。',
           },
           {
-            heading: '「车子、保险、未来买房——这些费用怎么一起追踪？」',
+            heading: '「车子、保险、未来买房——这些费用怎么一起记？」',
             body: '婚后的费用不只是日常开销，还有爱物、保险、大笔支出。Futari 让每笔支出可以关联到具体的爱物，车的费用、保险费——各自归位，不混在一起。',
           },
           {
@@ -3247,7 +3289,7 @@ export const zhCN: Translations = {
             body: '两个人一起养，费用却可能都由某一方先垫。Futari 的分摊功能让每笔支出都清楚标记，余额自动累计，不需要特别去问「这次谁出比较多」。',
           },
           {
-            heading: '「多猫家庭的费用怎么分开追踪？」',
+            heading: '「多猫家庭的费用怎么分开记？」',
             body: 'Futari 支援多个爱物——每只猫、每只狗都可以是一个独立的记录对象，医疗费直接关联到对应的毛孩，不会混在一起。',
           },
         ],
@@ -3262,7 +3304,7 @@ export const zhCN: Translations = {
           },
           {
             question: '如果养了两只以上，可以分开记吗？',
-            answer: '可以。Futari 支援多个爱物，每只毛孩都可以独立建立，各自的费用分开追踪，不会混在一起。',
+            answer: '可以。Futari 支援多个爱物，每只毛孩都可以独立建立，各自的费用分开记，不会混在一起。',
           },
         ],
       },
@@ -3280,8 +3322,8 @@ export const zhCN: Translations = {
             body: '旅行是特殊支出，不应该跟日常开销混在一起。Futari 让旅行账独立存在，平常看不干扰，想回顾就清楚。',
           },
           {
-            heading: '「多币别消费，换算起来很麻烦。」',
-            body: 'Futari 旅行子账本支援多币别记账，出国刷日元、港币都可以记，回来自动换算成主币别，不用手动算汇率。',
+            heading: '「多币种消费，换算起来很麻烦。」',
+            body: 'Futari 旅行子账本支援多币种记账，出国刷日元、港币都可以记，回来自动换算成主币种，不用手动算汇率。',
           },
         ],
         faq: [
@@ -3290,8 +3332,8 @@ export const zhCN: Translations = {
             answer: '建议旅行期间用 Futari 旅行子账本即时记账——每笔消费记下是谁付的，回来之后直接看结算，不用在群组里翻聊天记录。',
           },
           {
-            question: 'Futari 旅行子账本支援多币别吗？',
-            answer: '支援。旅行子账本可以设定旅行主币别，每笔费用记下原始金额，系统依汇率换算成主账本币别，方便结算。',
+            question: 'Futari 旅行子账本支援多币种吗？',
+            answer: '支援。旅行子账本可以设定旅行主币种，每笔费用记下原始金额，系统依汇率换算成主账本币种，方便结算。',
           },
           {
             question: 'Futari 要收费吗？',
@@ -3333,7 +3375,7 @@ export const zhCN: Translations = {
         ],
       },
       'monthly-bills': {
-        heroKicker: '每月固定开销管理',
+        heroKicker: '每月固定开销记账',
         heroTitle: '房租、水电、网络——每个月的固定账，一起看才安心。',
         heroSubtitle: '固定支出最容易被忽略，因为感觉「都差不多」。Futari 让两个人把每月固定账放在一起，清楚看见谁在负担什么。',
         painPoints: [
@@ -3352,7 +3394,7 @@ export const zhCN: Translations = {
         ],
         faq: [
           {
-            question: '每月固定支出要怎么和伴侣一起追踪？',
+            question: '每月固定支出要怎么和伴侣一起记？',
             answer: '在 Futari 记下每笔固定支出，标记谁付的、怎么分摊。两个人都能即时看到每笔账，不需要另外说明。',
           },
           {
@@ -3399,7 +3441,7 @@ export const zhCN: Translations = {
         ],
       },
       dining: {
-        heroKicker: '外食费用追踪',
+        heroKicker: '外食费用记账',
         heroTitle: '吃饭的账，最容易不知不觉多出来。',
         heroSubtitle: '每天外食、外卖、咖啡、聚餐——饮食开销很分散，很容易月底才发现多了很多。Futari 让两个人把吃饭的账一起记清楚。',
         painPoints: [
@@ -3418,7 +3460,7 @@ export const zhCN: Translations = {
         ],
         faq: [
           {
-            question: '外食费用要怎么和另一半一起追踪？',
+            question: '外食费用要怎么和另一半一起记？',
             answer: 'Futari 让每笔外食费用即时记下来，标记谁付的、怎么分，两个人都即时看到。月底可以看这个月饮食类的累计，不需要另外整理。',
           },
           {
@@ -3445,8 +3487,8 @@ export const zhCN: Translations = {
             body: '育儿费用常由某一方先垫，另一方感觉不到重量。Futari 让每笔育儿账都进入共同账本，两个人都即时看到，不需要特别说明。',
           },
           {
-            heading: '「有两个孩子，费用要分开追踪。」',
-            body: 'Futari 支援多个爱物，每个孩子都可以独立建立，各自的费用分开追踪，清楚知道每个孩子的开销。',
+            heading: '「有两个孩子，费用要分开记。」',
+            body: 'Futari 支援多个爱物，每个孩子都可以独立建立，各自的费用分开记，清楚知道每个孩子的开销。',
           },
         ],
         faq: [

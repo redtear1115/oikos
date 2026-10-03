@@ -43,6 +43,46 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **品牌頁文案拿掉「管理」「追蹤」與 track／manage 字眼（#1528）**
+  使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如「怎麼和伴侶一起追蹤？」改成「怎麼一起記？」；英文「expense tracking」只留在搜尋標題當品類名。
+  技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 區塊四個語系共約 140 句；9 個情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+
+- **情境、搬遷、登入頁改成同一個暖燈世界，不再是一堆白卡片（#1524）**
+  使用者：情境與搬遷頁的卡片網格換成細線列表，序號與圖示換成同一顆小小的暖光點；情境頁標題後有一片燈光、搬遷頁有一條光帶、登入頁開發日誌上方是插畫的一格窗景；電腦寬度下標題在左、列表在右；登入頁開發日誌先顯示最新 5 篇、其餘收在「更多日誌」，頁首重複的小 Futari 拿掉、改成大 Futari 本身就是回首頁連結。
+  技術：樣式以 inline `<style>`（`brand-inner.ts`）隨頁送出，不開新 CSS 檔、本項沒動 `globals.css`（獨立檔讓登入頁 LCP 2.32→2.55 s）；/zh-TW LCP 2.476 s、各頁 ≤ 2.48 s；新增 `signIn.blog.more` ×4 語，en／ja 譯文待確認。
+
+- **品牌頁換行不再把詞拆開，語言切換不再一字一行（#1522）**
+  使用者：首頁、登入頁、情境頁、搬遷頁在手機、Safari、iPhone 與 iOS 殼裡，大標、小標與內文不再於「資／料」「什／麼。」「ありませ／ん。」這種詞中間換行、也不再只剩一兩字；頁尾語言切換在窄螢幕不再直排，中日文的斜體標語改為正體，英文首頁副標不再被強制斷行。
+  技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`、標題以 `.ph`（`keep-all`）渲染，規則放品牌 layout 的 inline `<style>`；`.brand` 的 zh／ja 換行規則（`auto-phrase`、`line-break: strict`、`text-wrap: balance`）寫進 `globals.css`，多 14 行、約 230 bytes（再多會讓 /zh-TW 模擬 LCP 從 2.47 s 跳到 2.62 s）；dashboard 不受影響。
+
+- **英文、日文、简中的搬遷比較表整張翻譯（#1538）**
+  使用者：`/en/migrate/*`、`/ja/migrate/*`、`/zh-CN/migrate/*` 的比較表不再出現「雙人共同帳本」「支援」「無」「多種模式」這些中文列名與判定字，4 語各自完整；繁中頁文字不變。
+  技術：列名與判定字全部移進 `migrate.comparisonText`（34 個新 key），`ComparisonText` 不再接受字串、寫中文字面值會 `tsc` 失敗；新增 `tests/migrate-comparison-i18n.test.tsx` 逐來源×語系擋漏譯；各來源 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+
+- **品牌頁的連結夠大、能跳到內文、能回首頁（#1523）**
+  使用者：首頁、登入頁、情境頁、搬遷頁的頁尾連結、語言切換與「看全部情境」都放大到 44px 可點；鍵盤第一下 Tab 是「跳到主要內容」；登入頁左上多了回首頁的 Futari；情境與搬遷詳情頁在手機上也有「Futari / 情境 / 同居」這樣的導覽可回上層；高對比（forced colors）模式下登入與主要按鈕不再失去邊框。
+  技術：`<style>` 與 `#main` 放在品牌頁自己的 layout，本項沒動 `globals.css`（/zh-TW LCP 2.475 s）；搬遷頁 BreadcrumbList 隨可見導覽補上 `/migrate` 中間層；新增 `brand.*` 與 `migrate.hub.breadcrumbLabel` ×4 語，en／ja 譯文待確認。
+
+- **首頁的咖啡按鈕等捲過首屏才出現，也不再壓在內容上（#1525）**
+  使用者：捲過首屏之後才會出現請喝杯咖啡的按鈕（改成只有圖示、靠左緊貼邊緣，電腦與平板寬度下不壓標題與功能列），回到首屏時先收起來；一直沒捲動的訪客不會載入它。
+  技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 看首屏區塊，離開視窗上緣才載入 Ko-fi script；iOS 殼內不載入、GA `kofi_widget_click` 與 `SOURCE` 不變，也省掉首屏載入期的 Ko-fi 請求。
+
+- **首頁的主按鈕一開始就能點，關掉 JS 也能登入（#1521）**
+  使用者：首頁的主按鈕與「已經有帳號」從頁面一出現就是有字、可點的登入連結，不再先是一條空白的深色按鈕；載入完成後 iPhone 瀏覽器改指向 App Store、Android 改指向測試版報名，App 殼內與已安裝的 PWA 仍一律是登入。
+  技術：移除 `LandingCtaLink` 的 `inert` 與 pending 佔位，pending 直接渲染登入預設；載入完成前的點擊是一般導覽，不會送 `landing_cta_clicked`（iPhone 瀏覽器在載入完成前點到會進登入而不是 App Store，已接受）。
+
+- **登入頁的分頁標題與搜尋摘要不再用「開始」（#1526）**
+  使用者：登入頁在瀏覽器分頁與搜尋結果裡的標題與說明，改成說明登入後會進到你們共用的帳本，不再說「開始兩個人的記帳生活」；4 語同步。
+  技術：只改 `seo.signIn` 的 title／description／ogDescription ×4 語；en／ja 譯文待確認。
+
+- **搬遷頁比較表每格只剩一個符號（#1519）**
+  使用者：`/migrate/<來源>` 的比較表不再出現「✓ ✓ 支援」「◐ △ 基本對半」這種雙符號，每格只有一個 ✓／△／✕，4 語一致。
+  技術：符號改由 `MigrateComparison` 依 `tone` 單獨負責，`sources.ts` 與 `comparisonText` 的字串回到純文字；新增 `tests/migrate-comparison-marks.test.tsx` 逐來源×語系擋重複符號；各來源 `contentUpdatedAt` 一併更新。
+
+- **首頁、登入頁、情境頁與搬遷頁載入更快（#1520）**
+  使用者：開啟這些公開頁時，首屏不再等記錄與登入用的程式，手機上最大內容出現時間約快 0.4–0.8 秒。
+  技術：登入前品牌頁的 Sentry、posthog-js、Supabase 改在 load 後再等 1 秒、主執行緒閒下來（最多再等 3 秒）才開始下載，或第一次點擊／按鍵、第一次需要時就提前載入；dashboard 與其他路由仍在開機時載入，但 Sentry 改為動態 import，多一趟 chunk 往返，chunk 到達前丟出的錯誤不會被記到，`global-error` 也改為非同步送出。從開始導覽到載入完成的這段空窗（加 chunk 下載時間）內的錯誤與提早離開的訪客不會被記到；空窗內的點擊事件會先留在記憶體，分頁撐到載入完成才補送。
+
 - **相對日期在 iOS App 不再造成水合錯誤（#1515）**
   使用者：首頁與記錄列表的「N 天前」在所有裝置上一致顯示為「12 天前」（數字與單位間固定一個空格，原本部分裝置顯示「12天前」）。
   技術：`formatDateRelative` / `formatPickerSubtitle` 把 `Intl.RelativeTimeFormat` 輸出正規化（NBSP 轉空格、數字與 CJK 單位間固定一個空格），消除 Node 與 WebKit ICU 的差異。

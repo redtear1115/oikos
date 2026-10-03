@@ -108,6 +108,8 @@ export type Translations = {
     blog: {
       /** Section heading above the dev-log article list (issue #460). */
       heading: string
+      /** Disclosure label that reveals the dev-log entries past the first five (#1524). */
+      more: string
     }
     /** sr-only suffix appended to the "Futari" H1 for screen-reader / SEO context (#467). */
     srTagline: string
@@ -262,6 +264,17 @@ export type Translations = {
     phoneMockFeed2Sub: string
     phoneMockFeed3Title: string
     phoneMockFeed3Sub: string
+  }
+
+  /** Wayfinding strings shared by every brand page (landing, sign-in,
+   *  use-case, migrate, legal) — #1523. */
+  brand: {
+    /** First focusable element: skip link to <main id="main">. */
+    skipToMain: string
+    /** Accessible name of the wordmark link back to the locale home. */
+    homeLabel: string
+    /** aria-label of the visible breadcrumb <nav>. */
+    breadcrumbLabel: string
   }
 
   common: {
@@ -2725,10 +2738,10 @@ export type Translations = {
     /** Heading template for the comparison table. Contains `{other}` —
      *  replaced with the source brand name per page. e.g. "Futari vs {other}". */
     comparisonHeading: string
-    /** Comparison-table cells that carry a condition or specific claim (#1185).
-     *  Verdict-only labels (✓ 支援 / ✕ 無) stay as literals in
-     *  lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
-     *  Values keep their leading glyph (△ / ✓) as part of the string. */
+    /** Every string in the comparison table: feature names, verdict labels and
+     *  conditional cells (#1185, completed by #1538). Nothing is left as a literal
+     *  in lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
+     *  Values are plain text: the ✓ / △ / ✕ mark is owned by MigrateComparison (#1519). */
     comparisonText: Record<import('@/lib/migrate/sources').ComparisonTextKey, string>
     /** HowToStep `name` in the HowTo JSON-LD (not rendered). Contains `{n}`. */
     howToStepName: string
@@ -2776,6 +2789,8 @@ export type Translations = {
      *  reuse otherSources.items; only the hub's own hero + section heading
      *  live here. */
     hub: {
+      /** Breadcrumb label for the hub node itself (#1523). */
+      breadcrumbLabel: string
       heroKicker: string
       heroTitle: string
       heroSubtitle: string
@@ -3100,6 +3115,7 @@ export const zhTW: Translations = {
     },
     blog: {
       heading: '開發日誌',
+      more: '更多日誌',
     },
     srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
     srDescription:
@@ -3217,6 +3233,12 @@ export const zhTW: Translations = {
     phoneMockFeed2Sub: '昨天',
     phoneMockFeed3Title: '小白看醫生',
     phoneMockFeed3Sub: '5/11',
+  },
+
+  brand: {
+    skipToMain: '跳到主要內容',
+    homeLabel: 'Futari 首頁',
+    breadcrumbLabel: '麵包屑導覽',
   },
 
   common: {
@@ -5204,40 +5226,74 @@ export const zhTW: Translations = {
     comparisonHeading: 'Futari vs {other}',
     comparisonText: {
       interfaceLanguage: '介面語言',
-      fourLanguages: '✓ 中英日四語',
+      fourLanguages: '中英日四語',
       notStated: '未說明',
-      basicHalfSplit: '△ 基本對半',
-      updatesSlowed: '△ 節奏放緩',
-      paidUnlock: '△ 需付費解鎖',
-      paidPlanOnly: '△ 限付費版',
-      basicPlanLimited: '△ 基本版有限制',
+      basicHalfSplit: '基本對半',
+      updatesSlowed: '節奏放緩',
+      paidUnlock: '需付費解鎖',
+      paidPlanOnly: '限付費版',
+      basicPlanLimited: '基本版有限制',
       manualCleanup: '需自行整理',
-      requiresVip: '△ 需 VIP',
-      vipUnlock: '△ VIP 解鎖',
-      requiresSubscription: '△ 需訂閱',
-      manualBackup: '△ 需手動備份',
-      adsOrPaidPlan: '△ 含廣告／付費版',
-      mostlyEnglish: '△ 以英文為主',
-      advancedNeedsSubscription: '△ 進階需訂閱',
-      sharingSetupRequired: '△ 需設定共享',
-      premiumOnly: '△ Premium 限定',
-      someFeaturesPaid: '△ 部分功能付費',
-      viewOnly: '△ 僅能查看',
-      dependsOnVersion: '△ 視版本',
-      advancedSubscription: '△ 進階訂閱',
-      vipOnly: '△ VIP 限定',
-      dependsOnAccount: '△ 視帳號',
-      inAppPurchases: '△ 含內購',
-      subscriptionOnly: '△ 訂閱限定',
-      mostlyLocal: '△ 本機為主',
-      advancedPaid: '△ 進階付費',
-      partialExport: '△ 部分匯出',
-      iosOnly: '△ iOS 限定',
-      freePlanFourPerDay: '△ 免費版每日 4 筆',
-      conversionNeedsPro: '△ 換算需 Pro',
-      sharedLedgerSetupRequired: '△ 需設共享帳本',
-      adsOrMembership: '△ 含廣告／會員',
-      requiresMembership: '△ 需會員',
+      requiresVip: '需 VIP',
+      vipUnlock: 'VIP 解鎖',
+      requiresSubscription: '需訂閱',
+      manualBackup: '需手動備份',
+      adsOrPaidPlan: '含廣告／付費版',
+      mostlyEnglish: '以英文為主',
+      advancedNeedsSubscription: '進階需訂閱',
+      sharingSetupRequired: '需設定共享',
+      premiumOnly: 'Premium 限定',
+      someFeaturesPaid: '部分功能付費',
+      viewOnly: '僅能查看',
+      dependsOnVersion: '視版本',
+      advancedSubscription: '進階訂閱',
+      vipOnly: 'VIP 限定',
+      dependsOnAccount: '視帳號',
+      inAppPurchases: '含內購',
+      subscriptionOnly: '訂閱限定',
+      mostlyLocal: '本機為主',
+      advancedPaid: '進階付費',
+      partialExport: '部分匯出',
+      iosOnly: 'iOS 限定',
+      freePlanFourPerDay: '免費版每日 4 筆',
+      conversionNeedsPro: '換算需 Pro',
+      sharedLedgerSetupRequired: '需設共享帳本',
+      adsOrMembership: '含廣告／會員',
+      requiresMembership: '需會員',
+      featSharedLedger: '雙人共同帳本',
+      featSplitModes: '費用分攤模式',
+      featMaintained: '持續維護更新',
+      featMultiCurrency: '多幣別記帳',
+      featRealtimeSync: '即時同步',
+      featFree: '完全免費',
+      featCsvImport: 'CSV 資料匯入',
+      featCsvExport: 'CSV 資料匯出',
+      featCloudSync: '雲端同步',
+      featRealtimeCloudSync: '即時雲端同步',
+      featDataExport: '資料匯出帶走',
+      featCrossPlatform: '跨平台',
+      featDailyEntries: '每日記帳筆數',
+      verdictSupported: '支援',
+      verdictNone: '無',
+      verdictMultipleModes: '多種模式',
+      verdictBiweekly: '每兩週發版',
+      verdictFreeBuiltIn: '免費內建',
+      verdictNoNativeSupport: '無原生支援',
+      verdictForever: '永久',
+      verdictDirectUpload: '直接上傳',
+      verdictDefaultMode: '預設模式',
+      verdictInstant: '即時',
+      verdictSingleUser: '單人設計',
+      verdictSubscriptionModel: '訂閱制',
+      verdictFree: '免費',
+      verdictCanExport: '可匯出',
+      verdictNoExport: '無匯出',
+      verdictGroupSupport: '群組支援',
+      verdictUnlimited: '不限',
+      verdictBuiltInConversion: '內建換算',
+      verdictSpreadsheetExport: '試算表匯出',
+      verdictCsvExport: 'CSV 匯出',
+      verdictPlatforms: 'iOS／Android／Web',
     },
     howToStepName: '步驟 {n}',
     trust: {
@@ -5321,6 +5377,7 @@ export const zhTW: Translations = {
       },
     },
     hub: {
+      breadcrumbLabel: '搬家指南',
       heroKicker: '搬家不用從頭來過',
       heroTitle: '把記過的帳，一起搬到 Futari',
       heroSubtitle: '你現在用的記帳工具，這裡多半都有對應的搬遷指南。挑一個開始，幾分鐘就能把過去的紀錄帶過來。',
@@ -5960,9 +6017,9 @@ export const zhTW: Translations = {
       ogDescription: 'Futari 是為夫妻、伴侶設計的共同帳本——一起記帳、自動分攤、AA 結算，看見兩個人的生活全貌。',
     },
     signIn: {
-      title: '登入 Futari · 開始兩個人的記帳生活',
-      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
-      ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+      title: '登入 Futari · 兩個人的雙人記帳',
+      description: '用 Google 帳號登入後，會進到你們共用的帳本——伴侶一起記下日常開銷與愛車油耗，也照看保險與愛物的雙人記帳 PWA。',
+      ogDescription: '用 Google 一鍵登入，進到兩個人的家計簿。',
       /** Keep in sync with `invite.meta` — see the note there. (#1016) */
       invite: {
         title: '有人邀請你一起記帳 · Futari',
@@ -6069,7 +6126,7 @@ export const zhTW: Translations = {
       newlyweds: {
         title: '新婚家計分攤｜夫妻記帳怎麼記？Futari',
         description: '新婚生活費怎麼分攤？Futari 是為夫妻、伴侶設計的共同帳本，結婚後帳怎麼管一看就懂——日常開銷、愛物、旅行，兩個人的生活全都在一本帳裡。',
-        ogDescription: '新婚夫妻的家計管理首選——Futari 雙人帳本，從日常到愛物，一起記。',
+        ogDescription: '新婚夫妻的家計首選——Futari 雙人帳本，從日常到愛物，一起記。',
       },
       'pet-owners': {
         title: '寵物費用記帳｜貓咪醫療費、日常開銷怎麼記？Futari',
@@ -6089,20 +6146,20 @@ export const zhTW: Translations = {
       'monthly-bills': {
         title: '每月固定開銷記帳｜房租水電怎麼一起管？Futari',
         description: '房租、水電、網路、保險——每月固定支出怎麼和伴侶一起記？Futari 讓兩個人即時看到固定帳，清楚知道誰付了什麼、餘額怎麼走。免費、只開放給你們倆。',
-        ogDescription: '兩個人的固定開銷管理——Futari，每月必要支出一起看，不再只靠其中一人記。',
+        ogDescription: '兩個人的固定開銷——Futari，每月必要支出一起看，不再只靠其中一人記。',
       },
       'big-purchases': {
-        title: '大筆支出計畫｜購車換機怎麼和伴侶一起追蹤？Futari',
+        title: '大筆支出計畫｜購車換機怎麼和伴侶一起記？Futari',
         description: '購車、換電腦、旅遊基金——大筆支出怎麼和伴侶一起規劃記帳？Futari 讓每筆大額費用關聯到對應愛物，清楚看見這項支出的完整樣貌。免費、只開放給你們倆。',
         ogDescription: '大筆支出不再說不清——Futari，把每項重要花費記清楚、兩個人一起看到。',
       },
       dining: {
-        title: '外食費用記帳｜吃飯開銷怎麼和另一半一起追蹤？Futari',
+        title: '外食費用記帳｜吃飯開銷怎麼和另一半一起記？Futari',
         description: '每天吃飯、外送、咖啡——飲食開銷最容易不知不覺累積。Futari 讓兩個人的外食費用一起記、一起看，輕鬆知道這個月吃了多少。免費、無廣告、只開放給你們倆。',
         ogDescription: '外食帳不再算不清——Futari，把兩個人的飲食開銷一起記清楚。',
       },
       parenting: {
-        title: '育兒費用記帳｜寶寶花費怎麼和另一半一起追蹤？Futari',
+        title: '育兒費用記帳｜寶寶花費怎麼和另一半一起記？Futari',
         description: '奶粉、尿布、回診、保險——育兒開銷零碎又頻繁，兩個人一起記才不漏。Futari 讓每筆育兒費用關聯到小孩，清楚看見寶貝的每一筆支出。免費、只開放給你們倆。',
         ogDescription: '育兒記帳首選——Futari，把每筆寶寶費用記下來，兩個人一起看見。',
       },
@@ -6114,7 +6171,7 @@ export const zhTW: Translations = {
     },
   },
   useCase: {
-    backToHome: '回首頁',
+    backToHome: '← 回 Futari 首頁',
     featuresHeading: 'Futari 怎麼幫到你們',
     faqHeading: '常見問題',
     ctaLabel: '免費開始記帳',
@@ -6128,7 +6185,7 @@ export const zhTW: Translations = {
         body: '出遊的錢和日常帳分開記，回來之後清楚看見這趟誰出了多少，不需要在群組裡對帳。',
       },
       asset: {
-        title: '愛物費用追蹤',
+        title: '愛物費用記帳',
         body: '每筆支出可以關聯到你們共同照顧的對象——車、房、小孩、寵物、植物，費用自動歸類。',
       },
       realtime: {
@@ -6232,7 +6289,7 @@ export const zhTW: Translations = {
         ],
       },
       newlyweds: {
-        heroKicker: '新婚夫妻家計管理',
+        heroKicker: '新婚夫妻家計記帳',
         heroTitle: '結婚之後，帳要怎麼一起管？',
         heroSubtitle: '新婚生活的第一本帳，從日常開銷到愛物、旅行，Futari 讓兩個人的生活費用都有地方安放。',
         painPoints: [
@@ -6241,7 +6298,7 @@ export const zhTW: Translations = {
             body: '新婚家計沒有標準答案。有人全合、有人部分合、有人維持各自 AA。Futari 支援各種模式，不管你們怎麼決定，帳本都能配合。',
           },
           {
-            heading: '「車子、保險、未來買房——這些費用怎麼一起追蹤？」',
+            heading: '「車子、保險、未來買房——這些費用怎麼一起記？」',
             body: '婚後的費用不只是日常開銷，還有愛物、保險、大筆支出。Futari 讓每筆支出可以關聯到具體的愛物，車的費用、保險費——各自歸位，不混在一起。',
           },
           {
@@ -6278,7 +6335,7 @@ export const zhTW: Translations = {
             body: '兩個人一起養，費用卻可能都由某一方先墊。Futari 的分攤功能讓每筆支出都清楚標記，餘額自動累計，不需要特別去問「這次誰出比較多」。',
           },
           {
-            heading: '「多貓家庭的費用怎麼分開追蹤？」',
+            heading: '「多貓家庭的費用怎麼分開記？」',
             body: 'Futari 支援多個愛物——每隻貓、每隻狗都可以是一個獨立的記錄對象，醫療費直接關聯到對應的毛孩，不會混在一起。',
           },
         ],
@@ -6293,7 +6350,7 @@ export const zhTW: Translations = {
           },
           {
             question: '如果養了兩隻以上，可以分開記嗎？',
-            answer: '可以。Futari 支援多個愛物，每隻毛孩都可以獨立建立，各自的費用分開追蹤，不會混在一起。',
+            answer: '可以。Futari 支援多個愛物，每隻毛孩都可以獨立建立，各自的費用分開記，不會混在一起。',
           },
         ],
       },
@@ -6364,7 +6421,7 @@ export const zhTW: Translations = {
         ],
       },
       'monthly-bills': {
-        heroKicker: '每月固定開銷管理',
+        heroKicker: '每月固定開銷記帳',
         heroTitle: '房租、水電、網路——每個月的固定帳，一起看才安心。',
         heroSubtitle: '固定支出最容易被忽略，因為感覺「都差不多」。Futari 讓兩個人把每月固定帳放在一起，清楚看見誰在負擔什麼。',
         painPoints: [
@@ -6383,7 +6440,7 @@ export const zhTW: Translations = {
         ],
         faq: [
           {
-            question: '每月固定支出要怎麼和伴侶一起追蹤？',
+            question: '每月固定支出要怎麼和伴侶一起記？',
             answer: '在 Futari 記下每筆固定支出，標記誰付的、怎麼分攤。兩個人都能即時看到每筆帳，不需要另外說明。',
           },
           {
@@ -6430,7 +6487,7 @@ export const zhTW: Translations = {
         ],
       },
       dining: {
-        heroKicker: '外食費用追蹤',
+        heroKicker: '外食費用記帳',
         heroTitle: '吃飯的帳，最容易不知不覺多出來。',
         heroSubtitle: '每天外食、外送、咖啡、聚餐——飲食開銷很分散，很容易月底才發現多了很多。Futari 讓兩個人把吃飯的帳一起記清楚。',
         painPoints: [
@@ -6449,7 +6506,7 @@ export const zhTW: Translations = {
         ],
         faq: [
           {
-            question: '外食費用要怎麼和另一半一起追蹤？',
+            question: '外食費用要怎麼和另一半一起記？',
             answer: 'Futari 讓每筆外食費用即時記下來，標記誰付的、怎麼分，兩個人都即時看到。月底可以看這個月飲食類的累計，不需要另外整理。',
           },
           {
@@ -6476,8 +6533,8 @@ export const zhTW: Translations = {
             body: '育兒費用常由某一方先墊，另一方感覺不到重量。Futari 讓每筆育兒帳都進入共同帳本，兩個人都即時看到，不需要特別說明。',
           },
           {
-            heading: '「有兩個孩子，費用要分開追蹤。」',
-            body: 'Futari 支援多個愛物，每個孩子都可以獨立建立，各自的費用分開追蹤，清楚知道每個孩子的開銷。',
+            heading: '「有兩個孩子，費用要分開記。」',
+            body: 'Futari 支援多個愛物，每個孩子都可以獨立建立，各自的費用分開記，清楚知道每個孩子的開銷。',
           },
         ],
         faq: [

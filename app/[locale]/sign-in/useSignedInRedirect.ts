@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import { loadSupabaseClient } from '@/lib/supabase/lazyClient'
 import { hasStoredSessionCookie } from '@/lib/auth/storedSession'
 
 /**
@@ -51,12 +51,17 @@ export function useSignedInRedirect(
 
   useEffect(() => {
     if (!when()) return
+    // #1520 — no session cookie means no session (the browser client stores it
+    // in cookies only), so a new visitor never loads the Supabase SDK on the
+    // sign-in page or the landing. A device that does hold one loads it now,
+    // under the waiting curtain, not after idle.
+    if (!hasStoredSessionCookie(document.cookie)) return
     let active = true
     const timer = setTimeout(() => {
       if (active) setSettled(true)
     }, SESSION_CHECK_TIMEOUT_MS)
-    createClient()
-      .auth.getSession()
+    loadSupabaseClient()
+      .then((supabase) => supabase.auth.getSession())
       .then(({ data }: { data: { session: Session | null } }) => {
         if (!active) return
         if (data.session) {

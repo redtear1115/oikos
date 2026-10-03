@@ -1,3 +1,5 @@
+import { Phrase } from '../../_components/Phrase'
+
 /**
  * Quiet callout for source-specific background prose — Honeydue is the only
  * page using it today (#580). Warm tonal step + italic Fraunces keep the
@@ -17,7 +19,7 @@ export function MigrateIntroCallout({ text }: { text: string }) {
           color: 'var(--ink-2)',
         }}
       >
-        {text}
+        <Phrase text={text} />
       </p>
     </aside>
   )
