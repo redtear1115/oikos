@@ -74,7 +74,7 @@ export async function MonthlyStatsSection({
     | { kind: 'category'; rows: CategoryStatRow[] }
     | { kind: 'asset'; rows: AssetStatRow[] }
   > = effectiveView === 'asset'
-    ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
+    ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow, userId)
         .then((rows) => ({ kind: 'asset' as const, rows }))
     : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
         .then((rows) => ({ kind: 'category' as const, rows }))

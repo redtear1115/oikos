@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import type { db } from '@/lib/db/client'
+import { frozenCopyVisibleClause } from './_predicates'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -28,6 +29,18 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
  *     purge cron never meets a live row pointing at a deleted copy.
  *   - no column pointing back at the source: that would itself be a
  *     cross-ledger reference (#1457).
+ *   - copy of a copy (#1484 F2): when the source is itself a frozen copy, the
+ *     new copy gets frozen_at = the boundary only if `leaverId` may resolve
+ *     the source (frozenCopyVisibleClause — a member of its ledger at its
+ *     freeze moment). Otherwise it keeps the source's frozen_at, which no
+ *     chapter of the new ledger covers (that ledger's first chapter starts at
+ *     this boundary), so it resolves for no one there. Without this, a later
+ *     partner could re-link a copy they may not see and leave, and get a
+ *     fresh copy they may. Not a plain COALESCE: that would also lock out a
+ *     leaver who legitimately saw the copy (left, rejoined, left again).
+ *     Frozen copies never move between ledgers (they have no *Details row to
+ *     be moved by), so a frozen source is always in the old ledger and its
+ *     copy in the leaver's new one.
  * FuelLogs: only the fuel logs actually referenced by a re-pointed record are
  * copied (onto the car's frozen copy), and the record's fuel_log_id follows.
  *
@@ -45,6 +58,7 @@ export async function freezeCrossLedgerLinks(
   groupA: string,
   groupB: string,
   boundary: SQL,
+  leaverId: string,
 ): Promise<{ assetCopies: number; fuelLogCopies: number }> {
   const groups = sql`(${groupA}::uuid, ${groupB}::uuid)`
 
@@ -101,7 +115,9 @@ export async function freezeCrossLedgerLinks(
   // 2. The copies. Explicit column list on both sides — never SELECT *.
   await tx.execute(sql`
     INSERT INTO "Assets" (id, group_id, type, name, template_key, frozen_at, created_at, deleted_at)
-    SELECT m.copy_id, m.target_group, s.type, s.name, s.template_key, ${boundary}, s.created_at, s.deleted_at
+    SELECT m.copy_id, m.target_group, s.type, s.name, s.template_key,
+      CASE WHEN ${frozenCopyVisibleClause('s', leaverId)} THEN ${boundary} ELSE s.frozen_at END,
+      s.created_at, s.deleted_at
     FROM ${assetMap}
     JOIN "Assets" s ON s.id = m.source_id
   `)
