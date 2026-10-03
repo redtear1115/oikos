@@ -44,7 +44,7 @@ Not time-driven: no clock states. No data fixture (public pages are static). Vie
 ## Owner questions (open)
 
 - U1 wording assumes desktop → sign-in; on phone browsers the CTA goes to App Store / beta form. Re-word U1 per platform?
-- Use-case CTA says 「免費開始記帳」; sign-in `<title>`/meta say 「開始兩個人的記帳生活」 (sign-in bans 「開始」). Intended?
+- en use-case CTA "Start tracking for free" and ja landing 「家計管理ツール」 contain the app-banned 追蹤/管理. Acceptable on brand pages?
 
 ## Decisions log
 
@@ -63,3 +63,4 @@ Tracker #1528. Phase A: #1519 table marks, #1520 LCP/G1, #1521 CTA pre-hydration
 | Round | Date | Commit | Gates | D | U | C | T | Weighted | Result |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | 2026-10-03 | 1c94e1f | G1 FAIL (LCP landing 3.97 s local / 6.48 s prod; use-case 3.29 s; sign-in 2.70 s); G2–G5 pass | 5.92 | 6.25 | 6.17 | 7.25 | 6.20 | FAIL — [round-1.md](award-review/round-1.md) |
+| 2 | 2026-10-03 | 681655e | all pass (LCP 2.11–2.47 s) | 6.33 | 7.00 | 6.33 | 7.75 | 6.68 | FAIL — [round-2.md](award-review/round-2.md); P1 row bug fixed after (projected ~6.91) |
