@@ -52,6 +52,8 @@ describe('SignedInRedirect curtain (#1318)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // #1540 — each test is a fresh visit; the loop breaker's timestamp must not leak between them.
+    sessionStorage.clear()
     clearCookies()
     Object.defineProperty(window, 'location', {
       configurable: true,
@@ -131,6 +133,8 @@ describe('LandingStandaloneRedirect curtain (#1318)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // #1540 — each test is a fresh visit; the loop breaker's timestamp must not leak between them.
+    sessionStorage.clear()
     clearCookies()
     Object.defineProperty(window, 'location', {
       configurable: true,

@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **登出後不再卡在登入頁閃動（#1540）**
+  使用者：登出或登入失效後，登入頁會正常出現。
+  技術：proxy 導回登入頁時帶上 Supabase 的 cookie 指令，並在 session 被明確拒絕時清掉登入 cookie；登入頁自動導向加 15 秒防迴圈。
+
 - **品牌頁文案拿掉「管理」「追蹤」與 track／manage 字眼（#1528）**
   使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如「怎麼和伴侶一起追蹤？」改成「怎麼一起記？」；英文「expense tracking」只留在搜尋標題當品類名。
   技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 區塊四個語系共約 140 句；9 個情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。

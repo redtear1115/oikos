@@ -22,6 +22,8 @@ describe('LandingStandaloneRedirect (#949)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // #1540 — each test is a fresh visit; the loop breaker's timestamp must not leak between them.
+    sessionStorage.clear()
     // #1520 — the Supabase SDK is only loaded when the device holds a session
     // cookie; these tests are about a device that does.
     document.cookie = 'sb-test-auth-token=abc; path=/'
