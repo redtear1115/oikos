@@ -8,6 +8,9 @@ import {
   validateHouseInput,
   validateIncomeInput,
   validateInsuranceInput,
+  validateRecurringExpenseRuleInput,
+  validateRecurringIncomeRuleInput,
+  validateConfirmPendingExpenseInput,
   MAX_AMOUNT,
 } from '@/lib/validators'
 
@@ -372,5 +375,65 @@ describe('validateInsuranceInput — accountValue (#166)', () => {
     expect(
       validateInsuranceInput({ name: '車險', kind: 'car', accountValue: 999 }).accountValue,
     ).toBeNull()
+  })
+})
+
+// #1534 — `isValidCategoryId` used `id in BY_ID`, which also matches
+// Object.prototype keys. 'constructor' passed every category check and was
+// written to the DB as the row's category; the record then rendered with a
+// blank chip. Lenient validators must fall back to 'other'; strict ones throw.
+describe('category validators reject inherited keys (#1534)', () => {
+  const INHERITED = ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf']
+
+  it.each(INHERITED)('validateTransactionInput: %s falls back to other', (category) => {
+    const r = validateTransactionInput({
+      amount: 100,
+      description: '午餐',
+      category,
+      splitType: 'half',
+      payerId: 'user-a',
+      transactedAt: '2026-05-03',
+    })
+    expect(r.category).toBe('other')
+  })
+
+  it.each(INHERITED)('validateIncomeInput: %s falls back to other', (category) => {
+    const r = validateIncomeInput({
+      amount: 30000,
+      category,
+      recipientId: '11111111-1111-1111-1111-111111111111',
+      occurredAt: '2026-05-01',
+    })
+    expect(r.category).toBe('other')
+  })
+
+  it.each(INHERITED)('validateRecurringExpenseRuleInput: %s throws', (category) => {
+    expect(() => validateRecurringExpenseRuleInput({
+      amount: 1000,
+      category,
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '房租',
+      intervalMonths: 1,
+      dayOfMonth: 5,
+      startsOn: '2026-05-01',
+      endsOn: null,
+    })).toThrow(/支出類別不在允許清單/)
+  })
+
+  it.each(INHERITED)('validateConfirmPendingExpenseInput: %s throws', (category) => {
+    expect(() => validateConfirmPendingExpenseInput({ category })).toThrow(/支出類別不在允許清單/)
+  })
+
+  it.each(INHERITED)('validateRecurringIncomeRuleInput: %s throws', (category) => {
+    expect(() => validateRecurringIncomeRuleInput({
+      amount: 30000,
+      category,
+      recipientId: '11111111-1111-1111-1111-111111111111',
+      intervalMonths: 1,
+      dayOfMonth: 5,
+      startsOn: '2026-05-01',
+      endsOn: null,
+    })).toThrow(/收入類別不在允許清單/)
   })
 })
