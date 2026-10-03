@@ -2,59 +2,59 @@
   "migrateSources": {
     "honeydue": {
       "contentHash": "92f0eb17bd1529a7d2c83adb474fcfa797a92067a507fcbafb0a01fbba36e449",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "spendee": {
       "contentHash": "4212cabd57ed17aa6261f06b6f32fa7dae46a6b2610bd1e2ac1bc1b6a62413fb",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "cwmoney": {
       "contentHash": "a308e6d7851267589815798cd4e39d641c38c4f2b9295b486dc9835de572d81d",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "moneybook": {
       "contentHash": "56e7470c4fa14e3295e12359c01f31a4e07b7e944d63b7856c1602edb2650806",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "andromoney": {
       "contentHash": "25cbd0d2f76c4f2b66db2a1f78fb5957236be2f09a4f3c7d77591e143f539fd3",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "mobills": {
       "contentHash": "893bdc920d9fd588ace7bd9b5738752c362ef4ed8aacd3281acff95d38d1d61f",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "manebo": {
       "contentHash": "5d1a1ab4fdcf17e81e90c50bb6e085c2c9a53a409076d43e57c8471bd3a4b752",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "simple-daily-money": {
       "contentHash": "694c5ee8b23b3e874fb90db1e765371c66c991846bbb741b3a1d224e8be2b661",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "fortune-city": {
       "contentHash": "cb0b4072eb253e35a96d6feaf784b201711ad03612194df96316401aa90f90e4",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "cashman": {
       "contentHash": "5b7c032338b85229c5dc70575b69f67eb4af799ffb705aebad23d759dc79cbbd",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "1money": {
       "contentHash": "5de6a4028a3350b45d80024dacec1a7257b37cfbb706c24d56e01918f39843b5",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "icost": {
       "contentHash": "7026566e8235d39bdfddc8b7d8cfb40c9ff2f87dc6593121feacb9d22c99e577",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "splitwise": {
       "contentHash": "e898fdcfbe222448e5b8ddff9c86e37535b667187fd7c2f956240ccfb1a3480d",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     },
     "suishouji": {
       "contentHash": "d084d9f5e4bd0aa7561b74e3492a1659130dce9456ff14dbe97d33634652d24e",
-      "contentUpdatedAt": "2026-10-04"
+      "contentUpdatedAt": "2026-10-03"
     }
   },
   "useCases": {
