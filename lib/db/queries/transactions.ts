@@ -20,6 +20,7 @@ import {
   dateRangeClause,
   eqValueClause,
   epochClause,
+  frozenCopyVisibleClause,
   splitTypeClause,
   statusClause,
   burdenClause,
@@ -816,6 +817,7 @@ export async function monthlyStatsByCategory(
  * are read from Assets without filtering deletedAt so soft-deleted assets still
  * show their original name instead of "未命名". The join is scoped to the
  * record's own group (#1485): an asset in another ledger yields a NULL name.
+ * A frozen copy the viewer may not resolve (#1484) yields a NULL name too.
  *
  * Pinning the asset filter on this query is still allowed but the caller
  * normally avoids it — the breakdown would degenerate to one bar. The
@@ -828,6 +830,7 @@ export async function monthlyStatsByAsset(
   dateRange: DateRange | null | undefined,
   filter: ResolvedTxnFilter | undefined,
   epochWindow: EpochWindow,
+  viewerId: string,
 ): Promise<AssetStatRow[]> {
   // Same income-only cut as monthlyStatsByCategory — an income-only filter
   // leaves no expense rows, so the by-asset 支出 donut must go empty too.
@@ -850,7 +853,10 @@ export async function monthlyStatsByAsset(
     FROM "CashTransactions" ct
     -- #1485 — the joined asset must be in the record's own group: a link to
     -- another ledger's asset resolves as no name, never as that asset's name.
+    -- #1484 — a frozen copy's name resolves only for members of the ledger
+    -- at freeze time; for anyone else the bar has no name, like the above.
     LEFT JOIN "Assets" a ON a.id = ct.asset_id AND a.group_id = ct.group_id
+      AND ${frozenCopyVisibleClause('a', viewerId)}
     WHERE ct.group_id = ${groupId}
       AND ct.deleted_at IS NULL
       ${scope}

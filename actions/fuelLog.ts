@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client'
 import { assets, carDetails, cashTransactions, fuelLogs } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { lockOpenChapterForWrite } from '@/lib/db/queries/epoch'
-import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
+import { frozenCopyVisibleClause, openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
 import { eq, and, isNull } from 'drizzle-orm'
@@ -346,9 +346,13 @@ export interface FuelLogDetail {
 /**
  * Load a single fuel log with its car details for the edit sheet.
  * Verifies the fuel log belongs to an asset in the viewer's group.
+ *
+ * #1484 — a fuel log on a frozen car copy resolves only for viewers who were
+ * members of that ledger at the freeze moment; anyone else gets null, as for
+ * a fuel log of another ledger.
  */
 export const getFuelLogById = action(async (id: string): Promise<FuelLogDetail | null> => {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -370,6 +374,7 @@ export const getFuelLogById = action(async (id: string): Promise<FuelLogDetail |
     .where(and(
       eq(fuelLogs.id, id),
       isNull(fuelLogs.deletedAt),
+      frozenCopyVisibleClause('Assets', user.id),
     ))
     .limit(1)
 

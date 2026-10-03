@@ -96,7 +96,7 @@ describe('monthlyStatsByAsset', () => {
       { asset_id: 'a-1', asset_name: 'Tesla', total: 5000, count: 4 },
       { asset_id: null, asset_name: null, total: 1500, count: 8 },
     ])
-    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow)
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow, 'user-1')
     expect(rows).toEqual([
       { key: 'a-1', name: 'Tesla', total: 5000, count: 4 },
       { key: null, name: null, total: 1500, count: 8 },
@@ -109,12 +109,12 @@ describe('monthlyStatsByAsset', () => {
     queueDbResult([
       { asset_id: 'a-zombie', asset_name: '舊車（已刪）', total: 800, count: 1 },
     ])
-    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow)
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow, 'user-1')
     expect(rows[0].name).toBe('舊車（已刪）')
   })
 
   it('returns [] without querying when the filter cuts all expense (income-only filter)', async () => {
-    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, cutExpenseFilter, epochWindow)
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, cutExpenseFilter, epochWindow, 'user-1')
     expect(rows).toEqual([])
     expect(mockDb.execute).not.toHaveBeenCalled()
   })

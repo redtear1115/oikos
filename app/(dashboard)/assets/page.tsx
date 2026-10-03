@@ -20,7 +20,7 @@ export default async function AssetsPage() {
   // Known limit: those assets still show their current field values — see
   // lib/pinnedChapterScope.ts.
   const createdBefore = nonMemberPinCutoff(context, user.id)
-  const assetRows = await listAssetsForGroup(group.id, createdBefore)
+  const assetRows = await listAssetsForGroup(group.id, user.id, createdBefore)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
   const petIds = assetRows.filter((a) => a.type === 'pet').map((a) => a.id)
