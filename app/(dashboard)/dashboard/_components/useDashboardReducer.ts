@@ -4,10 +4,12 @@ import type { SettlementSheetInitial } from './SettlementSheet'
 import type { IncomeSheetInitial } from './IncomeSheet'
 import type { NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import type { FuelType } from '@/lib/fuel'
+import type { QuickAddPrefill } from '@/lib/quickAdd'
 
 export type ModalState =
   | { kind: 'closed' }
-  | { kind: 'add' }
+  /** `prefill` is set only by a quick-add URL (#1488, QuickAddProvider). */
+  | { kind: 'add'; prefill?: QuickAddPrefill }
   | { kind: 'income' }
   | { kind: 'edit-income'; data: IncomeSheetInitial }
   | { kind: 'edit-pending'; pendingId: string; data: IncomeSheetInitial }
