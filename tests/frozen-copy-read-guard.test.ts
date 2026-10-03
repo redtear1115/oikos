@@ -9,7 +9,8 @@
  * (BYPASSRLS), so the RLS policy of 0079 does not protect these paths.
  *
  * Failure looks like: nothing at runtime. A new query that selects
- * `assets.name` (or joins "Assets" in raw SQL) with only a group filter shows
+ * `assets.name` — or the whole row with a bare `.select()`, or
+ * `"Assets".name` / `<alias>.name` in raw SQL — with only a group filter shows
  * a later partner the leaver's car / child name on old records. This test
  * fails first.
  *
@@ -36,7 +37,7 @@ const ALLOWLIST: Record<string, string> = {
   'lib/db/queries/frozenAssetCopy.ts › freezeCrossLedgerLinks': 'creates copies, outputs no name',
 }
 
-interface Site { file: string; line: number; fn: string; ref: string; sqlAlias: string; body: string }
+interface Site { file: string; line: number; fn: string; ref: string; sqlAlias: string; body: string; row?: true }
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -64,38 +65,72 @@ function isComment(l: string) {
   return /^\s*(\/\/|\*|\/\*|--)/.test(l)
 }
 
-/** Every place an Assets row's name is read, with the SQL alias it renders under. */
+/**
+ * Where a bare `.select()` chain ends: the first `;`, or the start of another
+ * chain. Without this bound an unrelated `db.select().from(oikosGroups);`
+ * would pick up a later `.from(assets)` in the same function.
+ */
+const CHAIN_END = /;|\.select\(|\bdb\.|\btx\.|\bawait\s/
+
+/** Every place one file reads an Assets row's name (or the whole row), with the SQL alias it renders under. */
+function scanSource(file: string, src: string): Site[] {
+  const sites: Site[] = []
+  const lines = src.split('\n')
+  // Drizzle aliases of the Assets table: const x = alias(assets, 'sql_name')
+  const aliases = new Map<string, string>([['assets', 'Assets']])
+  for (const m of src.matchAll(/const (\w+) = alias\(assets, '(\w+)'\)/g)) aliases.set(m[1], m[2])
+  // Raw SQL aliases: "Assets" x
+  const rawAliases = new Set<string>()
+  for (const m of src.matchAll(/"Assets"\s+(?:AS\s+)?([a-z_]\w*)\b/g)) {
+    if (!/^(ON|WHERE|SET|JOIN|LEFT|INNER|USING)$/i.test(m[1])) rawAliases.add(m[1])
+  }
+  lines.forEach((l, i) => {
+    if (isComment(l)) return
+    for (const [ref, sqlAlias] of aliases) {
+      if (new RegExp(`\\b${ref}\\.name\\b`).test(l)) {
+        const { fn, body } = enclosing(lines, i)
+        sites.push({ file, line: i + 1, fn, ref, sqlAlias, body })
+      }
+    }
+    for (const al of rawAliases) {
+      if (new RegExp(`(?<![\\w.])${al}\\.name\\b`).test(l)) {
+        const { fn, body } = enclosing(lines, i)
+        if (!/"Assets"/.test(body)) continue
+        sites.push({ file, line: i + 1, fn, ref: al, sqlAlias: al, body })
+      }
+    }
+    // Raw SQL without an alias. Only the quoted form: unquoted Assets folds to
+    // `assets` in Postgres, and the bare word turns up in prose (JSX comments).
+    if (/"Assets"\.name\b/.test(l)) {
+      const { fn, body } = enclosing(lines, i)
+      sites.push({ file, line: i + 1, fn, ref: '"Assets"', sqlAlias: 'Assets', body })
+    }
+  })
+  // Whole-row reads: a bare `.select()` whose chain — usually spread over
+  // several lines — reaches `.from(<ref>)` or `*Join(<ref>`. The row carries
+  // `name` without the source ever spelling `<ref>.name`.
+  for (const m of src.matchAll(/\.select\(\)/g)) {
+    const i = src.slice(0, m.index).split('\n').length - 1
+    if (isComment(lines[i])) continue
+    const rest = src.slice(m.index + m[0].length)
+    const end = rest.search(CHAIN_END)
+    const chain = end === -1 ? rest : rest.slice(0, end)
+    for (const [ref, sqlAlias] of aliases) {
+      if (new RegExp(`(?:\\.from|Join)\\(${ref}\\b`).test(chain)) {
+        const { fn, body } = enclosing(lines, i)
+        sites.push({ file, line: i + 1, fn, ref, sqlAlias, body, row: true })
+      }
+    }
+  }
+  return sites
+}
+
+/** Every Assets name / whole-row read in the scanned source tree. */
 function nameSites(): Site[] {
   const sites: Site[] = []
   for (const dir of SCAN_DIRS) {
     for (const path of walk(join(ROOT, dir))) {
-      const file = relative(ROOT, path)
-      const src = readFileSync(path, 'utf8')
-      const lines = src.split('\n')
-      // Drizzle aliases of the Assets table: const x = alias(assets, 'sql_name')
-      const aliases = new Map<string, string>([['assets', 'Assets']])
-      for (const m of src.matchAll(/const (\w+) = alias\(assets, '(\w+)'\)/g)) aliases.set(m[1], m[2])
-      // Raw SQL aliases: "Assets" x
-      const rawAliases = new Set<string>()
-      for (const m of src.matchAll(/"Assets"\s+(?:AS\s+)?([a-z_]\w*)\b/g)) {
-        if (!/^(ON|WHERE|SET|JOIN|LEFT|INNER|USING)$/i.test(m[1])) rawAliases.add(m[1])
-      }
-      lines.forEach((l, i) => {
-        if (isComment(l)) return
-        for (const [ref, sqlAlias] of aliases) {
-          if (new RegExp(`\\b${ref}\\.name\\b`).test(l)) {
-            const { fn, body } = enclosing(lines, i)
-            sites.push({ file, line: i + 1, fn, ref, sqlAlias, body })
-          }
-        }
-        for (const al of rawAliases) {
-          if (new RegExp(`(?<![\\w.])${al}\\.name\\b`).test(l)) {
-            const { fn, body } = enclosing(lines, i)
-            if (!/"Assets"/.test(body)) continue
-            sites.push({ file, line: i + 1, fn, ref: al, sqlAlias: al, body })
-          }
-        }
-      })
+      sites.push(...scanSource(relative(ROOT, path), readFileSync(path, 'utf8')))
     }
   }
   return sites
@@ -104,7 +139,7 @@ function nameSites(): Site[] {
 function guarded(s: Site): boolean {
   const esc = s.ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   if (new RegExp(`isNull\\(${esc}\\.frozenAt\\)`).test(s.body)) return true
-  if (new RegExp(`\\b${s.sqlAlias}\\.frozen_at IS NULL`).test(s.body)) return true
+  if (new RegExp(`(?:\\b|")${s.sqlAlias}"?\\.frozen_at IS NULL`).test(s.body)) return true
   return new RegExp(`frozenCopyVisibleClause\\('${s.sqlAlias}',`).test(s.body)
 }
 
@@ -133,7 +168,7 @@ describe('frozen-copy read guard (#1484)', () => {
   it('every name read excludes frozen copies or applies frozenCopyVisibleClause', () => {
     const bad = sites
       .filter((s) => !(key(s) in ALLOWLIST) && !guarded(s))
-      .map((s) => `${s.file}:${s.line} (${s.fn}, ${s.ref}.name)`)
+      .map((s) => `${s.file}:${s.line} (${s.fn}, ${s.ref}${s.row ? ' whole row' : '.name'})`)
     expect(bad).toEqual([])
   })
 
@@ -154,5 +189,70 @@ describe('frozen-copy read guard (#1484)', () => {
     expect(guarded({ file: 'x', line: 2, fn: 'leak', ref: 'assets', sqlAlias: 'Assets', body: wrongAlias })).toBe(false)
     const ok = body.replace('eq(assets.groupId, groupId)', "eq(assets.groupId, groupId), frozenCopyVisibleClause('Assets', viewerId)")
     expect(guarded({ file: 'x', line: 2, fn: 'leak', ref: 'assets', sqlAlias: 'Assets', body: ok })).toBe(true)
+  })
+  describe('self-tests: the scanner finds what it should (#1533)', () => {
+    const fnOf = (...body: string[]) =>
+      ['export async function f(id: string, groupId: string, viewerId: string) {', ...body, '}'].join('\n')
+    const scan = (src: string) => scanSource('x.ts', src)
+    const unguarded = (src: string) => scan(src).filter((s) => !guarded(s))
+
+    it('a bare select() of the Assets table, on one line', () => {
+      const src = fnOf('  const [a] = await db.select().from(assets).where(eq(assets.id, id))')
+      expect(unguarded(src)).toHaveLength(1)
+      expect(unguarded(src.replace('eq(assets.id, id)', 'and(eq(assets.id, id), isNull(assets.frozenAt))'))).toEqual([])
+    })
+    it('a bare select() whose .from(assets) is on the next line', () => {
+      const src = fnOf('  const [a] = await db', '    .select()', '    .from(assets)', '    .where(eq(assets.id, id))')
+      expect(unguarded(src)).toHaveLength(1)
+      const ok = src.replace('eq(assets.id, id)', 'and(eq(assets.id, id), isNull(assets.frozenAt))')
+      expect(scan(ok)).toHaveLength(1)
+      expect(unguarded(ok)).toEqual([])
+    })
+    it('a bare select() that reaches Assets through a join on a later line', () => {
+      const src = fnOf(
+        '  return db',
+        '    .select()',
+        '    .from(fuelLogs)',
+        '    .leftJoin(assets, eq(assets.id, fuelLogs.assetId))',
+        '    .where(eq(fuelLogs.groupId, groupId))',
+      )
+      expect(unguarded(src)).toHaveLength(1)
+    })
+    it('a bare select() of a Drizzle alias of Assets', () => {
+      const src = "const kid = alias(assets, 'kid')\n" + fnOf('  return db.select().from(fuelLogs)', '    .innerJoin(kid, eq(kid.id, fuelLogs.assetId))')
+      expect(unguarded(src).map((s) => s.sqlAlias)).toEqual(['kid'])
+    })
+    it('an explicit projection without the name is not a site', () => {
+      expect(scan(fnOf('  const [a] = await db', '    .select({ id: assets.id })', '    .from(assets)'))).toEqual([])
+    })
+    it('a bare select() of another table, ended by `;`, does not reach a later Assets read', () => {
+      const src = fnOf(
+        '  const [g] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, groupId));',
+        '  const rows = db.select({ id: assets.id }).from(assets)',
+        '  return { g, rows }',
+      )
+      expect(scan(src)).toEqual([])
+    })
+    it('raw SQL reading the quoted "Assets".name, guarded either way', () => {
+      const src = fnOf('  return db.execute(sql`SELECT "Assets".name FROM "Assets" WHERE "Assets".id = ${id}`)')
+      expect(unguarded(src).map((s) => s.sqlAlias)).toEqual(['Assets'])
+      const viaClause = src.replace('= ${id}', "= ${id} AND ${frozenCopyVisibleClause('Assets', viewerId)}")
+      expect(unguarded(viaClause)).toEqual([])
+      const viaNull = src.replace('= ${id}', '= ${id} AND "Assets".frozen_at IS NULL')
+      expect(unguarded(viaNull)).toEqual([])
+    })
+    it('the word Assets.name in a JSX comment continuation is not a site', () => {
+      const src = [
+        'export function ChildDetail() {',
+        '  return (',
+        '      <InfoCard>',
+        '        {/* #826 — full real name row. Header above shows the nickname',
+        '            (Assets.name). This row decrypts the legal full name on tap. */}',
+        '      </InfoCard>',
+        '  )',
+        '}',
+      ].join('\n')
+      expect(scan(src)).toEqual([])
+    })
   })
 })
