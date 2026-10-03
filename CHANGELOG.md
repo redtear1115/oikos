@@ -41,90 +41,101 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.6.7] - 2026-10-04
+
+主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。
+完整 diff：[v1.6.6...v1.6.7](https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7)
+
 ### 使用者可見變化
 
 - **登出後不再卡在登入頁閃動（#1540）**
-  使用者：登出或登入失效後，登入頁會正常出現。
-  技術：proxy 導回登入頁時帶上 Supabase 的 cookie 指令，並在 session 被明確拒絕時清掉登入 cookie；登入頁自動導向加 15 秒防迴圈。
+  使用者：登出或登入失效後，登入頁會正常出現，iOS App 裡也是。
+  技術：proxy 導回登入頁時帶上 Supabase 的 cookie 指令，session 被明確拒絕時清掉登入 cookie；登入頁自動導向加 15 秒防迴圈。
 
-- **品牌頁文案拿掉「管理」「追蹤」與 track／manage 字眼（#1528）**
-  使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如「怎麼和伴侶一起追蹤？」改成「怎麼一起記？」；英文「expense tracking」只留在搜尋標題當品類名。
-  技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 區塊四個語系共約 140 句；9 個情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+- **品牌頁文案換成「記」「查看」的說法（#1528）**
+  使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如問句改成「怎麼一起記？」。
+  技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 四語約 140 句，情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
 
-- **情境、搬遷、登入頁改成同一個暖燈世界，不再是一堆白卡片（#1524）**
-  使用者：情境與搬遷頁的卡片網格換成細線列表，序號與圖示換成同一顆小小的暖光點；情境頁標題後有一片燈光、搬遷頁有一條光帶、登入頁開發日誌上方是插畫的一格窗景；電腦寬度下標題在左、列表在右；登入頁開發日誌先顯示最新 5 篇、其餘收在「更多日誌」，頁首重複的小 Futari 拿掉、改成大 Futari 本身就是回首頁連結。
-  技術：樣式以 inline `<style>`（`brand-inner.ts`）隨頁送出，不開新 CSS 檔、本項沒動 `globals.css`（獨立檔讓登入頁 LCP 2.32→2.55 s）；/zh-TW LCP 2.476 s、各頁 ≤ 2.48 s；新增 `signIn.blog.more` ×4 語，en／ja 譯文待確認。
+- **情境、搬遷、登入頁改成同一個暖燈世界（#1524）**
+  使用者：卡片網格換成細線列表與暖光點，標題後有燈光或光帶，登入頁的開發日誌先顯示最新 5 篇。
+  技術：樣式以品牌 layout 的 inline `<style>`（`brand-inner.ts`）送出，不動 `globals.css`，各頁 LCP ≤ 2.48 s。
 
-- **品牌頁換行不再把詞拆開，語言切換不再一字一行（#1522）**
-  使用者：首頁、登入頁、情境頁、搬遷頁在手機、Safari、iPhone 與 iOS 殼裡，大標、小標與內文不再於「資／料」「什／麼。」「ありませ／ん。」這種詞中間換行、也不再只剩一兩字；頁尾語言切換在窄螢幕不再直排，中日文的斜體標語改為正體，英文首頁副標不再被強制斷行。
-  技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`、標題以 `.ph`（`keep-all`）渲染，規則放品牌 layout 的 inline `<style>`；`.brand` 的 zh／ja 換行規則（`auto-phrase`、`line-break: strict`、`text-wrap: balance`）寫進 `globals.css`，多 14 行、約 230 bytes（再多會讓 /zh-TW 模擬 LCP 從 2.47 s 跳到 2.62 s）；dashboard 不受影響。
+- **品牌頁換行不再把詞拆開（#1522）**
+  使用者：大標、小標與內文不再在詞中間換行或只剩一兩字，頁尾語言切換在窄螢幕不再直排。
+  技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`，zh／ja 換行規則進 `globals.css`（約 230 bytes，貼著 LCP 門檻）。
 
-- **英文、日文、简中的搬遷比較表整張翻譯（#1538）**
-  使用者：`/en/migrate/*`、`/ja/migrate/*`、`/zh-CN/migrate/*` 的比較表不再出現「雙人共同帳本」「支援」「無」「多種模式」這些中文列名與判定字，4 語各自完整；繁中頁文字不變。
-  技術：列名與判定字全部移進 `migrate.comparisonText`（34 個新 key），`ComparisonText` 不再接受字串、寫中文字面值會 `tsc` 失敗；新增 `tests/migrate-comparison-i18n.test.tsx` 逐來源×語系擋漏譯；各來源 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+- **搬遷比較表整張翻成 4 語（#1538）**
+  使用者：英文、日文、简中的搬遷頁比較表不再出現中文列名與判定字。
+  技術：列名與判定字移進 `migrate.comparisonText`，`ComparisonText` 不再接受字串；新測試逐來源×語系擋漏譯。
 
-- **品牌頁的連結夠大、能跳到內文、能回首頁（#1523）**
-  使用者：首頁、登入頁、情境頁、搬遷頁的頁尾連結、語言切換與「看全部情境」都放大到 44px 可點；鍵盤第一下 Tab 是「跳到主要內容」；登入頁左上多了回首頁的 Futari；情境與搬遷詳情頁在手機上也有「Futari / 情境 / 同居」這樣的導覽可回上層；高對比（forced colors）模式下登入與主要按鈕不再失去邊框。
-  技術：`<style>` 與 `#main` 放在品牌頁自己的 layout，本項沒動 `globals.css`（/zh-TW LCP 2.475 s）；搬遷頁 BreadcrumbList 隨可見導覽補上 `/migrate` 中間層；新增 `brand.*` 與 `migrate.hub.breadcrumbLabel` ×4 語，en／ja 譯文待確認。
+- **品牌頁的連結夠大、能跳到內文、能回上層（#1523）**
+  使用者：頁尾與語言切換放大到 44px，第一下 Tab 是「跳到主要內容」，登入頁與詳情頁都能回首頁或上一層。
+  技術：skip link 與 `#main` 放在品牌 layout；搬遷頁 BreadcrumbList 補上 `/migrate` 中間層。
 
-- **首頁的咖啡按鈕等捲過首屏才出現，也不再壓在內容上（#1525）**
-  使用者：捲過首屏之後才會出現請喝杯咖啡的按鈕（改成只有圖示、靠左緊貼邊緣，電腦與平板寬度下不壓標題與功能列），回到首屏時先收起來；一直沒捲動的訪客不會載入它。
-  技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 看首屏區塊，離開視窗上緣才載入 Ko-fi script；iOS 殼內不載入、GA `kofi_widget_click` 與 `SOURCE` 不變，也省掉首屏載入期的 Ko-fi 請求。
+- **首頁的咖啡按鈕捲過首屏才出現（#1525）**
+  使用者：按鈕改成靠左的小圖示，不再壓住內容；沒捲動的訪客不會載入它。
+  技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 延後載入 Ko-fi script；iOS 殼內仍不載入。
 
-- **首頁的主按鈕一開始就能點，關掉 JS 也能登入（#1521）**
-  使用者：首頁的主按鈕與「已經有帳號」從頁面一出現就是有字、可點的登入連結，不再先是一條空白的深色按鈕；載入完成後 iPhone 瀏覽器改指向 App Store、Android 改指向測試版報名，App 殼內與已安裝的 PWA 仍一律是登入。
-  技術：移除 `LandingCtaLink` 的 `inert` 與 pending 佔位，pending 直接渲染登入預設；載入完成前的點擊是一般導覽，不會送 `landing_cta_clicked`（iPhone 瀏覽器在載入完成前點到會進登入而不是 App Store，已接受）。
+- **首頁主按鈕一開始就能點（#1521）**
+  使用者：主按鈕不再先是一條空白的深色按鈕，關掉 JS 也能登入。
+  技術：`LandingCtaLink` 拿掉 `inert` 與 pending 佔位，載入前先渲染登入連結。
 
 - **登入頁的分頁標題與搜尋摘要不再用「開始」（#1526）**
-  使用者：登入頁在瀏覽器分頁與搜尋結果裡的標題與說明，改成說明登入後會進到你們共用的帳本，不再說「開始兩個人的記帳生活」；4 語同步。
-  技術：只改 `seo.signIn` 的 title／description／ogDescription ×4 語；en／ja 譯文待確認。
+  使用者：改成說明登入後會進到你們共用的帳本；4 語同步。
 
-- **搬遷頁比較表每格只剩一個符號（#1519）**
-  使用者：`/migrate/<來源>` 的比較表不再出現「✓ ✓ 支援」「◐ △ 基本對半」這種雙符號，每格只有一個 ✓／△／✕，4 語一致。
-  技術：符號改由 `MigrateComparison` 依 `tone` 單獨負責，`sources.ts` 與 `comparisonText` 的字串回到純文字；新增 `tests/migrate-comparison-marks.test.tsx` 逐來源×語系擋重複符號；各來源 `contentUpdatedAt` 一併更新。
+- **搬遷比較表每格只剩一個符號（#1519）**
+  使用者：不再出現「✓ ✓ 支援」這種雙符號，每格只有一個 ✓／△／✕。
+  技術：符號只由 `MigrateComparison` 依 `tone` 負責；新測試擋重複符號。
 
-- **首頁、登入頁、情境頁與搬遷頁載入更快（#1520）**
-  使用者：開啟這些公開頁時，首屏不再等記錄與登入用的程式，手機上最大內容出現時間約快 0.4–0.8 秒。
-  技術：登入前品牌頁的 Sentry、posthog-js、Supabase 改在 load 後再等 1 秒、主執行緒閒下來（最多再等 3 秒）才開始下載，或第一次點擊／按鍵、第一次需要時就提前載入；dashboard 與其他路由仍在開機時載入，但 Sentry 改為動態 import，多一趟 chunk 往返，chunk 到達前丟出的錯誤不會被記到，`global-error` 也改為非同步送出。從開始導覽到載入完成的這段空窗（加 chunk 下載時間）內的錯誤與提早離開的訪客不會被記到；空窗內的點擊事件會先留在記憶體，分頁撐到載入完成才補送。
+- **公開頁載入更快（#1520）**
+  使用者：首頁、登入頁、情境頁與搬遷頁在手機上最大內容出現時間約快 0.4–0.8 秒。
+  技術：品牌頁的 Sentry、posthog-js、Supabase 延到 load 之後閒置時（或第一次互動）才載入；這段空窗內的錯誤不會被記到。
 
 - **相對日期在 iOS App 不再造成水合錯誤（#1515）**
-  使用者：首頁與記錄列表的「N 天前」在所有裝置上一致顯示為「12 天前」（數字與單位間固定一個空格，原本部分裝置顯示「12天前」）。
-  技術：`formatDateRelative` / `formatPickerSubtitle` 把 `Intl.RelativeTimeFormat` 輸出正規化（NBSP 轉空格、數字與 CJK 單位間固定一個空格），消除 Node 與 WebKit ICU 的差異。
+  使用者：「N 天前」在所有裝置上一致顯示為「12 天前」。
+  技術：`formatDateRelative`／`formatPickerSubtitle` 正規化 `Intl.RelativeTimeFormat` 的空白，消除 Node 與 WebKit ICU 的差異。
 
-- **設定頁的咖啡不再浮在畫面上，改成「應用」最後一列（#1516）**
-  使用者：設定頁右下角的浮動咖啡按鈕拿掉，「應用」區塊最後多一列「請喝杯咖啡」，點了在新分頁開啟 Ko-fi；iOS App 內不顯示這一列。
-  技術：新增 `SupportRow`（掛載後才依 `Capacitor.getPlatform()` 決定顯示）；設定頁不再載入 Ko-fi 第三方 script，`kofi_widget_click` 事件與 `source` 不變。
+- **設定頁的咖啡改成「應用」最後一列（#1516）**
+  使用者：右下角的浮動按鈕拿掉，改成一列「請喝杯咖啡」；iOS App 內不顯示。
+  技術：新增 `SupportRow`，掛載後依 `Capacitor.getPlatform()` 決定顯示；設定頁不再載入 Ko-fi script。
 
-- **iOS 文字大小跟著系統設定，主要畫面的小字放大（#1490）**
-  使用者：iOS 的「顯示與亮度 → 文字大小」調大後，記錄、新增、回顧等頁面的內文會跟著放大（上限 2 倍）；預設大小下，標籤與輔助文字從 10／12 號提高到 12／14 號，列表裡較長的描述改成換行顯示、不再以刪節號截斷。
-  技術：`--text-scale` 只乘 `text-xs`～`text-xl`／`text-mini`，標題與金額不放大、間距不變；僅 iOS WebKit 量測，Android 沿用系統字體縮放。
+- **iOS 文字大小跟著系統設定（#1490）**
+  使用者：調大系統文字後，記錄、新增、回顧等頁面的內文會跟著放大（上限 2 倍），預設下的小字從 10／12 號提高到 12／14 號。
+  技術：`--text-scale` 只乘 `text-xs`～`text-xl`／`text-mini`，標題與金額不放大。
 
 - **用 iOS 捷徑打開「記一筆」，金額與分類先填好（#1488）**
-  使用者：捷徑（例如讀 LINE Pay「付款完成」通知）打開 Futari 時，新增支出直接帶入金額、分類與描述，確認後按儲存才會記下；設定方式見 `docs/shortcuts/linepay-quick-add.md`。
-  技術：`lib/quickAdd.ts` 驗證 `dev.southernlight.futari://add?…`（App）與 `/dashboard#add=expense&…`（網頁），`QuickAddProvider` 只在記憶體交給 AddSheet 建立模式；有視窗開著或在過去章節時不開，網址裡的數值不送伺服器、不進分析。
+  使用者：捷徑打開 Futari 時帶入金額、分類與描述，按儲存才會記下；設定方式見 `docs/shortcuts/linepay-quick-add.md`。
+  技術：`lib/quickAdd.ts` 驗證 App scheme 與 `/dashboard#add=…`，數值只在記憶體交給 AddSheet，不送伺服器、不進分析。
 
 - **分類標籤不再出現空白（#1534）**
   使用者：異常分類的紀錄改顯示為「其他」。
-  技術：類別查表改用 `Object.hasOwn`，含收入類別、CSV 匯入同義詞、匯出標籤與首頁收入摘要；DB CHECK 另開 issue。
+  技術：類別查表改用 `Object.hasOwn`，含收入類別、CSV 匯入同義詞、匯出標籤與首頁收入摘要；DB CHECK 另開 #1541。
 
 ### 技術變更
 
+- **正式站執行期改用權限受限的資料庫角色（#1467）**
+  使用者：無可見變化。
+  技術：Vercel Production 的 `DATABASE_URL` 改用 `futari_app`（只有 public 的 DML，非超級使用者）；migration 仍走 `DATABASE_URL_DIRECT`，回退是把 env 換回去。
+
 - **邀請表移除明文 token 欄位（#1288）**
-  使用者：無可見變化；邀請連結照常運作，資料庫只留下 token 的雜湊。
-  技術：`0078` 先確認每列都有 `token_hash` 且唯一索引有效，再設 `token_hash` NOT NULL、刪除 `GroupInvites.token`；之後回退下限為 v1.6.6。
+  使用者：無可見變化；資料庫只留下 token 的雜湊。
+  技術：`0078` 確認每列都有 `token_hash` 後設 NOT NULL、刪除 `GroupInvites.token`；回退下限為 v1.6.6。
 
 - **直接開啟的登入後頁面與邀請連結不能再被其他網站嵌入（#1535）**
   使用者：無可見變化。
-  技術：next.config `headers()` 對登入後路徑、`/invite/*`、`/api/*` 加 `frame-ancestors 'none'` 與 `X-Frame-Options: DENY`；公開頁不變。
+  技術：next.config `headers()` 對登入後路徑、`/invite/*`、`/api/*` 加 `frame-ancestors 'none'` 與 `X-Frame-Options: DENY`。
 
 ### Security
 
 - **離開時留下的愛物副本，只給當時在帳本裡的人看（#1484）**
-  使用者：之後才加入、或更早就離開的夥伴，在舊紀錄上不再看得到留在副本裡的愛物名稱與油耗紀錄（離開的一方與留下的一方，兩邊帳本的副本都算）；prod 目前沒有任何副本，沒有實際曝露。
-  技術：伺服器端讀取（關聯愛物、統計、油耗、被保人）共用 `frozenCopyVisibleClause` 依凍結當下的章節成員判斷；`0079` 收緊 Assets 的 RLS（FuelLogs 經子查詢一併套用），只涵蓋副本，其他帳本資料表在 Data API 的章節範圍另由 #1518 處理。
+  使用者：之後才加入或更早離開的夥伴，看不到舊副本裡的愛物名稱與油耗紀錄；prod 沒有任何副本，沒有實際曝露。
+  技術：伺服器端讀取共用 `frozenCopyVisibleClause`；`0079` 收緊 Assets 的 RLS（FuelLogs 一併套用）。
+
 - **登入後直接讀資料庫，範圍收到自己在場的章節（#1518）**
-  使用者：App 畫面沒有變化；之後才加入帳本的夥伴，用自己的登入直接呼叫資料庫 API 或即時同步時，不再拿得到加入前章節的支出、收入、結清與油耗紀錄，章節、個人資料、邀請、匯入、回顧、問答與旅程等資料表也不再開放直接讀取。修補前這種讀取在少數帳本上是可能的，沒有存取紀錄可查，無法確認是否發生過。
-  技術：`0080` 以 `viewer_in_chapter` 讓這四張表的 RLS 依章節成員判斷，收回 anon 在所有資料表的權限與 authenticated 在 15 張未訂閱表的權限，即時同步用的表只留需要的欄位；回退分 `policies.down`（prod 可用）與 `grants.down`（僅 dev）。
+  使用者：App 畫面沒有變化；之後才加入的夥伴直接呼叫資料庫 API 時，拿不到加入前章節的紀錄。修補前這在少數帳本上可能發生，沒有存取紀錄可查。
+  技術：`0080` 以 `viewer_in_chapter` 讓四張交易表的 RLS 依章節成員判斷，收回 anon 全部與 authenticated 在 15 張表的權限；回退見 `policies.down`。
 
 ## [1.6.6] - 2026-10-03
 
@@ -1578,7 +1589,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.6...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.7...HEAD
+[1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4
