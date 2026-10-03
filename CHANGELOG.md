@@ -55,6 +55,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：iOS 的「顯示與亮度 → 文字大小」調大後，記錄、新增、回顧等頁面的內文會跟著放大（上限 2 倍）；預設大小下，標籤與輔助文字從 10／12 號提高到 12／14 號，列表裡較長的描述改成換行顯示、不再以刪節號截斷。
   技術：`--text-scale` 只乘 `text-xs`～`text-xl`／`text-mini`，標題與金額不放大、間距不變；僅 iOS WebKit 量測，Android 沿用系統字體縮放。
 
+- **用 iOS 捷徑打開「記一筆」，金額與分類先填好（#1488）**
+  使用者：捷徑（例如讀 LINE Pay「付款完成」通知）打開 Futari 時，新增支出直接帶入金額、分類與描述，確認後按儲存才會記下；設定方式見 `docs/shortcuts/linepay-quick-add.md`。
+  技術：`lib/quickAdd.ts` 驗證 `dev.southernlight.futari://add?…`（App）與 `/dashboard#add=expense&…`（網頁），`QuickAddProvider` 只在記憶體交給 AddSheet 建立模式；有視窗開著或在過去章節時不開，網址裡的數值不送伺服器、不進分析。
+
 ### 技術變更
 
 - **邀請表移除明文 token 欄位（#1288）**

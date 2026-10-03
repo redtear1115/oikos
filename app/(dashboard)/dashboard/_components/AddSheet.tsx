@@ -96,6 +96,19 @@ interface Props {
   /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB).
    */
   prefilledCategory?: CategoryId
+  /** Create-mode amount prefill (quick add, #1488). Must already be validated
+   *  (lib/quickAdd.ts); ignored in edit mode. */
+  prefilledAmount?: number
+  /** Create-mode description prefill (quick add, #1488); ignored in edit mode. */
+  prefilledDescription?: string
+  /**
+   * Skip the "today falls inside an active trip" auto-tag (and the currency
+   * switch that follows it) in create mode. Set for quick add (#1488): an
+   * amount read from a payment notification is in the base currency, and
+   * silently filing it into a trip would re-label it. The user can still pick
+   * a trip in the sheet. `prefilledTripId` still wins when set.
+   */
+  skipTripAutoDetect?: boolean
   /**
    * Force the new record into a specific trip. Wins over the date-range
    * auto-detect so the trip-detail FAB always lands inside its own trip,
@@ -124,7 +137,7 @@ interface Props {
   rates?: RateEntry[]
 }
 
-export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledTripId, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledAmount, prefilledDescription, skipTripAutoDetect, prefilledTripId, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
   const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -222,8 +235,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       // on edit — new trip-tagged records go to TripExpenses instead).
       setTripId(initial.kind === 'trip-expense' ? (initial.tripId ?? null) : null)
     } else {
-      setAmount('')
-      setDesc('')
+      setAmount(prefilledAmount != null ? String(prefilledAmount) : '')
+      setDesc(prefilledDescription ?? '')
       setCategory(prefilledCategory ?? 'dining')
       setSplit(isSolo ? 'all_mine' : 'weighted')
       setSplitRatioA(groupDefaultRatioA ?? 50)
@@ -238,9 +251,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         ? activeTrips.find((trip) => trip.id === prefilledTripId) ?? null
         : null
       const todayStr = localTodayISO()
-      const foundTrip = lockedTrip ?? activeTrips.find(
+      const foundTrip = lockedTrip ?? (skipTripAutoDetect ? null : activeTrips.find(
         (trip) => todayStr >= trip.startDate && (!trip.endDate || todayStr <= trip.endDate),
-      ) ?? null
+      )) ?? null
       setTripId(foundTrip?.id ?? null)
       setCurrency(foundTrip?.defaultCurrency ?? baseCurrency)
     }
@@ -248,7 +261,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // `activeTrips` is intentionally excluded — its identity changes every parent
   // render but its meaningful state is captured by `activeTripsKey`.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledAmount, prefilledDescription, skipTripAutoDetect, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
 
   // Reset scroll position before paint so the sheet always opens at the top —
   // the container stays mounted across closes and would otherwise preserve
