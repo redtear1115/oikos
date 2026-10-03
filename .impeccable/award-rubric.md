@@ -52,10 +52,11 @@ Not time-driven: no clock states. No data fixture (public pages are static). Vie
 - 2026-10-03 (after round 1): fix in two phases — A = bugs, LCP/G1, line breaks, a11y, wayfinding, de-carding inner pages (one PR); B = point-of-light signature concept, prototype first and owner decides before shipping. Landing CTA: SSR a labelled sign-in default, re-point after hydration (native-contract file → real-device check). Sign-in story + dev log: keep content, restyle as hairline list, shorten. Ko-fi on brand pages: appears only after scrolling past the hero, with clearance from content. (owner)
 - 2026-10-03 (#1520): LCP root cause = Lantern charges the JS chain (Sentry + PostHog + Supabase, ~600 KB raw) and the Fraunces font chain to text LCP. Blocking all three → LCP 2.40 s / P98 stable on landing and sign-in; any one alone is not enough. Owner: defer all three until after first paint (idle) **on brand pages only**; dashboard unchanged. (owner)
 - 2026-10-03 (#1520): accepted consequence — brand-page PostHog pageviews from visitors who leave before the SDK loads are lost (pageview/bounce discontinuity; GA unaffected). Owner: 「沒關係 效能重要」.
+- 2026-10-03: Ko-fi pill icon-only at every width (accessible label kept) — owner OK. en/ja migrate comparison table fully translated, folded into phase A (#1538). Use-case CTA 「免費開始記帳」 stays. (owner)
 
 ## Issues (v1.6.7)
 
-Tracker #1528. Phase A: #1519 table marks, #1520 LCP/G1, #1521 CTA pre-hydration, #1522 line breaks, #1523 a11y + wayfinding, #1524 de-card inner pages, #1525 Ko-fi placement, #1526 sign-in copy. Phase B: #1527 point-of-light prototype.
+Tracker #1528. Phase A: #1519 table marks, #1520 LCP/G1, #1521 CTA pre-hydration, #1522 line breaks, #1523 a11y + wayfinding, #1524 de-card inner pages, #1525 Ko-fi placement, #1526 sign-in copy, #1538 comparison table i18n. Phase B: #1527 point-of-light prototype.
 
 ## Rounds
 
