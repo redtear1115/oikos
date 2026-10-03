@@ -50,12 +50,15 @@ export const CATEGORIES: Category[] = PALETTE.map((c) => ({
 const BY_ID = Object.fromEntries(CATEGORIES.map(c => [c.id, c])) as Record<CategoryId, Category>
 const OTHER = BY_ID.other
 
+// Own keys only: BY_ID is a plain object, so the `in` operator or `BY_ID[id]` would
+// also match Object.prototype ('constructor', '__proto__', 'toString' …) and
+// let a non-category through validation and onto a blank chip (#1534).
 export function getCategory(id: string): Category {
-  return BY_ID[id as CategoryId] ?? OTHER
+  return Object.hasOwn(BY_ID, id) ? BY_ID[id as CategoryId] : OTHER
 }
 
 export function isValidCategoryId(id: string): boolean {
-  return id in BY_ID
+  return Object.hasOwn(BY_ID, id)
 }
 
 // Categories shown in Add sheet (excludes 'settle' — auto-applied for settlements only)

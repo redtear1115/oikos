@@ -1,4 +1,5 @@
 import { formatDateRelative } from '@/lib/format-date'
+import { getIncomeCategory } from '@/lib/incomeCategories'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 /**
@@ -20,7 +21,8 @@ export function recentIncomeLabel(
   incomeCategory: Translations['incomeCategory'],
 ): string {
   const dateStr = formatDateRelative(row.occurredAt, locale, todayYMD)
-  const catKey = row.category as keyof Translations['incomeCategory']
-  const catLabel = incomeCategory[catKey] ?? incomeCategory.other
+  // getIncomeCategory only resolves own keys, so a stray 'constructor' row
+  // reads 其他 rather than function source (#1534).
+  const catLabel = incomeCategory[getIncomeCategory(row.category).id]
   return `${dateStr} · ${row.source ?? catLabel}`
 }

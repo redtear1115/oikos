@@ -99,6 +99,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：捷徑（例如讀 LINE Pay「付款完成」通知）打開 Futari 時，新增支出直接帶入金額、分類與描述，確認後按儲存才會記下；設定方式見 `docs/shortcuts/linepay-quick-add.md`。
   技術：`lib/quickAdd.ts` 驗證 `dev.southernlight.futari://add?…`（App）與 `/dashboard#add=expense&…`（網頁），`QuickAddProvider` 只在記憶體交給 AddSheet 建立模式；有視窗開著或在過去章節時不開，網址裡的數值不送伺服器、不進分析。
 
+- **分類標籤不再出現空白（#1534）**
+  使用者：異常分類的紀錄改顯示為「其他」。
+  技術：類別查表改用 `Object.hasOwn`，含收入類別、CSV 匯入同義詞、匯出標籤與首頁收入摘要；DB CHECK 另開 issue。
+
 ### 技術變更
 
 - **邀請表移除明文 token 欄位（#1288）**
