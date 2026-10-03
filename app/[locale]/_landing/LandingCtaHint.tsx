@@ -19,21 +19,19 @@ interface Props {
 
 /**
  * Caption line under the mobile hero CTA. Same platform resolution as
- * `LandingPrimaryCta` (independent instance) — hidden while pending so a
- * visitor never briefly reads the sign-in caption under an App Store button
- * (#1413).
+ * `LandingPrimaryCta` (independent instance). #1521: while pending it shows
+ * the default (sign-in) caption, which matches the sign-in CTA rendered in
+ * that state; only iPhone/iPad and Android visitors see it swap after
+ * hydration.
  */
 export function LandingCtaHint({ className, style, children, appStoreHint, androidBetaHint }: Props) {
   const target = useVisitorPlatformTarget()
-  const pending = target === 'pending'
-
   const label = target === 'app_store' ? appStoreHint : target === 'android_beta' ? androidBetaHint : children
 
   return (
     <p
-      className={`${className ?? ''}${pending ? ' opacity-0' : ''}`.trim()}
+      className={className}
       style={style}
-      aria-hidden={pending || undefined}
     >
       {label}
     </p>

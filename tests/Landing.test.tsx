@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 
 vi.mock('@/lib/analytics/track', () => ({ track: vi.fn() }))
 
@@ -121,14 +121,45 @@ describe('Landing — device-dependent primary CTA (#1413)', () => {
       getPlatform: () => 'ios',
     }
     renderLanding()
-    // `cta`'s text is present even while pending (the placeholder renders it
-    // text-transparent, not absent — #1413), so waiting on the text alone
-    // would pass before resolution ever finishes. Wait for a real signal
-    // that resolution has settled: `aria-hidden` is only present pending.
-    await waitFor(() => {
-      const anchors = screen.getAllByText(zhTW.landing.cta).map((el) => el.closest('a')!)
-      expect(anchors.some((a) => !a.hasAttribute('aria-hidden'))).toBe(true)
-    })
+    // The pending render already shows `cta` (#1521), so let the resolver
+    // effect settle explicitly before asserting no App Store variant appears.
+    await act(async () => {})
     expect(screen.queryByText(zhTW.landing.appStoreCta)).not.toBeInTheDocument()
+  })
+})
+
+describe('Landing — SSR CTAs work without JS (#1521)', () => {
+  it('server HTML has labelled, clickable sign-in links for the header, hero and secondary CTAs', async () => {
+    const { renderToString } = await import('react-dom/server')
+    const html = renderToString(
+      <Landing
+        t={zhTW.landing}
+        signInHref="/zh-TW/sign-in"
+        dashboardHref="/dashboard"
+        checkingLabel={zhTW.signIn.signingIn}
+        useCaseHrefs={{ cohabitation: '/a', newlyweds: '/b', petOwners: '/c', hub: '/d' }}
+        migrateHrefs={{ honeydue: '/e', spendee: '/f', cwmoney: '/g', hub: '/h' }}
+        legalLinks={{ termsHref: '/t', termsLabel: 't', privacyHref: '/p', privacyLabel: 'p' }}
+      />,
+    )
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const anchorsWith = (label: string) =>
+      [...doc.querySelectorAll('a')].filter((a) => a.textContent?.trim() === label)
+
+    // Header CTA + hero CTA
+    const primary = anchorsWith(zhTW.landing.cta)
+    expect(primary.length).toBe(2)
+    // Desktop secondary + mobile secondary
+    const secondary = anchorsWith(zhTW.landing.alreadyHaveAccount)
+    expect(secondary.length).toBe(2)
+    for (const a of [...primary, ...secondary]) {
+      expect(a.getAttribute('href')).toBe('/zh-TW/sign-in?from=landing')
+      expect(a.hasAttribute('aria-hidden')).toBe(false)
+      expect(a.hasAttribute('tabindex')).toBe(false)
+      expect(a.className).not.toMatch(/pointer-events-none|opacity-0|text-transparent/)
+      expect(a.innerHTML).not.toMatch(/text-transparent/)
+    }
+    expect(html).not.toContain('apps.apple.com')
+    expect(html).not.toContain('forms.gle')
   })
 })

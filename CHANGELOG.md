@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **首頁的主按鈕一開始就能點，關掉 JS 也能登入（#1521）**
+  使用者：首頁的主按鈕與「已經有帳號」從頁面一出現就是有字、可點的登入連結，不再先是一條空白的深色按鈕；載入完成後 iPhone 瀏覽器改指向 App Store、Android 改指向測試版報名，App 殼內與已安裝的 PWA 仍一律是登入。
+  技術：移除 `LandingCtaLink` 的 `inert` 與 pending 佔位，pending 直接渲染登入預設；載入完成前的點擊是一般導覽，不會送 `landing_cta_clicked`（iPhone 瀏覽器在載入完成前點到會進登入而不是 App Store，已接受）。
+
 - **品牌頁換行不再把詞拆開，語言切換不再一字一行（#1522）**
   使用者：首頁、登入頁、情境頁、搬遷頁在手機上不再出現「資／料」「什／麼。」「ありませ／ん。」這類把詞切開或只剩一兩字的換行；頁尾的語言切換在窄螢幕不再直排，中日文的斜體標語改為正體；英文首頁副標不再被強制斷行。
   技術：`app/[locale]/layout.tsx` 加 `display: contents` 的 `.brand-surface`，`globals.css` 只對它啟用 zh／ja 的 `word-break: auto-phrase`（Chrome 119+，其他引擎退回逐字換行）、`line-break: strict`、`font-synthesis-style: none` 與 `text-wrap: balance`；zh／ja 比較表改固定欄寬（樣式放在 `MigrateComparison` 自己，不進 `globals.css`）；dashboard 不受影響。`globals.css` 與首頁 HTML 刻意只多幾十 bytes：再多就讓 /zh-TW 模擬 LCP 從 2.47 s 跳到 2.62 s（多一個 RTT）。

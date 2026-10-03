@@ -19,11 +19,10 @@ function isCapacitorShell(): boolean {
  * know it — and settles once this effect reads the local session plus the
  * platform signals `resolveVisitorPlatform` needs.
  *
- * Callers must render the `'pending'` state hidden and inert (see
- * `LandingPrimaryCta`): a visible CTA saying the wrong thing for a beat — sign
- * in shown to an iPhone visitor, an App Store link shown inside the iOS shell
- * itself — is worse than a beat of invisibility. Same hide-first reasoning as
- * `AppStoreNote` (#1333), which this replaces.
+ * Callers must render `'pending'` as the sign-in default, labelled and
+ * clickable (#1521) — it is the SSR markup, so it has to work with JS off and
+ * before hydration. It is also the safe default for a shell, where sign-in is
+ * the only correct destination (never the App Store, Apple 3.1.1).
  */
 export function useVisitorPlatformTarget(): VisitorPlatformTarget | 'pending' {
   const [target, setTarget] = useState<VisitorPlatformTarget | 'pending'>('pending')
