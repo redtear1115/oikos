@@ -17,9 +17,26 @@ const SETTLE_MS = 1000
  * The cost is that an error, or a visitor who bounces inside that window, is not
  * seen by Sentry / PostHog. `requestIdleCallback` is missing on Safari, hence the
  * timeout fallback.
+ *
+ * The first `pointerdown` / `keydown` runs `cb` straight away instead of waiting
+ * out the rest (once, passive, never before the listeners exist — an interaction
+ * cannot precede first paint). A tapped event only sits in memory until the SDK
+ * is up, so this shortens the window in which a tap can be lost; it does not
+ * close it (a hand-off that unloads the page, such as a store link on iOS, can
+ * still discard it). `cb` runs at most once, whichever trigger fires first.
  */
-export function whenIdle(cb: () => void): void {
+export function whenIdle(onIdle: () => void): void {
   if (typeof window === 'undefined') return
+  let done = false
+  const cb = () => {
+    if (done) return
+    done = true
+    window.removeEventListener('pointerdown', cb)
+    window.removeEventListener('keydown', cb)
+    onIdle()
+  }
+  window.addEventListener('pointerdown', cb, { once: true, passive: true })
+  window.addEventListener('keydown', cb, { once: true, passive: true })
   const idle = () => {
     if (typeof window.requestIdleCallback === 'function') {
       window.requestIdleCallback(cb, { timeout: 3000 })

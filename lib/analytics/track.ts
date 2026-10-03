@@ -8,6 +8,33 @@ const MAX_QUEUE_SIZE = 50
 
 type QueuedEvent = { event: string; properties?: Record<string, unknown> }
 
+/**
+ * Where the page was when the event was recorded. A queued event is sent later,
+ * and posthog-js stamps `$current_url` / `$pathname` / `$host` / `$referrer`
+ * from `window.location` at *capture* time — so on the brand pages (#1520),
+ * where init waits for idle, a `landing_cta_clicked` or the landing `$pageview`
+ * that was followed by a client-side navigation to /sign-in went out with
+ * `$pathname=/sign-in`. Failure looks like nothing: events arrive normally,
+ * the page column is just wrong (CTA clicks attributed to the sign-in page).
+ *
+ * Caller-supplied properties win over this (the pageview passes its own
+ * sanitized `$current_url`), and posthog-js lets event properties override its
+ * defaults. The values are raw here; they pass through `before_send`
+ * (`scrubAnalyticsUrls`), which masks any key ending in `url` / `pathname` /
+ * `referrer` on the final event, so invite tokens and filter values are
+ * scrubbed the same as for a live capture. `$host` is a bare hostname.
+ */
+function captureLocation(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  const { href, pathname, host } = window.location
+  return {
+    $current_url: href,
+    $pathname: pathname,
+    $host: host,
+    $referrer: document.referrer || '$direct',
+  }
+}
+
 // Module-level state: events fired before `posthog.init()` has run (e.g. from a
 // child component's on-mount effect — effects fire child-before-parent, and
 // `PostHogProvider`'s init lives in a parent effect) land here instead of
@@ -58,7 +85,7 @@ export function track(event: string, properties?: Record<string, unknown>): void
   if (!POSTHOG_ENABLED) return
 
   if (!initialized) {
-    queue.push({ event, properties })
+    queue.push({ event, properties: { ...captureLocation(), ...properties } })
     // Cap instead of dropping outright: init can legitimately race a fast
     // on-mount `track()` call, so a couple of queued events is normal and
     // fine to keep. Only trim if genuinely unbounded (see below).

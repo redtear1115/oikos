@@ -49,7 +49,10 @@ describe('PostHogProvider flush ordering (#1014)', () => {
     // detectPlatform() is null, so register() must NOT have been called...
     expect(h.register).not.toHaveBeenCalled()
     // ...but the queued event must still have been flushed regardless.
-    expect(h.capture).toHaveBeenCalledWith('queued_before_init', undefined)
+    expect(h.capture).toHaveBeenCalledWith(
+      'queued_before_init',
+      expect.objectContaining({ $pathname: '/dashboard' }),
+    )
   })
 
   it('does not load posthog-js at boot on a public brand page (#1520)', async () => {

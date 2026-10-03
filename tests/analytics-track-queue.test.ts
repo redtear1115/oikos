@@ -39,9 +39,42 @@ describe('track() pre-init queue (#1014)', () => {
     track('event_b', { y: 2 })
     flushQueue(ph as never)
 
-    expect(h.capture).toHaveBeenNthCalledWith(1, 'event_a', { x: 1 })
-    expect(h.capture).toHaveBeenNthCalledWith(2, 'event_b', { y: 2 })
+    expect(h.capture).toHaveBeenNthCalledWith(1, 'event_a', expect.objectContaining({ x: 1 }))
+    expect(h.capture).toHaveBeenNthCalledWith(2, 'event_b', expect.objectContaining({ y: 2 }))
     expect(h.capture).toHaveBeenCalledTimes(2)
+  })
+
+  it('stamps queued events with the page they happened on, not the page they flush on (#1520)', async () => {
+    const { track, flushQueue } = await import('@/lib/analytics/track')
+
+    window.history.pushState({}, '', '/zh-TW?utm_source=x')
+    track('landing_cta_clicked')
+    track('$pageview', { $current_url: 'https://example.test/zh-TW' })
+    window.history.pushState({}, '', '/zh-TW/sign-in')
+    flushQueue(ph as never)
+
+    expect(h.capture).toHaveBeenNthCalledWith(
+      1,
+      'landing_cta_clicked',
+      expect.objectContaining({
+        $pathname: '/zh-TW',
+        $host: window.location.host,
+        $current_url: `${window.location.origin}/zh-TW?utm_source=x`,
+        $referrer: '$direct',
+      }),
+    )
+    // Caller-supplied properties win over the captured location.
+    expect(h.capture.mock.calls[1][1]).toMatchObject({
+      $current_url: 'https://example.test/zh-TW',
+      $pathname: '/zh-TW',
+    })
+  })
+
+  it('does not stamp events sent live after init', async () => {
+    const { track, flushQueue } = await import('@/lib/analytics/track')
+    flushQueue(ph as never)
+    track('live', { a: 1 })
+    expect(h.capture).toHaveBeenCalledWith('live', { a: 1 })
   })
 
   it('sends events fired after flushQueue() immediately, without re-sending old ones', async () => {
@@ -67,8 +100,8 @@ describe('track() pre-init queue (#1014)', () => {
     expect(h.capture).toHaveBeenCalledTimes(50)
     // Oldest 5 (event_0..event_4) were dropped; the first flushed call should
     // be event_5.
-    expect(h.capture).toHaveBeenNthCalledWith(1, 'event_5', undefined)
-    expect(h.capture).toHaveBeenNthCalledWith(50, 'event_54', undefined)
+    expect(h.capture).toHaveBeenNthCalledWith(1, 'event_5', expect.any(Object))
+    expect(h.capture).toHaveBeenNthCalledWith(50, 'event_54', expect.any(Object))
   })
 
   it('flushQueue() is idempotent — calling it again does not re-send', async () => {

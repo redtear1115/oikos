@@ -25,7 +25,16 @@ let started = false
 function startPostHog() {
   if (started) return
   started = true
-  void import('posthog-js').then(({ default: posthog }) => initPostHog(posthog))
+  import('posthog-js')
+    .then(({ default: posthog }) => initPostHog(posthog))
+    .catch(() => {
+      // The chunk failed to load (offline, blocked, deploy swapped the hash).
+      // Reset so the next trigger (a sign-in tap's `analyticsReady()`) retries;
+      // `analyticsReady` itself gives up after its own timeout, so a failed load
+      // never holds up the tap. Left set, it looks like nothing: PostHog just
+      // never starts for the life of the page and the queue is never flushed.
+      started = false
+    })
 }
 
 function initPostHog(posthog: PostHog) {

@@ -30,7 +30,13 @@ export default function GlobalError({
     // Sentry import here put the whole SDK back in the public pages' first load.
     // The module is the same one instrumentation-client loads, so it is not
     // initialised twice.
-    void import('@/lib/observability/sentryClient').then((m) => m.captureException(error))
+    import('@/lib/observability/sentryClient')
+      .then((m) => m.captureException(error))
+      .catch(() => {
+        // Sentry chunk unavailable (the usual reason this page is showing may be
+        // a failed chunk load). The error page must still render and stay usable;
+        // the report is lost, with no other symptom.
+      })
     setLocale(pickGlobalErrorLocale())
   }, [error])
 
