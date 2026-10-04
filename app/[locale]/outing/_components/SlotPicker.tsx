@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
 import { OUTING_PARTICIPANT_NAME_MAX } from '@/lib/outing/validate'
 import type { OutingSlot } from '@/lib/db/queries/outingPublic'
-import { Field, ChipRow, Chip } from '@/app/(dashboard)/outings/[id]/_components/sheetBits'
+import { Field, ChipRow, Chip } from '@/app/(dashboard)/outings/_components/sheetBits'
 import { Card, SectionTitle } from './OutingPublicChrome'
 
 interface Props {

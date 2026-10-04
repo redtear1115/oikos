@@ -9,8 +9,10 @@ import { describeError } from '@/lib/errors'
 import { track } from '@/lib/analytics/track'
 import { bindOutingParticipant } from '@/actions/outing'
 import { Button } from '@/components/ui/Button'
-import type { OutingFullView } from '@/lib/db/queries/outingPublic'
+import type { OutingFullExpense, OutingFullView } from '@/lib/db/queries/outingPublic'
 import { SettleSheet } from '@/app/(dashboard)/outings/[id]/_components/SettleSheet'
+import { ExpenseSheet } from '@/app/(dashboard)/outings/_components/ExpenseSheet'
+import { SettlementList } from '@/app/(dashboard)/outings/_components/SettlementList'
 import { Card, OutingHeader, SectionTitle } from './OutingPublicChrome'
 
 interface Props {
@@ -24,9 +26,10 @@ interface Props {
 
 /**
  * A friend's full view of an outing (#1558): who is in it and their nets, who
- * pays whom, the expense feed, and recording a repayment. Ended outings are
- * read-only. Adding / editing / deleting expenses comes from S4's shared
- * components (phase 2).
+ * pays whom, the expense feed, adding / editing / deleting an expense, and
+ * recording / deleting a repayment. Ended outings are read-only. The expense
+ * sheet and repayment list are the dashboard's own components (S4), not
+ * copies: the outing actions resolve the friend by session or claim cookie.
  */
 export function OutingParticipantView({ view, needsBind, signedIn, signInHref }: Props) {
   const t = useTranslations()
@@ -36,6 +39,8 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
   const { outing } = view
   const active = outing.status === 'active'
   const [settling, setSettling] = useState(false)
+  // Expense sheet: closed, adding (null), or editing one expense.
+  const [expenseSheet, setExpenseSheet] = useState<{ expense: OutingFullExpense | null } | null>(null)
   const [bindHidden, setBindHidden] = useState(false)
   const [bindError, setBindError] = useState('')
   const [binding, startBind] = useTransition()
@@ -47,6 +52,11 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
   const youName = view.youParticipantId ? nameOf(view.youParticipantId) : ''
   const shown = view.participants.filter((p) => p.active || p.net !== 0)
   const settleable = view.participants.filter((p) => p.active).map((p) => ({ id: p.id, displayName: p.displayName }))
+  // ExpenseSheet offers active people, plus deactivated ones already on the expense being edited.
+  const expenseParticipants = useMemo(
+    () => view.participants.map((p) => ({ id: p.id, displayName: p.displayName, active: p.active })),
+    [view.participants],
+  )
 
   const bind = () => {
     setBindError('')
@@ -124,27 +134,46 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
           ) : (
             <div className="flex flex-col">
               {view.expenses.map((e, i) => (
-                <div
+                <button
                   key={e.id}
-                  className={`flex items-center justify-between gap-3 py-2.5${i === view.expenses.length - 1 ? '' : ' border-b border-hairline'}`}
+                  type="button"
+                  disabled={!active}
+                  onClick={() => setExpenseSheet({ expense: e })}
+                  className={`flex items-center justify-between gap-3 py-2.5 w-full text-left bg-transparent border-0 cursor-pointer disabled:cursor-default${i === view.expenses.length - 1 ? '' : ' border-b border-hairline'}`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate text-ink">{e.description || to.untitledExpense}</div>
-                    <div className="text-xs mt-0.5 text-ink-3">
+                  <span className="block flex-1 min-w-0">
+                    <span className="block text-sm truncate text-ink">{e.description || to.untitledExpense}</span>
+                    <span className="block text-xs mt-0.5 text-ink-3">
                       {to.paidByTag.replace('{name}', nameOf(e.paidByParticipantId))}
                       {' · '}
                       {to.splitCountTag.replace('{count}', String(e.shares.length))}
-                    </div>
-                  </div>
+                    </span>
+                  </span>
                   <span className="text-sm tabular-nums shrink-0 text-ink">{formatAmount(e.amount, outing.currency)}</span>
-                </div>
+                </button>
               ))}
             </div>
           )}
         </Card>
 
+        {view.settlements.length > 0 && (
+          <Card>
+            <SectionTitle>{to.settlementsLabel}</SectionTitle>
+            <SettlementList
+              outingId={outing.id}
+              currency={outing.currency}
+              settlements={view.settlements}
+              nameOf={nameOf}
+              canDelete={active}
+            />
+          </Card>
+        )}
+
         {active ? (
-          <Button variant="secondary" onClick={() => setSettling(true)}>{to.settle}</Button>
+          <div className="flex flex-col gap-2.5">
+            <Button variant="primary" onClick={() => setExpenseSheet({ expense: null })}>{to.addExpense}</Button>
+            <Button variant="secondary" onClick={() => setSettling(true)}>{to.settle}</Button>
+          </div>
         ) : (
           <p className="text-sm px-1 text-ink-3">{c.endedNote}</p>
         )}
@@ -163,6 +192,19 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
           </Card>
         )}
       </div>
+
+      {active && (
+        <ExpenseSheet
+          open={expenseSheet !== null}
+          outingId={outing.id}
+          currency={outing.currency}
+          participants={expenseParticipants}
+          expense={expenseSheet?.expense ?? null}
+          onClose={() => setExpenseSheet(null)}
+          // Fires for add, edit and delete; only a new expense is the event.
+          onSaved={() => { if (expenseSheet?.expense === null) track('outing_expense_added', { actor: 'participant' }) }}
+        />
+      )}
 
       {active && (
         <SettleSheet
