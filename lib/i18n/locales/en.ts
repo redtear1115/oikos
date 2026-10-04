@@ -5,7 +5,7 @@ export const en: Translations = {
     tagline: 'Your ledger is ready, for the two of you.',
     continueWithGoogle: 'Continue with Google',
     authFailedNotice: "That sign-in didn't finish. You can try again.",
-    appleFallbackHint: "Apple sign-in didn't finish. You can try again, or continue with Google instead, but a ledger you started with Apple won't appear in your Google account.",
+    appleFallbackHint: "Apple sign-in didn't finish. You can try again. You can also continue with Google, but a ledger you started with Apple won't be there when you sign in with Google.",
     signingIn: 'Signing you in',
     continueWithApple: 'Continue with Apple',
     termsPrefix: 'By continuing, you agree to our',

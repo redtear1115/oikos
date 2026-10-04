@@ -53,7 +53,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **iOS 的 Apple 登入改走瀏覽器後沒完成，會提示可以再試（#1552）**
   使用者：登入頁說明 Apple 登入沒有完成、可以再試或改用 Google，並提醒用 Apple 建立的帳本不會出現在 Google 帳號裡。
-  技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤，en／ja 譯文待確認。
+  技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤；en／ja 譯文已確認（#1556）。
 
 ### 技術變更
 

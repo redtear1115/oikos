@@ -7,7 +7,7 @@ export const ja: Translations = {
     tagline: '家計簿の準備はできました。お相手を招いて、ふたりで。',
     continueWithGoogle: 'Google アカウントで続ける',
     authFailedNotice: 'ログインが完了しませんでした。もう一度お試しください。',
-    appleFallbackHint: 'Apple でのログインが完了しませんでした。もう一度お試しいただけます。Google でログインすることもできますが、Apple で作成した家計簿は Google アカウントには表示されません。',
+    appleFallbackHint: 'Apple でのログインが完了しませんでした。もう一度お試しください。Google アカウントで続けることもできますが、Apple で作った家計簿は、そのアカウントには表示されません。',
     signingIn: 'サインインしています',
     continueWithApple: 'Apple で続ける',
     termsPrefix: '続行すると、当社の',
