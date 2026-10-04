@@ -76,32 +76,50 @@ esac
 [ "$(grep -c "$PLACEHOLDER" "${SRC}/backup-prod.sh")" = '1' ] \
   || { printf 'backup-prod.sh does not hold exactly one recipient placeholder\n' >&2; exit 1; }
 
-mkdir -p "$DEST" "$AGENTS"
-chmod 700 "$DEST"
-for f in $FILES; do
-  rm -f "${DEST}/${f}"
-done
-rm -f "${DEST}/SHA256SUMS"
+# Everything is built and checked in a staging dir first, and only swapped in
+# once every check has passed: a failed install leaves the previous install
+# (or nothing) in place, never a half-written one.
+#   Failure look if this order is broken: the installer exits 1, but the
+#   libexec copy and SHA256SUMS are already replaced while the plist is not —
+#   the next 03:30 run uses scripts the owner believes were not installed.
+mkdir -p "$(dirname "$DEST")" "$AGENTS"
+NEW_DEST=$(mktemp -d "${DEST}.new.XXXXXX")
+OLD_DEST="${DEST}.old.$$"
+cleanup() { rm -rf "$NEW_DEST" "${PLIST}.new"; }
+trap cleanup EXIT
 
-sed "s/${PLACEHOLDER}/${RECIPIENT}/" "${SRC}/backup-prod.sh" > "${DEST}/backup-prod.sh"
-cp "${SRC}/futari-backup-run.sh" "${SRC}/futari-backup-counts.sql" "${SRC}/futari-backup-manifest.sql" "$DEST/"
+sed "s/${PLACEHOLDER}/${RECIPIENT}/" "${SRC}/backup-prod.sh" > "${NEW_DEST}/backup-prod.sh"
+cp "${SRC}/futari-backup-run.sh" "${SRC}/futari-backup-counts.sql" "${SRC}/futari-backup-manifest.sql" "$NEW_DEST/"
 
-grep -q "$PLACEHOLDER" "${DEST}/backup-prod.sh" && { printf 'recipient substitution failed\n' >&2; exit 1; }
-[ "$(grep -c "^readonly AGE_RECIPIENT='${RECIPIENT}'\$" "${DEST}/backup-prod.sh")" = '1' ] \
+if grep -q "$PLACEHOLDER" "${NEW_DEST}/backup-prod.sh"; then
+  printf 'recipient substitution failed\n' >&2; exit 1
+fi
+[ "$(grep -c "^readonly AGE_RECIPIENT='${RECIPIENT}'\$" "${NEW_DEST}/backup-prod.sh")" = '1' ] \
   || { printf 'recipient line not found after substitution\n' >&2; exit 1; }
-
-chmod 500 "${DEST}/backup-prod.sh" "${DEST}/futari-backup-run.sh"
-chmod 400 "${DEST}/futari-backup-counts.sql" "${DEST}/futari-backup-manifest.sql"
-(cd "$DEST" && /usr/bin/shasum -a 256 $FILES > SHA256SUMS)
-chmod 400 "${DEST}/SHA256SUMS"
 
 sed -e "s#__RUN_SCRIPT__#${DEST}/futari-backup-run.sh#g" \
     -e "s#__LAUNCHD_LOG__#${LAUNCHD_LOG}#g" \
     "${SRC}/launchd/futari-backup.plist.template" > "${PLIST}.new"
-grep -q '__[A-Z_]*__' "${PLIST}.new" && { rm -f "${PLIST}.new"; printf 'plist placeholders left\n' >&2; exit 1; }
+if grep -q '__[A-Z_]*__' "${PLIST}.new"; then
+  printf 'plist placeholders left\n' >&2; exit 1
+fi
+/usr/bin/plutil -lint "${PLIST}.new" >/dev/null || { printf 'rendered plist does not lint\n' >&2; exit 1; }
 chmod 644 "${PLIST}.new"
+
+chmod 500 "${NEW_DEST}/backup-prod.sh" "${NEW_DEST}/futari-backup-run.sh"
+chmod 400 "${NEW_DEST}/futari-backup-counts.sql" "${NEW_DEST}/futari-backup-manifest.sql"
+(cd "$NEW_DEST" && /usr/bin/shasum -a 256 $FILES > SHA256SUMS)
+chmod 400 "${NEW_DEST}/SHA256SUMS"
+(cd "$NEW_DEST" && /usr/bin/shasum -a 256 --status -c SHA256SUMS) \
+  || { printf 'SHA256SUMS does not verify in the staged copy\n' >&2; exit 1; }
+chmod 700 "$NEW_DEST"
+
+# Swap in: libexec dir first, then the plist.
+if [ -e "$DEST" ]; then mv "$DEST" "$OLD_DEST"; fi
+mv "$NEW_DEST" "$DEST"
 mv -f "${PLIST}.new" "$PLIST"
-/usr/bin/plutil -lint "$PLIST" >/dev/null
+rm -rf "$OLD_DEST"
+trap - EXIT
 
 printf 'installed from %s into %s\n' "$TAG" "$DEST"
 printf 'recipient pinned: %s\n' "$RECIPIENT"

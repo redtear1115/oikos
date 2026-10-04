@@ -1,7 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, existsSync, readdirSync, rmSync } from 'node:fs'
-import { readFileSync } from 'node:fs'
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  readFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -314,9 +324,29 @@ describe('shell scripts (#1549)', () => {
     expect(shCode(install)).not.toMatch(/^\s*launchctl\b/m)
   })
 
+  it('installer: every check (recipient, placeholders, plutil, sums) runs before anything is swapped in', () => {
+    const code = shCode(install)
+    const swap = code.indexOf('mv "$NEW_DEST" "$DEST"')
+    expect(swap).toBeGreaterThan(-1)
+    for (const check of [
+      'recipient line not found after substitution',
+      "grep -q '__[A-Z_]*__' \"${PLIST}.new\"",
+      '/usr/bin/plutil -lint "${PLIST}.new"',
+      'shasum -a 256 --status -c SHA256SUMS',
+    ]) {
+      const i = code.indexOf(check)
+      expect(i, `${check} missing`).toBeGreaterThan(-1)
+      expect(i, `${check} runs after the swap`).toBeLessThan(swap)
+    }
+    // Nothing writes into the live install dir before the swap.
+    expect(code.slice(0, swap)).not.toMatch(/> "\$\{DEST\}\/|"\$DEST\/"|chmod [0-7]+ "\$\{DEST\}/)
+  })
+
   it('plist template: placeholders only, daily 03:30, private umask', () => {
     expect(plist).not.toMatch(/\/Users\/|\/home\//)
-    expect(plist).toContain('__RUN_SCRIPT__')
+    // Exactly the two tokens the installer fills — any other `__X__` (even in
+    // a comment) makes the installer refuse the rendered plist.
+    expect([...new Set(plist.match(/__[A-Z_]*__/g))].sort()).toEqual(['__LAUNCHD_LOG__', '__RUN_SCRIPT__'])
     expect(plist).toMatch(/<key>Hour<\/key>\s*<integer>3<\/integer>\s*<key>Minute<\/key>\s*<integer>30<\/integer>/)
     expect(plist).toMatch(/<key>Umask<\/key>\s*<integer>63<\/integer>/)
   })
@@ -324,6 +354,100 @@ describe('shell scripts (#1549)', () => {
 
 // The dry run must contact nothing. Run it for real against a throwaway HOME
 // whose config points every tool at a trap that records being called.
+// The installer is macOS-only (plutil, launchd, BSD userland); CI runs on
+// Linux, so this runs on the owner's Mac and in local verification only.
+describe.skipIf(process.platform !== 'darwin')('install-backup.sh really installs (#1549)', () => {
+  const OPS_FILES = [
+    'install-backup.sh',
+    'backup-prod.sh',
+    'futari-backup-run.sh',
+    'futari-backup-counts.sql',
+    'futari-backup-manifest.sql',
+    'launchd/futari-backup.plist.template',
+  ]
+  // Built at runtime so this file holds no recipient-shaped string.
+  const RECIPIENT = ['age1', 'q'.repeat(58)].join('')
+
+  function setup() {
+    const tmp = mkdtempSync(join(tmpdir(), 'futari-backup-install-'))
+    const repo = join(tmp, 'repo')
+    const home = join(tmp, 'home')
+    const bin = join(tmp, 'bin')
+    mkdirSync(join(repo, 'scripts/ops/launchd'), { recursive: true })
+    mkdirSync(home)
+    mkdirSync(bin)
+    for (const f of OPS_FILES) copyFileSync(join(ROOT, 'scripts/ops', f), join(repo, 'scripts/ops', f))
+    const called = join(tmp, 'CALLED')
+    // A real `launchctl` must never run; record it if the installer tries.
+    writeFileSync(join(bin, 'launchctl'), `#!/bin/sh\necho "launchctl $*" >> "${called}"\nexit 0\n`)
+    chmodSync(join(bin, 'launchctl'), 0o755)
+    const env = { HOME: home, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin`, NODE_ENV: 'test' as const }
+    const git = (...args: string[]) =>
+      execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@invalid', '-c', 'commit.gpgsign=false', ...args], {
+        cwd: repo,
+        env,
+        stdio: 'pipe',
+      })
+    git('init', '-q')
+    git('add', '.')
+    git('commit', '-q', '-m', 'x')
+    const run = () =>
+      execFileSync('bash', [join(repo, 'scripts/ops/install-backup.sh'), '--allow-untagged', '--recipient', RECIPIENT], {
+        encoding: 'utf8',
+        env,
+        stdio: 'pipe',
+      })
+    const dest = join(home, '.local/libexec/futari-backup')
+    const plistPath = join(home, 'Library/LaunchAgents/local.futari.backup.plist')
+    return { tmp, repo, dest, plistPath, called, git, run }
+  }
+
+  it('exits 0 with a lint-clean plist, a pinned copy and SHA256SUMS that verify; never calls launchctl', () => {
+    const t = setup()
+    try {
+      const out = t.run()
+      expect(out).toMatch(/installed from untagged/)
+      const rendered = readFileSync(t.plistPath, 'utf8')
+      expect(rendered).not.toMatch(/__[A-Z_]*__/)
+      expect(rendered).toContain(`${t.dest}/futari-backup-run.sh`)
+      execFileSync('/usr/bin/plutil', ['-lint', t.plistPath], { stdio: 'pipe' })
+      execFileSync('/usr/bin/shasum', ['-a', '256', '--status', '-c', 'SHA256SUMS'], { cwd: t.dest, stdio: 'pipe' })
+      expect(readFileSync(join(t.dest, 'backup-prod.sh'), 'utf8')).toContain(`readonly AGE_RECIPIENT='${RECIPIENT}'`)
+      expect(statSync(t.dest).mode & 0o777).toBe(0o700)
+      expect(statSync(join(t.dest, 'backup-prod.sh')).mode & 0o777).toBe(0o500)
+      expect(statSync(join(t.dest, 'SHA256SUMS')).mode & 0o777).toBe(0o400)
+      expect(readdirSync(join(t.dest, '..')).filter((n) => /\.(new|old)\./.test(n))).toEqual([])
+      expect(existsSync(t.called), 'launchctl was called').toBe(false)
+    } finally {
+      rmSync(t.tmp, { recursive: true, force: true })
+    }
+  })
+
+  it('a failed check leaves the previous install untouched (no partial install)', () => {
+    const t = setup()
+    try {
+      t.run()
+      const sumsBefore = readFileSync(join(t.dest, 'SHA256SUMS'), 'utf8')
+      const plistBefore = readFileSync(t.plistPath, 'utf8')
+      // A reviewed change that breaks the template: an unknown placeholder,
+      // plus a change to a script so a partial install would be visible.
+      const tpl = join(t.repo, 'scripts/ops/launchd/futari-backup.plist.template')
+      writeFileSync(tpl, readFileSync(tpl, 'utf8').replace('<plist version="1.0">', '<plist version="1.0"><!-- __BROKEN__ -->'))
+      const sql = join(t.repo, 'scripts/ops/futari-backup-counts.sql')
+      writeFileSync(sql, readFileSync(sql, 'utf8') + '\n-- changed\n')
+      t.git('commit', '-q', '-am', 'y')
+      expect(() => t.run()).toThrow(/plist placeholders left/)
+      expect(readFileSync(join(t.dest, 'SHA256SUMS'), 'utf8')).toBe(sumsBefore)
+      expect(readFileSync(t.plistPath, 'utf8')).toBe(plistBefore)
+      execFileSync('/usr/bin/shasum', ['-a', '256', '--status', '-c', 'SHA256SUMS'], { cwd: t.dest, stdio: 'pipe' })
+      expect(readdirSync(join(t.dest, '..')).filter((n) => /\.(new|old)\./.test(n))).toEqual([])
+      expect(existsSync(`${t.plistPath}.new`)).toBe(false)
+    } finally {
+      rmSync(t.tmp, { recursive: true, force: true })
+    }
+  })
+})
+
 describe('backup-prod.sh --dry-run connects to nothing (#1549)', () => {
   it('exits 0, prints the plan, runs no tool and writes nothing', () => {
     const home = mkdtempSync(join(tmpdir(), 'futari-backup-dry-'))

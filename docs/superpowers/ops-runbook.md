@@ -330,6 +330,8 @@ group by 1;
 
 0. **工具**：`brew install age rclone postgresql@17`，演練另外要 Supabase CLI 與 colima（docker）。`postgresql@17` 是 keg-only，路徑在 `/opt/homebrew/opt/postgresql@17/bin`。**pg_dump 的大版本要等於伺服器的大版本**（目前 17）；Supabase 升級到 18 時，腳本會在 `tools` 或 `snapshot` 階段失敗並說明，裝 `postgresql@18`、改設定檔的 `PG_BIN_DIR` 與 `PG_MAJOR`。
 1. **跑 migration**（見〈Drizzle Migrations〉），然後直接查資料：`select rolname, rolcanlogin, rolbypassrls, rolconnlimit from pg_roles where rolname = 'futari_backup'` 要有一列、`false`／`true`／`2`。再確認 `has_table_privilege('futari_backup', 'auth.users', 'SELECT')` 與 `has_table_privilege('futari_backup', 'cron.job', 'SELECT')` 都是 `true`。auth 或 cron 的 grant 失敗就**停**（見上方規則）。
+   - **MFA 檢查**（用 admin service 查，dev 演練與 prod 都要）：`select count(*) from auth.mfa_factors`。是 `0` 就照現狀繼續；**大於 0 就停下來問 owner**，決定要不要把 `auth.mfa_factors` 加進備份（要加就是另一次 review 過的改動：migration 的 grant、`backup-prod.sh` 的 `--table`、演練的比對一起改），不要自己先加。
+   - **失效的樣子**：有人開了 MFA，備份照樣每晚成功、演練照樣 PASS；直到真的還原那天，這些人的第二因素全部消失，登入流程要他們重新設定或直接卡住。
 2. **產生 age 金鑰**：建一個新的加密 dmg「Futari Backup Key」，密碼和 Futari Secrets **不同**，掛載後：
 
    ```

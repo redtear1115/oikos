@@ -587,7 +587,11 @@ log "ok uploaded and verified ${BUNDLE}"
 
 printf '%s %s\n' "$BUNDLE" "$(ts)" | "$RCLONE" rcat "${CFG_RCLONE_DEST%/}/LAST_OK" 2>>"$ERR_FILE" \
   || die_tool "could not write LAST_OK"
-cp "$COUNTS" "${PREV}.new" && chmod 600 "${PREV}.new" && mv -f "${PREV}.new" "$PREV"
+# One command per line: under set -e a failure inside an && chain is ignored,
+# and a stale baseline would let the next run compare against old counts.
+cp "$COUNTS" "${PREV}.new" || die "could not stage the count baseline"
+chmod 600 "${PREV}.new" || die "could not stage the count baseline"
+mv -f "${PREV}.new" "$PREV" || die "could not update the count baseline"
 printf '%s %s\n' "$BUNDLE" "$(ts)" > "${STATE_DIR}/LAST_OK"
 
 STAGE_NAME='prune'

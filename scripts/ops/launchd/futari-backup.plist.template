@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   #1549 — LaunchAgent for the nightly prod backup, daily at 03:30 local time.
-  Template only: scripts/ops/install-backup.sh fills the __PLACEHOLDERS__ with
+  Template only: scripts/ops/install-backup.sh fills in the two placeholders with
   paths under your home directory and writes the result to
   ~/Library/LaunchAgents/. It does not load it; loading is the owner's step
   (ops-runbook §「Prod backup (futari_backup)」).
