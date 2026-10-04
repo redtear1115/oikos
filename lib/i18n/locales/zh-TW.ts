@@ -54,6 +54,11 @@ export type Translations = {
      *  `?error=auth_failed`. Sign-in tone — state what happened and that
      *  retrying is fine; no alarm, no exclamation. (#973) */
     authFailedNotice: string
+    /** Shown on /sign-in after the iOS Apple native sheet failed and the
+     *  browser fallback also ended without signing in (#1552). Names Google as
+     *  the other way in, and says plainly that an Apple-created ledger does not
+     *  carry over — there is no identity linking. Sign-in tone, no exclamation. */
+    appleFallbackHint: string
     /** Shown while an OAuth attempt is in flight (#1083). On the native
      *  shells the sign-in page stays mounted underneath the in-app browser,
      *  so without a curtain the user returns to a fully interactive form and
@@ -3057,6 +3062,7 @@ export const zhTW: Translations = {
     continueWithGoogle: '以 Google 帳號繼續',
     continueWithApple: '以 Apple 帳號繼續',
     authFailedNotice: '剛才的登入沒有完成，再試一次就好。',
+    appleFallbackHint: 'Apple 登入沒有完成，可以再試一次。也可以改用 Google 登入；不過用 Apple 建立過的帳本，不會出現在 Google 帳號裡。',
     signingIn: '正在帶你進去',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',

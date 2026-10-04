@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
 import { SignInActions } from './SignInActions'
+import { SignInNotice } from './SignInNotice'
 import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
@@ -203,19 +204,12 @@ export default async function SignInPage({
           </div>
 
           <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
-            {authFailed && (
-              <p
-                role="status"
-                className="w-full m-0 rounded-xl px-4 py-3 text-sm text-center"
-                style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
-              >
-                {t.signIn.authFailedNotice}
-              </p>
-            )}
+            {authFailed && <SignInNotice>{t.signIn.authFailedNotice}</SignInNotice>}
             <SignInActions
               googleLabel={t.signIn.continueWithGoogle}
               appleLabel={t.signIn.continueWithApple}
               pendingLabel={t.signIn.signingIn}
+              appleFallbackHint={t.signIn.appleFallbackHint}
             />
             <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-ink-2 text-center">

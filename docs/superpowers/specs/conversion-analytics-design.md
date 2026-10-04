@@ -1,13 +1,14 @@
 ---
-last_updated: 2026-09-27
+last_updated: 2026-10-04
 status: shipped
 first_shipped_in: v1.2.0
 updates:
   - v1.5.11: `/use-case/<slug>` CTA 接上歸因 — `?from=use-case-<slug>` + `landing_cta_clicked`，`entry_source` 擴充 per-slug `use_case_*`（#1056）
   - v1.5.11: `entry_source` 的 migrate 取值改為衍生自 `lib/migrate/sources.ts` registry（全部 15 個，原本只認 3 個有 CSV parser 的，其餘靜默落進 `direct`）；import-resume 軸拆出獨立命名並衍生自 `lib/csvImport/detector.ts`（#1062）
   - v1.6.3: 事件清單新增稽核事件 `transactions_exported`（#1290）
+  - v1.6.8: 事件清單新增 iOS Apple 瀏覽器備援的 `sign_in_fallback_*` 事件（#1552）
 related_specs: [csv-import, solo-mode, csv-export]
-related_issues: ["#734", "#1056", "#1062", "#1290"]
+related_issues: ["#734", "#1056", "#1062", "#1290", "#1552"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
@@ -138,11 +139,14 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 | `migrate_preview_failed` | 解析失敗 | `migrate_source`、`reason` |
 | `migrate_cta_clicked` | 看完預覽點「開始」CTA | `migrate_source` |
 | `sign_in_started` | 點 Google 登入按鈕 | `entry_source` |
+| `sign_in_fallback_opened` / `_page_loaded` / `_callback` | iOS 原生 Apple 面板失敗、改走 in-app 瀏覽器時：開瀏覽器前／Apple 頁面首次載入／收到登入 deep link（#1552） | `provider`、`via`（`apple_fallback`）、`elapsed_ms`（後兩者） |
 
 實作落地點：landing CTA → `app/[locale]/_landing/Landing.tsx`；
 use-case CTA → `app/[locale]/use-case/_components/UseCaseCta.tsx`（走同一個 `LandingCtaLink`）；
 migrate 流程 → `app/[locale]/migrate/_components/MigrateTool.tsx` + `MigrateCta.tsx`
 （解析 hook `lib/migrate/useCsvPreview.ts`）；登入按鈕 → `app/[locale]/sign-in/SignInButton.tsx`。
+
+`sign_in_fallback_*` 是診斷事件，不是轉換步驟：結局（`sign_in_failed reason=fallback_dismissed` 等）與讀法見 [observability](observability-design.md)「iOS Apple 登入的瀏覽器備援」那條。只帶固定標籤與數字，**永遠不帶網址或 deep link**。
 
 ### Auth boundary — server（`posthog-node`，歸因 + alias）
 
