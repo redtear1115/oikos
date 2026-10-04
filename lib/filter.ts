@@ -104,7 +104,9 @@ export const SEARCH_TEXT_MAX = 100
  */
 export function normalizeSearchText(raw: string | null | undefined): string | undefined {
   if (!raw) return undefined
-  const t = raw.replace(/\s+/g, ' ').trim().slice(0, SEARCH_TEXT_MAX).trim()
+  // Cut by code point: slicing UTF-16 units can split a surrogate pair, and a
+  // lone surrogate makes encodeURIComponent (filterKey) throw.
+  const t = Array.from(raw.replace(/\s+/g, ' ').trim()).slice(0, SEARCH_TEXT_MAX).join('').trim()
   return t === '' ? undefined : t
 }
 
@@ -460,8 +462,8 @@ export function matchesFilter(
 //   ?fAmtMin=N                        (inclusive lower bound, non-negative integer)
 //   ?fAmtMax=N                        (inclusive upper bound, non-negative integer)
 //   ?fStatus=pending|settled          (record status; absent = both)
+//   ?search=1                         (search mode; q is ignored without it)
 //   ?q=text                           (free-text search; normalized, <= 100 chars)
-//   ?search=1                         (search mode UI; not part of the filter)
 //   ?from=YYYY-MM-DD&to=YYYY-MM-DD    (custom date range; both required together)
 //   ?range=all                        (sentinel for "all-time"; overrides ?month)
 //   ?month=YYYY-MM                    (legacy single-month scope; pre-existing)
@@ -563,8 +565,12 @@ export function parseFilterFromSearchParams(
   const status = params.get('fStatus')
   if (status && isValidStatus(status) && status !== 'all') f.status = status
 
-  const text = normalizeSearchText(params.get('q'))
-  if (text) f.text = text
+  // Text only narrows while search mode is on: a stray ?q= (e.g. a pasted link)
+  // must not silently narrow a view that shows no search field.
+  if (params.get('search') === '1') {
+    const text = normalizeSearchText(params.get('q'))
+    if (text) f.text = text
+  }
 
   return f
 }
@@ -581,6 +587,7 @@ export function parseFilterFromRecord(rec: {
   fAmtMax?: string
   fStatus?: string
   q?: string
+  search?: string
 }): TxnFilter {
   const fakeParams = {
     get: (name: string) => {

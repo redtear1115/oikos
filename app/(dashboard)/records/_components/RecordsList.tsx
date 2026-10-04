@@ -198,7 +198,10 @@ export function RecordsList({
   useEffect(() => { routerRef.current = router })
 
   const handleOpenSearch = () => {
-    preSearchQsRef.current = searchParams.toString()
+    const before = new URLSearchParams(searchParams.toString())
+    before.delete('q')
+    before.delete('search')
+    preSearchQsRef.current = before.toString()
     const params = new URLSearchParams(searchParams.toString())
     params.set('search', '1')
     router.replace(`/records?${params.toString()}`, { scroll: false })
@@ -257,6 +260,8 @@ export function RecordsList({
   const buildShareUrl = (next: TxnFilter, nextRange: DateRange) => {
     const params = new URLSearchParams()
     applyFilterToParams(params, { ...next, text: filter.text })
+    // q is inert without search=1, so a link that carries text carries the mode.
+    if (filter.text) params.set('search', '1')
     applyDateRangeToParams(params, nextRange)
     if (drill) applyDrillToParams(params, drill)
     const qs = params.toString()
@@ -503,6 +508,12 @@ export function RecordsList({
     setFilterOpen(false)
   }
 
+  const noFilteredNote = (
+    <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
+      {t.feed.noFiltered}
+    </div>
+  )
+
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* Sticky header — pins below the shell top stack rather than at the very
@@ -713,7 +724,7 @@ export function RecordsList({
         }}
         emptyState={
           tab === 'income'
-            ? <IncomeEmptyState />
+            ? (narrowing ? noFilteredNote : <IncomeEmptyState />)
             : (
               <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
                 {narrowing || effectiveDrill ? t.feed.noFiltered : t.feed.noFilteredAddHint}

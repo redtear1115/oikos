@@ -13,7 +13,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => router,
   useSearchParams: () => currentParams,
 }))
-vi.mock('next/dynamic', () => ({ default: () => () => null }))
+let onShare: ((d: TxnFilter, r: DateRange) => string) | undefined
+vi.mock('next/dynamic', () => ({
+  default: () => (p: { onShare?: typeof onShare }) => { if (p.onShare) onShare = p.onShare; return null },
+}))
 vi.mock('@/app/(dashboard)/records/_components/MonthSwitcher', () => ({ MonthSwitcher: () => null }))
 vi.mock('@/app/(dashboard)/records/_components/DateRangeChip', () => ({ DateRangeChip: () => null }))
 vi.mock('@/app/(dashboard)/records/_components/DrillFilterChip', () => ({ DrillFilterChip: () => null }))
@@ -238,6 +241,36 @@ describe('text-only filter', () => {
     const chip = screen.getByRole('button', { name: zhTW.dashboard.filterAriaLabel })
     expect(chip.querySelector('span[aria-hidden]')).toBeNull()
 
+    render(<I18nWrapper>{lastEmpty}</I18nWrapper>)
+    expect(screen.getByText(zhTW.feed.noFiltered)).toBeTruthy()
+  })
+})
+
+describe('q without search=1 is inert', () => {
+  it('does not narrow the feed', () => {
+    currentParams = new URLSearchParams('q=foo')
+    render(tree())
+    expect(lastFeedFilter).toBeUndefined()
+  })
+})
+
+describe('share URL', () => {
+  it('carries search=1 whenever it carries q', async () => {
+    const { defaultFilter } = await import('@/lib/filter')
+    currentParams = new URLSearchParams('search=1&q=foo')
+    render(tree())
+    const url = new URL(onShare!(defaultFilter(), monthRange))
+    expect(url.searchParams.get('q')).toBe('foo')
+    expect(url.searchParams.get('search')).toBe('1')
+  })
+})
+
+describe('income tab empty state while narrowing', () => {
+  it('uses noFiltered, not IncomeEmptyState', () => {
+    currentParams = new URLSearchParams('search=1&q=foo')
+    render(tree())
+    fireEvent.click(screen.getByRole('button', { name: zhTW.records.tabExpense }))
+    expect(lastFeedFilter).toBeUndefined() // income tab passes no feed filter
     render(<I18nWrapper>{lastEmpty}</I18nWrapper>)
     expect(screen.getByText(zhTW.feed.noFiltered)).toBeTruthy()
   })

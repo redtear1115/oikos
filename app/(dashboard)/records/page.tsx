@@ -39,6 +39,7 @@ export default async function RecordsPage({
     fAmtMax?: string
     fStatus?: string
     q?: string
+    search?: string
   }>
 }) {
   const user = await getCurrentUser()

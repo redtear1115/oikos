@@ -24,25 +24,38 @@ const f = (patch: Partial<TxnFilter> = {}): TxnFilter => ({ ...defaultFilter(), 
 
 describe('search text: parse / serialize / wire', () => {
   it('parses ?q= trimmed, whitespace-collapsed, capped; empty is absent', () => {
-    expect(parseFilterFromSearchParams(new URLSearchParams('q=%20%20foo%20%20bar%20')).text).toBe('foo bar')
-    expect(parseFilterFromSearchParams(new URLSearchParams('q=%20%20')).text).toBeUndefined()
+    expect(parseFilterFromSearchParams(new URLSearchParams('search=1&q=%20%20foo%20%20bar%20')).text).toBe('foo bar')
+    expect(parseFilterFromSearchParams(new URLSearchParams('search=1&q=%20%20')).text).toBeUndefined()
     expect(parseFilterFromSearchParams(new URLSearchParams('')).text).toBeUndefined()
-    const long = parseFilterFromSearchParams(new URLSearchParams({ q: 'a'.repeat(300) })).text
+    const long = parseFilterFromSearchParams(new URLSearchParams({ search: '1', q: 'a'.repeat(300) })).text
     expect(long).toHaveLength(SEARCH_TEXT_MAX)
   })
 
   it('the record variant (server searchParams) parses it too', () => {
-    expect(parseFilterFromRecord({ q: ' 咖啡 ' }).text).toBe('咖啡')
+    expect(parseFilterFromRecord({ search: '1', q: ' 咖啡 ' }).text).toBe('咖啡')
     expect(parseFilterFromRecord({}).text).toBeUndefined()
   })
 
   it('serialize round-trips and removes q when absent', () => {
-    const p = new URLSearchParams()
+    const p = new URLSearchParams('search=1')
     applyFilterToParams(p, f({ text: '咖啡 券' }))
     expect(p.get('q')).toBe('咖啡 券')
     expect(parseFilterFromSearchParams(p).text).toBe('咖啡 券')
     applyFilterToParams(p, f())
     expect(p.has('q')).toBe(false)
+  })
+
+  it('ignores q without search=1 (both parse variants)', () => {
+    expect(parseFilterFromSearchParams(new URLSearchParams('q=foo')).text).toBeUndefined()
+    expect(parseFilterFromRecord({ q: 'foo' }).text).toBeUndefined()
+    expect(filterKey(parseFilterFromRecord({ q: 'foo' }))).toBe('none')
+  })
+
+  it('never splits a surrogate pair at the cap (filterKey must not throw)', () => {
+    const t = normalizeSearchText('a'.repeat(99) + '😀')!
+    expect(() => filterKey(f({ text: t }))).not.toThrow()
+    const t2 = normalizeSearchText('a'.repeat(98) + '😀😀')!
+    expect(() => encodeURIComponent(t2)).not.toThrow()
   })
 
   it('serialize leaves ?search=1 alone (mode is not part of the filter)', () => {

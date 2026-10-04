@@ -64,8 +64,7 @@ export function RecordsSearchBar({ query, onCommit, onCancel }: Props) {
     <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center gap-2">
       <TextInput
         ref={inputRef}
-        className="flex-1 min-w-0"
-        inputClassName="appearance-none [&::-webkit-search-cancel-button]:appearance-none"
+        className="flex-1 min-w-0 [&_input]:appearance-none [&_input::-webkit-search-cancel-button]:appearance-none"
         type="search"
         enterKeyHint="search"
         autoComplete="off"
