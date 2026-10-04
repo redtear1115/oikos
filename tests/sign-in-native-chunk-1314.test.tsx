@@ -6,12 +6,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 // three layers: preload on mount, retry once at tap time, report as an issue.
 
 const captureException = vi.fn()
-vi.mock('@sentry/nextjs', () => ({ captureException: (...a: unknown[]) => captureException(...a) }))
+vi.mock('@/lib/observability/sentryClient', () => ({ captureException: (...a: unknown[]) => captureException(...a) }))
 
 const track = vi.fn()
 vi.mock('@/lib/analytics/track', () => ({
   track: (...a: unknown[]) => track(...a),
   getAnonId: () => 'anon-1',
+  analyticsReady: async () => {},
 }))
 vi.mock('@/actions/auth', () => ({ recordNativeAuthConversion: vi.fn() }))
 
@@ -96,6 +97,10 @@ describe('SignInActions in the iOS shell (#1314)', () => {
       new Error('fetch failed https://x.supabase.co/auth/v1/authorize?provider=google&state=SECRET'),
     )
     renderActions()
+    // Let the mount-time warm-up finish first: the tap and the warm-up both
+    // import the (mocked) Supabase module, and vitest resolves two imports of
+    // one mocked module that are in flight together to the real file.
+    await new Promise((resolve) => setTimeout(resolve, 20))
     fireEvent.click(screen.getByRole('button', { name: 'Google' }))
 
     await waitFor(() => expect(captureException).toHaveBeenCalledTimes(1))

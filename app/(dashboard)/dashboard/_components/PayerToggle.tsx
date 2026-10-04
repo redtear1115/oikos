@@ -44,7 +44,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
             aria-checked={value === w}
             tabIndex={rovingTabIndex(value === w, w === 'M', true)}
             onClick={() => onChange(w)}
-            className="oik-segment relative h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
+            className="oik-segment relative min-h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
             style={{
               background: value === w ? 'var(--toggle-segment-thumb)' : 'transparent',
               color: value === w ? 'var(--ink)' : 'var(--ink-2)',

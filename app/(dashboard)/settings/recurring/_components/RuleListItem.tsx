@@ -145,7 +145,7 @@ export function RuleListItem(props: Props) {
                 <span className="truncate">{personName}</span>
                 {splitText && (
                   <span
-                    className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-mini font-medium leading-none"
+                    className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-xs font-medium leading-none"
                     style={{ background: 'var(--hairline)', color: 'var(--ink-2)' }}
                   >
                     {splitText}

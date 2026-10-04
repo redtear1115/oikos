@@ -3,6 +3,8 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
 import { MigrateSourceCard } from './MigrateSourceCard'
+import { Phrase } from '../../_components/Phrase'
+import { s } from '../../_components/brand-inner'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -14,7 +16,7 @@ type OtherSources = Translations['migrate']['otherSources']
 
 /**
  * Cross-link section for the per-source /migrate landing pages (#612).
- * On each page, surfaces the *other two* sources as cards so visitors who
+ * On each page, surfaces the *other two* sources as rows so visitors who
  * arrived via the "wrong" source query can pivot in-place. Also emits an
  * ItemList JSON-LD describing the three guides as a single migration set.
  */
@@ -43,18 +45,15 @@ export function MigrateOtherSources({
   }
 
   return (
-    <section className="space-y-5">
+    <section className={s.band}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
       />
-      <h2
-        className="m-0 text-xl md:text-title font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
-        {copy.heading}
+      <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
+        <Phrase text={copy.heading} />
       </h2>
-      <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
+      <ul className={s.rows}>
         {others.map((source) => {
           const item = copy.items[source]
           return (

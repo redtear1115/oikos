@@ -170,7 +170,7 @@ describe('iOS App Store gate (#848, Apple Guideline 3.1.1)', () => {
   })
 })
 
-describe('KofiWidget unmount (leaving /settings)', () => {
+describe('KofiWidget unmount (leaving the page)', () => {
   it('removes the injected widget DOM when the component unmounts', () => {
     const { unmount } = render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
     // Simulate Ko-fi having drawn its widget after the script loaded.

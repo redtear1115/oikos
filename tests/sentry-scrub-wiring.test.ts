@@ -10,7 +10,7 @@ import { join } from 'node:path'
  * and none may define its own inline version.
  */
 
-const CONFIGS = ['instrumentation-client.ts', 'sentry.server.config.ts', 'sentry.edge.config.ts']
+const CONFIGS = ['lib/observability/sentryClient.ts', 'sentry.server.config.ts', 'sentry.edge.config.ts']
 
 const HOOKS: Array<[key: string, fn: string]> = [
   ['beforeSend', 'scrubSentryEvent'],

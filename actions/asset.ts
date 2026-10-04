@@ -7,7 +7,7 @@ import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { randomUUID } from 'crypto'
 import { encrypt, decrypt, aadFor, type AadContext } from '@/lib/crypto'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { writableAsset } from '@/lib/auth/asset'
 import { assertMemberInGroup } from '@/lib/auth/member'
@@ -352,8 +352,8 @@ export interface CarAsset {
  * Used by the insurance form vehicle picker.
  */
 export const getCarAssets = action(async (): Promise<CarAsset[]> => {
-  const { group } = await requireViewerGroup()
-  const rows = await listAssetsForGroup(group.id)
+  const { user, group } = await requireViewerGroup()
+  const rows = await listAssetsForGroup(group.id, user.id)
   return rows
     .filter(r => r.type === 'car')
     .map(r => ({ id: r.id, name: r.name }))
@@ -369,8 +369,8 @@ export interface ChildAsset {
  * insurance form to bind 被保人 to a Child 愛物 (insured_child_id).
  */
 export const getChildAssets = action(async (): Promise<ChildAsset[]> => {
-  const { group } = await requireViewerGroup()
-  const rows = await listAssetsForGroup(group.id)
+  const { user, group } = await requireViewerGroup()
+  const rows = await listAssetsForGroup(group.id, user.id)
   return rows
     .filter(r => r.type === 'child')
     .map(r => ({ id: r.id, name: r.name }))
@@ -381,8 +381,8 @@ export const getChildAssets = action(async (): Promise<ChildAsset[]> => {
  * deleted assets (new transaction links can never point at zombies).
  */
 export const loadAssetsForPicker = action(async (): Promise<PickerAsset[]> => {
-  const { group } = await requireViewerGroup()
-  const rows = await listAssetsForGroup(group.id)
+  const { user, group } = await requireViewerGroup()
+  const rows = await listAssetsForGroup(group.id, user.id)
   return rows.map(r => ({ id: r.id, type: r.type, name: r.name }))
 })
 
@@ -394,11 +394,13 @@ export interface LoadedAsset {
 
 /**
  * Loads a single asset for display (e.g. AddSheet's "關聯資產" row showing
- * "我的 Tesla（已刪除）"). Returns null if not found or wrong group.
+ * "我的 Tesla（已刪除）"). Returns null if not found or wrong group, and for a
+ * frozen copy the viewer may not resolve (#1484 — joined the ledger after, or
+ * left it before, the freeze).
  */
 export const loadAsset = action(async (assetId: string): Promise<LoadedAsset | null> => {
-  const { group } = await requireViewerGroup()
-  const row = await getAssetById(assetId, group.id)
+  const { user, group } = await requireViewerGroup()
+  const row = await getAssetById(assetId, group.id, user.id)
   if (!row) return null
   return {
     id: row.id,
@@ -598,7 +600,9 @@ export const revealChildPii = action(async (
     })
     .from(assets)
     .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    // #1484 — a frozen copy has nothing to reveal (display fields only) and
+    // is never revealed: refused like a missing asset.
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id), isNull(assets.frozenAt)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'child') {
     throw actionError('aibutsu_not_found')
@@ -634,7 +638,9 @@ export const revealChildName = action(async (assetId: string): Promise<string> =
       nameEncrypted: assets.nameEncrypted,
     })
     .from(assets)
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    // #1484 — a frozen copy has nothing to reveal (display fields only) and
+    // is never revealed: refused like a missing asset.
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id), isNull(assets.frozenAt)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'child') {
     throw actionError('aibutsu_not_found')
@@ -662,7 +668,9 @@ export const revealCarPlate = action(async (assetId: string): Promise<string> =>
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    // #1484 — a frozen copy has nothing to reveal (display fields only) and
+    // is never revealed: refused like a missing asset.
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id), isNull(assets.frozenAt)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'car') {
     throw actionError('aibutsu_not_found')
@@ -689,7 +697,9 @@ export const revealHouseAddress = action(async (assetId: string): Promise<string
     })
     .from(assets)
     .leftJoin(houseDetails, eq(houseDetails.assetId, assets.id))
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    // #1484 — a frozen copy has nothing to reveal (display fields only) and
+    // is never revealed: refused like a missing asset.
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id), isNull(assets.frozenAt)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'house') {
     throw actionError('aibutsu_not_found')

@@ -370,6 +370,15 @@ describe('parseFilterFromSearchParams', () => {
     expect(f.incomeCategories).toEqual(new Set(['salary']))  // 'fakecat' rejected
     expect(f.assetIds).toEqual(new Set(['11111111-1111-1111-1111-111111111111']))  // 'not-a-uuid' rejected
   })
+
+  // #1534 — `in BY_ID` also matched Object.prototype keys, so a URL like
+  // `?fCats=constructor` added a non-category to the filter (blank chip).
+  it('drops inherited-key cats / incCats (#1534)', () => {
+    const p = new URLSearchParams('fCats=constructor,dining,__proto__&fIncCats=toString,salary,hasOwnProperty')
+    const f = parseFilterFromSearchParams(p)
+    expect(f.categories).toEqual(new Set(['dining']))
+    expect(f.incomeCategories).toEqual(new Set(['salary']))
+  })
 })
 
 describe('parseFilterFromRecord', () => {

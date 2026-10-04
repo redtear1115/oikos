@@ -18,6 +18,22 @@ function calendarDayDiff(target: Date, ref: Date): number {
 }
 
 /**
+ * Relative day label ("today" / "12 天前" / "12 days ago").
+ *
+ * Node's ICU and WebKit's ICU disagree on spacing between a number and a CJK
+ * unit ("12 天前" vs "12天前"), so the raw Intl string differs between SSR and
+ * the iOS shell's hydration (#1515). Normalize it: NBSP / narrow NBSP become a
+ * plain space, and a digit followed by a CJK character always gets exactly one
+ * space — matching the hand-written copy in lib/i18n/locales (`{n} 天`).
+ */
+function formatRelativeDay(diff: number, locale: string): string {
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+    .format(diff, 'day')
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .replace(/(\d)\s*(?=[\u3000-\u9fff\uf900-\ufaff])/g, '$1 ')
+}
+
+/**
  * Records / dashboard list rows.
  * Diff 0/-1/…/-30 → relative ("today" / "yesterday" / "N days ago"); locale-aware
  * via Intl.RelativeTimeFormat. Older / future → short absolute date (with year
@@ -31,7 +47,7 @@ export function formatDateRelative(iso: string, locale: string, today: string): 
   const now = parseLocal(today)
   const diff = calendarDayDiff(d, now)
   if (diff <= 0 && diff >= -30) {
-    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(diff, 'day')
+    return formatRelativeDay(diff, locale)
   }
   return formatDateShort(iso, locale, { withYear: d.getFullYear() !== now.getFullYear() })
 }
@@ -84,7 +100,7 @@ export function formatMonthShort(iso: string, locale: string): string {
  */
 export function formatPickerSubtitle(iso: string, locale: string, today: string): string {
   if (iso === today) {
-    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'day')
+    return formatRelativeDay(0, locale)
   }
   return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(parseLocal(iso))
 }

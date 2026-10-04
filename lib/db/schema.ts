@@ -97,17 +97,16 @@ export const groupInvites = pgTable('GroupInvites', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   invitedBy: uuid('invited_by').notNull().references(() => profiles.id),
-  // #1288 I3c — the plaintext `token` column is deliberately NOT declared.
-  // It still exists in the database (nullable since 0070, no longer written)
-  // until the I3d migration drops it. Declaring it here would make every
-  // `db.select().from(groupInvites)` name it, and that build would break the
-  // moment I3d runs. `__tests__/inviteTokenColumnGuard.test.ts` keeps it out.
+  // #1288 I3d — there is no plaintext `token` column: 0078 dropped it (I3c,
+  // #1498, had already stopped writing and reading it). Do not add it back:
+  // every `db.select().from(groupInvites)` would name it and fail with
+  // "column does not exist", so every invite link breaks.
+  // `__tests__/inviteTokenColumnGuard.test.ts` keeps it out.
   //
   // #1288 I3 — hashToken(token) (lib/invite.ts): the only thing stored about
-  // the token, and the lookup key. Nullable in the database until I3d sets NOT
-  // NULL; every row minted since I3b has it, older rows were backfilled by
-  // 0070. Unique index added by 0070.
-  tokenHash: text('token_hash'),
+  // the token, and the lookup key. NOT NULL since 0078; unique index added by
+  // 0070.
+  tokenHash: text('token_hash').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
   // #79 — stamped by leaveGroup so any in-flight invites can't bring a

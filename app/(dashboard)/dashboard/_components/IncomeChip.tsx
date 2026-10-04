@@ -30,7 +30,7 @@ export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className="oik-chip h-8 pl-1.5 pr-3 rounded-full text-sm font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
+      className="oik-chip min-h-8 pl-1.5 pr-3 rounded-full text-sm font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
       style={{
         background: selected ? P.ink : 'var(--toggle-inactive-bg)',
         color: selected ? 'var(--toggle-active-text)' : 'var(--ink)',

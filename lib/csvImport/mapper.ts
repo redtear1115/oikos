@@ -161,7 +161,11 @@ export function mapCategory(raw: string | undefined | null): string {
   if (!trimmed) return 'other'
   if (isValidCategoryId(trimmed)) return trimmed
   const lower = trimmed.toLowerCase()
-  return CATEGORY_SYNONYMS[lower] ?? CATEGORY_SYNONYMS[trimmed] ?? 'other'
+  // Own keys only: CATEGORY_SYNONYMS is a plain object, so 'constructor'
+  // would otherwise return the Object function (#1534).
+  if (Object.hasOwn(CATEGORY_SYNONYMS, lower)) return CATEGORY_SYNONYMS[lower]!
+  if (Object.hasOwn(CATEGORY_SYNONYMS, trimmed)) return CATEGORY_SYNONYMS[trimmed]!
+  return 'other'
 }
 
 // ──────────────────────────── Mappers ────────────────────────────

@@ -43,6 +43,100 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.7] - 2026-10-04
+
+主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。
+完整 diff：[v1.6.6...v1.6.7](https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7)
+
+### 使用者可見變化
+
+- **登出後不再卡在登入頁閃動（#1540）**
+  使用者：登出或登入失效後，登入頁會正常出現，iOS App 裡也是。
+  技術：proxy 導回登入頁時帶上 Supabase 的 cookie 指令，session 被明確拒絕時清掉登入 cookie；登入頁自動導向加 15 秒防迴圈。
+
+- **品牌頁文案換成「記」「查看」的說法（#1528）**
+  使用者：首頁、登入頁、情境頁與搜尋摘要的 4 語文案改用「記」「查看」「家計簿」等說法，例如問句改成「怎麼一起記？」。
+  技術：`landing`／`signIn`／`useCase`／`seo`／`migrate` 四語約 140 句，情境頁 `contentUpdatedAt` 與 hash snapshot 一併更新；en／ja 譯文待確認。
+
+- **情境、搬遷、登入頁改成同一個暖燈世界（#1524）**
+  使用者：卡片網格換成細線列表與暖光點，標題後有燈光或光帶，登入頁的開發日誌先顯示最新 5 篇。
+  技術：樣式以品牌 layout 的 inline `<style>`（`brand-inner.ts`）送出，不動 `globals.css`，各頁 LCP ≤ 2.48 s。
+
+- **品牌頁換行不再把詞拆開（#1522）**
+  使用者：大標、小標與內文不再在詞中間換行或只剩一兩字，頁尾語言切換在窄螢幕不再直排。
+  技術：`lib/i18n/phrase.ts` 在詞組邊界插 `<wbr>`，zh／ja 換行規則進 `globals.css`（約 230 bytes，貼著 LCP 門檻）。
+
+- **搬遷比較表整張翻成 4 語（#1538）**
+  使用者：英文、日文、简中的搬遷頁比較表不再出現中文列名與判定字。
+  技術：列名與判定字移進 `migrate.comparisonText`，`ComparisonText` 不再接受字串；新測試逐來源×語系擋漏譯。
+
+- **品牌頁的連結夠大、能跳到內文、能回上層（#1523）**
+  使用者：頁尾與語言切換放大到 44px，第一下 Tab 是「跳到主要內容」，登入頁與詳情頁都能回首頁或上一層。
+  技術：skip link 與 `#main` 放在品牌 layout；搬遷頁 BreadcrumbList 補上 `/migrate` 中間層。
+
+- **首頁的咖啡按鈕捲過首屏才出現（#1525）**
+  使用者：按鈕改成靠左的小圖示，不再壓住內容；沒捲動的訪客不會載入它。
+  技術：`KofiWidget` 新增 `revealAfterId`，以 IntersectionObserver 延後載入 Ko-fi script；iOS 殼內仍不載入。
+
+- **首頁主按鈕一開始就能點（#1521）**
+  使用者：主按鈕不再先是一條空白的深色按鈕，關掉 JS 也能登入。
+  技術：`LandingCtaLink` 拿掉 `inert` 與 pending 佔位，載入前先渲染登入連結。
+
+- **登入頁的分頁標題與搜尋摘要不再用「開始」（#1526）**
+  使用者：改成說明登入後會進到你們共用的帳本；4 語同步。
+
+- **搬遷比較表每格只剩一個符號（#1519）**
+  使用者：不再出現「✓ ✓ 支援」這種雙符號，每格只有一個 ✓／△／✕。
+  技術：符號只由 `MigrateComparison` 依 `tone` 負責；新測試擋重複符號。
+
+- **公開頁載入更快（#1520）**
+  使用者：首頁、登入頁、情境頁與搬遷頁在手機上最大內容出現時間約快 0.4–0.8 秒。
+  技術：品牌頁的 Sentry、posthog-js、Supabase 延到 load 之後閒置時（或第一次互動）才載入；這段空窗內的錯誤不會被記到。
+
+- **相對日期在 iOS App 不再造成水合錯誤（#1515）**
+  使用者：「N 天前」在所有裝置上一致顯示為「12 天前」。
+  技術：`formatDateRelative`／`formatPickerSubtitle` 正規化 `Intl.RelativeTimeFormat` 的空白，消除 Node 與 WebKit ICU 的差異。
+
+- **設定頁的咖啡改成「應用」最後一列（#1516）**
+  使用者：右下角的浮動按鈕拿掉，改成一列「請喝杯咖啡」；iOS App 內不顯示。
+  技術：新增 `SupportRow`，掛載後依 `Capacitor.getPlatform()` 決定顯示；設定頁不再載入 Ko-fi script。
+
+- **iOS 文字大小跟著系統設定（#1490）**
+  使用者：調大系統文字後，記錄、新增、回顧等頁面的內文會跟著放大（上限 2 倍），預設下的小字從 10／12 號提高到 12／14 號。
+  技術：`--text-scale` 只乘 `text-xs`～`text-xl`／`text-mini`，標題與金額不放大。
+
+- **用 iOS 捷徑打開「記一筆」，金額與分類先填好（#1488）**
+  使用者：捷徑打開 Futari 時帶入金額、分類與描述，按儲存才會記下；設定方式見 `docs/shortcuts/linepay-quick-add.md`。
+  技術：`lib/quickAdd.ts` 驗證 App scheme 與 `/dashboard#add=…`，數值只在記憶體交給 AddSheet，不送伺服器、不進分析。
+
+- **分類標籤不再出現空白（#1534）**
+  使用者：異常分類的紀錄改顯示為「其他」。
+  技術：類別查表改用 `Object.hasOwn`，含收入類別、CSV 匯入同義詞、匯出標籤與首頁收入摘要；DB CHECK 另開 #1541。
+
+### 技術變更
+
+- **正式站執行期改用權限受限的資料庫角色（#1467）**
+  使用者：無可見變化。
+  技術：Vercel Production 的 `DATABASE_URL` 改用 `futari_app`（只有 public 的 DML，非超級使用者）；migration 仍走 `DATABASE_URL_DIRECT`，回退是把 env 換回去。
+
+- **邀請表移除明文 token 欄位（#1288）**
+  使用者：無可見變化；資料庫只留下 token 的雜湊。
+  技術：`0078` 確認每列都有 `token_hash` 後設 NOT NULL、刪除 `GroupInvites.token`；回退下限為 v1.6.6。
+
+- **直接開啟的登入後頁面與邀請連結不能再被其他網站嵌入（#1535）**
+  使用者：無可見變化。
+  技術：next.config `headers()` 對登入後路徑、`/invite/*`、`/api/*` 加 `frame-ancestors 'none'` 與 `X-Frame-Options: DENY`。
+
+### Security
+
+- **離開時留下的愛物副本，只給當時在帳本裡的人看（#1484）**
+  使用者：之後才加入或更早離開的夥伴，看不到舊副本裡的愛物名稱與油耗紀錄；prod 沒有任何副本，沒有實際曝露。
+  技術：伺服器端讀取共用 `frozenCopyVisibleClause`；`0079` 收緊 Assets 的 RLS（FuelLogs 一併套用）。
+
+- **登入後直接讀資料庫，範圍收到自己在場的章節（#1518）**
+  使用者：App 畫面沒有變化；之後才加入的夥伴直接呼叫資料庫 API 時，拿不到加入前章節的紀錄。修補前這在少數帳本上可能發生，沒有存取紀錄可查。
+  技術：`0080` 以 `viewer_in_chapter` 讓四張交易表的 RLS 依章節成員判斷，收回 anon 全部與 authenticated 在 15 張表的權限；回退見 `policies.down`。
+
 ## [1.6.6] - 2026-10-03
 
 主題：**送審前先把殼看牢**——iOS 殼加上原生崩潰回報與上傳前的啟動檢查，帳本之間的資料界線再收緊一層。
@@ -1495,7 +1589,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.6...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.7...HEAD
+[1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
 [1.6.4]: https://github.com/redtear1115/oikos/compare/v1.6.3...v1.6.4

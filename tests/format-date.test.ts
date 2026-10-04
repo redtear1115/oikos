@@ -96,3 +96,46 @@ describe('formatPickerSubtitle — date picker subtitle', () => {
     expect(formatPickerSubtitle('2026-05-13', 'en', '2026-05-14')).toBe('Wed')
   })
 })
+
+describe('relative day labels — pinned per locale (#1515)', () => {
+  it.each([
+    ['zh-TW', ['今天', '昨天', '3 天前', '12 天前']],
+    ['zh-CN', ['今天', '昨天', '3 天前', '12 天前']],
+    ['en',    ['today', 'yesterday', '3 days ago', '12 days ago']],
+    ['ja',    ['今日', '昨日', '3 日前', '12 日前']],
+  ])('%s: today / yesterday / N days ago', (loc, [t0, t1, t3, t12]) => {
+    expect(formatDateRelative('2026-05-14', loc, '2026-05-14')).toBe(t0)
+    expect(formatDateRelative('2026-05-13', loc, '2026-05-14')).toBe(t1)
+    expect(formatDateRelative('2026-05-11', loc, '2026-05-14')).toBe(t3)
+    expect(formatDateRelative('2026-05-02', loc, '2026-05-14')).toBe(t12)
+  })
+
+  it('future dates fall through to the short absolute date (cut-off unchanged)', () => {
+    expect(formatDateRelative('2026-05-15', 'en', '2026-05-14')).toBe('May 15')
+    expect(formatDateRelative('2026-05-15', 'zh-TW', '2026-05-14')).toBe('5月15日')
+  })
+})
+
+describe('relative day labels — engine-independent (#1515)', () => {
+  const realRTF = Intl.RelativeTimeFormat
+  const stub = (out: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(Intl as any).RelativeTimeFormat = class { format() { return out } }
+  }
+  afterAll(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(Intl as any).RelativeTimeFormat = realRTF
+  })
+
+  it.each([
+    ['zh-TW', ['12 天前', '12天前', '12\u00a0天前', '12\u202f天前'], '12 天前'],
+    ['zh-CN', ['12 天前', '12天前'], '12 天前'],
+    ['ja',    ['12 日前', '12日前'], '12 日前'],
+    ['en',    ['12 days ago', '12\u00a0days ago', '12\u202fdays ago'], '12 days ago'],
+  ])('%s: spaced / unspaced engine output → one string', (loc, variants, expected) => {
+    for (const v of variants) {
+      stub(v)
+      expect(formatDateRelative('2026-05-02', loc, '2026-05-14')).toBe(expected)
+    }
+  })
+})

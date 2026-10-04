@@ -1,16 +1,8 @@
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { UseCaseDef } from '@/lib/use-case/cases'
-
-type FeatureKey = keyof Translations['useCase']['features']
-
-const FEATURE_ICONS: Record<FeatureKey, string> = {
-  split: '⇌',
-  trip: '✈',
-  asset: '♥',
-  realtime: '⟳',
-  encrypt: '⚿',
-  history: '◎',
-}
+import { Phrase } from '../../_components/Phrase'
+import { Ember } from '../../_components/Ember'
+import { s } from '../../_components/brand-inner'
 
 export function UseCaseFeatures({
   heading,
@@ -22,47 +14,19 @@ export function UseCaseFeatures({
   features: Translations['useCase']['features']
 }) {
   return (
-    <section className="space-y-4">
-      <h2
-        className="m-0 text-xl md:text-title font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
-        {heading}
+    <section className={s.band}>
+      <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
+        <Phrase text={heading} />
       </h2>
-      <ul className="m-0 list-none p-0 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <ul className={s.rows}>
         {featureKeys.map((key) => {
           const f = features[key]
           return (
-            <li
-              key={key}
-              className="rounded-[16px] px-5 py-4"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="shrink-0 text-lg mt-0.5"
-                  aria-hidden
-                  style={{ color: 'var(--accent)', fontFamily: 'var(--font-fraunces)' }}
-                >
-                  {FEATURE_ICONS[key]}
-                </span>
-                <div>
-                  <p
-                    className="m-0 text-sm font-medium"
-                    style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
-                  >
-                    {f.title}
-                  </p>
-                  <p
-                    className="m-0 mt-1 text-sm leading-[1.65]"
-                    style={{ color: 'var(--ink-2)' }}
-                  >
-                    {f.body}
-                  </p>
-                </div>
+            <li key={key} className={s.row}>
+              <Ember />
+              <div>
+                <p className={`${s.rowTitle} text-base font-medium`}>{f.title}</p>
+                <p className={`${s.rowBody} text-sm`}>{f.body}</p>
               </div>
             </li>
           )

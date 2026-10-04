@@ -21,7 +21,10 @@ import { ShellTopStack } from './_components/ShellTopStack'
 import { TodayProvider } from './_components/TodayProvider'
 import { getTodayYMD } from '@/lib/today-server'
 import { PastChapterBar } from './_components/PastChapterBar'
+import { QuickAddProvider } from './_components/QuickAddProvider'
 import { maskAvatarUrl } from '@/lib/avatar'
+import { TextScale } from '@/components/TextScale'
+import { TEXT_SCALE_INIT_SCRIPT } from '@/lib/textScale'
 
 // CJK font note: Google serves Noto Sans TC as 105 unicode-range split files,
 // which is why this import is worth being careful with.
@@ -127,6 +130,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <TranslationsProvider value={t} locale={locale}>
       <TodayProvider todayYMD={todayYMD}>
+        {/* iOS system text size → --text-scale before first paint (#1490).
+            Must stay ahead of any content. TextScale below owns re-measure
+            and cleanup; see lib/textScale.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: TEXT_SCALE_INIT_SCRIPT }} />
+        <TextScale />
         {SUPABASE_ORIGIN && (
           <>
             <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
@@ -153,7 +161,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   )}
                   <PastChapterBar />
                 </ShellTopStack>
-                {children}
+                {/* Shortcut / `#add=` quick add (#1488): owns the shell URL
+                    listener and hands Dashboard a prefill in memory. Inside the
+                    dashboard group so it unmounts on sign-out. */}
+                <QuickAddProvider>{children}</QuickAddProvider>
               </div>
             </AvatarMenuProvider>
           </RealtimeProvider>

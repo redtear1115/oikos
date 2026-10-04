@@ -301,6 +301,12 @@ pg_cron job 要帶 `service_role` bearer token 呼叫 Edge Function 時，**toke
 
 ---
 
+## Supabase Auth：JWT 簽章金鑰與 refresh token（#1540）
+
+**JWT 簽章金鑰：先輪替、等它簽過的 access token 全部過期（~1 小時）之後才 revoke**；並在兩個 project 的 Auth 設定確認 refresh token reuse interval（唯讀查看）。失效的樣子：提早 revoke 會讓 `getUser()` 回 `bad_jwt`，`proxy.ts` 把它當「確定被拒」清掉登入 cookie——所有在那一小時內簽發 token 的使用者同時被登出，沒有任何錯誤。
+
+---
+
 ## Sign in with Apple 外部設定
 
 Apple Developer Portal + 兩個 Supabase project 都已設定完成（#903 / PR #910）。具體 ID 值與 `.p8` 私鑰不進 public repo——ID 存單機 agent memory，私鑰存密碼管理器。

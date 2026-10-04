@@ -17,6 +17,8 @@ import { LandingSecondaryCta } from './LandingSecondaryCta'
 import { LandingStandaloneRedirect } from './LandingStandaloneRedirect'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
+import { Phrase } from '../_components/Phrase'
+import { phraseHtml } from '@/lib/i18n/phrase'
 
 type LandingStrings = Translations['landing']
 
@@ -66,6 +68,7 @@ type Props = {
 export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
+      id="main"
       className="relative min-h-dvh overflow-hidden"
       style={{
         background: 'var(--bg-committed)',
@@ -113,7 +116,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
           signInHref={signInHref}
           dashboardHref={dashboardHref}
           ctaLocation="desktop_header"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
+          className="fc-edge hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
           style={{
             background: 'var(--ink)',
             color: 'var(--on-fill)',
@@ -128,7 +131,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
       </header>
 
       {/* HERO — single column on mobile, two columns on md+ */}
-      <section className="relative z-10 px-6 md:px-16 pt-10 md:pt-12 pb-12 md:pb-20 max-w-md md:max-w-none mx-auto">
+      <section id="landing-hero" className="relative z-10 px-6 md:px-16 pt-10 md:pt-12 pb-12 md:pb-20 max-w-md md:max-w-none mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:gap-10 md:max-w-[1280px] md:mx-auto">
           {/* Copy block */}
           <div className="text-center md:text-left md:w-[520px] md:shrink-0">
@@ -177,21 +180,21 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                   even though per-character it's smaller; lh 1.15 keeps
                   the block tight, letter-spacing -1px tightens CJK rhythm. */}
               <span
-                className="md:hidden block text-display-tagline"
+                className="ph md:hidden block text-display-tagline"
                 style={{
                   fontWeight: 400,
                   lineHeight: 1.15,
                   letterSpacing: '-1px',
                 }}
-                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+                dangerouslySetInnerHTML={{ __html: phraseHtml(t.taglineHtml) }}
               />
               {/* desktop: tagline as the giant headline */}
               <span
-                className="hidden md:inline text-display-tagline-lg"
+                className="ph hidden md:inline text-display-tagline-lg"
                 style={{
                   letterSpacing: '-3.5px',
                 }}
-                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+                dangerouslySetInnerHTML={{ __html: phraseHtml(t.taglineHtml) }}
               />
             </h1>
 
@@ -211,7 +214,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                 signInHref={signInHref}
                 dashboardHref={dashboardHref}
                 ctaLocation="hero"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
+                className="fc-edge flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
                 style={{
                   background: 'var(--ink)',
                   color: 'var(--on-fill)',
@@ -309,7 +312,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                   letterSpacing: '-0.5px',
                 }}
               >
-                {t.featuresTitle}
+                <Phrase text={t.featuresTitle} />
               </h2>
             </div>
             <p
@@ -322,7 +325,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
           {/* Editorial column: hanging Fraunces numeral + glyph-accented title
               + body. No card chrome; rhythm comes from hairline dividers and
               vertical spacing. 2 columns on desktop, single column on mobile. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-y-0 md:gap-x-12 lg:gap-x-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-x-12 lg:gap-x-20">
             <FeatureEntry
               kicker="01"
               glyphColor="var(--accent)"
@@ -379,7 +382,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
         }}
       >
         <div
-          className="flex items-center gap-2 md:gap-2 text-center md:text-left"
+          className="flex items-center gap-2 text-center md:text-left"
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
@@ -389,19 +392,19 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
           <div
-            className="flex items-center gap-3 text-xs"
+            className="flex flex-wrap items-center justify-center gap-3 text-xs"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
-            <Link href={migrateHrefs.hub} className="underline">{t.migrateSection.seeAll}</Link>
+            <Link href={migrateHrefs.hub} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{t.migrateSection.seeAll}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+            <Link href={legalLinks.termsHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.termsLabel}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
-            <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+            <Link href={legalLinks.privacyHref} className="inline-flex items-center min-h-11 underline whitespace-nowrap">{legalLinks.privacyLabel}</Link>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {languageSwitcher}
             <span
-              className="text-xs"
+              className="text-xs whitespace-nowrap"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               © 2026 · MADE IN TAIWAN
@@ -470,7 +473,7 @@ function MigrateLinksSection({
                 letterSpacing: '-0.3px',
               }}
             >
-              {t.migrateSection.title}
+              <Phrase text={t.migrateSection.title} />
             </h2>
           </div>
           <p
@@ -515,7 +518,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -589,7 +592,7 @@ function UseCaseLinksSection({
                 letterSpacing: '-0.3px',
               }}
             >
-              {t.useCaseSection.title}
+              <Phrase text={t.useCaseSection.title} />
             </h2>
           </div>
           <p
@@ -646,7 +649,7 @@ function UseCaseLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={useCaseHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',

@@ -46,7 +46,7 @@ export function CardCategory({
               {category?.mono ?? '·'}
             </div>
             <div className="flex-1">
-              <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-sm" style={{ color: 'var(--ink-3)' }}>
                 {localizedCategory}
               </div>
               <div className="text-2xl font-medium" style={{ color: 'var(--ink)' }}>

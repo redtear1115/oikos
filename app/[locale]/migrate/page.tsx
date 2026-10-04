@@ -5,9 +5,13 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
+import { BrandBreadcrumb } from '../_components/BrandBreadcrumb'
 import { MigrateHero } from './_components/MigrateSteps'
 import { MigrateSourceCard } from './_components/MigrateSourceCard'
 import { MigrateTrustBlock, MigrateFooter } from './_components/MigrateTrustFooter'
+import { Phrase } from '../_components/Phrase'
+import { s } from '../_components/brand-inner'
+import { LightRibbon } from '../_components/LightRibbon'
 
 type Params = Promise<{ locale: string }>
 
@@ -78,21 +82,28 @@ export default async function MigrateHubPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="space-y-10 md:space-y-14">
+    <div className={s.flow}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
       />
-      <MigrateHero kicker={hub.heroKicker} title={hub.heroTitle} subtitle={hub.heroSubtitle} />
+      <div className={s.hero}>
+        <BrandBreadcrumb
+          label={dictionaries[locale].brand.breadcrumbLabel}
+          crumbs={[
+            { label: 'Futari', href: localizedHref('/', locale) },
+            { label: hub.breadcrumbLabel },
+          ]}
+        />
+        <MigrateHero kicker={hub.heroKicker} title={hub.heroTitle} subtitle={hub.heroSubtitle} />
+        <LightRibbon />
+      </div>
 
-      <section className="space-y-5">
-        <h2
-          className="m-0 text-xl md:text-title font-medium"
-          style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-        >
-          {hub.heading}
+      <section className={s.band}>
+        <h2 className={`${s.h2} m-0 text-xl md:text-title font-medium`}>
+          <Phrase text={hub.heading} />
         </h2>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 m-0 p-0 list-none">
+        <ul className={s.rows}>
           {ALL_SOURCES.map((source) => {
             const item = sources.items[source]
             return (

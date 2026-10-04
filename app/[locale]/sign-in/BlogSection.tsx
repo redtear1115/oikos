@@ -1,15 +1,28 @@
+import Image from 'next/image'
 import type { Locale } from '@/lib/i18n/locales-meta'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { BlogPost } from '@/lib/blog-feed'
 import { withUtm } from '@/lib/utm'
+import { Ember } from '../_components/Ember'
+import { AfterPaint } from '../_components/AfterPaint'
+import { s } from '../_components/brand-inner'
+
+const VISIBLE = 5
 
 /**
  * Dev-log section pinned below the 3-column sign-in grid (issue #460).
  *
  * Build-time render — `posts` is fetched in the parent Server Component
- * with `next.revalidate`, so this is plain static HTML with no client JS.
- * Each card is an external `<a>` to southern-light.dev; we do NOT mirror
+ * with `next.revalidate`, so this is static HTML; the only client JS is the
+ * tiny `AfterPaint` island around the illustration.
+ * Each row is an external `<a>` to southern-light.dev; we do NOT mirror
  * the article body into Futari — this is an index + traffic referral only.
+ *
+ * #1524: a hairline list, latest five visible, the rest behind a native
+ * <details> (no JS; every entry stays in the DOM). Above it, a crop of the
+ * hero illustration is the page's lamp structure, mounted after first paint
+ * (`AfterPaint`) because plain lazy loading still fetched it in time to cost
+ * the page its LCP gate.
  */
 export function BlogSection({
   posts,
@@ -28,38 +41,59 @@ export function BlogSection({
     day: 'numeric',
   })
 
+  const row = (post: BlogPost) => (
+    <li key={post.link}>
+      <a
+        href={withUtm(post.link, { source: 'futari_landing', medium: 'blog_section' })}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${s.link} ${s.stack} focus-visible:oik-focus-ring`}
+      >
+        <Ember />
+        <div>
+          {post.pubDate && (
+            <p className={`${s.devDate} m-0 text-xs`}>{dateFmt.format(new Date(post.pubDate))}</p>
+          )}
+          <p className={`${s.rowTitle} text-sm mt-1`}>{post.title}</p>
+        </div>
+        <span className={s.arrow} aria-hidden="true">
+          →
+        </span>
+      </a>
+    </li>
+  )
+
   return (
     <section
       className="mx-auto w-full max-w-7xl px-6 pb-16 lg:px-12"
       aria-labelledby="blog-section-heading"
     >
-      <h2
-        id="blog-section-heading"
-        className="mb-6 text-sm text-ink-2 tracking-[2px] uppercase"
-      >
+      <div className={s.window} aria-hidden="true">
+        {/* Mounted after the page settles, not just lazy: see AfterPaint. */}
+        <AfterPaint>
+          <Image
+            src="/illustration-hero.png"
+            alt=""
+            width={1376}
+            height={768}
+            sizes="(min-width: 1280px) 1216px, 100vw"
+            className={s.windowImg}
+          />
+        </AfterPaint>
+      </div>
+      <h2 id="blog-section-heading" className="mb-4 text-sm text-ink-2 tracking-[2px] uppercase">
         {t.signIn.blog.heading}
       </h2>
-      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {posts.map(post => (
-          <li key={post.link}>
-            <a
-              href={withUtm(post.link, { source: 'futari_landing', medium: 'blog_section' })}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block h-full rounded-lg border border-ink-3 p-4 transition-opacity hover:opacity-80 focus-visible:oik-focus-ring"
-            >
-              {post.pubDate && (
-                <div className="mb-2 text-xs text-ink-2">
-                  {dateFmt.format(new Date(post.pubDate))}
-                </div>
-              )}
-              <div className="text-sm text-ink leading-relaxed">
-                {post.title}
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <ul className={s.rows}>{posts.slice(0, VISIBLE).map(row)}</ul>
+      {posts.length > VISIBLE && (
+        <details className={s.more}>
+          <summary className="text-sm">
+            <Ember />
+            {t.signIn.blog.more}
+          </summary>
+          <ul className={s.rows}>{posts.slice(VISIBLE).map(row)}</ul>
+        </details>
+      )}
     </section>
   )
 }

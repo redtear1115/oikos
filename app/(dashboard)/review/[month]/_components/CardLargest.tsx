@@ -39,7 +39,7 @@ export function CardLargest({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }
             {snapshot.largestExpenseDescription}
           </div>
           {(localizedCategory || snapshot.largestExpensePaidByName) && (
-            <div className="mt-1 text-xs flex items-center gap-2" style={{ color: 'var(--ink-3)' }}>
+            <div className="mt-1 text-sm flex items-center flex-wrap gap-x-2" style={{ color: 'var(--ink-3)' }}>
               {localizedCategory && <span>{localizedCategory}</span>}
               {snapshot.largestExpensePaidByName && <span>· {snapshot.largestExpensePaidByName}</span>}
             </div>

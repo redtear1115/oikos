@@ -4,6 +4,7 @@ import { DangerZone, type PendingSwap } from './DangerZone'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { QuickAccessRow } from './QuickAccessRow'
 import { InstallGuideRow } from './InstallGuideRow'
+import { SupportRow } from './SupportRow'
 import { LogoutButton } from './LogoutButton'
 import { DeleteAccountButton } from './DeleteAccountButton'
 
@@ -59,12 +60,13 @@ export async function SettingsContent({
         partner={partner ? { displayName: partner.displayName, avatarUrl: partner.avatarUrl } : null}
       />
 
-      {/* 應用 — install + offline (device/app-level prefs) */}
+      {/* 應用 — install + offline + support link (device/app-level prefs) */}
       <Section title={t.settings.sectionApp}>
         <InstallGuideRow />
         <div className="mt-3">
           <OfflineBrowsingToggle />
         </div>
+        <SupportRow />
       </Section>
 
       {/* 資料 — recurring rules → past chapters → trips → import → trust info */}

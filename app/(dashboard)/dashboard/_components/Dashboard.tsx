@@ -29,6 +29,7 @@ import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from '.
 import { DashboardFilterRow } from './DashboardFilterRow'
 import { DashboardFeed, DashboardFeedSkeleton } from './DashboardFeed'
 import { unwrapAction } from '@/lib/action-errors'
+import { useQuickAdd } from '@/app/(dashboard)/_components/QuickAddProvider'
 
 // Sheets are heavy and only meaningful on user interaction (FAB tap, edit-row
 // tap, ✈ button). Split into separate chunks and skip SSR so they don't bloat
@@ -162,6 +163,21 @@ export function Dashboard({
   const setSplitFilter = useCallback((next: DashboardSplit) => dispatch({ type: 'setSplitFilter', value: next }), [dispatch])
 
   const sheetOpen = modal.kind !== 'closed'
+
+  // Quick add from an iOS Shortcut / `#add=` link (#1488). QuickAddProvider has
+  // already gated it (nothing modal open, not pinned to a past chapter) and
+  // brought us here; re-check both against this page's own state, then open
+  // 記一筆 in CREATE mode — never `initial`, so it can only ever create.
+  // Consumed once either way, so it cannot fire again on a later re-render.
+  const { pending: quickAdd, clear: clearQuickAdd } = useQuickAdd()
+  const anySheetOpen = sheetOpen || tripSheetOpen || fuelSheet.open
+  useEffect(() => {
+    if (!quickAdd) return
+    clearQuickAdd()
+    if (isPast || anySheetOpen) return
+    dispatch({ type: 'openModal', modal: { kind: 'add', prefill: quickAdd } })
+  }, [quickAdd, clearQuickAdd, isPast, anySheetOpen, dispatch])
+  const quickAddPrefill = modal.kind === 'add' ? modal.prefill : undefined
 
   // Compose L3 toggles into a TxnFilter for the feed. Both dims are
   // optional; when both are 'all' we pass null so TransactionFeed skips
@@ -432,6 +448,10 @@ export function Dashboard({
             : undefined
         }
         pendingExpenseId={modal.kind === 'edit-pending-expense' ? modal.pendingId : undefined}
+        prefilledAmount={quickAddPrefill?.amount}
+        prefilledCategory={quickAddPrefill?.category}
+        prefilledDescription={quickAddPrefill?.description}
+        skipTripAutoDetect={!!quickAddPrefill}
         onMutated={handleMutated}
         onRaceResolved={showToast}
         groupDefaultRatioA={groupDefaultRatioA}

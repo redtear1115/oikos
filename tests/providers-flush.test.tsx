@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 
 // Regression for #1014: `flushQueue()` must run even when `detectPlatform()`
 // returns null — the pre-existing `if (!platform) return` early-return would
@@ -17,10 +17,6 @@ vi.mock('posthog-js', () => ({
   default: { init: h.init, register: h.register, capture: h.capture },
 }))
 
-vi.mock('posthog-js/react', () => ({
-  PostHogProvider: ({ children }: { children: React.ReactNode }) => children,
-}))
-
 vi.mock('@/lib/platform', () => ({
   detectPlatform: vi.fn(() => null),
   isNativeApp: vi.fn(() => false),
@@ -35,6 +31,8 @@ describe('PostHogProvider flush ordering (#1014)', () => {
     // The gate is the deployment, not NODE_ENV (#1116) — see lib/deployEnv.ts.
     vi.stubEnv('NEXT_PUBLIC_DEPLOY_ENV', 'production')
     vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'test-key')
+    // Non-public route: init at boot. Public brand pages defer it (#1520).
+    window.history.pushState({}, '', '/dashboard')
   })
 
   it('still flushes the queue when detectPlatform() returns null', async () => {
@@ -46,10 +44,22 @@ describe('PostHogProvider flush ordering (#1014)', () => {
     const { PostHogProvider } = await import('@/app/providers')
     render(<PostHogProvider>{null}</PostHogProvider>)
 
-    expect(h.init).toHaveBeenCalledTimes(1)
+    // posthog-js is a dynamic import now (#1520), so init lands a tick later.
+    await waitFor(() => expect(h.init).toHaveBeenCalledTimes(1))
     // detectPlatform() is null, so register() must NOT have been called...
     expect(h.register).not.toHaveBeenCalled()
     // ...but the queued event must still have been flushed regardless.
-    expect(h.capture).toHaveBeenCalledWith('queued_before_init', undefined)
+    expect(h.capture).toHaveBeenCalledWith(
+      'queued_before_init',
+      expect.objectContaining({ $pathname: '/dashboard' }),
+    )
+  })
+
+  it('does not load posthog-js at boot on a public brand page (#1520)', async () => {
+    window.history.pushState({}, '', '/zh-TW')
+    const { PostHogProvider } = await import('@/app/providers')
+    render(<PostHogProvider>{null}</PostHogProvider>)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(h.init).not.toHaveBeenCalled()
   })
 })

@@ -221,7 +221,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={isPending}
-        className="relative h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50 before:absolute before:-inset-y-[6px] before:-inset-x-1 before:content-['']"
+        className="relative min-h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50 before:absolute before:-inset-y-[6px] before:-inset-x-1 before:content-['']"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -235,7 +235,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         {monthLabel(monthKey, locale)}
         <span
           aria-hidden
-          className="inline-block text-mini leading-none"
+          className="inline-block text-xs leading-none"
           style={{
             color: 'var(--ink-3)',
             transform: open ? 'rotate(180deg)' : 'none',
