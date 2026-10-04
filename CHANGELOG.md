@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **朋友打開出遊連結就能加入（#1558）**
+  使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰、支出與記還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
+  技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
+
 - **紀錄頁可以搜尋描述與備註（#23）**
   使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
   技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。

@@ -52,6 +52,8 @@ export type EntrySource =
   | MigrateEntrySource
   | UseCaseEntrySource
   | 'invite'
+  /** #1558: a friend who joined an outing by link, then signed in from it. */
+  | 'outing'
   | 'direct'
 
 /**
@@ -118,6 +120,7 @@ function entrySourceForMigrate(from: string): MigrateEntrySource | undefined {
 export function entrySourceFromParam(from: string | null | undefined): EntrySource {
   if (from === 'landing') return 'landing'
   if (from === 'invite') return 'invite'
+  if (from === 'outing') return 'outing'
   const value = from ?? ''
   return entrySourceForMigrate(value) ?? entrySourceForUseCase(value) ?? 'direct'
 }

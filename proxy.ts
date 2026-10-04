@@ -11,6 +11,7 @@ import {
   parseLocaleFromPath,
   isPublicLocalizedPath,
   isLocalePrefixedPath,
+  isOutingPublicPath,
   localizedHref,
 } from './lib/i18n/path'
 import { isKnownProtectedPath } from './lib/auth/protectedPaths'
@@ -155,7 +156,13 @@ export async function proxy(request: NextRequest) {
     || pathname.startsWith('/invite/')
     || pathname === '/offline'
 
-  if (!isPublic) {
+  if (isPublic && isOutingPublicPath(pathname)) {
+    // #1558: the outing share pages are public but read the session (a
+    // signed-in friend sees their own name). Refresh it here like a protected
+    // page would, and never redirect: a signed-out visitor is a normal visitor.
+    // Cookie writes land on supabaseResponse, which the rewrite below copies.
+    await supabase.auth.getUser()
+  } else if (!isPublic) {
     const { data: { user }, error } = await supabase.auth.getUser()
 
     if (!user) {
