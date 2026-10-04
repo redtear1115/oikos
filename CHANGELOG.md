@@ -47,6 +47,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
   技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。
 
+- **隱私權政策寫明加密備份存放在 Google Drive（#1549）**
+  使用者：隱私權政策 4 語更新：每日加密備份存放在 Google Drive，最多保留約 60 天，第三方服務加列 Google Drive。
+  技術：`privacyPage` 的儲存、保留、第三方段落與 `lastUpdated`（2026-10-04）；en／ja 譯文待確認。
+
+### 技術變更
+
+- **正式站資料庫每天自動備份（#1549）**
+  使用者：畫面沒有變化；資料庫出事時有最近 30 天內的備份可以還原。
+  技術：`0081` 建唯讀角色 `futari_backup`；`scripts/ops/backup-prod.sh` 以同一快照 `pg_dump` 串流 age 加密後 rclone 上傳 Drive，附還原演練腳本；ops-runbook 新增一節。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。

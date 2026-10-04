@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  #1549 — LaunchAgent for the nightly prod backup, daily at 03:30 local time.
+  Template only: scripts/ops/install-backup.sh fills the __PLACEHOLDERS__ with
+  paths under your home directory and writes the result to
+  ~/Library/LaunchAgents/. It does not load it; loading is the owner's step
+  (ops-runbook §「Prod backup (futari_backup)」).
+
+  Umask 63 = 077: launchd creates the stdout/stderr files mode 600.
+  If the Mac is asleep at 03:30, launchd runs the job at the next wake.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.futari.backup</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__RUN_SCRIPT__</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>Umask</key>
+  <integer>63</integer>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__LAUNCHD_LOG__</string>
+  <key>StandardErrorPath</key>
+  <string>__LAUNCHD_LOG__</string>
+</dict>
+</plist>
