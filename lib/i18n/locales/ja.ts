@@ -752,6 +752,10 @@ export const ja: Translations = {
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
+    searchOpen: '記録を検索',
+    searchPlaceholder: '内容とメモを検索',
+    searchCancel: 'キャンセル',
+    searchClear: 'クリア',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     monthPicker: {
       triggerLabel: '月を選ぶ',

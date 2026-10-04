@@ -66,6 +66,7 @@ export function resolveTxnFilter(
     status: filter.status === 'all' ? null : filter.status,
     excludeSettlements: hidesSettlements(filter),
     cutAll: cutsExpense(filter),
+    text: filter.text,
   }
 }
 
@@ -82,5 +83,6 @@ export function resolveIncomeFilter(
     amountMin: filter.amountMin,
     amountMax: filter.amountMax,
     cutAll: cutsIncome(filter),
+    text: filter.text,
   }
 }

@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **紀錄頁可以搜尋描述與備註（#23）**
+  使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
+  技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。
 
 ## [1.6.7] - 2026-10-04
 

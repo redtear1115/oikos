@@ -751,6 +751,10 @@ export const en: Translations = {
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
     recurringShortcut: 'Recurring',
+    searchOpen: 'Search records',
+    searchPlaceholder: 'Search descriptions and notes',
+    searchCancel: 'Cancel',
+    searchClear: 'Clear',
     offlineMoreNeedsNetwork: 'More records need a connection',
     monthPicker: {
       triggerLabel: 'Select month',

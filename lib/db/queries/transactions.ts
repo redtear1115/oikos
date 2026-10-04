@@ -23,6 +23,7 @@ import {
   frozenCopyVisibleClause,
   splitTypeClause,
   statusClause,
+  textSearchClause,
   burdenClause,
   viewerChaptersClause,
   type BurdenResolution,
@@ -108,6 +109,8 @@ export interface ResolvedTxnFilter {
    * mirrors how the income query handles `cutAll` for expense-only dims.
    */
   cutAll?: boolean
+  /** Free-text search (#23); already normalized. Absent = no text predicate. */
+  text?: string
 }
 
 export interface TxnRow {
@@ -205,6 +208,7 @@ function buildExpenseFeedFilters(
   const txAssetIds = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
   const txAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
   const txStatus = andClause(filter ? statusClause(filter.status) : undefined)
+  const txText = andClause(textSearchClause(['description', 'notes'], filter?.text))
 
   // Drill-down clauses (mutually exclusive with one another). Income drill is
   // handled by the caller's early short-circuit (`drill?.kind === 'income'`).
@@ -231,7 +235,7 @@ function buildExpenseFeedFilters(
   // with zero separation (`AND paid_by = $2AND created_at >= $3`, a SQL
   // syntax error), not the newline the original inline-template version of
   // this query had for free between each `${...}` line.
-  const tx = sql`${txPayer} ${txSplit} ${txBurden} ${txCategory} ${txAssetIds} ${txAmount} ${txStatus} ${txDrillCategory} ${txDrillAsset} ${txMonth} ${epoch}`
+  const tx = sql`${txPayer} ${txSplit} ${txBurden} ${txCategory} ${txAssetIds} ${txAmount} ${txStatus} ${txText} ${txDrillCategory} ${txDrillAsset} ${txMonth} ${epoch}`
 
   // Drop the settlements branch entirely when 分攤 / 分類 / 愛物 dims are active
   // OR when a drill-down is active (a category/asset drill never matches a
@@ -246,7 +250,10 @@ function buildExpenseFeedFilters(
   // amount range is meaningful for them. status='pending' already drops the
   // entire settlements branch via excludeSettlements.
   const setAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
-  const settlements = sql`${setPayer} ${setAmount} ${setMonth} ${epoch}`
+  // Settlements: only the raw note is searched, never the COALESCE(note,'還款')
+  // display text — a query for「還款」must not match every note-less settlement.
+  const setText = andClause(textSearchClause(['note'], filter?.text))
+  const settlements = sql`${setPayer} ${setAmount} ${setText} ${setMonth} ${epoch}`
 
   return { tx, settlements }
 }
@@ -469,6 +476,7 @@ function buildAllFeedFilters(
   const txFilterAssets = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
   const txFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
   const txFilterStatus = andClause(filter ? statusClause(filter.status) : undefined)
+  const txFilterText = andClause(textSearchClause(['description', 'notes'], filter?.text))
   // Income-only filter active → no cash rows.
   const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
   // Burden filter is cash-only; if active, drop income.
@@ -478,11 +486,14 @@ function buildAllFeedFilters(
   // Settlements carry amount but no status. status='pending' already drops the
   // branch via excludeSettlements upstream.
   const setFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
+  // Raw note only — see buildExpenseFeedFilters.
+  const setFilterText = andClause(textSearchClause(['note'], filter?.text))
 
   const incFilterRecipient = andClause(eqValueClause('recipient_id', filter?.paidBy))
   const incFilterAssets = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
   const incFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
   const incFilterIncomeCats = andClause(filter ? categoryInClause(filter.incomeCategories) : undefined)
+  const incFilterText = andClause(textSearchClause(['source'], filter?.text))
   // Expense-category active → drop income UNLESS the user has also picked
   // an income category (in which case they want both kinds, each filtered).
   const expenseOnlyCatActive =
@@ -497,13 +508,13 @@ function buildAllFeedFilters(
   // See the comment in `buildExpenseFeedFilters` above — a space between
   // every pair of fragments is required, not optional, even when the
   // fragments on both sides are non-empty `AND ...` clauses.
-  const tx = sql`${txMonth} ${txDrill} ${txFilterPayer} ${txFilterSplit} ${txFilterBurden} ${txFilterCategory} ${txFilterAssets} ${txFilterAmount} ${txFilterStatus} ${txFilterCutByIncomeOnly} ${epoch}`
+  const tx = sql`${txMonth} ${txDrill} ${txFilterPayer} ${txFilterSplit} ${txFilterBurden} ${txFilterCategory} ${txFilterAssets} ${txFilterAmount} ${txFilterStatus} ${txFilterText} ${txFilterCutByIncomeOnly} ${epoch}`
 
   const settlements = filter?.excludeSettlements
     ? null
-    : sql`${setMonth} ${setDrill} ${setFilterPayer} ${setFilterAmount} ${epoch}`
+    : sql`${setMonth} ${setDrill} ${setFilterPayer} ${setFilterAmount} ${setFilterText} ${epoch}`
 
-  const income = sql`${incMonth} ${incDrill} ${incFilterRecipient} ${incFilterAssets} ${incFilterAmount} ${incFilterIncomeCats} ${incFilterCategoryCut} ${incFilterSplitCut} ${incFilterBurdenCut} ${incFilterStatusCut} ${epoch}`
+  const income = sql`${incMonth} ${incDrill} ${incFilterRecipient} ${incFilterAssets} ${incFilterAmount} ${incFilterIncomeCats} ${incFilterText} ${incFilterCategoryCut} ${incFilterSplitCut} ${incFilterBurdenCut} ${incFilterStatusCut} ${epoch}`
 
   return { tx, settlements, income }
 }
@@ -767,6 +778,7 @@ function statsScopeClauses(
     ${andClause(filter ? assetIdsClause(`${prefix}asset_id`, filter.assetIds) : undefined)}
     ${andClause(filter ? amountClause(filter.amountMin, filter.amountMax, `${prefix}amount`) : undefined)}
     ${andClause(filter ? statusClause(filter.status, `${prefix}status`) : undefined)}
+    ${andClause(textSearchClause([`${prefix}description`, `${prefix}notes`], filter?.text))}
   `
 }
 
@@ -919,6 +931,7 @@ export async function dailyTrendByMonth(
     ${andClause(incomeFilter ? categoryInClause(incomeFilter.incomeCategories) : undefined)}
     ${andClause(incomeFilter ? assetIdsClause('asset_id', incomeFilter.assetIds) : undefined)}
     ${andClause(incomeFilter ? amountClause(incomeFilter.amountMin, incomeFilter.amountMax) : undefined)}
+    ${andClause(textSearchClause(['source'], incomeFilter?.text))}
   `
   const epoch = andClause(epochClause('created_at', epochWindow))
 

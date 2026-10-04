@@ -744,6 +744,10 @@ export const zhCN: Translations = {
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
+    searchOpen: '搜索记录',
+    searchPlaceholder: '搜索描述、备注',
+    searchCancel: '取消',
+    searchClear: '清除',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
     monthPicker: {
       triggerLabel: '选择月份',
