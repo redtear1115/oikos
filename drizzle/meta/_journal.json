@@ -561,6 +561,13 @@
       "when": 1783700000000,
       "tag": "0080_chapter_scoped_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1783800000000,
+      "tag": "0081_futari_backup_role",
+      "breakpoints": true
     }
   ]
 }
