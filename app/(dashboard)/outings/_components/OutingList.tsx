@@ -10,7 +10,16 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { OutingListRow } from '@/lib/db/queries/outing'
 import { OutingSheet } from './OutingSheet'
 
-export function OutingList({ outings }: { outings: OutingListRow[] }) {
+/** 我參與的出遊 row (#1558): another ledger's outing; opens the public page. */
+export interface ParticipatingOuting {
+  id: string
+  name: string
+  ended: boolean
+  /** `/<locale>/outing/r/<outingId>` */
+  href: string
+}
+
+export function OutingList({ outings, participating = [] }: { outings: OutingListRow[]; participating?: ParticipatingOuting[] }) {
   const router = useRouter()
   const t = useTranslations()
   const tl = t.outingList
@@ -44,6 +53,20 @@ export function OutingList({ outings }: { outings: OutingListRow[] }) {
             </section>
           )}
         </div>
+      )}
+
+      {participating.length > 0 && (
+        <section className="px-4 pt-6 flex flex-col gap-3" aria-labelledby="outings-participating">
+          <div id="outings-participating">
+            <SectionLabel label={tl.participating.title} dotColor="var(--ink-3)" />
+          </div>
+          <p className="text-xs px-1 text-ink-3">{tl.participating.hint}</p>
+          <div className="rounded-card overflow-hidden border border-hairline bg-surface">
+            {participating.map((o, i) => (
+              <ParticipatingRow key={o.id} outing={o} isLast={i === participating.length - 1} />
+            ))}
+          </div>
+        </section>
       )}
 
       <BottomNav
@@ -120,6 +143,27 @@ function OutingRow({ outing, variant, isLast }: { outing: OutingListRow; variant
         <path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </Link>
+  )
+}
+
+function ParticipatingRow({ outing, isLast }: { outing: ParticipatingOuting; isLast: boolean }) {
+  const t = useTranslations()
+  const tl = t.outingList
+  return (
+    // A plain <a>: the target is a public locale route outside the dashboard
+    // shell, so a client-side transition would buy nothing.
+    <a
+      href={outing.href}
+      className={`flex items-center justify-between gap-3 px-3.5 py-3.5 no-underline text-ink ${isLast ? '' : 'border-b border-hairline'}`}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium truncate">{outing.name}</div>
+        {outing.ended && <div className="text-xs mt-0.5 text-ink-3">{tl.endedTag}</div>}
+      </div>
+      <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true" className="text-ink-3">
+        <path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </a>
   )
 }
 

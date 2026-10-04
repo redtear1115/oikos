@@ -7,27 +7,25 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/outings/o1',
 }))
 // Stub the action sheets — they import server actions out of scope here.
-vi.mock('@/app/(dashboard)/outings/[id]/_components/AddExpenseSheet', () => ({ AddExpenseSheet: () => null }))
+vi.mock('@/app/(dashboard)/outings/_components/ExpenseSheet', () => ({ ExpenseSheet: () => null }))
+vi.mock('@/actions/outing', () => ({}))
 vi.mock('@/app/(dashboard)/outings/[id]/_components/AddParticipantSheet', () => ({ AddParticipantSheet: () => null }))
 vi.mock('@/app/(dashboard)/outings/[id]/_components/SettleSheet', () => ({ SettleSheet: () => null }))
 vi.mock('@/app/(dashboard)/outings/[id]/_components/EndOutingSheet', () => ({ EndOutingSheet: () => null }))
 
 import { OutingDetailClient } from '@/app/(dashboard)/outings/[id]/_components/OutingDetailClient'
-import type { OutingView } from '@/lib/outing/view'
 
 const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
 
-const participants = [
-  { id: 'A', displayName: '我' },
-  { id: 'B', displayName: '伴' },
-  { id: 'F', displayName: '阿傑' },
-]
+const p = (id: string, displayName: string) =>
+  ({ id, displayName, active: true, claim: 'bound' as const, releasable: false, isMember: true })
+const participants = [p('A', '我'), p('B', '伴'), { ...p('F', '阿傑'), claim: 'unclaimed' as const, isMember: false }]
 
-const view: OutingView = {
+const view = {
   participants: [
-    { id: 'A', displayName: '我', profileId: 'pa', net: 600 },
-    { id: 'B', displayName: '伴', profileId: 'pb', net: -300 },
-    { id: 'F', displayName: '阿傑', profileId: null, net: -300 },
+    { id: 'A', displayName: '我', net: 600 },
+    { id: 'B', displayName: '伴', net: -300 },
+    { id: 'F', displayName: '阿傑', net: -300 },
   ],
   transfers: [
     { from: 'B', to: 'A', amount: 300 },

@@ -78,7 +78,10 @@ export interface OutingDetailRow {
   // whole-row select would carry those into the page's server code, one prop
   // away from the client.
   outing: Pick<typeof outings.$inferSelect, 'id' | 'groupId' | 'epochId' | 'name' | 'currency' | 'status'>
-  participants: Pick<typeof outingParticipants.$inferSelect, 'id' | 'displayName' | 'profileId' | 'deactivatedAt'>[]
+  participants: (Pick<typeof outingParticipants.$inferSelect, 'id' | 'displayName' | 'profileId' | 'deactivatedAt' | 'claimedAt'> & {
+    /** Whether a claim token is set — the hash itself never leaves the query. */
+    hasClaimToken: boolean
+  })[]
   expenses: OutingExpenseWithShares[]
   settlements: (typeof outingSettlements.$inferSelect)[]
 }
@@ -104,6 +107,8 @@ export async function getOutingDetail(outingId: string): Promise<OutingDetailRow
       displayName: outingParticipants.displayName,
       profileId: outingParticipants.profileId,
       deactivatedAt: outingParticipants.deactivatedAt,
+      claimedAt: outingParticipants.claimedAt,
+      hasClaimToken: sql<boolean>`${outingParticipants.claimTokenHash} is not null`,
     })
     .from(outingParticipants)
     .where(eq(outingParticipants.outingId, outingId))
