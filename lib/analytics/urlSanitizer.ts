@@ -9,6 +9,10 @@
  * - **Invite tokens** live in the path (`/invite/<token>`) and, after a
  *   sign-in bounce, inside `?next=/invite/<token>`. Anyone holding one can
  *   join the household.
+ * - **Outing share tokens** (#1558) live in the path (`/<locale>/outing/<token>`)
+ *   and, after a sign-in bounce, inside `?next=/<locale>/outing/<token>`.
+ *   Anyone holding one can join the outing. Only the singular `outing`
+ *   segment is a token route; the signed-in `/outings/<uuid>` is not.
  * - **Ledger filters** live in the query (`/records?fAmtMin=…&fQ=…`) — amounts,
  *   search text, category picks.
  *
@@ -22,7 +26,7 @@
  *   client, node and edge code.
  * - **Never throws.** On any internal failure it returns {@link REDACTED_URL} —
  *   never the input.
- * - Path: the segment after `invite` becomes `:token`. Everything else in the
+ * - Path: the segment after `invite` or `outing` becomes `:token`. Everything else in the
  *   path is kept, so events still group by route.
  * - `#hash` is dropped.
  * - Query: keys are kept; values survive only for the keys in
@@ -73,8 +77,15 @@ export const ANALYTICS_URL_PARAM_ALLOWLIST = [
 /** Replacement for a query value that is not on the allowlist. */
 export const MASKED_VALUE = '<masked>'
 
-/** Replacement for the invite path segment. */
+/** Replacement for the path segment after a {@link TOKEN_PATH_SEGMENTS} entry. */
 export const INVITE_TOKEN_PLACEHOLDER = ':token'
+
+/**
+ * Path segments whose follower is a bearer secret: `/invite/<token>` and the
+ * outing share link `/outing/<token>` (#1558). Exact, case-insensitive match,
+ * so `/outings/<uuid>` (the signed-in outing page) is left alone.
+ */
+const TOKEN_PATH_SEGMENTS: ReadonlySet<string> = new Set(['invite', 'outing'])
 
 /** What the sanitizer returns when it cannot safely say anything more. */
 export const REDACTED_URL = '<redacted-url>'
@@ -146,10 +157,10 @@ function sanitize(raw: string, dropUnknown: boolean): string {
 function sanitizePath(pathname: string): string {
   const segments = pathname.split('/')
   // Decided on the original segments, so `/invite/invite/<token>` masks both
-  // followers instead of skipping past the second `invite`.
+  // followers instead of skipping past the second `invite` (same for `outing`).
   const out = [...segments]
   for (let i = 0; i < segments.length - 1; i++) {
-    if (decodeLoose(segments[i]).toLowerCase() === 'invite' && segments[i + 1] !== '') {
+    if (TOKEN_PATH_SEGMENTS.has(decodeLoose(segments[i]).toLowerCase()) && segments[i + 1] !== '') {
       out[i + 1] = INVITE_TOKEN_PLACEHOLDER
     }
   }

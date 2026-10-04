@@ -641,3 +641,65 @@ function sourceFiles(): string[] {
   for (const root of ['app', 'lib', 'components', 'actions']) walk(join(REPO_ROOT, root))
   return out
 }
+
+describe('#1558 — PostHog events must not carry the outing share token', () => {
+  const UUID = '2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10'
+
+  afterEach(() => {
+    window.history.pushState({}, '', '/')
+    if (ORIGINAL_REFERRER) Object.defineProperty(document, 'referrer', ORIGINAL_REFERRER)
+    else delete (document as unknown as Record<string, unknown>).referrer
+  })
+
+  /** A friend lands on the share link from the sign-in bounce, then opens the signed-in outing page. */
+  function browse(ph: PostHog) {
+    window.history.pushState({}, '', `/en/outing/${SECRET_TOKEN}`)
+    ph.capture('$pageview')
+    window.history.pushState({}, '', `/outings/${UUID}`)
+    ph.capture('$pageview')
+  }
+
+  function arrive() {
+    Object.defineProperty(document, 'referrer', {
+      configurable: true,
+      get: () => `https://futari.example/sign-in?next=%2Fen%2Fouting%2F${SECRET_TOKEN}`,
+    })
+    window.history.pushState({}, '', `/sign-in?next=/en/outing/${SECRET_TOKEN}`)
+  }
+
+  it('leaks the token without the shipped hook (control)', () => {
+    arrive()
+    const bare = bootPostHog({ autocapture: false })
+    browse(bare.instance)
+    expect(bare.count()).toBe(2)
+    expect(bare.payload()).toContain(SECRET_TOKEN)
+  })
+
+  it('masks it with the shipped options, keeping the route and the plural /outings path', () => {
+    arrive()
+    const shipped = bootPostHog({ ...POSTHOG_PRIVACY_OPTIONS })
+    browse(shipped.instance)
+    expect(shipped.count()).toBe(2)
+    const payload = shipped.payload()
+    expect(payload).not.toContain(SECRET_TOKEN)
+    const decoded = decodeURIComponent(payload)
+    expect(decoded).toContain('/en/outing/:token')
+    expect(decoded).toContain('"$referrer":"https://futari.example/sign-in?next=<masked>"')
+    expect(decoded).toContain('"$prev_pageview_pathname":"/en/outing/:token"')
+    expect(decoded).toContain(`/outings/${UUID}`)
+  })
+
+  it('scrubs $set_once initial props carrying the share link', () => {
+    const out = scrubAnalyticsUrls({
+      uuid: 'u1',
+      event: '$pageview',
+      properties: { $current_url: `https://a.example/ja/outing/${SECRET_TOKEN}` },
+      $set_once: {
+        $initial_pathname: `/ja/outing/${SECRET_TOKEN}`,
+        $initial_referrer: `https://a.example/sign-in?next=/ja/outing/${SECRET_TOKEN}`,
+      },
+    } as CaptureResult)
+    expect(JSON.stringify(out)).not.toContain(SECRET_TOKEN)
+    expect(out?.$set_once?.$initial_pathname).toBe('/ja/outing/:token')
+  })
+})

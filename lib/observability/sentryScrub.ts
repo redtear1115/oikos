@@ -22,11 +22,12 @@
  * - logs (`enableLogs` + `consoleLoggingIntegration`): whatever text was passed
  *   to `console.error` / `console.warn`.
  *
- * Invite tokens (`/invite/<token>`, `?next=/invite/<token>`) and ledger filter
- * values (`/records?fAmtMin=…`) must not leave through any of them. URL rules
- * are the shared ones from `lib/analytics/urlSanitizer.ts`: path and query
- * keys stay (so issues still group and read well), invite segment becomes
- * `:token`, non-allowlisted query values become `<masked>`.
+ * Invite tokens (`/invite/<token>`, `?next=/invite/<token>`), outing share
+ * tokens (`/<locale>/outing/<token>`, #1558) and ledger filter values
+ * (`/records?fAmtMin=…`) must not leave through any of them. URL rules are
+ * the shared ones from `lib/analytics/urlSanitizer.ts`: path and query keys
+ * stay (so issues still group and read well), the invite / outing segment
+ * becomes `:token`, non-allowlisted query values become `<masked>`.
  *
  * Headers, cookies and request bodies (`request.data`) are removed outright —
  * same on client, server and edge.
@@ -165,19 +166,27 @@ function isRecord(value: unknown): value is AnyRecord {
 // ---------------------------------------------------------------------------
 
 /**
- * A route pattern after `invite` (`/invite/[token]`) is not a secret; keeping
- * it verbatim stops us from renaming parameterized transaction names, which
- * would flip their `transaction_info.source` to `custom`.
+ * A route pattern after `invite` / `outing` (`/invite/[token]`,
+ * `/[locale]/outing/[shareToken]`) is not a secret; keeping it verbatim stops
+ * us from renaming parameterized transaction names, which would flip their
+ * `transaction_info.source` to `custom`.
  */
-const INVITE_ROUTE_PARAM_RE = /(^|\/)invite\/(\[[^\]/?#]*\])(?=[/?#]|$)/i
+const TOKEN_ROUTE_PARAM_RE = /(^|\/)(invite|outing)\/(\[[^\]/?#]*\])(?=[/?#]|$)/gi
+
+/** A path segment that the URL sanitizer turns into `:token` (#1558 added `outing`). */
+const TOKEN_SEGMENT_RE = /(?:^|\/)(?:invite|outing)\//i
 
 function sanitizeUrl(value: string): string {
   const out = sanitizeAnalyticsUrl(value)
-  const param = INVITE_ROUTE_PARAM_RE.exec(value)
-  if (param && !/[?#]/.test(value)) {
-    return out.replace(/(^|\/)invite\/:token(?=[/?#]|$)/i, `$1invite/${param[2]}`)
+  if (/[?#]/.test(value)) return out
+  let restored = out
+  for (const param of value.matchAll(TOKEN_ROUTE_PARAM_RE)) {
+    restored = restored.replace(
+      new RegExp(`(^|\\/)${param[2]}\\/:token(?=[/?#]|$)`, 'i'),
+      `$1${param[2]}/${param[3]}`,
+    )
   }
-  return out
+  return restored
 }
 
 /** Absolute URL or something that starts like a path / query. */
@@ -188,11 +197,11 @@ function looksLikeUrl(value: string): boolean {
 /**
  * Scrub a value that is supposed to be a URL. Non-URL-looking strings are
  * left alone (so an unrelated value under a `*target` key is not rewritten)
- * unless they carry a query, hash or invite segment — then privacy wins.
+ * unless they carry a query, hash or invite / outing segment — then privacy wins.
  */
 function scrubUrlValue(value: unknown): unknown {
   if (typeof value !== 'string' || value === '') return value
-  if (looksLikeUrl(value) || /[?#]|(?:^|\/)invite\//i.test(value)) {
+  if (looksLikeUrl(value) || /[?#]/.test(value) || TOKEN_SEGMENT_RE.test(value)) {
     return sanitizeUrl(value)
   }
   return value
@@ -201,7 +210,7 @@ function scrubUrlValue(value: unknown): unknown {
 /**
  * URLs embedded in free text: `GET /invite/abc?x=1`, `fetch failed:
  * https://…?code=…`. Absolute URLs are always scrubbed; bare paths only when
- * they carry a query, hash or invite segment (so `GET /records` stays
+ * they carry a query, hash or invite / outing segment (so `GET /records` stays
  * byte-identical). No lookbehind — older iOS WebViews reject it at parse
  * time, which would take the whole client Sentry init down with it.
  *
@@ -234,7 +243,7 @@ function scrubText(value: unknown): unknown {
     URL_IN_TEXT_RE,
     (match, lead: string, path: string | undefined, absLead: string, absDigits: string, abs: string | undefined) => {
       if (abs) return `${absLead}${absDigits}${sanitizeUrl(abs)}`
-      if (path !== undefined && /[?#]|(?:^|\/)invite\//i.test(path)) return `${lead}${sanitizeUrl(path)}`
+      if (path !== undefined && (/[?#]/.test(path) || TOKEN_SEGMENT_RE.test(path))) return `${lead}${sanitizeUrl(path)}`
       return match
     },
   )
@@ -944,7 +953,8 @@ function scrubRequest(request: unknown): AnyRecord | undefined {
   // The request body. On the server, `httpServerIntegration` buffers textual
   // bodies up to 10 KB and `requestDataIntegration` copies them here — a
   // server action POST carries its arguments, so `acceptInvite(token)` puts
-  // the invite token in it, and ledger actions put descriptions and amounts.
+  // the invite token in it, `joinOuting(shareToken, …)` the outing share token
+  // (#1558), and ledger actions put descriptions and amounts.
   // `sentry.server.config.ts` already turns `data` off; this is the second
   // line, and covers client / edge events that set it some other way.
   // Failure looks like nothing: the token just sits in the issue's
