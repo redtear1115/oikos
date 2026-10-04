@@ -1087,6 +1087,12 @@ export type Translations = {
     manageRecurringIncome: string
     manageRecurringExpense: string
     recurringShortcut: string
+    /** aria-label of the Records header search button (#23). */
+    searchOpen: string
+    searchPlaceholder: string
+    searchCancel: string
+    /** aria-label of the clear (x) button inside the search field. */
+    searchClear: string
     offlineMoreNeedsNetwork: string
     monthPicker: {
       triggerLabel: string
@@ -3789,6 +3795,10 @@ export const zhTW: Translations = {
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
+    searchOpen: '搜尋紀錄',
+    searchPlaceholder: '搜尋描述、備註',
+    searchCancel: '取消',
+    searchClear: '清除',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     monthPicker: {
       triggerLabel: '選擇月份',

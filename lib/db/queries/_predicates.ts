@@ -1,7 +1,7 @@
 import { sql, type Column, type SQL } from 'drizzle-orm'
 import type { SplitType } from '@/lib/balance'
 import type { RecordStatus } from '@/lib/validators'
-import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
+import { ASSET_FILTER_NONE, toLikePattern, type DateRange } from '@/lib/filter'
 import { monthRangeIso } from '@/lib/monthKey'
 import type { EpochWindow } from './epoch'
 
@@ -43,6 +43,23 @@ function col(ref: ColRef): SQL | Column {
  */
 export function andClause(clause: SQL | undefined): SQL {
   return clause ? sql`AND ${clause}` : sql``
+}
+
+/**
+ * Free-text search (#23): `(c1 ILIKE p ESCAPE '\\' OR c2 ILIKE p ESCAPE '\\')`
+ * over the given plaintext columns. The pattern is `%escaped text%`, always a
+ * bound parameter (never interpolated), with `%` / `_` / `\\` in the user's
+ * text escaped so they match literally. Returns `undefined` when there is no
+ * text. A NULL column yields NULL for its ILIKE, which the OR treats as no match.
+ */
+export function textSearchClause(
+  columns: ColRef[],
+  text: string | undefined,
+): SQL | undefined {
+  if (!text) return undefined
+  const pattern = toLikePattern(text)
+  const parts = columns.map((c) => sql`${col(c)} ILIKE ${pattern} ESCAPE '\\'`)
+  return sql`(${sql.join(parts, sql` OR `)})`
 }
 
 /**

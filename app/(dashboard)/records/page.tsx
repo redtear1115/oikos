@@ -11,6 +11,7 @@ import type { BreakdownView } from './_components/StatsBreakdownToggle'
 import { parseDrillFromRecord } from '@/lib/drill'
 import {
   parseDateRangeFromRecord,
+  isFilterNarrowing,
   parseFilterFromRecord,
   type DateRange,
 } from '@/lib/filter'
@@ -37,6 +38,8 @@ export default async function RecordsPage({
     fAmtMin?: string
     fAmtMax?: string
     fStatus?: string
+    q?: string
+    search?: string
   }>
 }) {
   const user = await getCurrentUser()
@@ -72,15 +75,9 @@ export default async function RecordsPage({
   // mirrors via useSearchParams. The income variant is the same shape minus
   // the dims that don't apply to income rows (split / expense-cat → cutAll).
   const filter = parseFilterFromRecord(resolvedParams)
-  const filterIsActive = filter.payer !== 'all'
-    || filter.split !== 'all'
-    || filter.burden !== 'all'
-    || filter.categories.size > 0
-    || filter.incomeCategories.size > 0
-    || filter.assetIds.size > 0
-    || filter.amountMin !== null
-    || filter.amountMax !== null
-    || filter.status !== 'all'
+  // Text search narrows the data too (isFilterNarrowing); only the filter chip's
+  // dot ignores it.
+  const filterIsActive = isFilterNarrowing(filter)
   // 誰付→uuid collapse + cross-kind cut rules live in one shared resolver so the
   // SSR feed/stats here and the client pagination loaders (actions/transaction)
   // can't drift. Only resolve when a dim is active (else the queries skip the filter).
