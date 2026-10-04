@@ -1,9 +1,12 @@
 ---
-last_updated: 2026-09-21
-status: planned
+last_updated: 2026-10-05
+status: shipped
+first_shipped_in: v1.6.0
+updates:
+  - v1.7.0: 公開加入面——分享連結、認領 slot、匿名寫入、註冊後帶走歷史；管理者＝開局帳本的兩位成員；重設連結與釋放 slot（#1558）
 related_specs: [solo-trip, trip-multi-currency, epoch-readonly, onboarding, transactions, conversion-analytics, locale-currency]
 depends_on: [transactions]
-related_issues: ["#943", "#870"]
+related_issues: ["#943", "#870", "#1558"]
 ---
 
 # Group Outing — 出遊（對外名稱「出遊」；codebase 用 outing）
@@ -96,10 +99,17 @@ related_issues: ["#943", "#870"]
 所有寫入走 Server Action(主 app 既有 `Client → Server Action → Drizzle` 路徑),不開放 client 直連 DB。
 
 - **加入**:點 `share_token` 連結 → join 落地 → 認領空 slot 或新增自己 → 拿 `claim_token` 存 cookie,回訪即「我就是這個人」。登入的 Futari 用戶用登入身分認領(填 `profile_id`)。
-- **授權**:寫入允許「持有該出遊某 participant 有效 `claim_token`」**或**「已登入且為該出遊 participant」。出遊層級操作(改名、結束、刪 participant)只限 `created_by` owner——這是 v1.7.0 匿名世界的規則。**v1.6.0 沒有匿名參與者,結束與刪除出遊由帳本兩位成員都能做**(2026-09-21 使用者決定,#943 Q4):折回的那筆 Settlement 同時影響兩個人,與旅行、結算的權限一致。`share_token` 只能加入,要先認領出身分才有寫權限。
+- **授權**:寫入允許「持有該出遊某 participant 有效 `claim_token`」**或**「已登入且為該出遊 participant」**或**「已登入且為開局帳本的成員」。`share_token` 只能加入,要先認領出身分才有寫權限。
+- **管理者＝開局帳本的兩位成員**(2026-10-05 使用者決定,#1558;延續 v1.6.0 #943 Q4):出遊層級操作(改名、結束、刪除出遊、移除參與者、重設連結、釋放 slot)只有開局帳本當前章節的成員能做。朋友不論有沒有 Futari 帳號都不是管理者。理由:結束時折回的那筆 Settlement 同時影響夫妻兩人,與旅行、結算的權限一致。
+  > **撤回紀錄(2026-10-05,#1558)**:本條原寫「v1.7.0 出遊層級操作只限 `created_by` owner」。那樣會讓伴侶在 v1.7 失去 v1.6 已有的結束權限,而折回的帳是兩個人的。`created_by` 只是稽核欄位,不是權限來源。容易重新推導出錯的地方:看到「匿名世界要收緊權限」就想縮到開局者一人——要收緊的是朋友,不是伴侶。
+- **朋友的寫權限**(2026-10-05,#1558):已認領的參與者可以新增、編輯、刪除**任何一筆**支出與還款,不限自己記的(同 Splitwise)。編輯走 soft-delete + insert,`entered_by_participant_id` 記下是誰動的,軌跡就是信任的來源。不做「只能改自己記的」:朋友記錯別人那筆時要找成員代改,摩擦比風險大。
 - **RLS**:outing 五表對 client 直連一律 deny;Server Action server 端驗 token。不為匿名用戶開 `auth.uid()` RLS。
-- **Locked decision**:任何拿到連結者都能認領身分並寫入(摩擦最低,符合「快速開始」);**不**要 owner approve 新參與者。
-- **防濫用(v1 輕量)**:`share_token` 不可猜;participant 新增 rate limit;出遊人數上限(≤ 20);非 owner 不能刪別人已認領的 slot。
+- **Locked decision**:任何拿到連結者都能認領身分並寫入(摩擦最低,符合「快速開始」);**不**要管理者 approve 新參與者。
+- **防濫用(v1 輕量)**:`share_token` / `claim_token` 不可猜(高熵隨機值);出遊人數上限(≤ 20)就是新增參與者的天花板——codebase 沒有 rate-limit 基礎設施,v1.7 不為此新建;只有管理者能移除參與者。
+- **補救:重設連結與釋放 slot**(2026-10-05,#1558):
+  - **重設分享連結**:管理者換一個新的 `share_token`,舊連結立即失效;已認領的人靠 `claim_token`／登入身分繼續用,不受影響。給「連結貼錯群組」用。
+  - **釋放 slot**:管理者可以把一個**沒有綁帳號**(`profile_id` 為空)的已認領 slot 釋放回未認領,舊的 `claim_token` 隨之失效,朋友在新裝置從連結重新認領。歷史留在同一個 participant row,不搬資料。已綁帳號的 slot 不能釋放——那個人登入就拿回身分。
+  - 失效的樣子:朋友換手機後點連結,看到自己的名字顯示「已認領」、認領不了,也沒有任何錯誤——他會以為壞了,改「新增自己」,於是同一個人在帳上變成兩個。公開頁對已認領 slot 要說清楚「請開局的人釋放」。
 
 ### Realtime:v1 不做
 主 app realtime 綁登入 JWT,匿名者吃不到。v1 每次動作後 server action 回傳最新狀態、重抓即可(出遊人少、頻率低)。匿名 realtime(Supabase anonymous sign-in)留 phase 2。
@@ -108,13 +118,19 @@ related_issues: ["#943", "#870"]
 **Locked decision**:無帳號參與者註冊時,把當前持有 `claim_token` 對應的 participant `profile_id` 設為新 Profile。同一個 participant row 不搬資料,歷史(支出 / share / 還款全靠 `participant_id` 連著)天然續存。
 
 - 一個 slot 只能被認領一次;一個 Profile 在同出遊只能對應一個 participant。
-- 認領是選配:不註冊也能全程用(cookie 在即可);換裝置 / 清 cookie 會失去身分——這正是註冊誘因,不強迫。
+- 認領是選配:不註冊也能全程用(cookie 在即可);換裝置 / 清 cookie 會失去身分——這正是註冊誘因,不強迫;沒註冊的人另有「釋放 slot」可救(見「匿名存取 & 授權」)。
+- **註冊後回到出遊頁**(2026-10-05,#1558):從出遊頁註冊／登入的人,完成後經 `?next=` 回到同一個公開出遊頁,手上 `claim_token` 對應的 slot 自動綁到這個帳號。**不**在這時拉進 onboarding——他來是為了把出遊記完;等他自己進 dashboard、沒有帳本時,才走一般 onboarding。dashboard 有「我參與的出遊」入口,列出他以參與者身分綁定、但不屬於自己帳本的出遊,點進去回到公開出遊頁。
+  - 已登入的 Futari 用戶點連結時同樣落在公開頁,直接用登入身分認領(填 `profile_id`),不經 cookie。
 - CTA **軟性、永不強制**:結算頁看到自己紀錄時、出遊結束後回訪時輕量提示;不在加入當下逼註冊。文案走品牌「安靜的邀請」,不用「立即 / 免費試用」這類 conversion 語言。
 
 ## 路由與兩個面
 
-- **Owner 管理面(登入,`(dashboard)/outings`)**:入口與旅行合一(見「與旅行的界線」);在那個 IA 決定前,這裡只描述它包含什麼——出遊清單、詳情(參與者 / 支出 feed / 淨額 / 轉帳建議 / 分享連結 / 結束)、開局。
-- **公開加入面(v1.7.0;可匿名,`app/[locale]/outing/[shareToken]`,走 locale 路徑)**:join 落地 → 認領 / 新增自己 → 同畫面加支出、看淨額、看轉帳建議、標記還款。無帳號者整個體驗在此,不經 dashboard、不需登入——「快速開始」的實體。登入用戶點連結同樣落此,但用登入身分認領,事後在管理面「我參與的」看得到。
+- **管理面(登入,帳本成員,`(dashboard)/outings`)**:入口與旅行合一(見「與旅行的界線」);在那個 IA 決定前,這裡只描述它包含什麼——出遊清單、詳情(參與者 / 支出 feed / 淨額 / 轉帳建議 / 分享連結 / 結束)、開局。
+- **公開加入面(v1.7.0;可匿名,`app/[locale]/outing/[shareToken]`,走 locale 路徑)**:join 落地 → 認領 / 新增自己 → 同畫面加支出、看淨額、看轉帳建議、標記還款。無帳號者整個體驗在此,不經 dashboard、不需登入——「快速開始」的實體。登入用戶點連結同樣落此,但用登入身分認領,事後在 dashboard「我參與的出遊」看得到。
+  - 公開頁 `noindex`、不進 sitemap:內容是私人帳目,連結是唯一的鑰匙。分享預覽(OG)只放通用標題,不放出遊名稱、參與者或金額——連結會被貼進群組,預覽就是公開的。
+  - `ended` 的出遊公開頁仍可開、唯讀:結算結果是大家回來看的東西。
+  - 原生殼不攔截這個連結(沒有 universal link),朋友在手機瀏覽器打開即可;不需要重新送審。
+- **管理面在 v1.7.0 加的東西**:複製分享連結、重設連結、每個參與者的認領狀態(未認領／已認領／已綁帳號)與「釋放」。
 
 ## UI / 文案立場
 
@@ -129,7 +145,11 @@ related_issues: ["#943", "#870"]
 - 平分餘數逐分發,`Σ share === amount` 恆等。
 - 參與者中途退出:已參與支出的 share 不可刪(會破帳)→ 標記 inactive、不再進新支出預設勾選,歷史保留。
 - `claim_token` 一次性綁定,重放 / 重複認領擋下;同一 Profile 想認領同出遊兩 slot 擋下並提示。
-- 出遊 `ended` 後加帳:v1 擋寫入並提示已結束。
+- 出遊 `ended` 後加帳:v1 擋寫入並提示已結束;公開頁唯讀。
+- 已綁帳號的人想在同一出遊再認領另一個 slot:擋下並提示他已經是誰。
+- 認領中的 slot 被管理者移除(inactive)或釋放:持舊 `claim_token` 的人回訪時落回「選擇你是誰」,不是錯誤頁。
+- 重設連結後,舊連結落地顯示「這個連結已失效,請向開局的人要新連結」,不洩漏出遊內容。
+- 刪除帳號:已綁帳號的 participant 解除 `profile_id` 並匿名化名字,歷史保留(與 v1.6 離開者的處理一致)。
 - 幣別建立後有支出即不可改。金額整數規則依出遊 `currency`,與主 app 一致。
 - 當前章節有進行中的出遊時，離開帳本與移除伴侶都擋下，與旅行相同。出遊綁在 `epoch_id` 上，章節關閉會留下無法結束、也無法折回的孤兒出遊（[solo-trip](solo-trip-design.md) 狀態機「孤兒 trip 的柵欄」）。
 
@@ -147,10 +167,14 @@ related_issues: ["#943", "#870"]
 
 **v1.7.0**
 
-- Futari 用戶能拿分享連結；朋友從連結加入（認領空 slot 或新增自己），無帳號者全程不需登入、不經 onboarding。
-- 已認領的參與者能自己加支出、看淨額與轉帳建議、標記還款。
-- 無帳號參與者註冊後，該出遊的自身紀錄續存於新帳號名下（認領 slot）。v1.6.0 期間建立的名字參與者不需資料遷移即可被認領。
-- 匿名寫入僅透過 Server Action＋`claim_token` 驗證。
+- 帳本成員能複製分享連結、重設連結（舊連結失效、已加入者不受影響）、釋放未綁帳號的 slot。
+- 朋友從連結加入（認領空 slot 或新增自己），無帳號者全程不需登入、不經 onboarding。
+- 已認領的參與者能新增、編輯、刪除任何一筆支出、看淨額與轉帳建議、標記還款；每次寫入記下 `entered_by_participant_id`。
+- 出遊層級操作（改名、結束、刪除、移除參與者、重設連結、釋放 slot）只有開局帳本的成員能做；朋友呼叫一律被拒。
+- 無帳號參與者從出遊頁註冊後回到同一頁，該 slot 綁到新帳號、歷史續存；不被拉進 onboarding。dashboard 有「我參與的出遊」。v1.6.0 期間建立的名字參與者不需資料遷移即可被認領。
+- 匿名寫入僅透過 Server Action＋`claim_token` 驗證；outing 表對 client 直連仍一律 deny。
+- 公開頁 `noindex`、不進 sitemap、OG 不含出遊內容；`ended` 出遊唯讀。
+- 全部使用者可見字串 4 語齊全。
 
 ## 不採用
 
@@ -166,5 +190,7 @@ related_issues: ["#943", "#870"]
 - 多幣別(單一幣別鎖定)。
 - Realtime 即時同步。
 - 折回主 app 支出統計(decision (b))。
-- Owner approve 新參與者。
+- 管理者 approve 新參與者。
+- IP／裝置層級的 rate limit(人數上限 20 就是天花板)。
+- 原生殼 universal link。
 - Landing 直接開局入口。
