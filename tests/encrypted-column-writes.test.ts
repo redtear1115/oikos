@@ -38,12 +38,6 @@ const HELPER_WRITE: Record<string, RegExp> = {
   shareTokenEncrypted: /^encryptShareToken\(/,
 }
 
-/**
- * Registered columns with no write site in actions/ yet. #1558 S1 adds the
- * column; S2 adds the write and removes it from here. Kept explicit so the
- * write-site scan below still notices when it silently matches nothing.
- */
-const NOT_YET_WRITTEN = new Set(['shareTokenEncrypted'])
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
@@ -107,9 +101,7 @@ describe('encrypted-column writes in actions/', () => {
   it('finds the known write sites (guard against the scan silently matching nothing)', () => {
     // car ×2, child create ×3, editChild ×3 + upsert insert ×2, house ×2, invoice ×2
     expect(writes.length).toBeGreaterThanOrEqual(14)
-    expect(new Set(writes.map((w) => w.prop))).toEqual(
-      new Set(Object.keys(PROPERTY_COLUMN).filter((p) => !NOT_YET_WRITTEN.has(p))),
-    )
+    expect(new Set(writes.map((w) => w.prop))).toEqual(new Set(Object.keys(PROPERTY_COLUMN)))
   })
 
   it('every write comes from encrypt()/encryptForInsert() with the matching aadFor column', () => {

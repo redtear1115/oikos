@@ -57,6 +57,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **出遊的加入、認領與權限規則（#1558）**
+  使用者：畫面沒有變化；之後朋友從連結加入、認領名字、自己記帳與還款都走這些規則，出遊層級的操作只限開局帳本的成員。
+  技術：`lib/outing/access.ts` 判定成員／登入參與者／cookie 參與者；新增 join、bind、改名、停用參與者、取得與重設連結、釋放 slot、編輯刪除支出與還款等 action，被拒一律回傳 code；`outingPublic.ts` 分層讀取。
+
 - **出遊分享連結與認領的資料欄位（#1558）**
   使用者：畫面沒有變化；之後「朋友從連結加入」用這些欄位。
   技術：`0082` 加 `Outings.share_token_hash／_encrypted／_rotated_at` 與 `OutingParticipants.claim_token_hash／claimed_at`（token 只存 sha256 與綁 outing id 的密文，`lib/outing/tokens.ts`）；刪帳號時清 claim token 並保留 `claimed_at`。

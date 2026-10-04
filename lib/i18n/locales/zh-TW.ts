@@ -2975,6 +2975,14 @@ export type Translations = {
       outing_settlement_same_party: string
       outing_description_too_long: string
       outing_currency_changed: string
+      outing_admin_only: string
+      outing_viewing_past_chapter: string
+      outing_expense_not_found: string
+      outing_settlement_not_found: string
+      outing_link_invalid: string
+      outing_slot_taken: string
+      outing_slot_bound: string
+      outing_already_joined: string
       leave_active_outing: string
       category_empty: string
       split_ratio_required: string
@@ -6630,6 +6638,14 @@ export const zhTW: Translations = {
       outing_settlement_same_party: '付款人與收款人不可相同',
       outing_description_too_long: '說明最長 100 字',
       outing_currency_changed: '這次出遊的幣別和帳本目前的基準幣別不一致，所以不能折回主帳本。',
+      outing_admin_only: '只有開這次出遊的帳本成員可以這樣做',
+      outing_viewing_past_chapter: '你正在看過去的章節，回到目前的章節才能修改',
+      outing_expense_not_found: '找不到這筆支出',
+      outing_settlement_not_found: '找不到這筆還款',
+      outing_link_invalid: '這個連結已失效，請向開局的人要新連結',
+      outing_slot_taken: '這個名字已經有人認領了。如果是你，請開局的人幫你釋放',
+      outing_slot_bound: '這個名字已綁定帳號，不能釋放',
+      outing_already_joined: '你已經在這次出遊裡了',
       leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
       split_ratio_required: '依比例分需要指定比例',
