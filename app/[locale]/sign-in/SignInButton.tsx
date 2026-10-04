@@ -6,7 +6,8 @@ import { track, getAnonId, analyticsReady } from '@/lib/analytics/track'
 import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attribution'
 import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
-import { isUserCancelled } from '@/lib/auth/appleSignInError'
+import { appleAuthorizationErrorCode, isUserCancelled } from '@/lib/auth/appleSignInError'
+import { idTokenErrorLabel } from '@/lib/auth/idTokenErrorLabel'
 import { nativeCallbackUrl, safeSameOriginUrl } from '@/lib/auth/nativeRedirect'
 import { unwrapAction } from '@/lib/action-errors'
 
@@ -33,6 +34,21 @@ type Provider = 'google' | 'apple'
  * double-tap bug the curtain exists to prevent.
  */
 type SignInOutcome = 'navigating' | 'aborted'
+
+/**
+ * Why an aborted attempt ended, when the page should say something about it
+ * (#1552). Only the iOS Apple browser fallback sets one: the native sheet had
+ * already failed, so landing silently back on the sign-in page after the
+ * fallback also ends gives the user nothing to go on. A plain cancel (the
+ * native sheet's own Cancel, or any Google / Android abort) passes nothing.
+ */
+export type SignInAbortReason = 'apple_fallback_failed'
+
+/**
+ * Labels which caller is running the in-app browser flow, for telemetry only.
+ * `'apple_fallback'` is the iOS Apple native sheet → browser OAuth hand-off.
+ */
+type BrowserFlowVia = 'apple_fallback'
 
 /** Minimal shape of a Capacitor listener handle — avoids importing @capacitor/core. */
 type Removable = { remove: () => Promise<void> }
@@ -103,6 +119,23 @@ export function preloadNativeAuthModules(): void {
   if (getPlatform() === 'ios') import('@capacitor-community/apple-sign-in').catch(ignore)
 }
 
+/**
+ * Telemetry that must never get in the way of the flow it describes (#1552).
+ * The fallback events fire from the grace timer and the deep-link handler,
+ * where a throw would skip `finish()` and leave the curtain up on every native
+ * sign-in. Props are fixed labels / booleans / numbers only — never a URL, the
+ * deep link, `redirectTo` or an error message: PostHog's `before_send` scrubs
+ * only keys ending in `url` / `pathname` / `referrer`, so anything else goes
+ * out verbatim.
+ */
+function safeTrack(event: string, props: Record<string, string | number | boolean>): void {
+  try {
+    track(event, props)
+  } catch {
+    // Telemetry is best-effort; the sign-in is not.
+  }
+}
+
 /** Query strings can carry OAuth state; drop them before an error leaves the device. */
 function stripQueries(text: string): string {
   return text.replace(/\?[^\s)'"]*/g, '')
@@ -157,7 +190,18 @@ async function appleNativeSignIn(
     nonce: rawNonce,
   })
   if (error) {
-    track('sign_in_failed', { reason: 'id_token_rejected', provider: 'apple', path: 'ios_native' })
+    // Fields picked one by one (#1552): never `message` (the audience variant
+    // echoes the token's claims), `originalError`, `toJSON()` or a spread. The
+    // message only feeds the on-device classifier.
+    track('sign_in_failed', {
+      reason: 'id_token_rejected',
+      provider: 'apple',
+      path: 'ios_native',
+      error_name: typeof error.name === 'string' ? error.name : 'unknown',
+      error_status: typeof error.status === 'number' ? error.status : null,
+      error_code: typeof error.code === 'string' && /^[a-z0-9_]{1,64}$/.test(error.code) ? error.code : null,
+      error_label: idTokenErrorLabel(error.message),
+    })
     return 'aborted'
   }
 
@@ -185,7 +229,12 @@ async function browserOAuthSignIn(
   supabase: ReturnType<typeof createClient>,
   provider: Provider,
   ctx: { next: string; from: string | null },
+  opts: { via?: BrowserFlowVia } = {},
 ): Promise<SignInOutcome> {
+  // Telemetry for this flow is emitted only when a caller labels it (#1552) —
+  // today just the iOS Apple fallback. Unlabelled callers (iOS Google, Android
+  // Google / Apple) run exactly as before.
+  const via = opts.via
   const { Browser } = await loadBrowser()
   const { App } = await loadApp()
 
@@ -200,9 +249,12 @@ async function browserOAuthSignIn(
     options: { redirectTo, skipBrowserRedirect: true },
   })
   if (!data.url) {
-    track('sign_in_failed', { reason: 'no_oauth_url', provider, path: 'capacitor_browser' })
+    track('sign_in_failed', { reason: 'no_oauth_url', provider, path: 'capacitor_browser', ...(via && { via }) })
     return 'aborted'
   }
+  // Set when Browser.open is called; elapsed_ms on the fallback events counts from here.
+  let openedAt = 0
+  let pageLoaded = false
 
   let settle!: (outcome: SignInOutcome) => void
   const outcome = new Promise<SignInOutcome>((resolve) => {
@@ -231,8 +283,14 @@ async function browserOAuthSignIn(
       // Not our OAuth callback (or shaped to escape this origin): ignore it
       // rather than finishing — a stray link must not tear down a live attempt.
       const target = nativeCallbackUrl(window.location.origin, url, CAPACITOR_SCHEME)
-      if (target === null) return
+      if (target === null) {
+        if (via) safeTrack('sign_in_failed', { reason: 'callback_ignored', provider, path: 'capacitor_browser', via })
+        return
+      }
       await finish('navigating')
+      // After finish, and unable to throw: nothing here may stand between the
+      // callback and the navigation (#1552).
+      if (via) safeTrack('sign_in_fallback_callback', { provider, via, elapsed_ms: Date.now() - openedAt })
       await Browser.close()
       window.location.href = target
     }),
@@ -256,10 +314,40 @@ async function browserOAuthSignIn(
   // close it, so the deep link always comes first there.
   listeners.push(
     await Browser.addListener('browserFinished', () => {
-      setTimeout(() => void finish('aborted'), CALLBACK_GRACE_MS)
+      setTimeout(() => {
+        // Read before finish() flips it: only a real dismissal is counted, never
+        // the Android success where browserFinished precedes the callback.
+        const dismissed = !done
+        void finish('aborted')
+        if (dismissed && via) {
+          safeTrack('sign_in_failed', {
+            reason: 'fallback_dismissed',
+            provider,
+            path: 'capacitor_browser',
+            via,
+            elapsed_ms: Date.now() - openedAt,
+            page_loaded: pageLoaded,
+          })
+        }
+      }, CALLBACK_GRACE_MS)
     }),
   )
 
+  if (via) {
+    // Did the provider page ever load? Separates "the fallback never showed
+    // anything" from "the user saw Apple's page and left". Pushed into
+    // `listeners` so finish() tears it down with the other two.
+    listeners.push(
+      await Browser.addListener('browserPageLoaded', () => {
+        if (pageLoaded || done) return
+        pageLoaded = true
+        safeTrack('sign_in_fallback_page_loaded', { provider, via, elapsed_ms: Date.now() - openedAt })
+      }),
+    )
+    safeTrack('sign_in_fallback_opened', { provider, via })
+  }
+
+  openedAt = Date.now()
   await Browser.open({ url: data.url })
   return outcome
 }
@@ -298,7 +386,8 @@ export function SignInButton({
   /** True while EITHER provider has an attempt in flight — both buttons lock together. */
   pending: boolean
   onStart: () => void
-  onAbort: () => void
+  /** Called once per attempt that ends without navigating; see {@link SignInAbortReason}. */
+  onAbort: (reason?: SignInAbortReason) => void
 }) {
   const handleSignIn = async () => {
     // The curtain already blocks pointer input; this covers the keyboard path
@@ -314,6 +403,10 @@ export function SignInButton({
 
     const ctx = { next, from }
     let outcome: SignInOutcome = 'aborted'
+    // Set before the iOS Apple fallback starts, so every way it can end without
+    // navigating — dismissed, no OAuth URL, or a throw caught below — shows the
+    // retry hint (#1552).
+    let appleFallback = false
 
     try {
       // #1520 — PostHog and Supabase load lazily on the public pages. The anon
@@ -335,12 +428,19 @@ export function SignInButton({
           if (isUserCancelled(err)) {
             outcome = 'aborted'
           } else {
-            track('sign_in_failed', { reason: 'apple_native_unavailable', provider, path: 'ios_native' })
+            const appleErrorCode = appleAuthorizationErrorCode(err)
+            track('sign_in_failed', {
+              reason: 'apple_native_unavailable',
+              provider,
+              path: 'ios_native',
+              ...(appleErrorCode !== undefined && { apple_error_code: appleErrorCode }),
+            })
             console.error('[sign-in] native Apple failed, falling back to browser OAuth', err)
             // Same flow Google already uses on this platform, and it reaches the
             // same Apple authorize page the web build uses — so a reviewer or user
             // can still get in even when the native sheet refuses to present.
-            outcome = await browserOAuthSignIn(supabase, provider, ctx)
+            appleFallback = true
+            outcome = await browserOAuthSignIn(supabase, provider, ctx, { via: 'apple_fallback' })
           }
         }
       } else if (isCapacitor()) {
@@ -354,7 +454,10 @@ export function SignInButton({
       outcome = 'aborted'
     } finally {
       // Only 'navigating' keeps the curtain — see SignInOutcome.
-      if (outcome === 'aborted') onAbort()
+      if (outcome === 'aborted') {
+        if (appleFallback) onAbort('apple_fallback_failed')
+        else onAbort()
+      }
     }
   }
 

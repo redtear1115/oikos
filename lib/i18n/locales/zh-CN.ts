@@ -5,6 +5,7 @@ export const zhCN: Translations = {
     tagline: '账本准备好了，邀请对方一起。',
     continueWithGoogle: '以 Google 账号继续',
     authFailedNotice: '刚才的登录没有完成，再试一次就好。',
+    appleFallbackHint: 'Apple 登录没有完成，可以再试一次。也可以改用 Google 登录；不过用 Apple 创建的账本，不会出现在 Google 账号里。',
     signingIn: '正在带你进去',
     continueWithApple: '以 Apple 账号继续',
     termsPrefix: '继续即表示您同意我们的',
