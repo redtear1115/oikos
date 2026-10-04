@@ -34,6 +34,7 @@ const PK_COLUMN: Record<EncryptedTable, string> = {
   HouseDetails: 'asset_id',
   ChildDetails: 'asset_id',
   InvoiceCredentials: 'id',
+  Outings: 'id',
 }
 
 export interface ColumnTarget {

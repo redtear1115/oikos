@@ -568,6 +568,13 @@
       "when": 1783800000000,
       "tag": "0081_futari_backup_role",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1783900000000,
+      "tag": "0082_outing_link_join",
+      "breakpoints": true
     }
   ]
 }
