@@ -138,8 +138,8 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 要 release 時：
 
 1. 在 `chore/release-vX.Y.Z` 上跑 [`release`](.claude/skills/release/SKILL.md) skill（bump version + CHANGELOG + CLAUDE.md + README + tag）
-2. 開 PR `chore/release-vX.Y.Z → main`，merge 後 push tag
-3. 開 PR `main → release`，merge 後 Vercel 自動部 prod
+2. skill 開 PR `chore/release-vX.Y.Z → main`，交給獨立 verifier 驗證；全數 CONFIRMED 後 skill 自己 merge、push tag
+3. skill 開 PR `main → release` 後停下；**這條由使用者 merge**，merge 後 Vercel 自動部 prod
 
 本版動過「三平台架構」列的原生 trigger 路徑時，release 後要另外確認原生殼是否需要重送商店（skill 會在收尾 checklist 標示；流程見 [runbook](docs/app-store-submission-runbook.md)）。
 
@@ -251,6 +251,6 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
 - [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
-- [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描與收尾 checklist；不 push、不碰 protected branch。
+- [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描；push release branch、開 PR，獨立驗證通過後 merge 進 `main` 並推 tag，開好 `main → release` PR 就停（prod 部署由使用者 merge）。
 - [`ship-native`](.claude/skills/ship-native/SKILL.md) — 原生殼重送（版本計數 +1 → iOS archive/export/upload、Android AAB + 驗簽 → 實機驗證 checklist）；build 可自動跑，上傳前必停下來確認。
 - [`ship-issue`](.claude/skills/ship-issue/SKILL.md) — 協調者模式：issue → 查證 → 關卡 ① intent → 關卡 ② 方案 → executor 實作 + verifier 驗收 → 開 PR → 關卡 ③ 驗收；使用者只做選擇，做到開好 PR 就停、不 merge。§8 批次驗證多條 PR（依 milestone 分組 → 整合試合 → 依風險派 agent → 依裝置分組的人工清單 → merge 後比對 head sha）。
