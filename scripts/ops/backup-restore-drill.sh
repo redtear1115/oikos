@@ -210,7 +210,9 @@ restore_pass() { # label file pg_restore-args...
   #   Failure look without the drain: "DRILL STOPPED: age could not decrypt
   #   public.dump.age" right after "3. restore pre-data", with an empty .err
   #   (found in the first dev drill, 2026-10-06).
-  decrypt "$file" 2>>"$ERR" | { "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"; rc=$?; cat >/dev/null; exit "$rc"; }
+  # LC_MESSAGES=C: the error count below greps pg_restore's English text; a
+  # localized pg_restore ("pg_restore: 錯誤:") counted 0 errors.
+  decrypt "$file" 2>>"$ERR" | { LC_MESSAGES=C "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"; rc=$?; cat >/dev/null; exit "$rc"; }
   local st=("${PIPESTATUS[@]}")
   set -e
   [ "${st[0]}" -eq 0 ] || fail "age could not decrypt ${file##*/}"
@@ -353,7 +355,12 @@ compare function_acl 'function ACLs' '1'
 compare publication 'publication' '1-2'
 compare auth_triggers 'auth triggers' '1-2'
 printf '   informational (not part of the verdict):\n'
-EXT_MISSING=$(diff <(section "$MANIFEST" extensions | cut -f1 | sort) <(section "$LOCAL" extensions | cut -f1 | sort) | sed -n 's/^< //p' | tr '\n' ' ')
+# diff exits 1 whenever the lists differ, which under pipefail + set -e
+# ended the drill right here.
+#   Failure look: output stops after "informational (not part of the
+#   verdict):" with no DRILL line (first dev drill: the backup has pg_cron /
+#   pg_net, the local stack doesn't).
+EXT_MISSING=$({ diff <(section "$MANIFEST" extensions | cut -f1 | sort) <(section "$LOCAL" extensions | cut -f1 | sort) || true; } | sed -n 's/^< //p' | tr '\n' ' ')
 printf '     extensions in the backup but not local: %s\n' "${EXT_MISSING:-none}"
 DEFACL=$(diff <(section "$MANIFEST" default_acl | sort) <(section "$LOCAL" default_acl | sort) | grep -c '^[<>]' || true)
 printf '     default ACL lines differing: %s\n' "$DEFACL"

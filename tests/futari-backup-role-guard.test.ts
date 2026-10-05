@@ -452,7 +452,7 @@ describe('shell scripts (#1549)', () => {
     expect(code.match(/PGHOST=/g)).toHaveLength(1)
     // The role name may appear only in step 2's default-privileges REVOKEs
     // (closing it, never connecting as it); anything else naming it fails.
-    const closeDefaults = /^q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON (TABLES|SEQUENCES|FUNCTIONS) FROM anon, authenticated, service_role".*$/gm
+    const closeDefaults = /^q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON (TABLES|SEQUENCES|FUNCTIONS) FROM anon, authenticated, service_role" >\/dev\/null \|\| fail "default privileges \((tables|sequences|functions)\)"$/gm
     expect(code.match(closeDefaults)).toHaveLength(3)
     expect(code.replace(closeDefaults, '')).not.toMatch(/service_role|SERVICE_ROLE|supabase\s+status|\.env\b|vault\.|cron\.schedule|cron\.alter_job/i)
     expect(code).toMatch(/SELECT count\(\*\) FROM cron\.job WHERE active/)
@@ -490,7 +490,16 @@ describe('shell scripts (#1549)', () => {
     const code = shCode(drill)
     const feeds = code.split('\n').filter((l) => /\bdecrypt "\$file"[^\n]*\|/.test(l))
     expect(feeds).toHaveLength(1)
-    expect(feeds[0]).toMatch(/\| \{ "\$PG_RESTORE" [^}]*; rc=\$\?; cat >\/dev\/null; exit "\$rc"; \}$/)
+    expect(feeds[0]).toMatch(/\| \{ LC_MESSAGES=C "\$PG_RESTORE" [^}]*; rc=\$\?; cat >\/dev\/null; exit "\$rc"; \}$/)
+  })
+
+  it('drill: the informational diffs cannot end the run before the verdict', () => {
+    const code = shCode(drill)
+    // Under set -e + pipefail a bare `diff` (exit 1 on any difference) in a
+    // pipeline stops the drill with no DRILL line.
+    const diffs = code.split('\n').filter((l) => /\bdiff </.test(l))
+    expect(diffs.length).toBeGreaterThan(0)
+    for (const l of diffs) expect(l).toMatch(/\{ diff <.*\|\| true; \}|\|\| true\)$/)
   })
 
   it('drill: re-applies the repo\'s 0082 and accepts bundle_format 2 only, with all four parts present', () => {
