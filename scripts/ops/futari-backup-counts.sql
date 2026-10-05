@@ -19,5 +19,11 @@ WHERE n.nspname IN ('public', 'drizzle') AND c.relkind IN ('r', 'p')
 ORDER BY n.nspname, c.relname
 \gexec
 
-SELECT 'auth.users', count(*) FROM auth.users;
-SELECT 'auth.identities', count(*) FROM auth.identities;
+-- Sign-in identities through the backup_auth views (0082): futari_backup has
+-- no privilege on schema auth. Labels stay `auth.*` so the sanity check, the
+-- count baseline and the drill compare keep working unchanged. Failure look on
+-- a database without backup_auth (a restore that skipped re-applying 0082):
+-- `relation "backup_auth.users" does not exist` — the backup stops at its
+-- privilege preflight, before any part is written.
+SELECT 'auth.users', count(*) FROM backup_auth.users;
+SELECT 'auth.identities', count(*) FROM backup_auth.identities;

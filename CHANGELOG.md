@@ -61,6 +61,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：畫面沒有變化；資料庫出事時有最近 30 天內的備份可以還原。
   技術：`0081` 建唯讀角色 `futari_backup`；`scripts/ops/backup-prod.sh` 以同一快照 `pg_dump` 串流 age 加密後 rclone 上傳 Drive，附還原演練腳本；ops-runbook 新增一節。
 
+- **備份改從 `backup_auth` 的唯讀 view 讀登入身分（#1549）**
+  使用者：畫面沒有變化；每日備份能完整包含登入帳號。
+  技術：`0082` 建整列 jsonb view（不擋 Supabase Auth 升級），備份改兩段 `COPY` 只存資料、演練以 staging `\copy` 還原（`bundle_format 2`），收回 0081 的 auth grant。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。

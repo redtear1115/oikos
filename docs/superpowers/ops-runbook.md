@@ -293,7 +293,7 @@ group by 1;
 
 ## Prod backup (futari_backup)
 
-> #1549。prod 是 Supabase Free plan：**沒有自動備份、沒有 PITR**，在這之前從沒備份過。`drizzle/0081_futari_backup_role.sql` 建唯讀角色；`scripts/ops/backup-prod.sh` 每天備份；`scripts/ops/backup-restore-drill.sh` 演練還原；`scripts/ops/drop-futari-backup-role.sql` 拆角色。本節是 generic 的操作程序——不含連線字串、主機名稱、Drive 路徑、金鑰。
+> #1549。prod 是 Supabase Free plan：**沒有自動備份、沒有 PITR**，在這之前從沒備份過。`drizzle/0081_futari_backup_role.sql` 建唯讀角色；`drizzle/0082_backup_auth_views.sql` 建 `backup_auth` 的兩個唯讀 view（auth 資料只從這裡讀）；`scripts/ops/backup-prod.sh` 每天備份；`scripts/ops/backup-restore-drill.sh` 演練還原；`scripts/ops/drop-futari-backup-role.sql` 拆角色。本節是 generic 的操作程序——不含連線字串、主機名稱、Drive 路徑、金鑰。
 
 **流程一覽**
 
@@ -301,35 +301,53 @@ group by 1;
 |---|---|---|
 | 排程 | 使用者的 Mac（桌機、常開），launchd 每天 03:30 | `~/Library/LaunchAgents/local.futari.backup.plist` → `~/.local/libexec/futari-backup/futari-backup-run.sh`（先比對 SHA-256）→ `backup-prod.sh` |
 | 連線 | session pooler、`sslmode=verify-full` | 身分 `futari_backup`；密碼在 macOS 鑰匙圈，執行時寫成暫存的 600 `PGPASSFILE`，結束即刪 |
-| 一致性 | 一個 `REPEATABLE READ` 交易 `pg_export_snapshot()` 後一直開著 | 兩次 `pg_dump --snapshot` 與 manifest 的計數都來自同一個快照 |
-| 加密 | `pg_dump \| age -r <公鑰>` 串流 | 硬碟上從來沒有明文 dump；公鑰在安裝時寫死進安裝的副本，不從設定檔讀 |
+| 一致性 | 一個 `REPEATABLE READ` 交易 `pg_export_snapshot()` 後一直開著 | `pg_dump --snapshot`、兩段 auth 的 `COPY`（第二個 session `SET TRANSACTION SNAPSHOT`）與 manifest 的計數都來自同一個快照；同時最多 2 條連線 |
+| 加密 | `pg_dump \| age -r <公鑰>`、`COPY … TO STDOUT \| age -r <公鑰>` 串流 | 硬碟上從來沒有明文；公鑰在安裝時寫死進安裝的副本，不從設定檔讀 |
 | 上傳 | rclone → Google Drive（`drive.file` scope） | 上傳後比對大小與 md5，寫 `LAST_OK`，再清舊備份 |
 | 解密金鑰 | 「Futari Backup Key」dmg（密碼和 Futari Secrets **不同**）＋一份**異地的紙本** | 只有演練與還原時掛載 |
 
-每份備份是 Drive 上的一個資料夾 `futari-prod-<UTC 時間>/`：`public.dump.age`（public＋drizzle 的 schema 與資料）、`auth.dump.age`（只有 `auth.users`、`auth.identities` 的資料）、`manifest.txt.age`（計數、加密欄位各 kid 的筆數、realtime publication、`cron.job`、extensions、auth 上的 trigger、各表與欄位的 ACL、版本）。
+每份備份是 Drive 上的一個資料夾 `futari-prod-<UTC 時間>/`，**4 個檔**（manifest 的 `## dump` 寫 `bundle_format 2`）：
+
+- `public.dump.age`：public＋drizzle 的 schema 與資料（`pg_dump -Fc`）。
+- `auth-users.copy.age`、`auth-identities.copy.age`：`auth.users`、`auth.identities` 的資料，**只有資料**——`COPY (SELECT r FROM backup_auth.<表>) TO STDOUT` 的輸出，一行一個整列的 jsonb（`to_jsonb`，含 generated 欄位；還原時略過）。
+- `manifest.txt.age`：計數、加密欄位各 kid 的筆數、realtime publication、`cron.job`、extensions、auth 上的 trigger、各表與欄位的 ACL、版本、`bundle_format`。
+
+`bundle_format 1`（auth 是 pg_dump 檔 `auth.dump.age`）從來沒有真的產生過——0081 的 auth grant 在 Supabase 上被拒，備份在第一次跑之前就改成現在的格式；演練腳本只接受 2。
 
 **保留**：最新 30 份；永遠不少於 7 份；未滿 30 天的不刪。清掉的進 Drive 垃圾桶（再留約 30 天）——所以一份資料最長約 **60 天**後才真正消失，隱私權政策寫的就是這個數字。改保留規則＝改隱私權政策。
 
 ### 擋得住／擋不住
 
 - **擋得住**：
-  - `futari_backup` 外洩後的寫入、DDL、建角色、讀 `vault.decrypted_secrets`、讀 `storage.*`、讀 auth 的其他表（sessions、refresh tokens、MFA）——它只有 SELECT／USAGE，而且只在 public、drizzle、`auth.users`／`auth.identities`、`cron.job`。
+  - `futari_backup` 外洩後的寫入、DDL、建角色、讀 `vault.decrypted_secrets`、讀 `storage.*`、讀 auth 的其他表（sessions、refresh tokens、MFA）——它只有 SELECT／USAGE，而且只在 public、drizzle、`backup_auth.users`／`backup_auth.identities`（schema `backup_auth` 的 USAGE）、`cron.job`。對 schema `auth` 本身**沒有任何權限**。
+  - 透過 view 改 auth 資料：兩個 view 加了 `OFFSET 0`，不是可更新的 view（DELETE 會 55000）；角色本來也只有 SELECT。備份每次在 `privileges` 階段確認自己對 `backup_auth` 沒有 INSERT／UPDATE／DELETE／TRUNCATE、沒有 CREATE，有就拒絕執行。
   - Drive 帳號被入侵：拿到的是 age 密文，沒有 identity 解不開。
   - 備份檔或暫存目錄被別的使用者帳號讀到：目錄 700、檔案 600，也沒有明文 dump。
 - **擋不住**：
-  - **`futari_backup` 的密碼外洩＝全部 app 資料加上 `auth.users`（Email、各種 token 欄位）都讀得到**——BYPASSRLS 加上全表 SELECT，就是一份完整的備份。這個角色縮小的是「能不能改、能不能留下來」，不是「看不看得到」。
+  - **`futari_backup` 的密碼外洩＝全部 app 資料加上 `auth.users`、`auth.identities`（Email、各種 token 欄位）都讀得到**——BYPASSRLS 加上全表 SELECT，就是一份完整的備份。`backup_auth` 的 view 是 `postgres` 擁有、以 `postgres` 的權限讀的**同一份資料**（整列，每個欄位），換成 view 沒有縮小暴露面，只是不用動 schema `auth` 的權限。這個角色縮小的是「能不能改、能不能留下來」，不是「看不看得到」。
   - **鑰匙圈擋不住以你身分執行的程式，包括 agent**：對 `/usr/bin/security` 點過「永遠允許」之後，同一使用者的任何程序都能讀出這個密碼。SHA-256 檢查也一樣——同一使用者能改腳本，也能改 `SHA256SUMS`。它擋的是手滑與裝錯版本，不是同帳號的惡意程式。
   - **age identity＋任何一份備份＝那一天的全部資料**。加密欄位在備份裡仍是密文，要再加上 `ENCRYPTION_KEYS` 的 k2 才讀得到；其餘欄位就是明文。
   - `default_transaction_read_only` 只是護欄：session 可以自己 `SET` 回來。真正的控制是 grant 只有 SELECT。
   - 擁有 Drive 帳號的人可以刪光備份；Drive 垃圾桶的 30 天是最後一道緩衝。
-- **規則：`futari_backup` 的授權永遠只有上面那幾處的 SELECT／USAGE**，`tests/futari-backup-role-guard.test.ts` 會擋。要多給（別的 schema、`pg_read_all_data`、EXECUTE）先過一次新的安全審查。
-  - **失效的樣子**：dev 上 `auth.*` 或 `cron.job` 的 grant 被拒時，最快的「修法」是給 `pg_read_all_data`——不會有任何錯誤，只是這個角色從此讀得到 vault、storage 與每一個 schema。遇到就停下來問，不要這樣補。
+- **規則：`futari_backup` 的授權永遠只有上面那幾處的 SELECT／USAGE**，`tests/futari-backup-role-guard.test.ts` 會擋。要多給（別的 schema、`pg_read_all_data`、EXECUTE、SECURITY DEFINER 函式）先過一次新的安全審查。
+  - **失效的樣子**：某個 grant 被拒、或備份讀不到某張表時，最快的「修法」是給 `pg_read_all_data`——不會有任何錯誤，只是這個角色從此讀得到 vault、storage 與每一個 schema。遇到就停下來問，不要這樣補。
+  - **撤回紀錄（2026-10-05）**：這裡原本寫「`auth.*` 的 grant 被拒就**停**」，當成 migration 出錯的訊號。實際上那是 Supabase 的常態：`auth` 屬於 `supabase_admin`，`postgres` 對它只有不帶 grant option 的 USAGE，所以 0081 的 `GRANT USAGE ON SCHEMA auth TO futari_backup` 一定被拒（WARNING 01007，什麼都沒給；dev 上確認過），表的 grant 成功了也用不到。解法是 0082 的 `backup_auth` view，不是停下來、更不是更大的權限。0081 本身已套用、不改；它那行在 prod 會照樣跳 WARNING，無害。0082 也把 0081 給 `auth.users`／`auth.identities` 的表 grant 收回。
+- **`backup_auth` 的 view 必須維持「擁有者權限」**（不開 `security_invoker`）：view 以擁有者 `postgres` 的權限讀 `auth`，`futari_backup` 才不需要 `auth` 的任何權限。
+  - **失效的樣子**：有人為了清掉 Supabase advisor 的警告把 view 設成 `security_invoker=on`——設定當下什麼都沒壞；之後**每一晚**的備份都在 `copy-auth-users` 階段失敗，錯誤種類 `permission`（`permission denied for table users`）。改回來：`ALTER VIEW backup_auth.users RESET (security_invoker);`（identities 同），或用 admin service 重跑 0082 的內容（最後的 DO 區塊會拒絕帶選項的 view）。
+- **Supabase Auth 升級不會被這兩個 view 擋住**：view 是 `to_jsonb(整列)`，在 `pg_depend` 只記整張表、不記任何欄位，所以 Supabase Auth 自己的 migration（DROP COLUMN、ALTER COLUMN TYPE、RENAME）照常執行，新欄位自動出現在 `r` 裡（dev 上在會 rollback 的交易裡實測過）。所以沒有欄位漂移檢查，也沒有 refresh 腳本。
+  - **失效的樣子**：如果有人把 view 改成列出欄位（`SELECT id, email, … FROM auth.users`），平常一切正常；直到某次 Supabase Auth rollout 要改那個欄位，Auth 的 migration 失敗——**使用者登入失敗**，Supabase 的 Auth log 出現 `2BP01`（cannot drop … because other objects depend on it）或 `0A000`（cannot alter type of a column used by a view），訊息裡點名 `backup_auth`。立刻用 admin service 跑 `DROP SCHEMA backup_auth CASCADE;`（只是 view，不丟資料；當晚備份會失敗），讓 Auth 恢復，再把 0082 的整列版本重套回去。
 - **BYPASSRLS 是必要的**：沒有它，`pg_dump` 遇到第一張有 RLS 的表就失敗；`cron.job` 也受 pg_cron 的 RLS 保護，manifest 會列出 0 個 job。**不要用 `pg_dump --enable-row-security` 繞過**：session 沒有 JWT，每條 policy 的 `auth.uid()` 都是 NULL，備份會「成功」，但每張表都是 0 筆——只有還原那天才會發現。
 
 ### 設定步驟（每個環境：先 dev，再 prod；全部由使用者執行）
 
 0. **工具**：`brew install age rclone postgresql@17`，演練另外要 Supabase CLI 與 colima（docker）。`postgresql@17` 是 keg-only，路徑在 `/opt/homebrew/opt/postgresql@17/bin`。**pg_dump 的大版本要等於伺服器的大版本**（目前 17）；Supabase 升級到 18 時，腳本會在 `tools` 或 `snapshot` 階段失敗並說明，裝 `postgresql@18`、改設定檔的 `PG_BIN_DIR` 與 `PG_MAJOR`。
-1. **跑 migration**（見〈Drizzle Migrations〉），然後直接查資料：`select rolname, rolcanlogin, rolbypassrls, rolconnlimit from pg_roles where rolname = 'futari_backup'` 要有一列、`false`／`true`／`2`。再確認 `has_table_privilege('futari_backup', 'auth.users', 'SELECT')` 與 `has_table_privilege('futari_backup', 'cron.job', 'SELECT')` 都是 `true`。auth 或 cron 的 grant 失敗就**停**（見上方規則）。
+1. **跑 migration**（見〈Drizzle Migrations〉；0081 與 0082），然後直接查資料：`select rolname, rolcanlogin, rolbypassrls, rolconnlimit from pg_roles where rolname = 'futari_backup'` 要有一列、`false`／`true`／`2`。再確認：
+   - `true`：`has_schema_privilege('futari_backup', 'backup_auth', 'USAGE')`、`has_table_privilege('futari_backup', 'backup_auth.users', 'SELECT')`、`has_table_privilege('futari_backup', 'backup_auth.identities', 'SELECT')`、`has_table_privilege('futari_backup', 'cron.job', 'SELECT')`。
+   - `false`：`has_table_privilege('futari_backup', 'backup_auth.users', 'INSERT,UPDATE,DELETE,TRUNCATE')`（identities 同）；anon／authenticated／service_role 對 `backup_auth` 的 USAGE 與兩個 view 的 SELECT。
+   - **預期是 `false`**：`has_schema_privilege('futari_backup', 'auth', 'USAGE')`。這是 Supabase 的常態，不是錯（見上方撤回紀錄）；備份不讀 `auth`。
+   - 0082 最後的 DO 區塊會逐一核對 `backup_auth` 的擁有者、ACL 與 view 選項，不符就 RAISE、整個 migration 失敗——那時**停下來問**，不要手動補 grant。cron 的 grant 失敗也一樣停。
+   - **dev 的例外**：dev 已經套用過時間更晚的 outing migration，drizzle 只套用 `when` 比最後一筆新的項目，所以 `npm run db:migrate` 在 dev 上會**靜默跳過** 0082（沒有錯誤，`backup_auth` 就是不存在）。dev 的 0082 是 2026-10-05 用 admin service 手動執行檔案內容套上的，不補 journal 列（已經有更新的項目）。prod 沒有這個問題：0081、0082、outing 會依序套用。
+     - **失效的樣子**：在 dev 以外的環境也遇到同樣的跳過時，migration「成功」，備份當晚在 `privileges` 階段失敗，`last-run.err` 有 `relation "backup_auth.users" does not exist`。
    - **MFA 檢查**（用 admin service 查，dev 演練與 prod 都要）：`select count(*) from auth.mfa_factors`。是 `0` 就照現狀繼續；**大於 0 就停下來問 owner**，決定要不要把 `auth.mfa_factors` 加進備份（要加就是另一次 review 過的改動：migration 的 grant、`backup-prod.sh` 的 `--table`、演練的比對一起改），不要自己先加。
    - **失效的樣子**：有人開了 MFA，備份照樣每晚成功、演練照樣 PASS；直到真的還原那天，這些人的第二因素全部消失，登入流程要他們重新設定或直接卡住。
 2. **產生 age 金鑰**：建一個新的加密 dmg「Futari Backup Key」，密碼和 Futari Secrets **不同**，掛載後：
@@ -398,7 +416,10 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
 | `snapshot`（auth） | 密碼不對 | **當天不重試**（pooler 連續認證失敗會封鎖 IP，見〈Circuit breaker〉）。修好後 `--clear-auth-block` 手動跑 |
 | `snapshot`（tls） | CA 檔錯或過期、或 pooler 換了憑證 | 重新下載 CA；**不要**改成 `sslmode=require` |
 | `tools` | pg_dump 大版本和設定不符 | 見設定步驟 0 |
+| `privileges`（`relation "backup_auth.users" does not exist`） | 資料庫沒有 `backup_auth`：還原之後沒重套 0082，或 `db:migrate` 跳過了它（見設定步驟 1） | admin service 執行 `drizzle/0082_backup_auth_views.sql` 的內容 |
+| `privileges`（`write-privilege`） | 有人給了 `futari_backup` 對 `backup_auth` 的寫入權限或 CREATE | **當成事故**：查是誰、什麼時候給的，收回後再跑 |
 | `dump-public` | 新表沒有 grant；或等鎖超過 60 秒 | 覆蓋檢查；鎖的話隔天通常就好 |
+| `copy-auth-users`／`copy-auth-identities`（`permission`） | view 被設成 `security_invoker`；或 `backup_auth` 的 grant 被收回 | 見上方〈擋得住／擋不住〉的 view 規則；重套 0082 |
 | `sanity` | 某張表（上次 ≥ 10 筆）不見了、歸零、或少了一半以上；或 `auth.users`／`Profiles` 是 0 | **先確認是不是 prod 真的掉資料**。是的話不要 `--accept-counts`——之前的備份才是好的那份，30 天內都不會被清掉。確定是預期內的（migration 刪表、清資料）才 `--accept-counts` 手動跑一次 |
 | `upload`／`verify` | Drive token 過期或被撤銷、空間滿 | `rclone config reconnect <remote>:` |
 | `prune` | 清舊備份失敗 | 今天的備份已經上傳並驗證過；只是清理沒做完 |
@@ -420,6 +441,7 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
    ```
 
    腳本只接受 `127.0.0.1` 而且 public 沒有任何表的目標；順序跟真正還原一樣（見下），除了 cron：**只比對、不建 job、不載入任何 Vault 機密**。
+   腳本只接受 `bundle_format 2`，四個檔要齊。auth 的兩個檔只當**資料**載入（見下方真正還原步驟 3），每張表印出筆數與「沒還原的 key」——正常是 generated 欄位（`users` 的 `confirmed_at`、`identities` 的 `email`）；出現別的名稱代表本機 stack 的 Auth 版本比備份舊，那些欄位的資料不會進來。
 5. **通過條件**（腳本最後印 `DRILL PASS`）：`role does not exist` 錯誤 0、計數／加密 kid／表與欄位與 function 的 ACL／publication／auth trigger 跟 manifest 0 差異、本機 active 的 cron job 0、anon／authenticated 讀得到的 `*_encrypted` 欄位 0。
    - 其他 pg_restore 錯誤（例如 `schema "public" already exists`）會列出物件名稱，不影響判定；第一次 dev 演練時記下基準數字，之後數字變了就去看 `drill-*.err`。
    - 可選：用 k2 的 keyring 對本機這份資料跑 `scripts/reencrypt-pii.ts` dry-run，預期 preflight 0 失敗。這個腳本能不能指向本機 stack，第一次 dev 演練時確認。
@@ -441,7 +463,18 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
    ```
 
    - 漏掉：還原出來的每張表都帶著 Supabase 預設給 anon／authenticated 的 ALL，Data API 重新打開（#1518），沒有任何錯誤。
-3. **pg_restore 四段**，每段都是 `age -d -i <identity> <檔> | pg_restore -d <目標> <參數>`：`public.dump.age --section=pre-data` → `public.dump.age --section=data` → `auth.dump.age --data-only` → `public.dump.age --section=post-data`。auth 的資料要在 post-data（外鍵）之前、在步驟 4 的 trigger 之前。
+3. **還原順序**：
+   1. `age -d -i <identity> public.dump.age | pg_restore -d <目標> --section=pre-data`。
+   2. **重套 0082**：`psql -X -v ON_ERROR_STOP=1 -f drizzle/0082_backup_auth_views.sql`（用 review 過的 repo 裡那份）。還原出來的 `drizzle.__drizzle_migrations` 已經列著 0082，`db:migrate` 不會再跑它。
+      - 漏掉：還原本身一切正常；之後第一個晚上的備份在 `privileges` 階段失敗，`relation "backup_auth.users" does not exist`。
+   3. `age -d … public.dump.age | pg_restore -d <目標> --section=data`。
+   4. **auth 資料（只當資料）**，`users` 先、`identities` 後。**絕對不要**把解密出來的內容直接 pipe 進 `psql`（那會把每一行當指令執行，一行 `\!` 就是在你的 Mac 上跑 shell）。照 `scripts/ops/backup-restore-drill.sh` 的 `restore_auth` 做：
+      - `CREATE SCHEMA futari_restore_staging; CREATE TABLE futari_restore_staging.users (r jsonb NOT NULL);`
+      - `age -d … auth-users.copy.age | psql -X -v ON_ERROR_STOP=1 -c "SET client_encoding = 'UTF8'" -c "\copy futari_restore_staging.users (r) FROM STDIN"`——指令只來自 `-c`，stdin 只是 `\copy` 的資料。
+      - 用演練腳本裡那個 DO 區塊 `INSERT INTO auth.users (<欄位>) SELECT <欄位> FROM futari_restore_staging.users s CROSS JOIN LATERAL jsonb_populate_record(NULL::auth.users, s.r) x`：欄位＝目標表非 generated、而且在資料裡出現的 key，名稱符合 `^[a-z_][a-z0-9_]*$`、用 `format('%I')` 加引號；插入筆數要等於 staging 筆數。
+      - `identities` 同上；最後 `DROP SCHEMA futari_restore_staging CASCADE;`。
+      - 漏掉 staging 的清理：auth 的完整內容留在一個沒人會看的 schema 裡，沒有任何錯誤。
+   5. `age -d … public.dump.age | pg_restore -d <目標> --section=post-data`。auth 的資料要在 post-data（外鍵）之前、在步驟 4 的 trigger 之前。
 4. **重套 `db/triggers/handle_new_user.sql`**（它不在 migrations 裡，不在 dump 裡）。
    - 漏掉：既有使用者一切正常，**新註冊的人沒有 Profiles 列**，登入後畫面壞掉。
 5. **realtime publication**：依 manifest 的 `## publication` 把表加回 `supabase_realtime`。
@@ -488,7 +521,7 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
 
 3. 換密碼：`\password futari_backup`，`security add-generic-password -s futari-backup -a futari_backup -U -w` 更新鑰匙圈（照設定步驟 3）。
 4. `ALTER ROLE futari_backup RESET ALL;` 再重跑 0081 的 `ALTER ROLE futari_backup SET default_transaction_read_only = on;`（角色可以改自己的設定）。
-5. 唯讀確認沒有留下東西：`futari_backup` 擁有的物件 0、`pg_auth_members` 裡不屬於任何角色、`has_table_privilege` 的 INSERT／UPDATE／DELETE 在 public 全是 false。全程唯讀，查完再處置（同〈緊急輪替〉）。
+5. 唯讀確認沒有留下東西：`futari_backup` 擁有的物件 0、`pg_auth_members` 裡不屬於任何角色、`has_table_privilege` 的 INSERT／UPDATE／DELETE 在 public 與 `backup_auth` 全是 false、`backup_auth` 沒有 CREATE。全程唯讀，查完再處置（同〈緊急輪替〉）。
 6. `ALTER ROLE futari_backup LOGIN;`，手動跑一次備份。
 7. 這個角色本來就讀得到全部 app 資料與 `auth.users`（見「擋不住」），應視為資料已暴露；是否通知使用者是使用者的決定。
 
@@ -497,7 +530,7 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
 ### Rollback
 
 1. `launchctl bootout gui/$(id -u)/local.futari.backup`，刪掉 plist 與 `~/.local/libexec/futari-backup/`。
-2. admin service 跑 `scripts/ops/drop-futari-backup-role.sql`（先收回 default privileges，再 DROP ROLE）。順序反過來（先拆角色、排程還在）的樣子：下一次 03:30 失敗通知，其他都不受影響。
+2. admin service 跑 `scripts/ops/drop-futari-backup-role.sql`（先收回 default privileges，再 DROP ROLE），再跑 `scripts/rollback/0082_backup_auth_views.down.sql`（`DROP SCHEMA backup_auth CASCADE`，只有 view、不丟資料）。順序反過來（先拆角色、排程還在）的樣子：下一次 03:30 失敗通知，其他都不受影響。
 3. 刪掉 Drive 上的備份資料夾並清空垃圾桶；在 Google 帳戶撤銷 rclone；`security delete-generic-password -s futari-backup -a futari_backup`。
 4. 隱私權政策的備份段落一起改回去——政策寫著「保留約 60 天」，實際做法要跟它一致。
 
