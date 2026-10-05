@@ -88,7 +88,7 @@ BEGIN
   SELECT string_agg(e, ' ' ORDER BY e) INTO extra FROM (
     SELECT format('%s:%s:%s:%s', a.grantor::regrole,
                   CASE a.grantee WHEN 0 THEN 'PUBLIC' ELSE a.grantee::regrole::text END,
-                  a.privilege_type, a.is_grantable) AS e
+                  a.privilege_type, a.is_grantable::text) AS e
       FROM pg_namespace n, aclexplode(n.nspacl) a
      WHERE n.nspname = 'backup_auth' AND a.grantee <> n.nspowner
   ) s;
@@ -108,7 +108,7 @@ BEGIN
     SELECT string_agg(e, ' ' ORDER BY e) INTO extra FROM (
       SELECT format('%s:%s:%s:%s', a.grantor::regrole,
                     CASE a.grantee WHEN 0 THEN 'PUBLIC' ELSE a.grantee::regrole::text END,
-                    a.privilege_type, a.is_grantable) AS e
+                    a.privilege_type, a.is_grantable::text) AS e
         FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace, aclexplode(c.relacl) a
        WHERE n.nspname = 'backup_auth' AND c.relname = v AND a.grantee <> c.relowner
     ) s;

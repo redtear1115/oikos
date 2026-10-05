@@ -252,6 +252,9 @@ describe('0082 backup_auth views (#1549)', () => {
     expect(code.trimEnd().endsWith(check)).toBe(true)
     expect(check).toContain("'postgres:futari_backup:USAGE:false'")
     expect(check).toContain("'postgres:futari_backup:SELECT:false'")
+    // format('%s', bool) renders 'f', not 'false': without the ::text cast the
+    // assertion RAISEs on every environment (caught applying to dev 2026-10-05).
+    expect(check.match(/a\.is_grantable::text/g) ?? []).toHaveLength(2)
     expect(check).toMatch(/aclexplode\(n\.nspacl\)/)
     expect(check).toMatch(/aclexplode\(c\.relacl\)/)
     expect(check).toMatch(/c\.reloptions IS NULL/)
