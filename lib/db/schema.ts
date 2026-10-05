@@ -611,7 +611,7 @@ export const tripExpenses = pgTable('TripExpenses', {
 // 依 group.member_a/b 連結）。所有存取走 Server Action；5 表 RLS enable 且無
 // policy，並 REVOKE anon/authenticated = client 直連 deny。CHECK 與索引只寫在
 // drizzle/0066_outing_tables.sql。分享連結與認領（#1558）的欄位與 partial
-// unique index 在 drizzle/0082_outing_link_join.sql：token 一律不存明文，查詢用
+// unique index 在 drizzle/0083_outing_link_join.sql：token 一律不存明文，查詢用
 // sha256 hash（lib/outing/tokens.ts）；share_token_encrypted 綁 outing id 的 AAD，
 // 只給成員重新顯示連結。spec: docs/superpowers/specs/group-outing-design.md
 export const outings = pgTable('Outings', {

@@ -652,7 +652,7 @@ export const resetOutingShareLink = action(async (input: { outingId: string }): 
  * only): clears its claim, so the old cookie stops resolving and the slot is
  * claimable again from the link. History stays on the same row.
  * - Bound to an account (profile_id set), or a deleted account's slot
- *   (claimed_at kept, no claim token — 0082) → `outing_slot_bound`.
+ *   (claimed_at kept, no claim token — 0083) → `outing_slot_bound`.
  * - Already unclaimed → nothing to do (ok).
  */
 export const releaseOutingSlot = action(async (input: { outingId: string; participantId: string }): Promise<void> => {

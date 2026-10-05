@@ -5,8 +5,8 @@ import { loadEnvLocal, seedGroup as seedGroupRow } from '../outing/_setup'
 // ─── 出遊．朋友從分享連結加入 against the real dev database (#1558 S2) ──────
 //
 // Integration tests for PLAN-1558 rev 2 「S2 acceptance」 a–h. They need
-// 0082_outing_link_join applied to the dev project (every Outings insert names
-// the 0082 columns: without it they fail with 42703). Excluded from CI with the
+// 0083_outing_link_join applied to the dev project (every Outings insert names
+// the 0083 columns: without it they fail with 42703). Excluded from CI with the
 // rest of __tests__/actions/** (vitest.config.ci.ts).
 //
 // Identity is the mocked session user (`mockUserId`, '' = anonymous) plus the
