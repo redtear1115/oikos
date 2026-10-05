@@ -173,13 +173,15 @@ tag 先留在本地，第 11 步 merge 進 `main` 之後才推。
 
 ```bash
 git push -u origin chore/release-vX.Y.Z
+# 先把 PR 內文寫進 scratchpad 的 release-body.md：第 4 步驗證腳本的輸出＋第 7 步的原生影響結論
 gh pr create --base main --head chore/release-vX.Y.Z \
-  --title "chore(release): vX.Y.Z" --milestone "vX.Y.Z" --label no-changelog
+  --title "chore(release): vX.Y.Z" --body-file <scratchpad>/release-body.md \
+  --milestone "vX.Y.Z" --label no-changelog
 ```
 
+- `--body-file` 不能省：非互動環境（agent 的 Bash）裡沒有 `--body` / `--body-file`，`gh pr create` 會直接報錯 `must provide --title and --body`。
 - milestone 必填（CLAUDE.md 政策）。
-- `no-changelog` label：release PR 本身就是在搬 CHANGELOG，沒有這個 label，`.claude/hooks/require-changelog.sh` 會擋下第 11 步的 merge。
-- PR 內文附上第 4 步驗證腳本的輸出與第 7 步的原生影響結論，給 verifier 對照。
+- `no-changelog` label：依 CLAUDE.md 的 CHANGELOG 政策，release PR 屬於「不需要另補條目」的 PR。（hook 本身因為這條 PR 有動到 CHANGELOG.md 就會放行，label 是標示用途，不是為了過 hook。）
 
 ### 10. 獨立驗證
 
@@ -187,7 +189,7 @@ gh pr create --base main --head chore/release-vX.Y.Z \
 
 驗證的 claim（每條都要 CONFIRMED）：
 
-1. PR diff 只動了 `package.json` / `package-lock.json` / `CHANGELOG.md` / `CLAUDE.md` / `README.md`，兩個 package 檔的 `version` 都是 `X.Y.Z`。
+1. PR diff 只動了 `package.json` / `package-lock.json` / `CHANGELOG.md` / `CLAUDE.md` / `README.md`；`package.json` 的 `version`、`package-lock.json` 的頂層 `version` 與 `packages[""].version` 三處都是 `X.Y.Z`。
 2. 在 PR head 上重跑第 4 步的兩段驗證腳本，兩個 ✓ 都出現。
 3. `[X.Y.Z]` 段的每一條條目，都在 `git diff vPREV..origin/main` 裡指得出支持它的那幾行；`vPREV..origin/main` 裡有使用者可見的改動卻沒有條目，也算失敗。issue／PR 內文是意圖不是證據。
 4. CLAUDE.md「目前狀態」是 `vX.Y.Z`、backlog 表已刪掉 `vX.Y.Z` 那列；README 最近 3 版表正確。
@@ -203,13 +205,16 @@ gh pr create --base main --head chore/release-vX.Y.Z \
 ```bash
 HEAD_SHA=$(gh pr view <N> --json headRefOid -q .headRefOid)   # 必須等於 verifier 驗的那顆
 gh pr merge <N> --merge --match-head-commit "$HEAD_SHA"       # 不加 --admin
-git fetch origin && git merge-base --is-ancestor vX.Y.Z origin/main && git push origin vX.Y.Z
-gh pr create --base release --head main --title "release: vX.Y.Z" --milestone "vX.Y.Z" --label no-changelog
+git fetch origin && git merge-base --is-ancestor vX.Y.Z origin/main \
+  && git push origin vX.Y.Z \
+  && gh pr create --base release --head main --title "release: vX.Y.Z" \
+       --body "vX.Y.Z 部署到 prod。release PR #<N> 已經獨立驗證並 merge 進 main。" \
+       --milestone "vX.Y.Z" --label no-changelog
 ```
 
 - `--match-head-commit` 確保 merge 的就是驗過的那顆；驗證之後有新 commit 就回第 10 步。
 - harness（auto mode）擋下 `gh pr merge` 時，請使用者在該 session 輸入 `allow gh pr merge <N>`，不要繞路，也不要改由別的 session 代為 merge。
-- tag 只在確認它已經在 `origin/main` 的歷史裡之後才推。
+- tag 只在確認它已經在 `origin/main` 的歷史裡之後才推；這個檢查失敗時，tag 不推、deploy PR 也不開，停下來回報。
 
 **到此為止。** `main → release` 的 PR 開好就停，由使用者 merge（Vercel 隨即部署 prod）。
 
