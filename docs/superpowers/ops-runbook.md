@@ -70,7 +70,7 @@ select hash, created_at from drizzle.__drizzle_migrations order by created_at;
 
 ## 欄位級加密：本機沒有 prod 金鑰、金鑰輪替 runbook（#881 / #882 / #1287）
 
-**陷阱**：本機與 Futari Secrets dmg 裡**每一份標成 prod 的 env 檔**（`.env.production`、dmg 的 `env/.env.production`、`reencrypt-prod.env`）裡的 `ENCRYPTION_KEY` 都是 **dev 的金鑰**。prod 的金鑰只存在 Vercel 的 Sensitive 變數裡（`vercel env pull` 拿回來的是 `[SENSITIVE]`），本機拿不到。那些檔案裡的 prod DB 連線字串是對的，只有金鑰不對。
+**陷阱**：本機與 Futari Secrets dmg 裡**每一份標成 prod 的 env 檔**（`.env.production`、dmg 的 `env/.env.production`、`reencrypt-prod.env`）裡的 `ENCRYPTION_KEY` 都是 **dev 的金鑰**。那些檔案裡的 prod DB 連線字串是對的，只有金鑰不對。prod 的 k1 從來只存在 Vercel 的 Sensitive 變數裡（`vercel env pull` 拿回來的是 `[SENSITIVE]`），本機從沒拿到過，2026-10-05 已經移除（見下方「現況」）。現役的 k2 有備份，唯一能用的本機副本是 secrets image 裡的 `prod-k2*` 檔，見下方「只含 k_new 的 env 檔」。
 
 **失效的樣子**：拿這些檔案對 prod 跑 `scripts/reencrypt-pii.ts --target=prod`，所有 guard 都會通過（DB URL 確實是 prod），然後 **preflight 在每一列都失敗——包括 app 自己寫進去的列**——什麼都沒寫入（2026-09-27 dry-run：preflight 22/22 失敗）。這不是資料壞了，是金鑰拿錯了。#881 是同一個錯誤往寫入方向走的版本：backfill 用 dev 金鑰加密了 prod 資料，prod runtime 解不開。
 
@@ -107,7 +107,9 @@ select hash, created_at from drizzle.__drizzle_migrations order by created_at;
    - **每日備份保留期（#1549）＝約 60 天**：Drive 上 30 份，加上被清掉之後在 Drive 垃圾桶的 30 天（見〈Prod backup (futari_backup)〉）。哪一份備份依賴哪些 kid，看該份 manifest 的 `## encrypted_kids`——k_old 要等到**最後一份含 `v1:k_old:` 的備份**被清出垃圾桶之後才能銷毀。
    - PITR：prod 是 Free plan，沒有。
 
-**回退**：步驟 7 之前，把 write kid 指回 k_old（rollback floor 隨之調整回去）、重跑重新加密即可；步驟 7 之後，從 secrets image 把 k_old 加回 `ENCRYPTION_KEYS`（k_old 的位元組本身永遠沒被丟棄，只是先不在環境變數裡）。**例外：今天 prod 的 k_old（k1）從沒匯出過 Vercel，secrets image 裡沒有它**——對 k1 來說，從 Vercel 移除就等於銷毀（步驟 7 就是步驟 8），沒有加回來的路。所以 k1 必須留在 Vercel，直到備份／PITR／dump 的保留期都過了、#1466 也完成。失效的樣子：提早移除 k1 之後，任何從保留期內備份還原的舊資料都永久解不開，而且不會有任何錯誤提醒你這件事，直到真的要還原那天。
+**回退**：步驟 7 之前，把 write kid 指回 k_old（rollback floor 隨之調整回去）、重跑重新加密即可；步驟 7 之後，從 secrets image 把 k_old 加回 `ENCRYPTION_KEYS`（k_old 的位元組本身永遠沒被丟棄，只是先不在環境變數裡）。**例外：prod 的 k1 從沒匯出過 Vercel，secrets image 裡沒有它。** 對 k1 來說，從 Vercel 移除就等於銷毀（步驟 7 就是步驟 8），沒有加回來的路。所以 k1 一直留在 Vercel，等到備份、PITR、dump 三者的保留期條件都確認過、#1466 也完成，才在 2026-10-05 移除（見下方「現況」）。失效的樣子：提早移除 k1 之後，任何從保留期內備份還原的舊資料都永久解不開，而且不會有任何錯誤提醒你，直到真的要還原那天才發現。
+
+  dmg 裡標成 prod 的 `ENCRYPTION_KEY` 檔**不是** k1 的備份，那是 dev 金鑰（見本節開頭「陷阱」）。把它當 k1 加回 Vercel，解不開任何 k1 密文。2026-10-05 移除當晚就有一段說明誤寫成「dmg 裡留著 k1 的備份，可以加回來」，這說法不成立。
 
 **按環境跑（步驟 5 的細節）：**
 
@@ -155,9 +157,16 @@ S2 導入時的回退方式是「把 `ENCRYPTION_WRITE_KID` 拿掉、redeploy／
 
 ### 現況（generic，不含金鑰值）
 
-prod 目前寫入與儲存用的是輪替後的新 kid；那把新 kid 已經備份進 secrets image。舊 kid 仍留在 Vercel，但只當作解密的備援，直到「備份／PITR 保留期」都過了，並且 #1466（密文出現在 client payload）落地之後，才會被真正移除。舊 kid 沒有離線備份，所以從 Vercel 移除它就是銷毀它（見上方「回退」的例外）。
+**prod 只剩新 kid（k2）**。寫入和儲存都用它，備份在 secrets image。舊 kid（k1）已在 **2026-10-05** 從 Vercel 的 Production 與 Preview 移除（#1287）。k1 沒有離線備份，所以這次移除就是銷毀，**沒有回退**：任何 `v1:k1:` 密文從此都解不開。移除後重新部署，prod 的加密欄位仍正常顯示。
 
-**備份與 PITR 這個條件（#1287 的關卡）**：prod 沒有 PITR（Free plan）。#1549 的每日備份從輪替完成之後才開始，當時 prod 的加密欄位已經全部是新 kid（22 筆，2026-10-04），所以**這些備份只依賴新 kid，不會延長舊 kid 的保留**。這要用第一份 prod 備份 manifest 的 `## encrypted_kids` 確認：除了 `null`（該列這欄沒有值）之外只能有新 kid。出現舊 kid 或 `other`，就停下來改寫這一段，不要照原計畫移除舊 kid。任何操作者手動 `pg_dump` 那一項不受影響，仍要個別確認。
+**移除前確認過的條件**（2026-10-04 確認，2026-10-05 執行）：
+
+- **PITR／Supabase 備份**：prod 是 Free plan，沒有 PITR，也沒有 Supabase 的自動備份。
+- **手動 dump**：本機沒有 prod dump，使用者也確認其他裝置與雲端都沒有。
+- **#1549 每日備份**：從輪替完成後才開始，當時 prod 加密欄位已全部是新 kid（22 筆，2026-10-04），不依賴 k1。
+- **#1466**（密文出現在 client payload）：已關閉。
+
+**還要做的驗收**：第一份 prod 備份（#1549 S3）的 manifest 跑出來後，看 `## encrypted_kids`，除了 `null`（該列這欄沒有值）只能有新 kid。若出現舊 kid 或 `other`，代表 prod 還有新 kid 解不開的列：停下來回報、查是哪一欄。資料不會因此復原，但要知道壞了哪些。
 
 ---
 
