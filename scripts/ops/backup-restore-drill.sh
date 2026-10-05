@@ -7,7 +7,8 @@
 #   scripts/ops/backup-restore-drill.sh --bundle <dir> --identity <key.age>
 #   scripts/ops/backup-restore-drill.sh --bundle <dir> --identity-paper
 #
-#   --bundle <dir>      a downloaded bundle: public.dump.age, auth.dump.age,
+#   --bundle <dir>      a downloaded bundle (bundle_format 2): public.dump.age,
+#                       auth-users.copy.age, auth-identities.copy.age,
 #                       manifest.txt.age (`rclone copy <remote>/<bundle> <dir>`)
 #   --identity <file>   the passphrase-protected age identity (key.age) on the
 #                       mounted "Futari Backup Key" image; age asks for the
@@ -26,7 +27,12 @@
 #   2. default privileges for postgres in public: revoke everything from anon
 #      and authenticated, so new objects start closed and the dump's own
 #      GRANT / REVOKE decide;
-#   3. pre-data → data → auth data (users, identities) → post-data;
+#   3. pre-data → re-apply drizzle/0082 (backup_auth views; the restored
+#      journal lists 0082, so db:migrate would skip it) → data → auth data
+#      (users, then identities) → post-data. Auth parts are DATA ONLY: each is
+#      loaded with `\copy … FROM STDIN` into a staging table (r jsonb) and
+#      inserted from there with jsonb_populate_record. Bundle content is never
+#      run as a psql script;
 #   4. re-apply db/triggers/handle_new_user.sql (lives outside the migrations);
 #   5. re-add tables to publication supabase_realtime from the manifest;
 #   6. cron: compare only — creates no job and loads no Vault secret. A real
@@ -36,7 +42,9 @@
 #
 # Output: counts, error counts and object names only. Raw tool stderr goes to
 # a 600 file under ~/Library/Caches/futari-backup-drill/. Decrypted data only
-# ever flows through pipes into pg_restore; the manifest is held in memory.
+# ever flows through pipes into pg_restore or psql's \copy (as data, never as
+# commands); auth rows sit in a staging schema of the local stack until they
+# are inserted, then the schema is dropped. The manifest is held in memory.
 
 set -euo pipefail
 umask 077
@@ -45,6 +53,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 MANIFEST_SQL="${SCRIPT_DIR}/futari-backup-manifest.sql"
 TRIGGER_SQL="${REPO}/db/triggers/handle_new_user.sql"
+BACKUP_AUTH_SQL="${REPO}/drizzle/0082_backup_auth_views.sql"
 CONF_FILE="${HOME}/.config/futari-backup/config"
 DRILL_DIR="${HOME}/Library/Caches/futari-backup-drill"
 
@@ -58,7 +67,7 @@ while [ $# -gt 0 ]; do
     --identity) IDENTITY_FILE=${2:-}; shift 2 ;;
     --identity-paper) IDENTITY_PAPER=1; shift ;;
     --port) PORT=${2:-}; shift 2 ;;
-    -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,47p' "$0"; exit 0 ;;
     *) printf 'unknown argument: %s\n' "$1" >&2; exit 2 ;;
   esac
 done
@@ -86,8 +95,8 @@ fi
 PSQL="${PG_BIN_DIR}/psql"
 PG_RESTORE="${PG_BIN_DIR}/pg_restore"
 for t in "$PSQL" "$PG_RESTORE" "$AGE_BIN"; do [ -x "$t" ] || fail "tool not found: ${t}"; done
-for t in "$MANIFEST_SQL" "$TRIGGER_SQL"; do [ -f "$t" ] || fail "missing: ${t}"; done
-for part in public.dump.age auth.dump.age manifest.txt.age; do
+for t in "$MANIFEST_SQL" "$TRIGGER_SQL" "$BACKUP_AUTH_SQL"; do [ -f "$t" ] || fail "missing: ${t}"; done
+for part in public.dump.age auth-users.copy.age auth-identities.copy.age manifest.txt.age; do
   [ -f "${BUNDLE}/${part}" ] || fail "bundle has no ${part}"
   [ "$(head -n 1 "${BUNDLE}/${part}" | LC_ALL=C tr -d '\r')" = 'age-encryption.org/v1' ] || fail "${part} is not an age file"
 done
@@ -161,6 +170,10 @@ decrypt() { "$AGE_BIN" -d -i <(printf '%s\n' "$IDENT") "$1"; }
 
 MANIFEST=$(decrypt "${BUNDLE}/manifest.txt.age" 2>>"$ERR") || fail "cannot decrypt the manifest with this identity"
 section() { printf '%s\n' "$1" | awk -v s="## $2" '$0 == s { f = 1; next } /^## / { f = 0 } f && NF'; }
+# Format 1 (auth as a pg_dump archive) was never produced by a real run; only
+# format 2's data-only parts are restored by this script.
+BUNDLE_FORMAT=$(section "$MANIFEST" dump | awk -F'\t' '$1 == "bundle_format" { print $2 }')
+[ "$BUNDLE_FORMAT" = '2' ] || fail "bundle_format is '${BUNDLE_FORMAT:-missing}', this drill restores format 2 only"
 printf 'manifest: taken_at %s, %s tables\n' \
   "$(section "$MANIFEST" meta | awk -F'\t' '$1 == "taken_at" { print $2 }')" \
   "$(section "$MANIFEST" row_counts | grep -c . || true)"
@@ -190,9 +203,80 @@ restore_pass() { # label file pg_restore-args...
   [ "${st[0]}" -eq 0 ] || fail "age could not decrypt ${file##*/}"
   printf '   pg_restore exit %s\n' "${st[1]}"
 }
+# Auth rows: data only, through a staging table. psql gets its command from
+# -c and the decrypted part on stdin, read by \copy as data — a line in the
+# part can never run as a psql command (`\!` included). After the \copy psql
+# exits; nothing else is read from stdin. The INSERT then takes only target
+# columns that are not generated and appear as keys in the data, with names
+# checked against ^[a-z_][a-z0-9_]*$ and quoted by format('%I').
+#   Failure look: a part that is not one JSON object per line stops the drill
+#   at the \copy (invalid input syntax for type json) or at the object check;
+#   a short load stops it at the row count check — never a partial success.
+STAGE_SCHEMA='futari_restore_staging'
+restore_auth() { # table
+  local t=$1
+  [[ "$t" =~ ^(users|identities)$ ]] || fail "unexpected auth table ${t}"
+  step "3. restore auth.${t} (data only: staged \\copy)"
+  q "CREATE TABLE ${STAGE_SCHEMA}.${t} (r jsonb NOT NULL)" >/dev/null || fail "creating the staging table for ${t} failed"
+  set +e
+  decrypt "${BUNDLE}/auth-${t}.copy.age" 2>>"$ERR" \
+    | "$PSQL" -X -w -q -v ON_ERROR_STOP=1 -c "SET client_encoding = 'UTF8'" -c "\\copy ${STAGE_SCHEMA}.${t} (r) FROM STDIN" >/dev/null 2>>"$ERR"
+  local st=("${PIPESTATUS[@]}")
+  set -e
+  [ "${st[0]}" -eq 0 ] || fail "age could not decrypt auth-${t}.copy.age"
+  [ "${st[1]}" -eq 0 ] || fail "loading auth-${t}.copy.age into staging failed (psql exit ${st[1]})"
+  q "DO \$restore\$
+DECLARE
+  cols text[];
+  bad text;
+  n_stage bigint;
+  n_ins bigint;
+BEGIN
+  IF EXISTS (SELECT 1 FROM ${STAGE_SCHEMA}.${t} WHERE jsonb_typeof(r) <> 'object') THEN
+    RAISE EXCEPTION 'auth.${t}: a staged line is not a JSON object';
+  END IF;
+  SELECT count(*) INTO n_stage FROM ${STAGE_SCHEMA}.${t};
+  SELECT array_agg(a.attname::text ORDER BY a.attnum) INTO cols
+    FROM pg_attribute a
+   WHERE a.attrelid = 'auth.${t}'::regclass AND a.attnum > 0 AND NOT a.attisdropped AND a.attgenerated = ''
+     AND a.attname::text IN (SELECT DISTINCT jsonb_object_keys(r) FROM ${STAGE_SCHEMA}.${t});
+  IF n_stage = 0 THEN
+    RETURN;
+  END IF;
+  IF cols IS NULL THEN
+    RAISE EXCEPTION 'auth.${t}: no staged key matches a column';
+  END IF;
+  SELECT string_agg(c, ' ') INTO bad FROM unnest(cols) c WHERE c !~ '^[a-z_][a-z0-9_]*\$';
+  IF bad IS NOT NULL THEN
+    RAISE EXCEPTION 'auth.${t}: unexpected column name(s): %', bad;
+  END IF;
+  EXECUTE format('INSERT INTO auth.%I (%s) SELECT %s FROM %I.%I s CROSS JOIN LATERAL jsonb_populate_record(NULL::auth.%I, s.r) x',
+    '${t}',
+    (SELECT string_agg(format('%I', c), ', ') FROM unnest(cols) c),
+    (SELECT string_agg(format('x.%I', c), ', ') FROM unnest(cols) c),
+    '${STAGE_SCHEMA}', '${t}', '${t}');
+  GET DIAGNOSTICS n_ins = ROW_COUNT;
+  IF n_ins <> n_stage THEN
+    RAISE EXCEPTION 'auth.${t}: inserted % of % staged rows', n_ins, n_stage;
+  END IF;
+END
+\$restore\$" >/dev/null || fail "inserting auth.${t} from staging failed"
+  # Keys in the backup that this stack has no (non-generated) column for —
+  # generated columns are expected here; anything else is data the target
+  # version drops. Column names only, never values.
+  printf '   rows %s; keys not restored: %s\n' \
+    "$(q "SELECT count(*) FROM ${STAGE_SCHEMA}.${t}")" \
+    "$(q "SELECT coalesce(string_agg(k, ' ' ORDER BY k), 'none') FROM (SELECT DISTINCT jsonb_object_keys(r) AS k FROM ${STAGE_SCHEMA}.${t}) d WHERE k NOT IN (SELECT attname::text FROM pg_attribute WHERE attrelid = 'auth.${t}'::regclass AND attnum > 0 AND NOT attisdropped AND attgenerated = '')")"
+}
+
 restore_pass pre-data "${BUNDLE}/public.dump.age" --section=pre-data
+step '3. re-apply drizzle/0082_backup_auth_views.sql (backup_auth views)'
+"$PSQL" -X -w -q -v ON_ERROR_STOP=1 -f "$BACKUP_AUTH_SQL" >/dev/null 2>>"$ERR" || fail "0082 re-apply failed (see the ACL check message in the .err file)"
 restore_pass data "${BUNDLE}/public.dump.age" --section=data
-restore_pass 'auth data (users, identities)' "${BUNDLE}/auth.dump.age" --data-only
+q "CREATE SCHEMA ${STAGE_SCHEMA}; REVOKE ALL ON SCHEMA ${STAGE_SCHEMA} FROM PUBLIC" >/dev/null || fail "creating the staging schema failed (left over from an earlier run?)"
+restore_auth users
+restore_auth identities
+q "DROP SCHEMA ${STAGE_SCHEMA} CASCADE" >/dev/null || fail "dropping the staging schema failed"
 restore_pass post-data "${BUNDLE}/public.dump.age" --section=post-data
 
 step '4. re-apply db/triggers/handle_new_user.sql'
