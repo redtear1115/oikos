@@ -578,7 +578,14 @@ curl -sI "https://<ref>.supabase.co/auth/v1/authorize?provider=apple"
 
 `app/layout.tsx` 的 `<GoogleAnalytics gaId="G-YHXFBMRQ3S">` 是**跨產品共用**的 property，服務 Ko-fi 收益來源歸因；`components/KofiWidget.tsx` 的 `kofi_widget_click` 事件（repo 內唯一的 `gtag` 呼叫）是歸因鏈的輸入。
 
-**Why 看起來可刪但不能刪**：從 Oikos 單體看，142 KiB 的 GA 只為一個事件、且已有 PostHog / Vercel Analytics，像是效能 easy win——但它承載跨產品商業需求。也不要 lazy load 或條件載入 gtag：歸因需要 pageview + referrer 上下文。
+**Why 看起來可刪但不能刪**：從 Oikos 單體看，142 KiB 的 GA 只為一個事件、且已有 PostHog / Vercel Analytics，像是效能 easy win——但它承載跨產品商業需求。
+
+**也不要 lazy load gtag（例如比照 #1520 用 `whenIdle` 延後）**。除了 `app/layout.tsx` 那道「只在 production deployment 載入」的 gate（#1116），不要再加任何條件。理由有兩個：
+
+- **Ko-fi 點擊會無聲消失**：`KofiWidget` 呼叫的是 `window.gtag?.(…)`，`window.gtag` 還沒定義前這次呼叫什麼都不做。延後載入，太早發生的 `kofi_widget_click` 就直接不見，不會有任何錯誤。
+- **GA 是品牌頁唯一完整的流量基準**：#1520 之後，品牌頁的 PostHog 會晚 1–2 秒才啟動，太快離開的訪客不會進 PostHog。observability-design.md 因此指定「跨部署日比流量看 GA」。gtag 一延後，這個基準就跟著偏掉。
+
+**撤回紀錄（2026-10-06）**：這裡原本寫「歸因需要 pageview + referrer 上下文」，這個理由不成立。Ko-fi 收益歸因（#1308）只用 `kofi_widget_click` 的 `source` 加點擊時間，去對 Ko-fi 的交易時間，不用 pageview 也不用 referrer。規則本身沒變，換掉的只是理由。以後如果有人再以「歸因需要 pageview」為由反對改動 GA，先回來看這段。
 
 **How**：landing JS 的效能工作對準 first-party chunks 與 PostHog module，把這 142 KiB 當必要商業成本。見 oikos#922 與 `components/KofiWidget.tsx` 檔頭註解（runtime iOS gate + `SOURCE` 歸因常數）。
 
