@@ -450,7 +450,11 @@ describe('shell scripts (#1549)', () => {
     const code = shCode(drill)
     expect(code).toMatch(/^export PGHOST='127\.0\.0\.1'$/m)
     expect(code.match(/PGHOST=/g)).toHaveLength(1)
-    expect(code).not.toMatch(/service_role|SERVICE_ROLE|supabase\s+status|\.env\b|vault\.|cron\.schedule|cron\.alter_job/i)
+    // The role name may appear only in step 2's default-privileges REVOKEs
+    // (closing it, never connecting as it); anything else naming it fails.
+    const closeDefaults = /^q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON (TABLES|SEQUENCES|FUNCTIONS) FROM anon, authenticated, service_role".*$/gm
+    expect(code.match(closeDefaults)).toHaveLength(3)
+    expect(code.replace(closeDefaults, '')).not.toMatch(/service_role|SERVICE_ROLE|supabase\s+status|\.env\b|vault\.|cron\.schedule|cron\.alter_job/i)
     expect(code).toMatch(/SELECT count\(\*\) FROM cron\.job WHERE active/)
   })
 
@@ -458,7 +462,7 @@ describe('shell scripts (#1549)', () => {
     const code = shCode(drill)
     const order = [
       'CREATE ROLE %I WITH NOLOGIN NOSUPERUSER NOCREATEROLE NOCREATEDB NOREPLICATION NOINHERIT BYPASSRLS',
-      'REVOKE ALL ON TABLES FROM anon, authenticated',
+      'REVOKE ALL ON TABLES FROM anon, authenticated, service_role',
       '--section=pre-data',
       '-f "$BACKUP_AUTH_SQL"',
       '--section=data',

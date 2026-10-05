@@ -63,7 +63,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **備份改從 `backup_auth` 的唯讀 view 讀登入身分（#1549）**
   使用者：畫面沒有變化；每日備份能完整包含登入帳號。
-  技術：`0082` 建整列 jsonb view（不擋 Supabase Auth 升級），備份改兩段 `COPY` 只存資料、演練以 staging `\copy` 還原（`bundle_format 2`），收回 0081 的 auth grant；演練的 `pg_restore` 段先排空串流，age 不再因 SIGPIPE 誤報解密失敗。
+  技術：`0082` 建整列 jsonb view（不擋 Supabase Auth 升級），備份改兩段 `COPY` 只存資料、演練以 staging `\copy` 還原（`bundle_format 2`），收回 0081 的 auth grant；演練的 `pg_restore` 段先排空串流，age 不再因 SIGPIPE 誤報解密失敗；還原先關掉 service_role 的 default privileges，function ACL 不再多出來源沒有的授權。
 
 ## [1.6.7] - 2026-10-04
 

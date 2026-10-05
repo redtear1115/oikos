@@ -24,9 +24,14 @@
 # Restore order (identical to a real restore, except step 6):
 #   1. global roles futari_app / futari_backup, NOLOGIN, same attributes as
 #      0072 / 0081;
-#   2. default privileges for postgres in public: revoke everything from anon
-#      and authenticated, so new objects start closed and the dump's own
-#      GRANT / REVOKE decide;
+#   2. default privileges for postgres in public: revoke everything from anon,
+#      authenticated and service_role, so new objects start closed and the
+#      dump's own GRANT / REVOKE decide. pg_dump writes grants relative to the
+#      built-in default (owner + PUBLIC), never relative to pg_default_acl, so
+#      any role left in the target's defaults gets a grant the source never
+#      had. Failure look with service_role left in: "function ACLs 4
+#      difference(s)" (frozen_copy_visible, viewer_in_chapter, whose source
+#      ACL has no service_role) — first dev drill, 2026-10-06;
 #   3. pre-data → re-apply drizzle/0082 (backup_auth views; the restored
 #      journal lists 0082, so db:migrate would skip it) → data → auth data
 #      (users, then identities) → post-data. Auth parts are DATA ONLY: each is
@@ -187,10 +192,10 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'role')
 \\gexec" -v role="$role" >/dev/null || fail "creating role ${role} failed"
 done
 
-step '2. default privileges: start closed for anon / authenticated'
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated" >/dev/null || fail "default privileges (tables)"
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated" >/dev/null || fail "default privileges (sequences)"
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated" >/dev/null || fail "default privileges (functions)"
+step '2. default privileges: start closed for the API roles'
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (tables)"
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (sequences)"
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (functions)"
 
 restore_pass() { # label file pg_restore-args...
   local label=$1 file=$2
