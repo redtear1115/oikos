@@ -55,6 +55,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：登入頁說明 Apple 登入沒有完成、可以再試或改用 Google，並提醒用 Apple 建立的帳本不會出現在 Google 帳號裡。
   技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤；en／ja 譯文已確認（#1556）。
 
+- **出遊詳情頁可以分享連結、看認領狀態、改支出（#1558）**
+  使用者：帳本成員可以複製與重設分享連結、看每個人未認領／已認領／已綁帳號並釋放或移除、改出遊名稱、編輯刪除支出與還款；出遊清單多了「我參與的出遊」。
+  技術：共用 `ExpenseSheet`／`SettlementList` 取代 `AddExpenseSheet`，供公開頁沿用；`getOutingDetail` 只多回 `claimedAt` 與 `hasClaimToken` 布林，profile id 不再傳到 client；en／ja 譯文待確認。
+
 ### 技術變更
 
 - **出遊的加入、認領與權限規則（#1558）**

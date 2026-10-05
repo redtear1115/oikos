@@ -819,6 +819,8 @@ export type Translations = {
     /** Participant count tag on a list row. `{count}` = number of participants. */
     countTag: string
     addCta: string
+    /** 我參與的出遊 (#1558): other ledgers' outings the user joined. */
+    participating: { title: string; hint: string }
     empty: { heading: string; body: string }
   }
 
@@ -850,6 +852,44 @@ export type Translations = {
     /** Participant name for a group member whose profile name is blank. */
     memberFallbackName: string
     endConfirmBody: string
+    // ── #1558 admin side (dashboard) ──
+    rename: string
+    editExpense: string
+    deleteExpense: string
+    deleteExpenseConfirmTitle: string
+    deleteExpenseConfirmBody: string
+    settlementsLabel: string
+    /** aria-label of a repayment row's delete; `{row}` = "A → B". */
+    deleteSettlementAria: string
+    deleteSettlementConfirmTitle: string
+    /** `{row}` = "A → B", `{amount}` = formatted amount. */
+    deleteSettlementConfirmBody: string
+    share: {
+      label: string
+      hint: string
+      copy: string
+      copied: string
+      /** Clipboard refused; the URL is on screen to select by hand. */
+      copyFailed: string
+      reset: string
+      resetConfirmTitle: string
+      resetConfirmBody: string
+      resetConfirm: string
+      resetDone: string
+    }
+    participant: {
+      /** Claim status under a participant's name (簡潔中性). */
+      claim: { unclaimed: string; claimed: string; bound: string }
+      removedTag: string
+      /** "⋯" menu label; `{name}` = participant. */
+      actionsAria: string
+      release: string
+      releaseConfirmTitle: string
+      releaseConfirmBody: string
+      remove: string
+      removeConfirmTitle: string
+      removeConfirmBody: string
+    }
     form: {
       nameLabel: string
       namePlaceholder: string
@@ -3630,6 +3670,10 @@ export const zhTW: Translations = {
     endedTag: '已結束',
     countTag: '{count} 人',
     addCta: '開一個出遊',
+    participating: {
+      title: '我參與的出遊',
+      hint: '朋友開的出遊，你從連結加入的。',
+    },
     empty: {
       heading: '還沒有出遊',
       body: '揪朋友出門時，開一個出遊，誰付了什麼、誰該還誰，一起看得清楚。',
@@ -3656,6 +3700,42 @@ export const zhTW: Translations = {
     foldSettlementNote: '出遊『{name}』結算',
     memberFallbackName: '成員',
     endConfirmBody: '結束後就不能再記帳了。你們倆之間的部分會折回主帳本，朋友的部分留在這裡結算。',
+    rename: '改名',
+    editExpense: '編輯支出',
+    deleteExpense: '刪除這筆支出',
+    deleteExpenseConfirmTitle: '刪除這筆支出？',
+    deleteExpenseConfirmBody: '刪除後，每個人的淨額會重新計算。',
+    settlementsLabel: '還款紀錄',
+    deleteSettlementAria: '刪除還款 {row}',
+    deleteSettlementConfirmTitle: '刪除這筆還款？',
+    deleteSettlementConfirmBody: '{row}，{amount}。刪除後，每個人的淨額會重新計算。',
+    share: {
+      label: '分享連結',
+      hint: '朋友點開連結，選自己的名字或加入自己，就能一起記。',
+      copy: '複製連結',
+      copied: '已複製連結',
+      copyFailed: '沒能自動複製，可以直接選取上面的連結。',
+      reset: '重設連結',
+      resetConfirmTitle: '重設分享連結？',
+      resetConfirmBody: '舊連結會立刻失效。已經加入的人不受影響，照常記帳。',
+      resetConfirm: '重設',
+      resetDone: '已換成新連結，舊連結不能再用了。',
+    },
+    participant: {
+      claim: {
+        unclaimed: '未認領',
+        claimed: '已認領',
+        bound: '已綁帳號',
+      },
+      removedTag: '已移除',
+      actionsAria: '{name} 的操作',
+      release: '釋放',
+      releaseConfirmTitle: '釋放「{name}」？',
+      releaseConfirmBody: '目前認領這個名字的裝置會失去身分，朋友可以從連結重新認領。記過的帳都留著。',
+      remove: '移除',
+      removeConfirmTitle: '移除「{name}」？',
+      removeConfirmBody: '之後的新支出不能再分給這個人，記過的帳都留著。',
+    },
     form: {
       nameLabel: '出遊名稱',
       namePlaceholder: '例如：九份兩日',
