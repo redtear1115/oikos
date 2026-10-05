@@ -68,7 +68,7 @@ export class CryptoError extends Error {
  * (actions/membership.ts — Assets.group_id and InvoiceCredentials on leave).
  *
  * Primary keys: Assets.id, CarDetails/HouseDetails/ChildDetails.asset_id,
- * InvoiceCredentials.id.
+ * InvoiceCredentials.id, Outings.id.
  */
 export const ENCRYPTED_COLUMNS = {
   Assets: ['name_encrypted'],
@@ -76,6 +76,7 @@ export const ENCRYPTED_COLUMNS = {
   HouseDetails: ['address_encrypted'],
   ChildDetails: ['id_number_encrypted', 'insurance_id_encrypted'],
   InvoiceCredentials: ['verification_code_encrypted'],
+  Outings: ['share_token_encrypted'],
 } as const
 
 export type EncryptedTable = keyof typeof ENCRYPTED_COLUMNS

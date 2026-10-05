@@ -57,6 +57,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **出遊分享連結與認領的資料欄位（#1558）**
+  使用者：畫面沒有變化；之後「朋友從連結加入」用這些欄位。
+  技術：`0082` 加 `Outings.share_token_hash／_encrypted／_rotated_at` 與 `OutingParticipants.claim_token_hash／claimed_at`（token 只存 sha256 與綁 outing id 的密文，`lib/outing/tokens.ts`）；刪帳號時清 claim token 並保留 `claimed_at`。
+
 - **正式站資料庫每天自動備份（#1549）**
   使用者：畫面沒有變化；資料庫出事時有最近 30 天內的備份可以還原。
   技術：`0081` 建唯讀角色 `futari_backup`；`scripts/ops/backup-prod.sh` 以同一快照 `pg_dump` 串流 age 加密後 rclone 上傳 Drive，附還原演練腳本；ops-runbook 新增一節。
