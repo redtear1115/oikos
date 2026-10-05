@@ -197,7 +197,15 @@ restore_pass() { # label file pg_restore-args...
   shift 2
   step "3. restore ${label}"
   set +e
-  decrypt "$file" 2>>"$ERR" | "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"
+  # pg_restore stops reading stdin once its section is done (pre-data and
+  # post-data never reach the end of the archive), so age would die of
+  # SIGPIPE (141) on a perfectly good file. Drain the rest: age then always
+  # reads, authenticates and exits on the whole file, and its status means
+  # "decrypted" again.
+  #   Failure look without the drain: "DRILL STOPPED: age could not decrypt
+  #   public.dump.age" right after "3. restore pre-data", with an empty .err
+  #   (found in the first dev drill, 2026-10-06).
+  decrypt "$file" 2>>"$ERR" | { "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"; rc=$?; cat >/dev/null; exit "$rc"; }
   local st=("${PIPESTATUS[@]}")
   set -e
   [ "${st[0]}" -eq 0 ] || fail "age could not decrypt ${file##*/}"

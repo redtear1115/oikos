@@ -479,6 +479,16 @@ describe('shell scripts (#1549)', () => {
     }
   })
 
+  // Regression (first dev drill, 2026-10-06): pg_restore stops reading after
+  // its section, age died of SIGPIPE and the drill reported a good bundle as
+  // undecryptable. The pg_restore side must drain stdin before exiting.
+  it('drill: the pg_restore pass drains the rest of the stream, so age\'s status means "decrypted"', () => {
+    const code = shCode(drill)
+    const feeds = code.split('\n').filter((l) => /\bdecrypt "\$file"[^\n]*\|/.test(l))
+    expect(feeds).toHaveLength(1)
+    expect(feeds[0]).toMatch(/\| \{ "\$PG_RESTORE" [^}]*; rc=\$\?; cat >\/dev\/null; exit "\$rc"; \}$/)
+  })
+
   it('drill: re-applies the repo\'s 0082 and accepts bundle_format 2 only, with all four parts present', () => {
     const code = shCode(drill)
     expect(code).toMatch(/^BACKUP_AUTH_SQL="\$\{REPO\}\/drizzle\/0082_backup_auth_views\.sql"$/m)
