@@ -994,6 +994,42 @@ export type Translations = {
     }
   }
 
+  /** Public outing share pages (#1558): /outing/<shareToken>, /outing/r/<outingId>. */
+  outingPublic: {
+    /** Generic page title / OG title. Same for every outing: no outing name (link previewers cache it). */
+    metaTitle: string
+    metaDescription: string
+    whoAreYou: string
+    whoAreYouHint: string
+    /** "以「{name}」加入" — confirm button after picking a slot. */
+    joinAs: string
+    /** Under a slot someone already picked. */
+    slotTakenHint: string
+    notListed: string
+    addSelfLabel: string
+    addSelfPlaceholder: string
+    addSelfSave: string
+    /** Landing (share token, not joined yet) for an ended outing: no joining. */
+    endedLanding: string
+    /** Full view of an ended outing: read-only. */
+    endedNote: string
+    invalidTitle: string
+    invalidBody: string
+    /** /outing/r/<id> without a claim cookie or bound session. */
+    noAccessTitle: string
+    noAccessBody: string
+    youTag: string
+    bindTitle: string
+    /** {name} = the slot this device claimed. */
+    bindBody: string
+    bindConfirm: string
+    bindDismiss: string
+    signUpTitle: string
+    /** {name} = the viewer's slot. */
+    signUpBody: string
+    signUpCta: string
+  }
+
   /** Trip detail page (#42). */
   tripDetail: {
     /** Empty-state copy when the trip is still active. */
@@ -3797,6 +3833,34 @@ export const zhTW: Translations = {
       USD: '美元',
       JPY: '日圓',
     },
+  },
+
+  /** Public outing share pages (#1558): /outing/<shareToken>, /outing/r/<outingId>. */
+  outingPublic: {
+    metaTitle: '出遊分帳 · Futari',
+    metaDescription: '朋友傳來的出遊分帳連結。',
+    whoAreYou: '你是哪一位？',
+    whoAreYouHint: '選你的名字，就能一起記這次出遊的帳。',
+    joinAs: '以「{name}」加入',
+    slotTakenHint: '已經有人選了。如果這是你，請開這次出遊的人幫你釋放。',
+    notListed: '名單上沒有你？',
+    addSelfLabel: '你的名字',
+    addSelfPlaceholder: '大家會看到這個名字',
+    addSelfSave: '加入',
+    endedLanding: '這次出遊已經結束，不能再加入。',
+    endedNote: '這次出遊已經結束，帳目只能查看。',
+    invalidTitle: '這個連結已經失效',
+    invalidBody: '可能已經被重設。請向開這次出遊的人要新的連結。',
+    noAccessTitle: '看不到這次出遊',
+    noAccessBody: '這台裝置還沒加入這次出遊。請用朋友傳來的連結打開。',
+    youTag: '你',
+    bindTitle: '這是你嗎？',
+    bindBody: '把「{name}」連到你的帳號，換手機也找得回這次出遊。',
+    bindConfirm: '是我，連到帳號',
+    bindDismiss: '不是我',
+    signUpTitle: '之後也想找得到這次出遊？',
+    signUpBody: '登入後，「{name}」會連到你的帳號。不登入也能繼續記。',
+    signUpCta: '登入',
   },
 
   tripDetail: {

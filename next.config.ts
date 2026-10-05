@@ -3,6 +3,7 @@ import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import { PROTECTED_ROOT_SEGMENTS } from "./lib/auth/protectedPaths";
+import { SUPPORTED_LOCALES } from "./lib/i18n/locales-meta";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -48,6 +49,31 @@ export const FRAME_DENY_HEADERS = [
   { key: "X-Frame-Options", value: "DENY" },
 ];
 
+// #1558 — the outing share pages: `/outing/<shareToken>` and the resume route
+// `/outing/r/<outingId>`, with or without a locale prefix. The share token is a
+// bearer secret in the URL, so:
+// - Referrer-Policy: no-referrer — a full-page navigation from here to
+//   /sign-in (or any outbound link) must not carry the token in Referer /
+//   document.referrer, where GA and PostHog would pick it up. The pages also
+//   set <meta name="referrer" content="no-referrer"> as a second layer.
+// - noindex + private, no-store — per-token pages, never cached or indexed.
+// - frame-ancestors 'none' — the page holds buttons that write.
+// Failure looks like nothing: the page renders the same; the token just shows
+// up in another site's referrer logs or a shared cache.
+// tests/outing-public-headers-1558.test.ts checks this config; check
+// `curl -sI` on a deploy too (Next may rewrite Cache-Control on dynamic pages).
+export const OUTING_PUBLIC_HEADERS = [
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
+  { key: "Cache-Control", value: "private, no-store" },
+  ...FRAME_DENY_HEADERS,
+];
+
+export const OUTING_PUBLIC_SOURCES = [
+  "/outing/:path*",
+  `/:locale(${SUPPORTED_LOCALES.join("|")})/outing/:path*`,
+] as const;
+
 // Exported unwrapped (no Sentry/Serwist/analyzer) so tests can match paths
 // with Next's own matcher.
 export const headerRules = [
@@ -92,6 +118,7 @@ export const headerRules = [
     source: `/:root(${FRAME_DENY_ROOTS.join("|")})/:path*`,
     headers: FRAME_DENY_HEADERS,
   },
+  ...OUTING_PUBLIC_SOURCES.map((source) => ({ source, headers: OUTING_PUBLIC_HEADERS })),
 ];
 
 const nextConfig: NextConfig = {
