@@ -128,6 +128,7 @@ Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type �
 - Nebula = 生命視角（照料記錄、成長、情感）
 - 同一個 entity 定義層，兩個產品各自貢獻鏡頭
 - 架構上預留：entity UUID 將來要能跨產品共用
+- 開放使用者自訂 entity 類型時，類型定義要和 Nebula 連動，不要只在 Oikos 單邊長出來
 
 ---
 
