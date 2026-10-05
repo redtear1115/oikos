@@ -5,7 +5,7 @@
  *   profile_id set                         → bound     (signs in to get back)
  *   claim token set, no profile            → claimed   (cookie only; releasable)
  *   claimed_at set, no token, no profile   → claimed   (a deleted account's
- *                                            anonymised slot — 0082; NOT
+ *                                            anonymised slot — 0083; NOT
  *                                            releasable, the server refuses
  *                                            with outing_slot_bound)
  *   none of the above                      → unclaimed

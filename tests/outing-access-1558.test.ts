@@ -11,7 +11,7 @@ import { ja } from '@/lib/i18n/locales/ja'
 // #1558 S2 — actor resolution and action refusals, against the queue-based DB
 // mock (order-sensitive: one queued result per awaited query, in order). The
 // real-DB half (concurrency, IDOR on real rows, cap under FOR UPDATE) lives in
-// __tests__/actions/outing-link-join.test.ts and needs 0082 on dev.
+// __tests__/actions/outing-link-join.test.ts and needs 0083 on dev.
 
 const jar = new Map<string, string>()
 const setCookie = vi.fn()

@@ -5,7 +5,7 @@ import { aadFor, decrypt, encrypt } from '@/lib/crypto'
  * Tokens for 出遊．朋友從分享連結加入 (#1558): the outing's share link and a
  * participant's claim cookie. Server-only.
  *
- * Neither token is ever stored in plaintext (drizzle/0082_outing_link_join.sql):
+ * Neither token is ever stored in plaintext (drizzle/0083_outing_link_join.sql):
  *   * Lookup is by `hashToken` — sha256 hex in Outings.share_token_hash /
  *     OutingParticipants.claim_token_hash, each under a partial unique index.
  *   * The share token is also kept as lib/crypto ciphertext so a member can

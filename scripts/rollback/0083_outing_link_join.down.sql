@@ -1,4 +1,4 @@
--- ROLLBACK for drizzle/0082_outing_link_join.sql — MANUAL ONLY, NEVER RUN AUTOMATICALLY.
+-- ROLLBACK for drizzle/0083_outing_link_join.sql — MANUAL ONLY, NEVER RUN AUTOMATICALLY.
 -- Not a drizzle migration: drizzle-kit only runs files listed in drizzle/meta/_journal.json.
 --
 -- What it does:
@@ -6,13 +6,13 @@
 --      CREATE OR REPLACE FUNCTION block of
 --      drizzle/0074_account_deletion_profile_lock.sql (from
 --      "CREATE OR REPLACE FUNCTION public.process_account_deletions()" through
---      its REVOKE / GRANT) BEFORE this file — step 2 drops a column the 0082
+--      its REVOKE / GRANT) BEFORE this file — step 2 drops a column the 0083
 --      body writes, and every run of the job fails per user (WARNING only)
 --      until the function stops naming it.
 --   2. Drops the five #1558 columns and their indexes. Share links and claims
 --      are lost: every shared outing link stops working, every claimed
 --      friend loses their slot.
---   3. Removes 0082's row from drizzle.__drizzle_migrations.
+--   3. Removes 0083's row from drizzle.__drizzle_migrations.
 --
 -- Roll the app code back FIRST: anything that selects these columns fails
 -- once they are gone.

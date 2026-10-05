@@ -1,4 +1,4 @@
--- 0082: 出遊．朋友從分享連結加入 (#1558) — share-link and claim-token columns.
+-- 0083: 出遊．朋友從分享連結加入 (#1558) — share-link and claim-token columns.
 -- spec: docs/superpowers/specs/group-outing-design.md
 --
 -- Outings gets a share link; OutingParticipants gets a claim token. Neither
@@ -30,7 +30,7 @@
 -- Failure looks like: nothing errors; someone else is writing as
 -- '已離開的夥伴'.
 --
--- Rollback: scripts/rollback/0082_outing_link_join.down.sql
+-- Rollback: scripts/rollback/0083_outing_link_join.down.sql
 -- Idempotent: safe to re-apply.
 
 ALTER TABLE "Outings" ADD COLUMN IF NOT EXISTS "share_token_hash" text;

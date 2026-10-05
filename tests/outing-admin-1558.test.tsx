@@ -174,7 +174,7 @@ describe('claim status per participant', () => {
     expect(participantClaim({ profileId: null, claimedAt: null, hasClaimToken: false })).toEqual({ claim: 'unclaimed', releasable: false })
     expect(participantClaim({ profileId: null, claimedAt: at, hasClaimToken: true })).toEqual({ claim: 'claimed', releasable: true })
     expect(participantClaim({ profileId: 'u1', claimedAt: at, hasClaimToken: false })).toEqual({ claim: 'bound', releasable: false })
-    // A deleted account's anonymised slot (0082): claimed_at kept, no token.
+    // A deleted account's anonymised slot (0083): claimed_at kept, no token.
     expect(participantClaim({ profileId: null, claimedAt: at, hasClaimToken: false })).toEqual({ claim: 'claimed', releasable: false })
   })
 })
