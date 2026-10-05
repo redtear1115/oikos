@@ -1,11 +1,12 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { db } from '@/lib/db/client'
 import {
   outings, outingParticipants, outingExpenses, outingExpenseShares, outingSettlements,
-  groupEpochs, oikosGroups, profiles, settlements,
+  oikosGroups, profiles, settlements,
 } from '@/lib/db/schema'
-import { and, eq, isNull, inArray, sql } from 'drizzle-orm'
+import { and, eq, isNull, isNotNull, inArray, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { action, actionError } from '@/lib/action-errors'
@@ -16,6 +17,26 @@ import { getTodayYMD } from '@/lib/today-server'
 import { ymdToUTCNoon } from '@/lib/local-date'
 import { splitEqual } from '@/lib/outing/split'
 import { coupleNetFromOuting } from '@/lib/outing/foldback'
+import {
+  type OutingActor,
+  claimCookieName,
+  claimCookieOptions,
+  currentEpochId,
+  getSessionUserId,
+  loadOuting,
+  lockForAdmin,
+  lockForContentWrite,
+  readClaimToken,
+  requestActorInputs,
+  resolveActor,
+} from '@/lib/outing/access'
+import {
+  decryptShareToken,
+  encryptShareToken,
+  generateToken,
+  hashToken,
+  isWellFormedToken,
+} from '@/lib/outing/tokens'
 import {
   OUTING_PARTICIPANT_CAP,
   foldNoteName,
@@ -31,74 +52,56 @@ import {
 } from '@/lib/outing/validate'
 
 /**
- * 出遊 (Group Outing) actions, v1.6.0 (#943). spec:
+ * 出遊 (Group Outing) actions. v1.6.0 (#943) members only; v1.7.0 (#1558)
+ * friends join from a share link. spec:
  * docs/superpowers/specs/group-outing-design.md
  *
- * ## Who may write
- * Both members of the viewer's group, through `getViewerWriteContext()` —
- * which also rejects a viewer pinned to a past epoch. There is no anonymous
- * access in v1.6.0.
+ * ## Who may write (lib/outing/access.ts)
+ * - Content (add / edit / delete expense, record / delete settlement): a
+ *   member of the outing's group, or a participant (bound by session, or by
+ *   the `oc_<outingId>` claim cookie).
+ * - Outing-level (rename, end, delete, add / deactivate participant, get /
+ *   reset link, release slot): members only → participants get
+ *   `outing_admin_only`.
+ * - Creating an outing needs the viewer's own ledger (getViewerWriteContext).
+ * A member pinned to a past chapter is refused with a code, not a throw.
  *
  * ## Scoping (every id the client sends is untrusted)
- * - The outing is always loaded `WHERE id AND group_id = viewer's group AND
- *   deleted_at IS NULL`. Another group's outing id is indistinguishable from a
- *   missing one: `outing_not_found`.
- * - Every participant id (payer, share ids, settlement from/to) must be an
- *   active participant of THAT outing, else `outing_participant_not_found`.
- * - Member participants are created only here, from the group's member_a /
- *   member_b. Friends always get `profile_id NULL`; no action accepts a
- *   profile id from the client. Foldback finds the two members by profile_id.
+ * - The group always comes from the outing row. No action accepts a group id
+ *   or a profile id from the client.
+ * - An outing the caller cannot act on is `outing_not_found`, same as a
+ *   missing one. Expense / settlement ids are matched `WHERE id AND
+ *   outing_id = <resolved> AND deleted_at IS NULL`; another outing's id is
+ *   `outing_expense_not_found` / `outing_settlement_not_found`.
+ * - Every participant id (payer, share ids, settlement from/to) must be a
+ *   participant of THAT outing, else `outing_participant_not_found`.
+ *
+ * ## What leaves the server
+ * Results carry only ids the caller already addresses (outing, participant,
+ * expense, settlement) and, for members, the share token. Never a claim
+ * token (it goes out only as the httpOnly cookie), a hash, a profile id, a
+ * group id or an epoch id.
  *
  * ## Locking — why a Settlement can never miss an expense
  * - Every mutation of an outing's contents runs in one transaction that first
- *   locks the outing row (`FOR SHARE`; `FOR UPDATE` when adding a participant,
- *   so two concurrent adds cannot both pass the 20-person cap) and re-checks
- *   status = 'active' under that lock.
- * - `endOuting` flips status with a conditional UPDATE, which takes the row's
- *   exclusive lock. It therefore waits for in-flight mutations to commit, and
- *   any mutation that starts afterwards sees 'ended' and is rejected. Only then
- *   does it read expenses/settlements and compute the couple net.
- * - Lock order is Outings → OikosGroups (endOuting only). leaveGroup /
- *   removePartner / acceptInvite lock OikosGroups, then the open GroupEpochs
- *   row, and never Outings; outing writes never lock GroupEpochs beyond the
- *   FK check (FOR KEY SHARE, which those NO KEY UPDATE locks don't block), so
- *   there is no cycle.
+ *   locks the outing row (`FOR SHARE`; `FOR UPDATE` when adding a participant
+ *   or claiming a new slot, so two concurrent adds cannot both pass the
+ *   20-person cap) and re-checks status = 'active' under that lock.
+ * - `endOuting` locks the outing row FOR UPDATE before flipping status. It
+ *   therefore waits for in-flight mutations to commit, and any mutation that
+ *   starts afterwards sees 'ended' and is rejected. Only then does it read
+ *   expenses/settlements and compute the couple net.
+ * - Lock order is Outings → OikosGroups. leaveGroup / removePartner /
+ *   acceptInvite lock OikosGroups, then the open GroupEpochs row, and never
+ *   Outings; outing writes never lock GroupEpochs beyond the FK check (FOR
+ *   KEY SHARE, which those NO KEY UPDATE locks don't block), so there is no
+ *   cycle.
+ * - Claims are one conditional `UPDATE … RETURNING` on the slot: two
+ *   concurrent claims of one slot → exactly one row comes back.
  */
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
 type CurrencyCode = 'twd' | 'cny' | 'usd' | 'jpy'
-
-async function currentEpochId(tx: Tx, groupId: string): Promise<string | null> {
-  const [row] = await tx
-    .select({ id: groupEpochs.id })
-    .from(groupEpochs)
-    .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
-    .limit(1)
-  return row?.id ?? null
-}
-
-/**
- * Lock the outing for a content mutation and assert it can still be written:
- * belongs to the group, not deleted, active, and in the group's current epoch.
- * An outing whose epoch has closed (a solo owner's outing after a partner
- * accepted an invite) is read-only history; it can still be ended.
- */
-async function lockOutingForWrite(
-  tx: Tx,
-  outingId: string,
-  groupId: string,
-  strength: 'share' | 'update',
-) {
-  const [outing] = await tx
-    .select({ id: outings.id, status: outings.status, epochId: outings.epochId })
-    .from(outings)
-    .where(and(eq(outings.id, outingId), eq(outings.groupId, groupId), isNull(outings.deletedAt)))
-    .for(strength)
-  if (!outing) throw actionError('outing_not_found')
-  if (outing.status !== 'active') throw actionError('outing_not_active')
-  if (outing.epochId !== await currentEpochId(tx, groupId)) throw actionError('outing_epoch_closed')
-  return outing
-}
 
 /**
  * Lock the group row FOR SHARE (after any outing lock: the order is always
@@ -116,15 +119,6 @@ async function lockGroupShared(tx: Tx, groupId: string) {
   return row
 }
 
-/**
- * Reject ids that are not UUIDs before they reach Postgres: a malformed id
- * would fail the uuid cast (22P02) and surface as an unexpected error instead
- * of the "not found" it is.
- */
-function assertOutingId(outingId: unknown): asserts outingId is string {
-  if (!isUuid(outingId)) throw actionError('outing_not_found')
-}
-
 /** Throws unless every id is an active participant of `outingId`. */
 async function assertActiveParticipants(tx: Tx, outingId: string, ids: string[]) {
   if (!ids.every(isUuid)) throw actionError('outing_participant_not_found')
@@ -139,10 +133,19 @@ async function assertActiveParticipants(tx: Tx, outingId: string, ids: string[])
   if (found.length !== new Set(ids).size) throw actionError('outing_participant_not_found')
 }
 
+/** The participant row that entered a write, for `entered_by_participant_id`. */
+function enteredByOf(actor: OutingActor): string | null {
+  return actor.participantId
+}
+
 function revalidateOuting(outingId: string) {
   revalidatePath('/outings')
   revalidatePath(`/outings/${outingId}`)
 }
+
+const isUniqueViolation = (e: unknown) =>
+  typeof e === 'object' && e !== null &&
+  ((e as { code?: unknown }).code === '23505' || (e as { cause?: { code?: unknown } }).cause?.code === '23505')
 
 export interface CreateOutingInput {
   name: string
@@ -205,25 +208,20 @@ export interface AddParticipantInput {
   displayName: string
 }
 
-/** Add a friend (a name, never linked to a profile in v1.6.0). At most 20 people per outing. */
+/** Add a friend by name (members only). At most 20 people per outing. */
 export const addOutingParticipant = action(async (input: AddParticipantInput): Promise<{ id: string }> => {
-  const { group } = await getViewerWriteContext()
-  assertOutingId(input?.outingId)
+  const inputs = await requestActorInputs(String(input?.outingId))
   const displayName = normalizeParticipantName(input?.displayName)
 
   const participant = await db.transaction(async (tx) => {
     // FOR UPDATE, not FOR SHARE: two concurrent adds must serialize, or both
     // would count 19 and both insert.
-    await lockOutingForWrite(tx, input.outingId, group.id, 'update')
-    const [{ n }] = await tx
-      .select({ n: sql<number>`count(*)::int` })
-      .from(outingParticipants)
-      .where(eq(outingParticipants.outingId, input.outingId))
-    if (Number(n) >= OUTING_PARTICIPANT_CAP) throw actionError('outing_participant_limit')
-
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs, 'update')
+    await assertWritable(tx, outing)
+    await assertUnderCap(tx, outing.id)
     const [row] = await tx
       .insert(outingParticipants)
-      .values({ outingId: input.outingId, displayName, profileId: null })
+      .values({ outingId: outing.id, displayName, profileId: null })
       .returning({ id: outingParticipants.id })
     return row
   })
@@ -231,6 +229,21 @@ export const addOutingParticipant = action(async (input: AddParticipantInput): P
   revalidateOuting(input.outingId)
   return { id: participant.id }
 })
+
+/** Content-mutation status checks for admin paths (lockForContentWrite has its own). */
+async function assertWritable(tx: Tx, outing: { status: string; epochId: string; groupId: string }) {
+  if (outing.status !== 'active') throw actionError('outing_not_active')
+  if (outing.epochId !== await currentEpochId(tx, outing.groupId)) throw actionError('outing_epoch_closed')
+}
+
+/** Under the outing's FOR UPDATE lock: refuse the 21st participant. */
+async function assertUnderCap(tx: Tx, outingId: string) {
+  const [{ n }] = await tx
+    .select({ n: sql<number>`count(*)::int` })
+    .from(outingParticipants)
+    .where(eq(outingParticipants.outingId, outingId))
+  if (Number(n) >= OUTING_PARTICIPANT_CAP) throw actionError('outing_participant_limit')
+}
 
 export interface AddExpenseInput {
   outingId: string
@@ -242,54 +255,126 @@ export interface AddExpenseInput {
   category?: string | null
 }
 
-export const addOutingExpense = action(async (input: AddExpenseInput): Promise<{ id: string }> => {
-  const { user, group } = await getViewerWriteContext()
-  assertOutingId(input?.outingId)
+interface ValidExpense {
+  paidBy: string
+  amount: number
+  shareIds: string[]
+  description: string | null
+  category: string | null
+}
+
+function validateExpense(input: Omit<AddExpenseInput, 'outingId'> | undefined): ValidExpense {
   const amount = validateOutingAmount(input?.amount)
   const shareIds = normalizeShareIds(input?.participantIds)
   const description = normalizeDescription(input?.description)
   const category = normalizeCategory(input?.category)
-  if (typeof input.paidByParticipantId !== 'string' || !input.paidByParticipantId) {
-    throw actionError('outing_participant_not_found')
-  }
+  const paidBy = input?.paidByParticipantId
+  if (typeof paidBy !== 'string' || !paidBy) throw actionError('outing_participant_not_found')
+  return { paidBy, amount, shareIds, description, category }
+}
+
+async function insertExpense(tx: Tx, outingId: string, e: ValidExpense, enteredBy: string | null) {
+  const [row] = await tx
+    .insert(outingExpenses)
+    .values({
+      outingId,
+      paidByParticipantId: e.paidBy,
+      amount: e.amount,
+      description: e.description,
+      category: e.category,
+      enteredByParticipantId: enteredBy,
+    })
+    .returning({ id: outingExpenses.id })
+  await tx.insert(outingExpenseShares).values(
+    splitEqual(e.amount, e.shareIds).map((s) => ({
+      expenseId: row.id,
+      participantId: s.participantId,
+      shareAmount: s.shareAmount,
+    })),
+  )
+  return row
+}
+
+export const addOutingExpense = action(async (input: AddExpenseInput): Promise<{ id: string }> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  const e = validateExpense(input)
 
   const expense = await db.transaction(async (tx) => {
-    await lockOutingForWrite(tx, input.outingId, group.id, 'share')
-    await lockGroupShared(tx, group.id)
-    await assertActiveParticipants(tx, input.outingId, [input.paidByParticipantId, ...shareIds])
-
-    // Audit: which member entered it. Null only if the viewer somehow has no
-    // participant row (e.g. joined the group after the outing was opened).
-    const [enteredBy] = await tx
-      .select({ id: outingParticipants.id })
-      .from(outingParticipants)
-      .where(and(eq(outingParticipants.outingId, input.outingId), eq(outingParticipants.profileId, user.id)))
-      .limit(1)
-
-    const [row] = await tx
-      .insert(outingExpenses)
-      .values({
-        outingId: input.outingId,
-        paidByParticipantId: input.paidByParticipantId,
-        amount,
-        description,
-        category,
-        enteredByParticipantId: enteredBy?.id ?? null,
-      })
-      .returning({ id: outingExpenses.id })
-
-    await tx.insert(outingExpenseShares).values(
-      splitEqual(amount, shareIds).map((s) => ({
-        expenseId: row.id,
-        participantId: s.participantId,
-        shareAmount: s.shareAmount,
-      })),
-    )
-    return row
+    const { outing, actor } = await lockForContentWrite(tx, input?.outingId, inputs)
+    await assertActiveParticipants(tx, outing.id, [e.paidBy, ...e.shareIds])
+    return insertExpense(tx, outing.id, e, enteredByOf(actor))
   })
 
   revalidateOuting(input.outingId)
   return { id: expense.id }
+})
+
+export interface EditExpenseInput extends AddExpenseInput {
+  expenseId: string
+}
+
+/**
+ * Edit = soft-delete + insert (the app's convention). Any member or
+ * participant may edit any expense (spec 「朋友的寫權限」); the new row's
+ * entered_by records who did. A participant who has since been deactivated
+ * may stay on the expense they were already on, but cannot be added.
+ */
+export const editOutingExpense = action(async (input: EditExpenseInput): Promise<{ id: string }> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  const e = validateExpense(input)
+  if (!isUuid(input?.expenseId)) throw actionError('outing_expense_not_found')
+
+  const expense = await db.transaction(async (tx) => {
+    const { outing, actor } = await lockForContentWrite(tx, input?.outingId, inputs)
+    const [old] = await tx
+      .update(outingExpenses)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(outingExpenses.id, input.expenseId),
+        eq(outingExpenses.outingId, outing.id),
+        isNull(outingExpenses.deletedAt),
+      ))
+      .returning({ id: outingExpenses.id, paidBy: outingExpenses.paidByParticipantId })
+    if (!old) throw actionError('outing_expense_not_found')
+
+    const oldShares = await tx
+      .select({ participantId: outingExpenseShares.participantId })
+      .from(outingExpenseShares)
+      .where(eq(outingExpenseShares.expenseId, old.id))
+    const already = new Set([old.paidBy, ...oldShares.map((s) => s.participantId)])
+    const ids = [...new Set([e.paidBy, ...e.shareIds])]
+    if (!ids.every(isUuid)) throw actionError('outing_participant_not_found')
+    const rows = await tx
+      .select({ id: outingParticipants.id, deactivatedAt: outingParticipants.deactivatedAt })
+      .from(outingParticipants)
+      .where(and(eq(outingParticipants.outingId, outing.id), inArray(outingParticipants.id, ids)))
+    const ok = rows.filter((r) => r.deactivatedAt === null || already.has(r.id))
+    if (ok.length !== ids.length) throw actionError('outing_participant_not_found')
+
+    return insertExpense(tx, outing.id, e, enteredByOf(actor))
+  })
+
+  revalidateOuting(input.outingId)
+  return { id: expense.id }
+})
+
+export const deleteOutingExpense = action(async (input: { outingId: string; expenseId: string }): Promise<void> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  if (!isUuid(input?.expenseId)) throw actionError('outing_expense_not_found')
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForContentWrite(tx, input?.outingId, inputs)
+    const [row] = await tx
+      .update(outingExpenses)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(outingExpenses.id, input.expenseId),
+        eq(outingExpenses.outingId, outing.id),
+        isNull(outingExpenses.deletedAt),
+      ))
+      .returning({ id: outingExpenses.id })
+    if (!row) throw actionError('outing_expense_not_found')
+  })
+  revalidateOuting(input.outingId)
 })
 
 export interface RecordSettlementInput {
@@ -301,21 +386,21 @@ export interface RecordSettlementInput {
 
 /** A repayment between two people inside the outing. Never touches the main ledger. */
 export const recordOutingSettlement = action(async (input: RecordSettlementInput): Promise<{ id: string }> => {
-  const { group } = await getViewerWriteContext()
-  assertOutingId(input?.outingId)
+  const inputs = await requestActorInputs(String(input?.outingId))
   const amount = validateOutingAmount(input?.amount)
-  const { fromParticipantId: from, toParticipantId: to } = input
+  const from = input?.fromParticipantId
+  const to = input?.toParticipantId
   if (typeof from !== 'string' || typeof to !== 'string' || !from || !to) {
     throw actionError('outing_participant_not_found')
   }
   if (from === to) throw actionError('outing_settlement_same_party')
 
   const settlement = await db.transaction(async (tx) => {
-    await lockOutingForWrite(tx, input.outingId, group.id, 'share')
-    await assertActiveParticipants(tx, input.outingId, [from, to])
+    const { outing } = await lockForContentWrite(tx, input?.outingId, inputs)
+    await assertActiveParticipants(tx, outing.id, [from, to])
     const [row] = await tx
       .insert(outingSettlements)
-      .values({ outingId: input.outingId, fromParticipantId: from, toParticipantId: to, amount })
+      .values({ outingId: outing.id, fromParticipantId: from, toParticipantId: to, amount })
       .returning({ id: outingSettlements.id })
     return row
   })
@@ -324,12 +409,31 @@ export const recordOutingSettlement = action(async (input: RecordSettlementInput
   return { id: settlement.id }
 })
 
+export const deleteOutingSettlement = action(async (input: { outingId: string; settlementId: string }): Promise<void> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  if (!isUuid(input?.settlementId)) throw actionError('outing_settlement_not_found')
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForContentWrite(tx, input?.outingId, inputs)
+    const [row] = await tx
+      .update(outingSettlements)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(outingSettlements.id, input.settlementId),
+        eq(outingSettlements.outingId, outing.id),
+        isNull(outingSettlements.deletedAt),
+      ))
+      .returning({ id: outingSettlements.id })
+    if (!row) throw actionError('outing_settlement_not_found')
+  })
+  revalidateOuting(input.outingId)
+})
+
 /**
- * End the outing. If it belongs to the group's current epoch, the couple's
- * mutual debt folds into the main ledger as ONE ordinary Settlement (note
- * 「出遊『{name}』結算」) and GroupBalance is recalculated — in the same
- * transaction as the status change. Friends' shares never touch the main
- * ledger.
+ * End the outing (members only). If it belongs to the group's current epoch,
+ * the couple's mutual debt folds into the main ledger as ONE ordinary
+ * Settlement (note 「出遊『{name}』結算」) and GroupBalance is recalculated —
+ * in the same transaction as the status change. Friends' shares never touch
+ * the main ledger.
  *
  * An outing whose epoch has closed ends WITHOUT folding. Duo epochs close only
  * through leaveGroup / removePartner, which refuse while an outing is active,
@@ -340,45 +444,34 @@ export const recordOutingSettlement = action(async (input: RecordSettlementInput
  * a second call gets `outing_not_active` and writes nothing.
  */
 export const endOuting = action(async (input: { outingId: string }): Promise<{ folded: boolean }> => {
-  const { group } = await getViewerWriteContext()
-  assertOutingId(input?.outingId)
+  const inputs = await requestActorInputs(String(input?.outingId))
   const t = await getTranslations()
   const todayYMD = await getTodayYMD()
   const now = new Date()
 
   const result = await db.transaction(async (tx) => {
-    // 1. Outing row lock (exclusive) + status flip. Waits for any in-flight
-    //    FOR SHARE mutation; later mutations see 'ended'.
+    // 1. Outing row FOR UPDATE, then the group row NO KEY UPDATE (members read
+    //    from it fresh, not from any pre-transaction context). NO KEY UPDATE,
+    //    like the chapter closers: it excludes them and other endOutings, but
+    //    does not block the FK check (FOR KEY SHARE) of an insert that
+    //    references this group. Asked for up front: upgrading a SHARE lock
+    //    later would let two endOutings deadlock.
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs, 'update', 'no key update')
+    const group = { id: outing.groupId }
+
+    // 2. Status flip. Waits for nothing more (the row is ours); later
+    //    mutations see 'ended'.
     const [ended] = await tx
       .update(outings)
       .set({ status: 'ended', endedAt: now, foldedAt: now })
-      .where(and(
-        eq(outings.id, input.outingId),
-        eq(outings.groupId, group.id),
-        eq(outings.status, 'active'),
-        isNull(outings.foldedAt),
-        isNull(outings.deletedAt),
-      ))
+      .where(and(eq(outings.id, outing.id), eq(outings.status, 'active'), isNull(outings.foldedAt)))
       .returning({ id: outings.id, name: outings.name, epochId: outings.epochId, currency: outings.currency })
-    if (!ended) {
-      const [exists] = await tx
-        .select({ id: outings.id })
-        .from(outings)
-        .where(and(eq(outings.id, input.outingId), eq(outings.groupId, group.id), isNull(outings.deletedAt)))
-        .limit(1)
-      throw actionError(exists ? 'outing_not_active' : 'outing_not_found')
-    }
+    if (!ended) throw actionError('outing_not_active')
 
-    // 2. Group row lock, then read the members fresh — not from the viewer
-    //    context resolved before the transaction. NO KEY UPDATE, like the
-    //    chapter closers: it still excludes them and other endOutings, but
-    //    does not block the FK check (FOR KEY SHARE) of an insert that
-    //    references this group.
     const [locked] = await tx
       .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB, baseCurrency: oikosGroups.baseCurrency })
       .from(oikosGroups)
       .where(eq(oikosGroups.id, group.id))
-      .for('no key update')
 
     // 3. Past epoch → terminal, no fold.
     if (ended.epochId !== await currentEpochId(tx, group.id)) return { folded: false }
@@ -454,18 +547,298 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
 })
 
 /**
- * Soft-delete an outing, active or ended. Deleting an ended outing does NOT
- * undo its fold: that Settlement is an ordinary main-ledger row, deletable on
- * its own like any other, and GroupBalance does not move here.
+ * Soft-delete an outing, active or ended (members only). Deleting an ended
+ * outing does NOT undo its fold: that Settlement is an ordinary main-ledger
+ * row, deletable on its own like any other, and GroupBalance does not move
+ * here.
  */
 export const softDeleteOuting = action(async (input: { outingId: string }): Promise<void> => {
-  const { group } = await getViewerWriteContext()
-  assertOutingId(input?.outingId)
-  const [row] = await db
-    .update(outings)
-    .set({ deletedAt: new Date() })
-    .where(and(eq(outings.id, input.outingId), eq(outings.groupId, group.id), isNull(outings.deletedAt)))
-    .returning({ id: outings.id })
-  if (!row) throw actionError('outing_not_found')
+  const inputs = await requestActorInputs(String(input?.outingId))
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    await tx.update(outings).set({ deletedAt: new Date() }).where(eq(outings.id, outing.id))
+  })
   revalidatePath('/outings')
+})
+
+/** Rename (members only). Works on an ended outing too. */
+export const renameOuting = action(async (input: { outingId: string; name: string }): Promise<void> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  const name = normalizeOutingName(input?.name)
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    await tx.update(outings).set({ name }).where(eq(outings.id, outing.id))
+  })
+  revalidateOuting(input.outingId)
+})
+
+/**
+ * Mark a participant inactive (members only): out of new expenses, history
+ * kept. Their claim cookie stops resolving (access.ts requires an active
+ * slot), so a friend holding it falls back to "choose who you are".
+ */
+export const deactivateOutingParticipant = action(async (
+  input: { outingId: string; participantId: string },
+): Promise<void> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  if (!isUuid(input?.participantId)) throw actionError('outing_participant_not_found')
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    await assertWritable(tx, outing)
+    const [row] = await tx
+      .update(outingParticipants)
+      .set({ deactivatedAt: new Date() })
+      .where(and(
+        eq(outingParticipants.id, input.participantId),
+        eq(outingParticipants.outingId, outing.id),
+        isNull(outingParticipants.deactivatedAt),
+      ))
+      .returning({ id: outingParticipants.id })
+    if (!row) throw actionError('outing_participant_not_found')
+  })
+  revalidateOuting(input.outingId)
+})
+
+/** Store a fresh share token on the (locked) outing row; returns the plaintext. */
+async function rotateShareToken(tx: Tx, outingId: string): Promise<string> {
+  const token = generateToken()
+  await tx
+    .update(outings)
+    .set({
+      shareTokenHash: hashToken(token),
+      shareTokenEncrypted: encryptShareToken(token, outingId),
+      shareTokenRotatedAt: new Date(),
+    })
+    .where(eq(outings.id, outingId))
+  return token
+}
+
+/**
+ * The outing's share token (members only). Created on first call; later calls
+ * return the same token (decrypted, bound to this outing's id), so copying the
+ * link twice never rotates it. The caller builds the URL.
+ */
+export const getOutingShareLink = action(async (input: { outingId: string }): Promise<{ token: string }> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  const token = await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    const [row] = await tx
+      .select({ enc: outings.shareTokenEncrypted })
+      .from(outings)
+      .where(eq(outings.id, outing.id))
+    if (row?.enc) return decryptShareToken(row.enc, outing.id)
+    return rotateShareToken(tx, outing.id)
+  })
+  return { token }
+})
+
+/**
+ * Replace the share token (members only). The old link stops working at once;
+ * claimed participants keep writing (their cookie / session is not the share
+ * token).
+ */
+export const resetOutingShareLink = action(async (input: { outingId: string }): Promise<{ token: string }> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  const token = await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    return rotateShareToken(tx, outing.id)
+  })
+  revalidateOuting(input.outingId)
+  return { token }
+})
+
+/**
+ * Release a slot claimed by cookie and not bound to an account (members
+ * only): clears its claim, so the old cookie stops resolving and the slot is
+ * claimable again from the link. History stays on the same row.
+ * - Bound to an account (profile_id set), or a deleted account's slot
+ *   (claimed_at kept, no claim token — 0082) → `outing_slot_bound`.
+ * - Already unclaimed → nothing to do (ok).
+ */
+export const releaseOutingSlot = action(async (input: { outingId: string; participantId: string }): Promise<void> => {
+  const inputs = await requestActorInputs(String(input?.outingId))
+  if (!isUuid(input?.participantId)) throw actionError('outing_participant_not_found')
+  await db.transaction(async (tx) => {
+    const { outing } = await lockForAdmin(tx, input?.outingId, inputs)
+    const [slot] = await tx
+      .select({
+        profileId: outingParticipants.profileId,
+        claimTokenHash: outingParticipants.claimTokenHash,
+        claimedAt: outingParticipants.claimedAt,
+      })
+      .from(outingParticipants)
+      .where(and(eq(outingParticipants.id, input.participantId), eq(outingParticipants.outingId, outing.id)))
+      .for('update')
+    if (!slot) throw actionError('outing_participant_not_found')
+    if (slot.profileId !== null || (slot.claimTokenHash === null && slot.claimedAt !== null)) {
+      throw actionError('outing_slot_bound')
+    }
+    if (slot.claimTokenHash === null) return
+    await tx
+      .update(outingParticipants)
+      .set({ claimTokenHash: null, claimedAt: null })
+      .where(and(
+        eq(outingParticipants.id, input.participantId),
+        isNull(outingParticipants.profileId),
+        isNotNull(outingParticipants.claimTokenHash),
+      ))
+  })
+  revalidateOuting(input.outingId)
+})
+
+export interface JoinOutingInput {
+  shareToken: string
+  /** Claim this existing unclaimed slot… */
+  participantId?: string
+  /** …or add yourself under this name. Exactly one of the two. */
+  displayName?: string
+}
+
+/**
+ * Join an outing from its share link: claim an unclaimed slot, or add
+ * yourself (counts toward the 20-person cap).
+ *
+ * - Signed in → the slot is bound to the account (profile_id); no cookie.
+ * - Anonymous → a fresh claim token; its sha256 goes on the slot and the
+ *   token itself only into the httpOnly `oc_<outingId>` cookie.
+ *
+ * Refusals (codes, never 23505):
+ *   bad / reset / deleted link           → outing_link_invalid
+ *   ended outing                         → outing_not_active
+ *   member of the outing's group, a user already bound here, or a valid
+ *   claim cookie for this outing         → outing_already_joined
+ *   slot claimed meanwhile (lost race)   → outing_slot_taken
+ */
+export const joinOuting = action(async (input: JoinOutingInput): Promise<{ participantId: string }> => {
+  const shareToken = input?.shareToken
+  if (!isWellFormedToken(shareToken)) throw actionError('outing_link_invalid')
+  const claimId = input?.participantId
+  const addName = input?.displayName
+  if ((claimId === undefined) === (addName === undefined)) throw actionError('outing_participant_not_found')
+  if (claimId !== undefined && !isUuid(claimId)) throw actionError('outing_participant_not_found')
+  const displayName = addName !== undefined ? normalizeParticipantName(addName) : null
+
+  const [found] = await db
+    .select({ id: outings.id })
+    .from(outings)
+    .where(and(eq(outings.shareTokenHash, hashToken(shareToken)), isNull(outings.deletedAt)))
+    .limit(1)
+  if (!found) throw actionError('outing_link_invalid')
+
+  const userId = await getSessionUserId()
+  const cookieToken = await readClaimToken(found.id)
+  const claimToken = userId ? null : generateToken()
+  const claimHash = claimToken ? hashToken(claimToken) : null
+
+  let result: { participantId: string; status: Parameters<typeof claimCookieOptions>[0] }
+  try {
+    result = await db.transaction(async (tx) => {
+      // FOR UPDATE: the cap check below must serialize against other adds,
+      // and a reset link committed before this lock must be seen.
+      const outing = await loadOuting(tx, found.id, claimId ? 'share' : 'update')
+      const [still] = await tx
+        .select({ hash: outings.shareTokenHash })
+        .from(outings)
+        .where(eq(outings.id, outing.id))
+      if (still?.hash !== hashToken(shareToken)) throw actionError('outing_link_invalid')
+      if (outing.status !== 'active') throw actionError('outing_not_active')
+      if (outing.epochId !== await currentEpochId(tx, outing.groupId)) throw actionError('outing_epoch_closed')
+
+      const existing = await resolveActor(tx, outing, { userId, claimToken: cookieToken }, { lockGroup: 'share' })
+      if (existing) throw actionError('outing_already_joined')
+
+      const now = new Date()
+      const claim = { profileId: userId, claimTokenHash: claimHash, claimedAt: now }
+
+      if (claimId) {
+        const [row] = await tx
+          .update(outingParticipants)
+          .set(claim)
+          .where(and(
+            eq(outingParticipants.id, claimId),
+            eq(outingParticipants.outingId, outing.id),
+            isNull(outingParticipants.profileId),
+            isNull(outingParticipants.claimTokenHash),
+            isNull(outingParticipants.claimedAt),
+            isNull(outingParticipants.deactivatedAt),
+          ))
+          .returning({ id: outingParticipants.id })
+        if (row) return { participantId: row.id, status: outing.status }
+        const [exists] = await tx
+          .select({ id: outingParticipants.id })
+          .from(outingParticipants)
+          .where(and(
+            eq(outingParticipants.id, claimId),
+            eq(outingParticipants.outingId, outing.id),
+            isNull(outingParticipants.deactivatedAt),
+          ))
+        throw actionError(exists ? 'outing_slot_taken' : 'outing_participant_not_found')
+      }
+
+      await assertUnderCap(tx, outing.id)
+      const [row] = await tx
+        .insert(outingParticipants)
+        .values({ outingId: outing.id, displayName: displayName!, ...claim })
+        .returning({ id: outingParticipants.id })
+      return { participantId: row.id, status: outing.status }
+    })
+  } catch (e) {
+    // uq_outing_participants_profile: the same account bound concurrently in
+    // another request. Not reachable for an anonymous claim (fresh token).
+    if (isUniqueViolation(e)) throw actionError('outing_already_joined')
+    throw e
+  }
+
+  if (claimToken) {
+    const jar = await cookies()
+    jar.set(claimCookieName(found.id), claimToken, claimCookieOptions(result.status))
+  }
+  return { participantId: result.participantId }
+})
+
+/**
+ * Bind the slot this browser's claim cookie holds to the signed-in account —
+ * only after the person confirms 「這是你嗎」 (never on render). Then the
+ * cookie is no longer needed and is cleared; the session carries the slot.
+ *
+ * Refusals: not signed in / no valid cookie → outing_not_found; a member of
+ * the outing's group, or an account already bound to a slot here →
+ * outing_already_joined.
+ */
+export const bindOutingParticipant = action(async (input: { outingId: string }): Promise<{ participantId: string }> => {
+  const userId = await getSessionUserId()
+  if (!userId || !isUuid(input?.outingId)) throw actionError('outing_not_found')
+  const claimToken = await readClaimToken(input.outingId)
+  if (!claimToken) throw actionError('outing_not_found')
+
+  let participantId: string
+  try {
+    participantId = await db.transaction(async (tx) => {
+      const outing = await loadOuting(tx, input.outingId, 'share')
+      const actor = await resolveActor(tx, outing, { userId, claimToken }, { lockGroup: 'share' })
+      if (!actor) throw actionError('outing_not_found')
+      if (actor.kind === 'member' || actor.via === 'session') throw actionError('outing_already_joined')
+      const [row] = await tx
+        .update(outingParticipants)
+        .set({ profileId: userId, claimTokenHash: null })
+        .where(and(
+          eq(outingParticipants.id, actor.participantId),
+          eq(outingParticipants.outingId, outing.id),
+          isNull(outingParticipants.profileId),
+          eq(outingParticipants.claimTokenHash, hashToken(claimToken)),
+          isNull(outingParticipants.deactivatedAt),
+        ))
+        .returning({ id: outingParticipants.id })
+      if (!row) throw actionError('outing_not_found')
+      return row.id
+    })
+  } catch (e) {
+    if (isUniqueViolation(e)) throw actionError('outing_already_joined')
+    throw e
+  }
+
+  const jar = await cookies()
+  jar.delete(claimCookieName(input.outingId))
+  revalidateOuting(input.outingId)
+  return { participantId }
 })

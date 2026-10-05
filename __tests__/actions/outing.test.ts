@@ -386,7 +386,8 @@ describe('endOuting folds the couple debt into the main ledger (S-D)', () => {
     await db.insert(groupEpochs).values({ groupId: o.groupId, startedAt: now, memberAId: o.userId, memberBId: o.partnerId })
     await db.update(oikosGroups).set({ currentEpochStartedAt: now }).where(eq(oikosGroups.id, o.groupId))
     cookieJar.set(PAST_EPOCH_COOKIE, oldEpoch.id)
-    await expect(endOuting({ outingId: o.outingId })).rejects.toThrow()
+    // #1558: a code, not a throw (the viewer is still a member of the outing's group).
+    expect(await endOuting({ outingId: o.outingId })).toEqual({ ok: false, code: 'outing_viewing_past_chapter' })
     const [still] = await db.select().from(outings).where(eq(outings.id, o.outingId))
     expect(still.status).toBe('active')
   })
