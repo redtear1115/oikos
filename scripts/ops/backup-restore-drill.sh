@@ -24,9 +24,14 @@
 # Restore order (identical to a real restore, except step 6):
 #   1. global roles futari_app / futari_backup, NOLOGIN, same attributes as
 #      0072 / 0081;
-#   2. default privileges for postgres in public: revoke everything from anon
-#      and authenticated, so new objects start closed and the dump's own
-#      GRANT / REVOKE decide;
+#   2. default privileges for postgres in public: revoke everything from anon,
+#      authenticated and service_role, so new objects start closed and the
+#      dump's own GRANT / REVOKE decide. pg_dump writes grants relative to the
+#      built-in default (owner + PUBLIC), never relative to pg_default_acl, so
+#      any role left in the target's defaults gets a grant the source never
+#      had. Failure look with service_role left in: "function ACLs 4
+#      difference(s)" (frozen_copy_visible, viewer_in_chapter, whose source
+#      ACL has no service_role) — first dev drill, 2026-10-06;
 #   3. pre-data → re-apply drizzle/0082 (backup_auth views; the restored
 #      journal lists 0082, so db:migrate would skip it) → data → auth data
 #      (users, then identities) → post-data. Auth parts are DATA ONLY: each is
@@ -187,10 +192,10 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'role')
 \\gexec" -v role="$role" >/dev/null || fail "creating role ${role} failed"
 done
 
-step '2. default privileges: start closed for anon / authenticated'
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated" >/dev/null || fail "default privileges (tables)"
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated" >/dev/null || fail "default privileges (sequences)"
-q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated" >/dev/null || fail "default privileges (functions)"
+step '2. default privileges: start closed for the API roles'
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (tables)"
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (sequences)"
+q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role" >/dev/null || fail "default privileges (functions)"
 
 restore_pass() { # label file pg_restore-args...
   local label=$1 file=$2
@@ -205,7 +210,9 @@ restore_pass() { # label file pg_restore-args...
   #   Failure look without the drain: "DRILL STOPPED: age could not decrypt
   #   public.dump.age" right after "3. restore pre-data", with an empty .err
   #   (found in the first dev drill, 2026-10-06).
-  decrypt "$file" 2>>"$ERR" | { "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"; rc=$?; cat >/dev/null; exit "$rc"; }
+  # LC_MESSAGES=C: the error count below greps pg_restore's English text; a
+  # localized pg_restore ("pg_restore: 錯誤:") counted 0 errors.
+  decrypt "$file" 2>>"$ERR" | { LC_MESSAGES=C "$PG_RESTORE" -w --dbname=postgres "$@" 2>>"$ERR"; rc=$?; cat >/dev/null; exit "$rc"; }
   local st=("${PIPESTATUS[@]}")
   set -e
   [ "${st[0]}" -eq 0 ] || fail "age could not decrypt ${file##*/}"
@@ -348,7 +355,12 @@ compare function_acl 'function ACLs' '1'
 compare publication 'publication' '1-2'
 compare auth_triggers 'auth triggers' '1-2'
 printf '   informational (not part of the verdict):\n'
-EXT_MISSING=$(diff <(section "$MANIFEST" extensions | cut -f1 | sort) <(section "$LOCAL" extensions | cut -f1 | sort) | sed -n 's/^< //p' | tr '\n' ' ')
+# diff exits 1 whenever the lists differ, which under pipefail + set -e
+# ended the drill right here.
+#   Failure look: output stops after "informational (not part of the
+#   verdict):" with no DRILL line (first dev drill: the backup has pg_cron /
+#   pg_net, the local stack doesn't).
+EXT_MISSING=$({ diff <(section "$MANIFEST" extensions | cut -f1 | sort) <(section "$LOCAL" extensions | cut -f1 | sort) || true; } | sed -n 's/^< //p' | tr '\n' ' ')
 printf '     extensions in the backup but not local: %s\n' "${EXT_MISSING:-none}"
 DEFACL=$(diff <(section "$MANIFEST" default_acl | sort) <(section "$LOCAL" default_acl | sort) | grep -c '^[<>]' || true)
 printf '     default ACL lines differing: %s\n' "$DEFACL"

@@ -457,12 +457,13 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
 2. **default privileges 先關**：
 
    ```sql
-   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;
-   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated;
-   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated;
+   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated, service_role;
+   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role;
+   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role;
    ```
 
    - 漏掉：還原出來的每張表都帶著 Supabase 預設給 anon／authenticated 的 ALL，Data API 重新打開（#1518），沒有任何錯誤。
+   - service_role 也要關：pg_dump 的 GRANT 是相對於內建預設（owner＋PUBLIC）寫的，不看來源的 default privileges，所以目標預設裡留著的角色會拿到來源沒有的權限。漏掉的樣子：演練在第 7 步報 `function ACLs 4 difference(s)`（`frozen_copy_visible`、`viewer_in_chapter` 多了 `service_role=X`），2026-10-06 第一次 dev 演練撞到。
 3. **還原順序**：
    1. `age -d -i <identity> public.dump.age | pg_restore -d <目標> --section=pre-data`。
    2. **重套 0082**：`psql -X -v ON_ERROR_STOP=1 -f drizzle/0082_backup_auth_views.sql`（用 review 過的 repo 裡那份）。還原出來的 `drizzle.__drizzle_migrations` 已經列著 0082，`db:migrate` 不會再跑它。
