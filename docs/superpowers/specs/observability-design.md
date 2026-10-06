@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-27
+last_updated: 2026-10-04
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -11,8 +11,9 @@ updates:
   - v1.6.0: 補「GA 收得到邀請 token 與帳務篩選值」這條已接受的風險（#1300）
   - v1.6.2: 補「`invite_created` 的真正語意」與「client 邀請事件補 group_id」兩條邊界（#1415）
   - v1.6.3: 補「DB 錯誤在 DB 層就被清洗」這條邊界（#1453）
+  - v1.6.8: 補「iOS Apple 登入的瀏覽器備援事件與 `id_token_rejected` 細分」這條邊界（#1552）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453", "#1552"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -68,6 +69,11 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", 
   - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。
   - **失效的樣子不是查詢報錯，是活化率緩慢地、看起來很合理地往下走。** 雙人帳本愈多、其中一方主要替另一方記帳的比例愈高，分子就漏得愈多，而曲線沒有任何不連續。等到有人去追「為什麼活化率降了」，會先去查 onboarding，不會想到是口徑。
   - 小樣本上兩個口徑會**看起來一樣**（2026-09 的新客群裡剛好都是 8 人），所以「我算過，沒差」不能當成安全的理由。
+- **iOS Apple 登入的瀏覽器備援，自 v1.6.8 部署起才看得到結局（#1552）。** 原生 Apple 面板失敗（`sign_in_failed reason=apple_native_unavailable`，自此帶 `apple_error_code`，例如沒有登入 Apple ID 的裝置是 1000）之後，流程改走 in-app 瀏覽器。在此之前這條路的結局完全沒有事件：成功只出現在 server 的 `signed_in` / `signed_up`（分不出是不是備援），失敗則什麼都沒有。v1.6.8 起只有這條備援路徑（`via=apple_fallback`）會發：`sign_in_fallback_opened`（開瀏覽器前）、`sign_in_fallback_page_loaded`（Apple 頁面第一次載入）、`sign_in_fallback_callback`（收到 deep link，即將導向 `/auth/callback`）、`sign_in_failed reason=fallback_dismissed`（瀏覽器被關掉、寬限 1500 ms 內沒有 callback，帶 `elapsed_ms` 與 `page_loaded`）、`sign_in_failed reason=callback_ignored`（收到不是登入回呼的 deep link）。iOS Google、Android 的 Google / Apple 走同一個函式但不發這些事件。
+  - **跨部署日比較無效**：v1.6.8 之前「備援失敗」是 0 筆，不是沒人失敗。`id_token_rejected` 也一樣：v1.6.8 起才帶 `error_name` / `error_status` / `error_code` / `error_label`，舊事件只有 reason。
+  - **`id_token_rejected` 要用 `error_label` 分原因，不要用 `error_code`。** GoTrue 對 nonce 不符、audience 不符、壞 token 一律回 `AuthApiError` / 400 / code 未定義，所以 `error_code` 幾乎永遠是 null。`error_label`（`nonce_mismatch` / `audience` / `bad_id_token` / `nonce_missing` / `other`）是裝置上用錯誤訊息分類出來的（`lib/auth/idTokenErrorLabel.ts`），訊息本身不送出——audience 那種訊息會把 token 的 claim 原文帶回來。**失效的樣子是 `other` 的比例突然變高**：GoTrue 改了措辭，分類器就安靜地把那類原因倒進 `other`，不會有任何錯誤。
+  - 這些事件只帶固定標籤、布林與數字，不帶網址、deep link、`redirectTo` 或錯誤訊息：PostHog 的 `before_send` 只遮罩結尾是 `url` / `pathname` / `referrer` 的 key，其他 key 會原樣送出。
+  - `sign_in_fallback_callback` 不等於登入成功：之後 `/auth/callback` 還可能失敗（那時使用者會看到 `?error=auth_failed` 的提示）。成功與否仍以 server 端事件為準，而 server 與 client 不 join（見第一條）。
 
 ---
 

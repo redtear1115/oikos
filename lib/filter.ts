@@ -87,6 +87,36 @@ export interface TxnFilter {
    * `cutsIncome` / `hidesSettlements`.
    */
   status: StatusFilter
+  /**
+   * Free-text search (#23). Normalized by `normalizeSearchText`: trimmed, inner
+   * whitespace collapsed, capped at SEARCH_TEXT_MAX. Absent = no text search.
+   * Matches expense description / notes, income source and settlement note.
+   */
+  text?: string
+}
+
+/** Max length of the search text; longer input is truncated. */
+export const SEARCH_TEXT_MAX = 100
+
+/**
+ * Normalize raw search input: trim, collapse inner whitespace, cap length.
+ * Returns undefined for empty so "no text" has exactly one representation.
+ */
+export function normalizeSearchText(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined
+  // Cut by code point: slicing UTF-16 units can split a surrogate pair, and a
+  // lone surrogate makes encodeURIComponent (filterKey) throw.
+  const t = Array.from(raw.replace(/\s+/g, ' ').trim()).slice(0, SEARCH_TEXT_MAX).join('').trim()
+  return t === '' ? undefined : t
+}
+
+/**
+ * Escape `%`, `_` and `\` so user text is matched literally by
+ * `ILIKE … ESCAPE '\'`. Returns the full `%text%` pattern (always bound as a
+ * parameter, never interpolated into SQL).
+ */
+export function toLikePattern(text: string): string {
+  return `%${text.replace(/[\\%_]/g, '\\$&')}%`
 }
 
 export function defaultFilter(): TxnFilter {
@@ -103,7 +133,11 @@ export function defaultFilter(): TxnFilter {
   }
 }
 
-/** True if any dimension would narrow the feed. */
+/**
+ * True if any non-text dimension would narrow the feed. Drives ONLY the filter
+ * chip's active dot — text search has its own input and must not light it.
+ * Data flow uses `isFilterNarrowing`.
+ */
 export function isFilterActive(f: TxnFilter): boolean {
   return (
     f.payer !== 'all' ||
@@ -116,6 +150,11 @@ export function isFilterActive(f: TxnFilter): boolean {
     f.amountMax !== null ||
     f.status !== 'all'
   )
+}
+
+/** True if anything (a filter dimension OR search text) narrows the feed. */
+export function isFilterNarrowing(f: TxnFilter): boolean {
+  return isFilterActive(f) || !!f.text
 }
 
 /**
@@ -147,7 +186,7 @@ export function normalizeAmountRange(
  * so equivalent filters collapse to the same key (no spurious remounts).
  */
 export function filterKey(f: TxnFilter): string {
-  if (!isFilterActive(f)) return 'none'
+  if (!isFilterNarrowing(f)) return 'none'
   return [
     f.payer,
     f.split,
@@ -158,6 +197,9 @@ export function filterKey(f: TxnFilter): string {
     f.amountMin ?? '',
     f.amountMax ?? '',
     f.status,
+    // Text is last so a text-less filter keeps its pre-#23 key shape plus one
+    // trailing empty segment. Encoded so a `|` in the query can't alias a segment.
+    encodeURIComponent(f.text ?? ''),
   ].join('|')
 }
 
@@ -222,6 +264,8 @@ export interface TxnFilterWire {
   status?: StatusFilter
   /** Optional for back-compat; absent = 'all'. */
   burden?: BurdenFilter
+  /** Optional; absent = no text search. */
+  text?: string
 }
 
 export function toWire(f: TxnFilter): TxnFilterWire {
@@ -235,6 +279,7 @@ export function toWire(f: TxnFilter): TxnFilterWire {
     amountMax: f.amountMax,
     status: f.status,
     burden: f.burden,
+    ...(f.text ? { text: f.text } : {}),
   }
 }
 
@@ -262,6 +307,8 @@ export function fromWire(w: TxnFilterWire): TxnFilter {
     amountMin: w.amountMin ?? null,
     amountMax: w.amountMax ?? null,
     status: w.status ?? 'all',
+    // Re-normalize: the wire crosses a trust boundary (server action arg).
+    text: normalizeSearchText(w.text),
   }
 }
 
@@ -277,6 +324,11 @@ export interface FilterableRow {
   amount?: number
   /** Row status. Settlements are always 'settled'; transactions can be either. */
   status?: RecordStatus
+  /** Searchable text fields (#23): mirror the SQL columns the text predicate hits. */
+  description?: string | null   // cash transaction
+  notes?: string | null         // cash transaction
+  note?: string | null          // settlement (raw note, not the display fallback)
+  source?: string | null        // income
 }
 
 /**
@@ -310,6 +362,19 @@ export function matchesFilter(
   if (row.amount !== undefined) {
     if (filter.amountMin !== null && row.amount < filter.amountMin) return false
     if (filter.amountMax !== null && row.amount > filter.amountMax) return false
+  }
+
+  // 搜尋 dimension (#23) — case-insensitive substring over the same columns the
+  // SQL ILIKE predicate hits: cash description/notes, settlement note, income
+  // source. Rows lacking every searched field never match.
+  if (filter.text) {
+    const needle = filter.text.toLowerCase()
+    const hay = row.kind === 'settlement'
+      ? [row.note]
+      : row.source !== undefined
+        ? [row.source]
+        : [row.description, row.notes]
+    if (!hay.some((h) => !!h && h.toLowerCase().includes(needle))) return false
   }
 
   // Settlements pass through if no transaction-only dim is active.
@@ -397,6 +462,8 @@ export function matchesFilter(
 //   ?fAmtMin=N                        (inclusive lower bound, non-negative integer)
 //   ?fAmtMax=N                        (inclusive upper bound, non-negative integer)
 //   ?fStatus=pending|settled          (record status; absent = both)
+//   ?search=1                         (search mode; q is ignored without it)
+//   ?q=text                           (free-text search; normalized, <= 100 chars)
 //   ?from=YYYY-MM-DD&to=YYYY-MM-DD    (custom date range; both required together)
 //   ?range=all                        (sentinel for "all-time"; overrides ?month)
 //   ?month=YYYY-MM                    (legacy single-month scope; pre-existing)
@@ -498,6 +565,13 @@ export function parseFilterFromSearchParams(
   const status = params.get('fStatus')
   if (status && isValidStatus(status) && status !== 'all') f.status = status
 
+  // Text only narrows while search mode is on: a stray ?q= (e.g. a pasted link)
+  // must not silently narrow a view that shows no search field.
+  if (params.get('search') === '1') {
+    const text = normalizeSearchText(params.get('q'))
+    if (text) f.text = text
+  }
+
   return f
 }
 
@@ -512,6 +586,8 @@ export function parseFilterFromRecord(rec: {
   fAmtMin?: string
   fAmtMax?: string
   fStatus?: string
+  q?: string
+  search?: string
 }): TxnFilter {
   const fakeParams = {
     get: (name: string) => {
@@ -555,6 +631,9 @@ export function applyFilterToParams(params: URLSearchParams, f: TxnFilter): void
 
   if (f.status !== 'all') params.set('fStatus', f.status)
   else params.delete('fStatus')
+
+  if (f.text) params.set('q', f.text)
+  else params.delete('q')
 }
 
 // ─── Date range URL encoding ──────────────────────────────────────────────────

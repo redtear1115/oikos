@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { SignInButton, preloadNativeAuthModules } from './SignInButton'
+import { SignInButton, preloadNativeAuthModules, type SignInAbortReason } from './SignInButton'
+import { SignInNotice } from './SignInNotice'
 import { WaitingCurtain } from './WaitingCurtain'
 
 /**
@@ -23,23 +24,35 @@ export function SignInActions({
   googleLabel,
   appleLabel,
   pendingLabel,
+  appleFallbackHint,
 }: {
   googleLabel: string
   appleLabel: string
   pendingLabel: string
+  /** Shown after the iOS Apple browser fallback ends without signing in (#1552). */
+  appleFallbackHint?: string
 }) {
   const [pending, setPending] = useState(false)
+  const [appleFallbackFailed, setAppleFallbackFailed] = useState(false)
 
   // #1314 — fetch the native plugin chunks now, not on the tap.
   useEffect(() => {
     preloadNativeAuthModules()
   }, [])
 
-  const start = () => setPending(true)
-  const abort = () => setPending(false)
+  // A new attempt clears the hint; only the Apple fallback's own abort sets it.
+  const start = () => {
+    setAppleFallbackFailed(false)
+    setPending(true)
+  }
+  const abort = (reason?: SignInAbortReason) => {
+    setPending(false)
+    if (reason === 'apple_fallback_failed') setAppleFallbackFailed(true)
+  }
 
   return (
     <>
+      {appleFallbackFailed && appleFallbackHint && <SignInNotice>{appleFallbackHint}</SignInNotice>}
       <SignInButton provider="google" label={googleLabel} pending={pending} onStart={start} onAbort={abort} />
       <SignInButton provider="apple" label={appleLabel} pending={pending} onStart={start} onAbort={abort} />
       {pending && <WaitingCurtain label={pendingLabel} />}

@@ -3,10 +3,13 @@ name: release
 description: >
   Cut an Oikos (Futari) release: bump version, roll CHANGELOG `[Unreleased]`
   into a dated section, update CLAUDE.md / README.md, scan the diff for
-  native-shell impact, commit and tag locally. Use when the user says
-  "release vX.Y.Z", "發版", "出 v1.6.0", "準備 release", "bump 版本",
+  native-shell impact, commit + tag, push the release branch, open the
+  release PR, merge it into `main` once an independent verifier confirms it,
+  push the tag, then open the `main → release` PR and stop. Use when the user
+  says "release vX.Y.Z", "發版", "出 v1.6.0", "準備 release", "bump 版本",
   "切一版", or asks to prepare a release branch / changelog for a new
-  version. Never pushes; never touches `main` / `release` directly.
+  version. Never pushes directly to `main` / `release`; never merges into
+  `release` (that is the prod deploy and stays with the user).
 ---
 
 # release
@@ -18,8 +21,10 @@ description: >
 
 ## 硬性約束
 
-- **絕不 push**，不論 branch。push / 開 PR 一律留給收尾 checklist 由人執行。
-- **絕不**產生或執行 `git push origin main` 之類直推 protected branch 的指令。`main` / `release` 只能走 PR merge。
+- **push 只限兩樣**：`chore/release-vX.Y.Z` 這條 branch，以及 release PR merge 進 `main` **之後**的 `vX.Y.Z` tag。
+- **merge 進 `main` 只在獨立驗證通過之後**（第 10 步）。寫 release commit 的 session 不能自己驗自己。
+- **絕不 merge 進 `release`**：`main → release` 一 merge 就部署 prod，這一步永遠由使用者按。skill 開好那條 PR 就停。
+- **絕不**產生或執行 `git push origin main` 之類直推 protected branch 的指令。`main` / `release` 只能走 PR merge；**絕不**用 `--admin` 或任何繞過 branch protection 的方式。
 - 只 stage 下面列出的檔案（`package.json` / `package-lock.json` / `CHANGELOG.md` / `CLAUDE.md` / `README.md`），不要順手 commit 工作區其他改動。
 - **不自動 bump 原生版本號**（`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` / `versionName` / `versionCode`）。那是送審當下手動做的，見 [runbook §E](../../../docs/app-store-submission-runbook.md)。
 - 任何一步資訊不足或判斷模糊（版本號、CHANGELOG 主題句、原生影響歸類），**停下來問使用者**，不要猜。
@@ -123,7 +128,7 @@ grep -E '^\[Unreleased\]: .*compare/vX\.Y\.Z\.\.\.HEAD$' CHANGELOG.md \
 
 **(b)「Backlog / 未釋出版本」表：把 `vX.Y.Z` 那一列刪掉。**
 
-這張表的定義是**還開著的 milestone**。發版意味著該 milestone 即將關閉（見第 9 步 checklist），所以它不再屬於 backlog。漏了這步表就會每發一版漂一次——v1.5.6 發布後就在表上多留了一版才被發現。
+這張表的定義是**還開著的 milestone**。發版意味著該 milestone 即將關閉（見第 12 步 checklist），所以它不再屬於 backlog。漏了這步表就會每發一版漂一次——v1.5.6 發布後就在表上多留了一版才被發現。
 
 表的其餘列不要動：那是別人的 backlog，不歸發版流程管。若發現表裡還有其他**已關閉**的 milestone，或缺了**開著**的，那是既有漂移——回報給使用者，不要順手塞進 release commit（release PR 只放版本性變更）。
 
@@ -162,22 +167,66 @@ git commit -m "chore(release): vX.Y.Z"
 git tag -a vX.Y.Z -m "vX.Y.Z"   # 既有 tag 都是 annotated，維持一致
 ```
 
-tag **不 push**（第 9 步 checklist 裡等 PR merge 後才推）。
+tag 先留在本地，第 11 步 merge 進 `main` 之後才推。
 
-### 9. 收尾 checklist（印給使用者，不要自己跑）
+### 9. Push + 開 release PR
+
+```bash
+git push -u origin chore/release-vX.Y.Z
+# 先把 PR 內文寫進 scratchpad 的 release-body.md：第 4 步驗證腳本的輸出＋第 7 步的原生影響結論
+gh pr create --base main --head chore/release-vX.Y.Z \
+  --title "chore(release): vX.Y.Z" --body-file <scratchpad>/release-body.md \
+  --milestone "vX.Y.Z" --label no-changelog
+```
+
+- `--body-file` 不能省：非互動環境（agent 的 Bash）裡沒有 `--body` / `--body-file`，`gh pr create` 會直接報錯 `must provide --title and --body`。
+- milestone 必填（CLAUDE.md 政策）。
+- `no-changelog` label：依 CLAUDE.md 的 CHANGELOG 政策，release PR 屬於「不需要另補條目」的 PR。（hook 本身因為這條 PR 有動到 CHANGELOG.md 就會放行，label 是標示用途，不是為了過 hook。）
+
+### 10. 獨立驗證
+
+交給**沒有參與這次發版的 fresh context**：`pilotfish:verifier` subagent，或 session-crew 裡的 verifier session。寫 release commit 的 session 不能自己驗收。
+
+驗證的 claim（每條都要 CONFIRMED）：
+
+1. PR diff 只動了 `package.json` / `package-lock.json` / `CHANGELOG.md` / `CLAUDE.md` / `README.md`；`package.json` 的 `version`、`package-lock.json` 的頂層 `version` 與 `packages[""].version` 三處都是 `X.Y.Z`。
+2. 在 PR head 上重跑第 4 步的兩段驗證腳本，兩個 ✓ 都出現。
+3. `[X.Y.Z]` 段的每一條條目，都在 `git diff vPREV..origin/main` 裡指得出支持它的那幾行；`vPREV..origin/main` 裡有使用者可見的改動卻沒有條目，也算失敗。issue／PR 內文是意圖不是證據。
+4. CLAUDE.md「目前狀態」是 `vX.Y.Z`、backlog 表已刪掉 `vX.Y.Z` 那列；README 最近 3 版表正確。
+5. 第 7 步原生影響結論和重跑掃描的結果一致。
+6. CI 全綠、`mergeStateStatus` 是 `CLEAN`。
+
+任何一條 REFUTED 或 INCONCLUSIVE → 修正後重新驗證，**不 merge**。
+
+### 11. Merge 進 main → 推 tag → 開 deploy PR
+
+只在第 10 步全數 CONFIRMED 之後：
+
+```bash
+HEAD_SHA=$(gh pr view <N> --json headRefOid -q .headRefOid)   # 必須等於 verifier 驗的那顆
+gh pr merge <N> --merge --match-head-commit "$HEAD_SHA"       # 不加 --admin
+git fetch origin && git merge-base --is-ancestor vX.Y.Z origin/main \
+  && git push origin vX.Y.Z \
+  && gh pr create --base release --head main --title "release: vX.Y.Z" \
+       --body "vX.Y.Z 部署到 prod。release PR #<N> 已經獨立驗證並 merge 進 main。" \
+       --milestone "vX.Y.Z" --label no-changelog
+```
+
+- `--match-head-commit` 確保 merge 的就是驗過的那顆；驗證之後有新 commit 就回第 10 步。
+- harness（auto mode）擋下 `gh pr merge` 時，請使用者在該 session 輸入 `allow gh pr merge <N>`，不要繞路，也不要改由別的 session 代為 merge。
+- tag 只在確認它已經在 `origin/main` 的歷史裡之後才推；這個檢查失敗時，tag 不推、deploy PR 也不開，停下來回報。
+
+**到此為止。** `main → release` 的 PR 開好就停，由使用者 merge（Vercel 隨即部署 prod）。
+
+### 12. 收尾 checklist（印給使用者）
 
 ```
-1. git push -u origin chore/release-vX.Y.Z
-2. gh pr create --base main --head chore/release-vX.Y.Z \
-     --title "chore(release): vX.Y.Z" --milestone "<當前 milestone>"
-   ※ milestone 必填（CLAUDE.md 政策），不確定就選最近未關閉的
-3. PR merge 後：git push origin vX.Y.Z
-4. gh pr create --base release --head main --title "release: vX.Y.Z" --milestone "<同上>"
-5. 該 PR merge 後 Vercel 自動部 prod
-6. (optional) gh release create vX.Y.Z --notes-from-tag  或用 CHANGELOG 該段內容
-7. 關閉 milestone：gh api -X PATCH repos/redtear1115/oikos/milestones/<number> -f state=closed
+1. release PR：#<N> 已 merge 進 main（verifier：<誰>，head <sha>）；tag vX.Y.Z 已推
+2. deploy PR：#<M> main → release —— 由你 merge，merge 後 Vercel 自動部 prod
+3. (optional) gh release create vX.Y.Z --notes-from-tag  或用 CHANGELOG 該段內容
+4. prod 部署後關閉 milestone：gh api -X PATCH repos/redtear1115/oikos/milestones/<number> -f state=closed
    ※ 第 5 步 (b) 已把它從 CLAUDE.md backlog 表移除，這步讓 GitHub 那邊也對齊
-8. 原生影響：<第 7 步的結論>
+5. 原生影響：<第 7 步的結論>
 ```
 
 ## Gotchas

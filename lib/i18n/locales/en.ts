@@ -5,6 +5,7 @@ export const en: Translations = {
     tagline: 'Your ledger is ready, for the two of you.',
     continueWithGoogle: 'Continue with Google',
     authFailedNotice: "That sign-in didn't finish. You can try again.",
+    appleFallbackHint: "Apple sign-in didn't finish. You can try again. You can also continue with Google, but a ledger you started with Apple won't be there when you sign in with Google.",
     signingIn: 'Signing you in',
     continueWithApple: 'Continue with Apple',
     termsPrefix: 'By continuing, you agree to our',
@@ -751,6 +752,10 @@ export const en: Translations = {
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
     recurringShortcut: 'Recurring',
+    searchOpen: 'Search records',
+    searchPlaceholder: 'Search descriptions and notes',
+    searchCancel: 'Cancel',
+    searchClear: 'Clear',
     offlineMoreNeedsNetwork: 'More records need a connection',
     monthPicker: {
       triggerLabel: 'Select month',
@@ -1937,7 +1942,7 @@ export const en: Translations = {
 
   privacyPage: {
     heading: 'Privacy Policy',
-    lastUpdated: 'Last updated: September 16, 2026',
+    lastUpdated: 'Last updated: October 4, 2026',
     intro: 'This page explains how Futari collects, uses, and protects your personal data.',
     sectionCollectTitle: 'Data we collect',
     sectionCollectItems: [
@@ -1954,13 +1959,14 @@ export const en: Translations = {
       'To analyze feature usage and improve the product experience (via PostHog, with no personally identifiable information).',
     ],
     sectionStorageTitle: 'Where data is stored',
-    sectionStorageBody: "Data is stored on servers hosted by Supabase, transmitted over encrypted connections and protected by access controls. These fields are encrypted with AES-256-GCM before they are written to the database: a child's full name, national ID number, health insurance card number, a vehicle licence plate, a home address, and the verification code for an e-invoice carrier. Everything else you record — transaction descriptions, amounts, categories, settlement notes — is stored as plain text. Both encryption and decryption happen on our servers and we hold the key, so this is encryption at rest, not end-to-end encryption.",
+    sectionStorageBody: "Data is stored on servers hosted by Supabase, transmitted over encrypted connections and protected by access controls. These fields are encrypted with AES-256-GCM before they are written to the database: a child's full name, national ID number, health insurance card number, a vehicle licence plate, a home address, and the verification code for an e-invoice carrier. Everything else you record — transaction descriptions, amounts, categories, settlement notes — is stored as plain text. Both encryption and decryption happen on our servers and we hold the key, so this is encryption at rest, not end-to-end encryption. We also make a backup of the database every day. Each backup is encrypted before it is uploaded, stored on Google Drive and kept for up to about 60 days; the key that decrypts it is kept offline, separate from the backups.",
     sectionRetentionTitle: 'Data retention',
     sectionRetentionBody: 'Your account data is retained for as long as your account remains active. Transactions you delete are kept as soft-deleted records for about a year, then cleared automatically. When you request account deletion from the settings page there is a 14-day grace period (calendar days, not business days) during which you can cancel at any time; after that it runs automatically. What happens then depends on whether the ledger is yours alone or shared with a partner:',
     sectionRetentionItems: [
       'A solo ledger: the whole ledger goes — transactions, settlements, recurring rules, aibutsu and trip records are all removed, along with your profile (name, avatar, email).',
       "A shared ledger: the ledger stays with your partner. The transactions, settlements and aibutsu records the two of you wrote together remain in their ledger; we do not remove them on your behalf, because those records are theirs as well. Your sign-in identity is deleted (Google / Apple account link, email, avatar, push devices), and your name appears in their ledger as “a partner who left”.",
       'If you would like the content in a shared ledger removed as well, talk it over with your partner before deleting your account, or write to us first.',
+      'Data you delete (including what is removed when you delete your account) can remain in encrypted backups made before the deletion for up to about 60 days, and disappears as those backups are cleared. We do not use backups to bring it back; backups are only used if the whole service has to be restored, and in that case we apply those deletions again.',
     ],
     sectionThirdPartyTitle: 'Third-party services',
     sectionThirdPartyItems: [
@@ -1971,6 +1977,7 @@ export const en: Translations = {
       'Sentry (error tracking — collects anonymous error traces, no personally identifiable information)',
       'PostHog (product analytics — collects anonymous usage events, no personally identifiable information)',
       'Google Analytics 4 (traffic source analytics — IP-anonymised, cross-site personalisation disabled)',
+      'Google Drive (storage for encrypted database backups)',
     ],
     sectionRightsTitle: 'Your rights',
     sectionRightsBody: 'You may sign out or delete your account at any time from the settings page. To export or enquire about your personal data, ',

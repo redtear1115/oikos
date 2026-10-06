@@ -43,6 +43,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.8] - 2026-10-06
+
+主題：**找得到，也留得住**——紀錄頁可以用文字搜尋；Apple 登入沒完成時說清楚下一步；正式站每日加密備份的腳本與唯讀角色就位，還原演練已在 dev 跑通。
+完整 diff：[v1.6.7...v1.6.8](https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8)
+
+### 使用者可見變化
+
+- **紀錄頁可以搜尋描述與備註（#23）**
+  使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
+  技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。
+
+- **隱私權政策寫明加密備份存放在 Google Drive（#1549）**
+  使用者：隱私權政策 4 語更新：每日加密備份存放在 Google Drive，最多保留約 60 天，第三方服務加列 Google Drive。
+  技術：`privacyPage` 的儲存、保留、第三方段落與 `lastUpdated`（2026-10-04）；en／ja 譯文待確認。
+
+- **iOS 的 Apple 登入改走瀏覽器後沒完成，會提示可以再試（#1552）**
+  使用者：登入頁說明 Apple 登入沒有完成、可以再試或改用 Google，並提醒用 Apple 建立的帳本不會出現在 Google 帳號裡。
+  技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤；en／ja 譯文已確認（#1556）。
+
+### 技術變更
+
+- **正式站每日加密備份的腳本與唯讀角色就位（#1549）**
+  使用者：畫面沒有變化；prod 排程上線後，資料庫出事時有最近 30 天內的備份可以還原。
+  技術：`0081` 唯讀角色 `futari_backup`、`0082` 以 `backup_auth` 整列 jsonb view 讀登入身分；`backup-prod.sh` 同一快照 dump＋age 加密＋rclone 上傳，附還原演練腳本（dev 演練已通過）。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。
@@ -1589,7 +1614,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.7...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.8...HEAD
+[1.6.8]: https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5

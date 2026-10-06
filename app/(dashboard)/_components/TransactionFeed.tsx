@@ -170,6 +170,8 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           assetId: row.assetId ?? null,
           amount: row.amount,
           status: row.status ?? 'settled',
+          description: row.description,
+          notes: row.notes ?? null,
         }
         if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
       }
@@ -233,6 +235,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
             assetId: null,
             amount: row.amount,
             status: 'settled',
+            note: row.note ?? null,
           }
           if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
         }

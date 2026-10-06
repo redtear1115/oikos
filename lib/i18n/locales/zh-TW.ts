@@ -54,6 +54,11 @@ export type Translations = {
      *  `?error=auth_failed`. Sign-in tone — state what happened and that
      *  retrying is fine; no alarm, no exclamation. (#973) */
     authFailedNotice: string
+    /** Shown on /sign-in after the iOS Apple native sheet failed and the
+     *  browser fallback also ended without signing in (#1552). Names Google as
+     *  the other way in, and says plainly that an Apple-created ledger does not
+     *  carry over — there is no identity linking. Sign-in tone, no exclamation. */
+    appleFallbackHint: string
     /** Shown while an OAuth attempt is in flight (#1083). On the native
      *  shells the sign-in page stays mounted underneath the in-app browser,
      *  so without a curtain the user returns to a fully interactive form and
@@ -1087,6 +1092,12 @@ export type Translations = {
     manageRecurringIncome: string
     manageRecurringExpense: string
     recurringShortcut: string
+    /** aria-label of the Records header search button (#23). */
+    searchOpen: string
+    searchPlaceholder: string
+    searchCancel: string
+    /** aria-label of the clear (x) button inside the search field. */
+    searchClear: string
     offlineMoreNeedsNetwork: string
     monthPicker: {
       triggerLabel: string
@@ -3051,6 +3062,7 @@ export const zhTW: Translations = {
     continueWithGoogle: '以 Google 帳號繼續',
     continueWithApple: '以 Apple 帳號繼續',
     authFailedNotice: '剛才的登入沒有完成，再試一次就好。',
+    appleFallbackHint: 'Apple 登入沒有完成，可以再試一次。也可以改用 Google 登入；不過用 Apple 建立過的帳本，不會出現在 Google 帳號裡。',
     signingIn: '正在帶你進去',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
@@ -3789,6 +3801,10 @@ export const zhTW: Translations = {
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
+    searchOpen: '搜尋紀錄',
+    searchPlaceholder: '搜尋描述、備註',
+    searchCancel: '取消',
+    searchClear: '清除',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     monthPicker: {
       triggerLabel: '選擇月份',
@@ -4967,7 +4983,7 @@ export const zhTW: Translations = {
 
   privacyPage: {
     heading: '隱私權政策',
-    lastUpdated: '最後更新：2026 年 9 月 16 日',
+    lastUpdated: '最後更新：2026 年 10 月 4 日',
     intro: '本頁說明 Futari 如何蒐集、使用與保護您的個人資料。',
     sectionCollectTitle: '蒐集的資料',
     sectionCollectItems: [
@@ -4984,13 +5000,14 @@ export const zhTW: Translations = {
       '分析功能使用情況以改善產品體驗（透過 PostHog，不含個人識別資訊）。',
     ],
     sectionStorageTitle: '資料儲存',
-    sectionStorageBody: '資料儲存於 Supabase 託管的伺服器，以加密連線傳輸，並以存取控制保護。以下欄位在寫入資料庫前會先以 AES-256-GCM 加密：孩子的本名、身分證字號、健保卡號、車牌號碼、房屋地址，以及電子發票載具的驗證碼。這些欄位以外的記帳內容——交易說明、金額、分類、結算備註等——以明文儲存。加密與解密都在本服務的伺服器端進行，金鑰由我們保管；這是儲存時加密，不是端對端加密。',
+    sectionStorageBody: '資料儲存於 Supabase 託管的伺服器，以加密連線傳輸，並以存取控制保護。以下欄位在寫入資料庫前會先以 AES-256-GCM 加密：孩子的本名、身分證字號、健保卡號、車牌號碼、房屋地址，以及電子發票載具的驗證碼。這些欄位以外的記帳內容——交易說明、金額、分類、結算備註等——以明文儲存。加密與解密都在本服務的伺服器端進行，金鑰由我們保管；這是儲存時加密，不是端對端加密。另外，我們每天為資料庫製作一份備份，上傳前先加密，存放在 Google Drive，最多保留約 60 天；解密用的金鑰另外離線保管，不和備份放在一起。',
     sectionRetentionTitle: '資料保留期限',
     sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記約 1 年，之後由系統自動清除。在設定頁提出刪除帳號後，有 14 天的緩衝期（日曆天，不是工作天），期間隨時可以取消；期滿由系統自動執行。執行時會發生什麼，取決於這本帳本是您一個人的，還是和伴侶共用的：',
     sectionRetentionItems: [
       '一個人的帳本：整本一起刪除——交易、結算、定期收支規則、愛物與旅行紀錄都會移除，您的個人資料（姓名、頭像、Email）也一併刪除。',
       '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算與愛物紀錄會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
       '如果您希望共用帳本裡的內容也一併移除，請在刪除帳號前與伴侶談過，或先寫信告訴我們。',
+      '已刪除的資料（包括刪除帳號時移除的內容），在刪除前就做好的加密備份裡最多還會留存約 60 天，之後隨舊備份清除而消失。這段期間我們不會用備份把它們找回來；只有在整個服務需要從備份還原時才會用到備份，而那時我們會重新套用這些刪除。',
     ],
     sectionThirdPartyTitle: '第三方服務',
     sectionThirdPartyItems: [
@@ -5001,6 +5018,7 @@ export const zhTW: Translations = {
       'Sentry（錯誤追蹤，收集匿名錯誤堆疊，不含個人識別資訊）',
       'PostHog（產品分析，收集匿名操作事件，不含個人識別資訊）',
       'Google Analytics 4（流量來源分析，IP 匿名化，不啟用跨站個人化）',
+      'Google Drive（存放加密的資料庫備份）',
     ],
     sectionRightsTitle: '您的權利',
     sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，',

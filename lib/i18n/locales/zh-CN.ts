@@ -5,6 +5,7 @@ export const zhCN: Translations = {
     tagline: '账本准备好了，邀请对方一起。',
     continueWithGoogle: '以 Google 账号继续',
     authFailedNotice: '刚才的登录没有完成，再试一次就好。',
+    appleFallbackHint: 'Apple 登录没有完成，可以再试一次。也可以改用 Google 登录；不过用 Apple 创建的账本，不会出现在 Google 账号里。',
     signingIn: '正在带你进去',
     continueWithApple: '以 Apple 账号继续',
     termsPrefix: '继续即表示您同意我们的',
@@ -744,6 +745,10 @@ export const zhCN: Translations = {
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
+    searchOpen: '搜索记录',
+    searchPlaceholder: '搜索描述、备注',
+    searchCancel: '取消',
+    searchClear: '清除',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
     monthPicker: {
       triggerLabel: '选择月份',
@@ -1922,7 +1927,7 @@ export const zhCN: Translations = {
 
   privacyPage: {
     heading: '隐私权政策',
-    lastUpdated: '最后更新：2026 年 9 月 16 日',
+    lastUpdated: '最后更新：2026 年 10 月 4 日',
     intro: '本页说明 Futari 如何收集、使用与保护您的个人数据。',
     sectionCollectTitle: '收集的数据',
     sectionCollectItems: [
@@ -1939,13 +1944,14 @@ export const zhCN: Translations = {
       '分析功能使用情况以改善产品体验（通过 PostHog，不含个人识别信息）。',
     ],
     sectionStorageTitle: '数据存储',
-    sectionStorageBody: '数据存储于 Supabase 托管的服务器，以加密连接传输，并以访问控制保护。以下字段在写入数据库前会先以 AES-256-GCM 加密：孩子的本名、身份证号、健保卡号、车牌号码、房屋地址，以及电子发票载具的验证码。这些字段以外的记账内容——交易说明、金额、分类、结算备注等——以明文存储。加密与解密都在本服务的服务器端进行，密钥由我们保管；这是存储时加密，不是端到端加密。',
+    sectionStorageBody: '数据存储于 Supabase 托管的服务器，以加密连接传输，并以访问控制保护。以下字段在写入数据库前会先以 AES-256-GCM 加密：孩子的本名、身份证号、健保卡号、车牌号码、房屋地址，以及电子发票载具的验证码。这些字段以外的记账内容——交易说明、金额、分类、结算备注等——以明文存储。加密与解密都在本服务的服务器端进行，密钥由我们保管；这是存储时加密，不是端到端加密。此外，我们每天为数据库制作一份备份，上传前先加密，存放在 Google Drive，最多保留约 60 天；解密用的密钥另行离线保管，不与备份放在一起。',
     sectionRetentionTitle: '数据保留期限',
     sectionRetentionBody: '您的账号数据在账号存续期间持续保存。您删除的交易记录会保留软删除标记约 1 年，之后由系统自动清除。在设置页提出删除账号后，有 14 天的缓冲期（日历天，不是工作日），期间随时可以取消；期满由系统自动执行。执行时会发生什么，取决于这本账本是您一个人的，还是和伴侣共用的：',
     sectionRetentionItems: [
       '一个人的账本：整本一起删除——交易、结算、定期收支规则、愛物与旅行记录都会移除，您的个人资料（姓名、头像、Email）也一并删除。',
       '两人共用的账本：账本会留给对方。你们一起记下的交易、结算与愛物记录会留在对方的账本里，我们不会单方面替您删掉——那些记录同时也是对方的。您的登录身份会删除（Google／Apple 账号关联、Email、头像、推送设备），您的名字在对方的账本里会显示为「已离开的伙伴」。',
       '如果您希望共用账本里的内容也一并移除，请在删除账号前与伴侣谈过，或先写信告诉我们。',
+      '已删除的数据（包括删除账号时移除的内容），在删除前已做好的加密备份中最多还会保留约 60 天，之后随旧备份清除而消失。这段期间我们不会用备份把它们找回来；只有在整个服务需要从备份恢复时才会用到备份，届时我们会重新执行这些删除。',
     ],
     sectionThirdPartyTitle: '第三方服务',
     sectionThirdPartyItems: [
@@ -1956,6 +1962,7 @@ export const zhCN: Translations = {
       'Sentry（错误追踪，收集匿名错误堆栈，不含个人识别信息）',
       'PostHog（产品分析，收集匿名操作事件，不含个人识别信息）',
       'Google Analytics 4（流量来源分析，IP 匿名化，不启用跨站个人化）',
+      'Google Drive（存放加密的数据库备份）',
     ],
     sectionRightsTitle: '您的权利',
     sectionRightsBody: '您可随时通过设置页登出或删除账号。如需导出或查询您的个人数据，',

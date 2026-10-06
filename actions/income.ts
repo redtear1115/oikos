@@ -3,12 +3,13 @@
 import { db } from '@/lib/db/client'
 import { assets, incomeTransactions } from '@/lib/db/schema'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
-import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
+import { listIncomesPaged, type IncomeCursor } from '@/lib/db/queries/incomes'
 import { lockOpenChapterForWrite, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
-import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { assertMemberInGroup } from '@/lib/auth/member'
@@ -162,36 +163,6 @@ export const getInsuranceAssets = action(async (): Promise<{ id: string; name: s
   return rows
 })
 
-/**
- * Wire → ResolvedIncomeFilter conversion. Income rows have no split / no
- * expense-categories: if either of those dims is active in the filter, the
- * entire result set is dropped (cutAll = true) rather than silently ignoring
- * the filter. Payer ('mine' / 'theirs') maps to recipient_id; assetIds pass
- * through verbatim (the SQL helper expands the '__none__' sentinel).
- */
-function resolveIncomeFilter(
-  filterWire: TxnFilterWire | undefined,
-  viewerId: string,
-  group: { memberA: string; memberB: string | null },
-): ResolvedIncomeFilter | undefined {
-  if (!filterWire) return undefined
-  const f = fromWire(filterWire)
-  let recipientId: string | null = null
-  if (f.payer === 'mine') recipientId = viewerId
-  else if (f.payer === 'theirs') {
-    const partner = group.memberA === viewerId ? group.memberB : group.memberA
-    recipientId = partner ?? '00000000-0000-0000-0000-000000000000'
-  }
-  return {
-    recipientId,
-    assetIds: Array.from(f.assetIds),
-    incomeCategories: Array.from(f.incomeCategories),
-    amountMin: f.amountMin,
-    amountMax: f.amountMax,
-    cutAll: cutsIncome(f),
-  }
-}
-
 export const loadMoreIncomes = action(async (
   cursor: IncomeCursor | null,
   limit: number = 20,
@@ -202,7 +173,9 @@ export const loadMoreIncomes = action(async (
 ): Promise<PagedIncomeRow[]> => {
   const { user, group, epochWindow } = await getViewerReadContext()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const incomeFilter = resolveIncomeFilter(filterWire, user.id, group)
+  const incomeFilter = filterWire
+    ? resolveIncomeFilter(fromWire(filterWire), user.id, group)
+    : undefined
   const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,

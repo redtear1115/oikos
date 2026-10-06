@@ -20,6 +20,8 @@ import {
   defaultFilter,
   filterKey,
   isFilterActive,
+  isFilterNarrowing,
+  normalizeSearchText,
   parseFilterFromSearchParams,
   toWire,
   type DateRange,
@@ -44,6 +46,7 @@ import { useFuelSheet } from './useFuelSheet'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
 import type { IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { DrillFilterChip } from './DrillFilterChip'
+import { RecordsSearchBar } from './RecordsSearchBar'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
@@ -168,16 +171,55 @@ export function RecordsList({
   // client mirrors via useSearchParams so the FilterSheet's "current state"
   // and the loaders / realtime row predicate share one source of truth.
   const filter = useMemo<TxnFilter>(() => parseFilterFromSearchParams(searchParams), [searchParams])
+  // Two predicates (#23): `filterActive` (non-text dims) drives ONLY the filter
+  // chip's dot; `narrowing` (adds search text) gates everything that moves data.
   const filterActive = isFilterActive(filter)
+  const narrowing = isFilterNarrowing(filter)
   // Same reference-stability reasoning as `effectiveDrillWire` above.
   const filterWire = useMemo(
-    () => (filterActive ? toWire(filter) : undefined),
-    [filterActive, filter],
+    () => (narrowing ? toWire(filter) : undefined),
+    [narrowing, filter],
   )
-  // For TransactionFeed.filter — only pass when active so the empty-state
+  // For TransactionFeed.filter — only pass when narrowing so the empty-state
   // logic in TransactionFeed correctly distinguishes "no filter" from
   // "filter that excluded everything".
-  const feedFilterProp = filterActive ? filter : undefined
+  const feedFilterProp = narrowing ? filter : undefined
+
+  // Search mode (#23): `?search=1` swaps the header row for the search field.
+  // The query text is `filter.text` (`?q=`). Entering keeps every other param,
+  // so the date scope is whatever Records already shows (default: this month).
+  const searchMode = searchParams.get('search') === '1'
+  // The query string from before search mode opened, so 取消 can put the view
+  // back exactly. Null when the page was opened already in search mode.
+  const preSearchQsRef = useRef<string | null>(null)
+  const searchParamsRef = useRef(searchParams)
+  useEffect(() => { searchParamsRef.current = searchParams })
+  const routerRef = useRef(router)
+  useEffect(() => { routerRef.current = router })
+
+  const handleOpenSearch = () => {
+    const before = new URLSearchParams(searchParams.toString())
+    before.delete('q')
+    before.delete('search')
+    preSearchQsRef.current = before.toString()
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('search', '1')
+    router.replace(`/records?${params.toString()}`, { scroll: false })
+  }
+  const handleCommitSearch = (text: string) => {
+    const params = new URLSearchParams(searchParamsRef.current.toString())
+    const next = normalizeSearchText(text)
+    if ((params.get('q') ?? '') === (next ?? '')) return
+    if (next) params.set('q', next)
+    else params.delete('q')
+    params.set('search', '1')
+    routerRef.current.replace(`/records?${params.toString()}`, { scroll: false })
+  }
+  const handleCancelSearch = () => {
+    const qs = preSearchQsRef.current
+    preSearchQsRef.current = null
+    routerRef.current.replace(qs ? `/records?${qs}` : '/records', { scroll: false })
+  }
   // dateRange travels through to the loaders. SSR already used it for the
   // initial page; the loaders need it for pagination.
   const dateRangeForLoader = dateRange.kind === 'month' ? undefined : dateRange
@@ -217,7 +259,9 @@ export function RecordsList({
    */
   const buildShareUrl = (next: TxnFilter, nextRange: DateRange) => {
     const params = new URLSearchParams()
-    applyFilterToParams(params, next)
+    applyFilterToParams(params, { ...next, text: filter.text })
+    // q is inert without search=1, so a link that carries text carries the mode.
+    if (filter.text) params.set('search', '1')
     applyDateRangeToParams(params, nextRange)
     if (drill) applyDrillToParams(params, drill)
     const qs = params.toString()
@@ -445,7 +489,9 @@ export function RecordsList({
 
   const handleApplyFilter = (next: TxnFilter, nextRange?: DateRange) => {
     const params = new URLSearchParams(searchParams.toString())
-    applyFilterToParams(params, next)
+    // The sheet edits the filter dimensions only; the search text has its own
+    // field, so carry the live text through (the sheet's own reset drops it).
+    applyFilterToParams(params, { ...next, text: filter.text })
     // /records always passes a concrete dateRange — the optional `?` here is
     // only because FilterSheet supports a lite mode for /dashboard.
     if (nextRange) applyDateRangeToParams(params, nextRange)
@@ -461,6 +507,12 @@ export function RecordsList({
     runAfterSheetCloseBack(() => router.replace(target, { scroll: false }))
     setFilterOpen(false)
   }
+
+  const noFilteredNote = (
+    <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
+      {t.feed.noFiltered}
+    </div>
+  )
 
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
@@ -483,6 +535,13 @@ export function RecordsList({
             of extra gap while scrolled to the top. Now the strip never scrolls
             away, so "is there a band above me" is a static question again and
             --safe-top already answers it. */}
+        {searchMode ? (
+          <RecordsSearchBar
+            query={filter.text ?? ''}
+            onCommit={handleCommitSearch}
+            onCancel={handleCancelSearch}
+          />
+        ) : (
         <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
           <h1
             className="text-page font-medium tracking-tight"
@@ -490,17 +549,43 @@ export function RecordsList({
           >
             {t.records.title}
           </h1>
-          {/* Recurring entry — moved from the inline section card (#545 §4)
-              to keep L3 focused on time/filter chips. */}
-          <Link
-            href="/settings/recurring"
-            className="text-sm no-underline flex items-center gap-1 cursor-pointer"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            {t.records.recurringShortcut}
-            <span aria-hidden className="text-sm leading-none">›</span>
-          </Link>
+          <div className="flex items-center gap-1">
+            {/* Search entry (#23). 44px hit area; -my-2 keeps the row height
+                the title alone gave it, so normal mode lays out as before. */}
+            <button
+              type="button"
+              onClick={handleOpenSearch}
+              aria-label={t.records.searchOpen}
+              className="size-11 -my-2 flex items-center justify-center border-0 bg-transparent text-ink-2 cursor-pointer"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+            </button>
+            {/* Recurring entry — moved from the inline section card (#545 §4)
+                to keep L3 focused on time/filter chips. */}
+            <Link
+              href="/settings/recurring"
+              className="text-sm no-underline flex items-center gap-1 cursor-pointer"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {t.records.recurringShortcut}
+              <span aria-hidden className="text-sm leading-none">›</span>
+            </Link>
+          </div>
         </div>
+        )}
 
         {/* L2: dual toggle pill — 支出 + 收入 wrapped in one pill (#545 §3).
             Both selected = 全部 (no separate "all" pill). Disallow zero-
@@ -639,10 +724,10 @@ export function RecordsList({
         }}
         emptyState={
           tab === 'income'
-            ? <IncomeEmptyState />
+            ? (narrowing ? noFilteredNote : <IncomeEmptyState />)
             : (
               <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
-                {filterActive || effectiveDrill ? t.feed.noFiltered : t.feed.noFilteredAddHint}
+                {narrowing || effectiveDrill ? t.feed.noFiltered : t.feed.noFilteredAddHint}
               </div>
             )
         }
@@ -673,7 +758,7 @@ export function RecordsList({
         assets={assets}
         onClose={() => setFilterOpen(false)}
         onApply={handleApplyFilter}
-        onReset={() => handleApplyFilter(defaultFilter(), { kind: 'month', monthKey: maxMonthKey })}
+        onReset={() => handleApplyFilter({ ...defaultFilter(), text: filter.text }, { kind: 'month', monthKey: maxMonthKey })}
         onShare={(draft, draftRange) => buildShareUrl(draft, draftRange)}
       />
       <IncomeSheet

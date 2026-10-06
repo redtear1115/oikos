@@ -13,6 +13,7 @@ import {
   dateColumnClause,
   epochClause,
   eqValueClause,
+  textSearchClause,
 } from './_predicates'
 
 export interface IncomeRow {
@@ -51,6 +52,8 @@ export interface ResolvedIncomeFilter {
   amountMax: number | null
   /** True when an expense-only dim is active and income rows should be hidden. */
   cutAll: boolean
+  /** Free-text search (#23) over `source`; already normalized. Absent = none. */
+  text?: string
 }
 
 /**
@@ -98,6 +101,7 @@ function buildIncomeFeedConditions(opts: {
     filter ? categoryInClause(filter.incomeCategories, incomeTransactions.category) : undefined,
     filter ? amountClause(filter.amountMin, filter.amountMax, incomeTransactions.amount) : undefined,
     filter ? assetIdsDrizzleClause(filter.assetIds) : undefined,
+    textSearchClause([incomeTransactions.source], filter?.text),
     epochClause(incomeTransactions.createdAt, epochWindow),
   ]
 }
@@ -247,6 +251,7 @@ export async function monthlyIncomeStatsByCategory(
       ${andClause(filter ? categoryInClause(filter.incomeCategories) : undefined)}
       ${andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)}
       ${andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)}
+      ${andClause(textSearchClause(['source'], filter?.text))}
       ${andClause(epochClause('created_at', epochWindow))}
     GROUP BY category
     ORDER BY total DESC
