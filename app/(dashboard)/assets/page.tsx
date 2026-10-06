@@ -5,6 +5,7 @@ import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { nonMemberPinCutoff } from '@/lib/pinnedChapterScope'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames, getPetListDetailsBatch, getPlantListDetailsBatch } from '@/lib/db/queries/aibutsu'
+import { resolvePolicyHolder } from '@/lib/insurancePolicyHolder'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
@@ -53,6 +54,16 @@ export default async function AssetsPage() {
       isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
     if (a.type === 'insurance') {
+      // #1486 — a holder who left the ledger is dropped server-side.
+      const holder = resolvePolicyHolder(
+        {
+          userId: a.insurancePolicyHolderUserId,
+          displayName: a.insurancePolicyHolderDisplayName,
+          avatarUrl: a.insurancePolicyHolderAvatarUrl,
+        },
+        group,
+        user.id,
+      )
       base.insurance = {
         insuranceType: a.insuranceType,
         insured: a.insuranceInsured,
@@ -60,9 +71,10 @@ export default async function AssetsPage() {
         insuredChildName: a.insuranceInsuredChildName,
         insuredUserId: a.insuranceInsuredUserId,
         insuredUserDisplayName: a.insuranceInsuredUserDisplayName,
-        policyHolderUserId: a.insurancePolicyHolderUserId,
-        policyHolderDisplayName: a.insurancePolicyHolderDisplayName,
-        policyHolderAvatarUrl: a.insurancePolicyHolderAvatarUrl,
+        policyHolderUserId: holder.userId,
+        policyHolderDisplayName: holder.displayName,
+        policyHolderAvatarUrl: holder.avatarUrl,
+        policyHolderIsFormer: holder.isFormer,
         insurer: a.insuranceInsurer,
         annualPremium: a.insuranceAnnualPremium,
         sumInsured: a.insuranceSumInsured,

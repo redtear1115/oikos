@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
+  使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
+  技術：`lib/insurancePolicyHolder.ts` 在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。

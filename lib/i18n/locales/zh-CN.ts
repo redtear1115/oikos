@@ -1234,6 +1234,7 @@ export const zhCN: Translations = {
       lapseConfirm: '已停止',
       lapseError: '停止失败，请再试一次',
       insuredShort: '保 {name}',
+      policyHolderFormer: '前伴侣',
       annualLabel: '年缴',
       timelineStarts: '生效',
       timelineEnds: '到期',
