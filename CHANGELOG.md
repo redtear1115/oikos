@@ -41,6 +41,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.6.8] - 2026-10-06
+
+主題：**找得到，也留得住**——紀錄頁可以用文字搜尋；Apple 登入沒完成時說清楚下一步；正式站每日加密備份的腳本與唯讀角色就位，還原演練已在 dev 跑通。
+完整 diff：[v1.6.7...v1.6.8](https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8)
+
 ### 使用者可見變化
 
 - **紀錄頁可以搜尋描述與備註（#23）**
@@ -57,13 +64,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
-- **正式站資料庫每天自動備份（#1549）**
-  使用者：畫面沒有變化；資料庫出事時有最近 30 天內的備份可以還原。
-  技術：`0081` 建唯讀角色 `futari_backup`；`scripts/ops/backup-prod.sh` 以同一快照 `pg_dump` 串流 age 加密後 rclone 上傳 Drive，附還原演練腳本；ops-runbook 新增一節。
-
-- **備份改從 `backup_auth` 的唯讀 view 讀登入身分（#1549）**
-  使用者：畫面沒有變化；每日備份能完整包含登入帳號。
-  技術：`0082` 建整列 jsonb view（不擋 Supabase Auth 升級），備份改兩段 `COPY` 只存資料、演練以 staging `\copy` 還原（`bundle_format 2`），收回 0081 的 auth grant；演練的 `pg_restore` 段先排空串流，age 不再因 SIGPIPE 誤報解密失敗；還原先關掉 service_role 的 default privileges，function ACL 不再多出來源沒有的授權；演練遇到本機缺 extension 不再在判定前中斷，pg_restore 錯誤數在中文語系下也算得對。
+- **正式站每日加密備份的腳本與唯讀角色就位（#1549）**
+  使用者：畫面沒有變化；prod 排程上線後，資料庫出事時有最近 30 天內的備份可以還原。
+  技術：`0081` 唯讀角色 `futari_backup`、`0082` 以 `backup_auth` 整列 jsonb view 讀登入身分；`backup-prod.sh` 同一快照 dump＋age 加密＋rclone 上傳，附還原演練腳本（dev 演練已通過）。
 
 ## [1.6.7] - 2026-10-04
 
@@ -1611,7 +1614,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.7...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.8...HEAD
+[1.6.8]: https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
 [1.6.5]: https://github.com/redtear1115/oikos/compare/v1.6.4...v1.6.5
