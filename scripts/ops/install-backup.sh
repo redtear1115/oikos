@@ -81,7 +81,7 @@ esac
 # (or nothing) in place, never a half-written one.
 #   Failure look if this order is broken: the installer exits 1, but the
 #   libexec copy and SHA256SUMS are already replaced while the plist is not —
-#   the next 03:30 run uses scripts the owner believes were not installed.
+#   the next scheduled run uses scripts the owner believes were not installed.
 mkdir -p "$(dirname "$DEST")" "$AGENTS"
 NEW_DEST=$(mktemp -d "${DEST}.new.XXXXXX")
 OLD_DEST="${DEST}.old.$$"

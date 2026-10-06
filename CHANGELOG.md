@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 技術變更
+
+- **正式站每日備份改在早上 08:00 跑（#1549）**
+  使用者：無直接變化；備份失敗時的通知不再被凌晨的睡眠模式收起來。
+  技術：launchd 範本 03:30→08:00；runbook 補上 prod 設定時踩到的雷（pooler 主機、dev 狀態檔、rclone scope 與 OAuth client、通知與專注模式）。
 
 ## [1.6.8] - 2026-10-06
 
