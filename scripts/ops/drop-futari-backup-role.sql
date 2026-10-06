@@ -2,7 +2,7 @@
 --
 -- PRECONDITION: the nightly job is stopped first —
 --   launchctl bootout gui/$(id -u)/<label>   (ops-runbook §「Prod backup (futari_backup)」, Rollback)
---   Failure look if you skip this: the next 03:30 run fails to connect, the
+--   Failure look if you skip this: the next scheduled run fails to connect, the
 --   Mac shows a FAILED notification and leaves the FAILED marker on the
 --   Desktop; nothing else breaks (the app never uses this role).
 --

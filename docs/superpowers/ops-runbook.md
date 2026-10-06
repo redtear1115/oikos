@@ -308,7 +308,7 @@ group by 1;
 
 | 環節 | 在哪裡 | 說明 |
 |---|---|---|
-| 排程 | 使用者的 Mac（桌機、常開），launchd 每天 03:30 | `~/Library/LaunchAgents/local.futari.backup.plist` → `~/.local/libexec/futari-backup/futari-backup-run.sh`（先比對 SHA-256）→ `backup-prod.sh` |
+| 排程 | 使用者的 Mac（桌機、常開），launchd 每天 08:00（不排凌晨的原因見設定步驟 8） | `~/Library/LaunchAgents/local.futari.backup.plist` → `~/.local/libexec/futari-backup/futari-backup-run.sh`（先比對 SHA-256）→ `backup-prod.sh` |
 | 連線 | session pooler、`sslmode=verify-full` | 身分 `futari_backup`；密碼在 macOS 鑰匙圈，執行時寫成暫存的 600 `PGPASSFILE`，結束即刪 |
 | 一致性 | 一個 `REPEATABLE READ` 交易 `pg_export_snapshot()` 後一直開著 | `pg_dump --snapshot`、兩段 auth 的 `COPY`（第二個 session `SET TRANSACTION SNAPSHOT`）與 manifest 的計數都來自同一個快照；同時最多 2 條連線 |
 | 加密 | `pg_dump \| age -r <公鑰>`、`COPY … TO STDOUT \| age -r <公鑰>` 串流 | 硬碟上從來沒有明文；公鑰在安裝時寫死進安裝的副本，不從設定檔讀 |
@@ -382,8 +382,17 @@ group by 1;
    - `pg_service.conf`：一個 `[futari_prod_backup]` 區段（dev 用 `[futari_dev_backup]`），只放 `host`／`port`（session pooler）／`dbname`／`user`（`futari_backup.<project-ref>` 格式）／`sslmode=verify-full`／`sslrootcert=<Supabase dashboard 下載的 CA 檔路徑>`。**不放密碼**——出現 `password` 欄位腳本就拒絕執行。
    - `config`：`KEY=value` 一行一個。必填 `RCLONE_DEST=<remote>:<資料夾>`；可選 `PG_BIN_DIR`、`PG_MAJOR`、`AGE_BIN`、`RCLONE_BIN`、`PG_SERVICE`、`KEYCHAIN_SERVICE`、`KEYCHAIN_ACCOUNT`、`BUNDLE_PREFIX`（dev 演練用 `futari-dev`，`RCLONE_DEST` 可以是本機資料夾）。不認得的 key、或 `AGE_RECIPIENT`，腳本都拒絕執行。
    - **失效的樣子**：權限太寬（不是 700／600）時腳本在 `preflight` 停下；`--dry-run` 會列出原因。
+   - **pooler 主機照 dashboard 的 Connect 抄，不要從另一個環境推**：dev 與 prod 的 session pooler 主機名稱可能只差一個字（`aws-0-…`／`aws-1-…`），不能互相套用。
+     - **失效的樣子**：主機抄錯時，第一次跑在 `snapshot` 階段失敗，錯誤種類 `other`，`last-run.err` 裡是 tenant 找不到。不是密碼錯，不會觸發認證封鎖。
+   - **同一台 Mac 先演練 dev、再設 prod 時**：狀態目錄 `~/Library/Application Support/futari-backup/` 裡的 `counts.prev`、`LAST_OK` 是 dev 那一次留下的。prod 第一次跑之前，先把它們改名（例如加 `.dev`）或刪掉；`config` 改成 prod 前也先留一份 dev 的副本。
+     - **失效的樣子**：prod 第一次跑在 `sanity` 階段失敗，幾乎每張表都被標成 `halved`／`zero`——拿 dev 的大量測試資料當基準比對。不要用 `--accept-counts` 蓋過去，搬走 dev 的狀態檔再跑，基準才乾淨。
 5. **rclone**：`rclone config` 新增一個 Google Drive remote，scope 選 **`drive.file`**（只看得到它自己建的檔案）。token 存在 `~/.config/rclone/rclone.conf`，確認是 600。
    - **失效的樣子**：選成完整的 `drive` scope 一樣能用，只是這個 token 外洩時，整個 Google Drive 都跟著暴露。
+   - **scope 用選單編號選，不要自己打字**：打成 `drive.file.`（多一個句點）時 rclone 照樣存檔，Google 授權頁才回 `400 invalid_scope`。
+   - **「Configure this as a Shared Drive」回答 `n`**：`drive.file` 列不了共用雲端硬碟，答 `y` 會以 `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT` 結束——但 token 已經寫進設定檔了。
+   - **用自己的 OAuth client，不用 rclone 內建的**：rclone 內建的共用 client_id 會在 2026 年內停用（rclone 自己的警告）。在 Futari 的 Google Cloud 專案建一個「Desktop app」類型的 OAuth client，把 client_id／client_secret 填進這個 remote（不經過指令列），再 `rclone config reconnect <remote>:`。該專案的 OAuth 同意畫面要是「正式版」（In production）。
+     - **失效的樣子**：用內建 client 時，某天起每晚在 `upload` 階段失敗；用的 client 停在「測試」狀態時，token 7 天後過期，同樣是 `upload` 失敗，`rclone config reconnect` 只能撐 7 天。
+   - **檢查 token 存在時只看欄位名稱**（例如 `grep -oE '^[a-z_]+ *=' rclone.conf`），不要用 sed 遮罩後印整個檔：macOS 的 BSD sed 不認 `\s`，遮罩靜默失效，refresh token 整段印出來。印出來了就到 Google 帳戶的第三方存取撤銷 rclone、刪掉設定檔裡的 token、重新授權。
 6. **安裝**：從 review 過的 tag 安裝（dev 演練可加 `--allow-untagged`）：
 
    ```
@@ -392,9 +401,12 @@ group by 1;
    ```
 
    然後先跑 `/bin/bash ~/.local/libexec/futari-backup/futari-backup-run.sh --dry-run`（不連任何東西、不讀鑰匙圈，只列計畫與本機檢查），再不帶參數手動跑一次。第一次手動跑時鑰匙圈會問 `security` 能不能讀這個項目，選「永遠允許」。
-   - **失效的樣子**：沒有手動跑過就直接交給 launchd，03:30 那個詢問視窗沒人回答，每晚都在 `credential` 階段失敗。
-7. **驗證通知（prod）**：暫時把 `RCLONE_DEST` 改成不存在的 remote，`launchctl kickstart gui/$(id -u)/local.futari.backup`，確認 launchd 底下真的跳出通知、桌面出現 `FUTARI-BACKUP-FAILED.txt`，再改回來、刪掉標記。
-8. **載入排程**：`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.futari.backup.plist`。驗收：隔天 Drive 上的 `LAST_OK` 是當天凌晨的時間。
+   - **失效的樣子**：沒有手動跑過就直接交給 launchd，排程時間跳出的詢問視窗沒人回答，每次都在 `credential` 階段失敗。
+7. **載入排程**：`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.futari.backup.plist`（`RunAtLoad` 是 false，載入當下不會跑）。驗收：隔天 Drive 上的 `LAST_OK` 是當天早上 08:00 左右的時間。
+8. **驗證通知（prod）**：`kickstart` 只對已載入的排程有效，所以排在載入之後。暫時把 `RCLONE_DEST` 改成不存在的 remote，`launchctl kickstart gui/$(id -u)/local.futari.backup`，確認 launchd 底下真的跳出通知、桌面出現 `FUTARI-BACKUP-FAILED.txt`，再改回來、刪掉標記。
+   - 通知是 `osascript` 發的，macOS 把它算在「工序指令編寫程式」（Script Editor）名下：**系統設定 → 通知 → 工序指令編寫程式**要允許，樣式建議選「持續」。
+   - **專注模式（例如「睡眠」）開著時，通知不會跳出來**，只會收進通知中心。這是排程改在 08:00、不排凌晨的原因：凌晨失敗的通知沒人看得到，要等使用者自己去翻。要讓它穿過專注模式，在該專注模式的「允許的通知」加入工序指令編寫程式。
+   - **失效的樣子**：測試時桌面標記有出現、通知卻沒跳——先看通知中心；在那裡就是專注模式或通知設定，不是腳本壞了。桌面標記不受這兩者影響，是比較可靠的那一道。
 9. **演練一次**（見下方〈還原演練〉）。prod 的第一次用紙本。
 
 ### 每次 migration 之後：覆蓋檢查
@@ -540,7 +552,7 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
 ### Rollback
 
 1. `launchctl bootout gui/$(id -u)/local.futari.backup`，刪掉 plist 與 `~/.local/libexec/futari-backup/`。
-2. admin service 跑 `scripts/ops/drop-futari-backup-role.sql`（先收回 default privileges，再 DROP ROLE），再跑 `scripts/rollback/0082_backup_auth_views.down.sql`（`DROP SCHEMA backup_auth CASCADE`，只有 view、不丟資料）。順序反過來（先拆角色、排程還在）的樣子：下一次 03:30 失敗通知，其他都不受影響。
+2. admin service 跑 `scripts/ops/drop-futari-backup-role.sql`（先收回 default privileges，再 DROP ROLE），再跑 `scripts/rollback/0082_backup_auth_views.down.sql`（`DROP SCHEMA backup_auth CASCADE`，只有 view、不丟資料）。順序反過來（先拆角色、排程還在）的樣子：下一次排程跑的時候失敗通知，其他都不受影響。
 3. 刪掉 Drive 上的備份資料夾並清空垃圾桶；在 Google 帳戶撤銷 rclone；`security delete-generic-password -s futari-backup -a futari_backup`。
 4. 隱私權政策的備份段落一起改回去——政策寫著「保留約 60 天」，實際做法要跟它一致。
 

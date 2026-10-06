@@ -565,12 +565,12 @@ describe('shell scripts (#1549)', () => {
     expect(code.slice(0, swap)).not.toMatch(/> "\$\{DEST\}\/|"\$DEST\/"|chmod [0-7]+ "\$\{DEST\}/)
   })
 
-  it('plist template: placeholders only, daily 03:30, private umask', () => {
+  it('plist template: placeholders only, daily 08:00, private umask', () => {
     expect(plist).not.toMatch(/\/Users\/|\/home\//)
     // Exactly the two tokens the installer fills — any other `__X__` (even in
     // a comment) makes the installer refuse the rendered plist.
     expect([...new Set(plist.match(/__[A-Z_]*__/g))].sort()).toEqual(['__LAUNCHD_LOG__', '__RUN_SCRIPT__'])
-    expect(plist).toMatch(/<key>Hour<\/key>\s*<integer>3<\/integer>\s*<key>Minute<\/key>\s*<integer>30<\/integer>/)
+    expect(plist).toMatch(/<key>Hour<\/key>\s*<integer>8<\/integer>\s*<key>Minute<\/key>\s*<integer>0<\/integer>/)
     expect(plist).toMatch(/<key>Umask<\/key>\s*<integer>63<\/integer>/)
   })
 })
