@@ -4,7 +4,8 @@ import { singleEcon } from '@/lib/fuelEcon'
 import { formatDateRelative } from '@/lib/format-date'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 
 interface FuelRowProps {
   fuelLog: {
@@ -27,6 +28,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
   const locale = useLocale()
   const today = useToday()
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   // singleEcon(curr, prev): only prev.odometer matters; liters/loggedAt in prev are unused
   const econ = singleEcon(
     { liters: fuelLog.liters, odometer: fuelLog.odometer, loggedAt: new Date(fuelLog.loggedAt) },
@@ -70,7 +72,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
       </div>
 
       <div className="text-base font-medium text-[var(--ink)] tabular-nums shrink-0">
-        {formatAmount(amount, 'twd')}
+        {formatLedgerAmount(amount, baseCurrency)}
       </div>
     </button>
   )

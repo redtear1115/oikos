@@ -109,7 +109,7 @@ function bootPostHog(
 }
 
 const member: MemberContextValue = {
-  group: { id: 'g1', name: 'G' },
+  group: { id: 'g1', name: 'G', baseCurrency: 'twd' },
   viewer: {
     id: 'viewer-1',
     initial: 'V',

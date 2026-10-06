@@ -1,7 +1,8 @@
 'use client'
 
 import type { Age } from '@/lib/age'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { useTranslations } from '@/lib/i18n/client'
 
 export function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -56,12 +57,13 @@ export function InfoRow({ label, value, mono = false, last = false }: {
 // chapter total instead.
 export function MoneyLine({ month, total, isPast }: { month: number; total: number; isPast: boolean }) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const amount = isPast ? total : month
   if (amount === 0) return null
   const label = isPast ? t.assetDetail.money.thisChapter : t.assetDetail.money.thisMonth
   return (
     <div className="tnum text-xs px-5 pt-3 text-ink-3">
-      {label} {formatAmount(amount, 'twd')}
+      {label} {formatLedgerAmount(amount, baseCurrency)}
     </div>
   )
 }

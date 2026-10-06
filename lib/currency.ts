@@ -50,17 +50,7 @@ export interface AmountParts {
   digits: string
 }
 
-/**
- * Splits an amount into sign / symbol / digits so layouts that render the
- * symbol and digits at different sizes (hero stats, split amount tiles)
- * don't each re-derive this from scratch. `formatAmount` composes its
- * single-string output from these same parts (#1358).
- */
-export function formatAmountParts(amount: number, currency: string): AmountParts {
-  const negative = amount < 0
-  const abs = Math.abs(amount)
-  const precision = currencyPrecision(currency)
-  const display = precision === 2 ? abs / 100 : abs
+function partsFromDisplay(display: number, negative: boolean, currency: string, precision: 0 | 2): AmountParts {
   const digits = display.toLocaleString('en-US', {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
@@ -68,8 +58,44 @@ export function formatAmountParts(amount: number, currency: string): AmountParts
   return { sign: negative ? '-' : '', symbol: currencySymbol(currency), digits }
 }
 
+/**
+ * MINOR-UNIT amounts: the FX path (`convertAmount` / `convertViaSnapshot`
+ * output, trip / outing amounts). USD is stored in cents, so `1250` renders
+ * as `$12.50`. Do NOT use this for main-ledger amounts — use
+ * `formatLedgerAmountParts` below. Mixing them is silent: a USD-base ledger
+ * that recorded $45 would show $0.45, with no error (#1399 / #1482).
+ *
+ * Splits an amount into sign / symbol / digits so layouts that render the
+ * symbol and digits at different sizes (hero stats, split amount tiles)
+ * don't each re-derive this from scratch. `formatAmount` composes its
+ * single-string output from these same parts (#1358).
+ */
+export function formatAmountParts(amount: number, currency: string): AmountParts {
+  const abs = Math.abs(amount)
+  const precision = currencyPrecision(currency)
+  return partsFromDisplay(precision === 2 ? abs / 100 : abs, amount < 0, currency, precision)
+}
+
+/** Minor-unit single-string form of `formatAmountParts` (FX path only). */
 export function formatAmount(amount: number, currency: string): string {
   const { sign, symbol, digits } = formatAmountParts(amount, currency)
+  return `${sign}${symbol}${digits}`
+}
+
+/**
+ * MAIN-LEDGER amounts: CashTransactions / IncomeTransactions / Settlements and
+ * every total derived from them are stored as integer whole units as typed
+ * (元 / $ / ¥) — never divided by 100 and shown without decimals, whatever the ledger's base currency
+ * (#1399 decision (a)). `currency` is the ledger's base currency
+ * (`useBaseCurrency()` on the client, `group.baseCurrency` on the server);
+ * it only picks the symbol here.
+ */
+export function formatLedgerAmountParts(amount: number, currency: string): AmountParts {
+  return partsFromDisplay(Math.abs(amount), amount < 0, currency, 0)
+}
+
+export function formatLedgerAmount(amount: number, currency: string): string {
+  const { sign, symbol, digits } = formatLedgerAmountParts(amount, currency)
   return `${sign}${symbol}${digits}`
 }
 

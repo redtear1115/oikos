@@ -7,7 +7,7 @@ import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateRelative } from '@/lib/format-date'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
-import { formatAmount, type CurrencyCode } from '@/lib/currency'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
 import { toViewerShare } from '@/lib/splitRatio'
 import { isOutingFoldNote } from '@/lib/outing/foldNote'
 
@@ -149,13 +149,13 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
               className="tnum text-sm font-medium tracking-[-0.2px]"
               style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
             >
-              {formatAmount(tx.originalAmount, tx.originalCurrency)}
+              {formatLedgerAmount(tx.originalAmount, tx.originalCurrency)}
             </div>
             <div
               className="tnum text-sm mt-px"
               style={{ color: 'var(--ink-3)' }}
             >
-              ≈ {formatAmount(tx.amount, baseCurrency)}
+              ≈ {formatLedgerAmount(tx.amount, baseCurrency)}
             </div>
           </>
         ) : (

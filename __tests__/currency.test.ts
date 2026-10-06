@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, formatAmountParts, convertAmount, parseCurrencyCode } from '@/lib/currency'
+import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, formatAmountParts, formatLedgerAmount, formatLedgerAmountParts, convertAmount, parseCurrencyCode } from '@/lib/currency'
 
 describe('CURRENCIES constant', () => {
   it('contains the four MVP currencies in canonical order', () => {
@@ -75,6 +75,30 @@ describe('formatAmountParts', () => {
       const { sign, symbol, digits } = formatAmountParts(amount, currency)
       expect(formatAmount(amount, currency)).toBe(`${sign}${symbol}${digits}`)
     }
+  })
+})
+
+describe('formatLedgerAmount (#1482: main-ledger integers, whole units)', () => {
+  it('TWD is byte-identical to the minor-unit path', () => {
+    for (const n of [0, 500, 12345, -500, 1234567]) {
+      expect(formatLedgerAmount(n, 'twd')).toBe(formatAmount(n, 'twd'))
+      expect(formatLedgerAmountParts(n, 'twd')).toEqual(formatAmountParts(n, 'twd'))
+    }
+  })
+  it('USD base: $45 stays $45, not $0.45', () => {
+    expect(formatLedgerAmount(45, 'usd')).toBe('$45')
+    expect(formatLedgerAmount(1234, 'usd')).toBe('$1,234')
+    expect(formatLedgerAmount(-45, 'usd')).toBe('-$45')
+    expect(formatLedgerAmountParts(45, 'usd')).toEqual({ sign: '', symbol: '$', digits: '45' })
+  })
+  it('JPY / CNY base use their symbol, whole units', () => {
+    expect(formatLedgerAmount(50000, 'jpy')).toBe('¥50,000')
+    expect(formatLedgerAmount(1000, 'cny')).toBe('CN¥1,000')
+  })
+  it('the FX path keeps minor units: same number, different source, different text', () => {
+    expect(formatAmount(4500, 'usd')).toBe('$45.00')
+    expect(formatLedgerAmount(4500, 'usd')).toBe('$4,500')
+    expect(formatAmount(45, 'usd')).toBe('$0.45')
   })
 })
 

@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeAge, daysSince } from '@/lib/age'
 import { parseLocalDate } from '@/lib/local-date'
@@ -39,12 +40,13 @@ function MoneyLine({
   isPast: boolean
 }) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const amount = isPast ? totalAmount : monthAmount
   if (amount === 0) return null
   const label = isPast ? t.assetListItem.thisChapter : t.assetListItem.thisMonth
   return (
     <div className="tnum text-xs mt-1 text-ink-3">
-      {label} {formatAmount(amount, 'twd')}
+      {label} {formatLedgerAmount(amount, baseCurrency)}
     </div>
   )
 }

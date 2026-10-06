@@ -27,7 +27,7 @@ vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHeader', () => ({
   useTint: () => ({ accent: '#000', bg: '#fff' }),
 }))
 vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHintCard', () => ({ AibutsuHintCard: () => null }))
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useMember: () => member }))
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd', useMember: () => member }))
 
 import { render, screen } from '@testing-library/react'
 import { MoneyLine } from '@/app/(dashboard)/assets/[id]/_components/aibutsu-ui'

@@ -17,7 +17,7 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 } as unknown as typeof ResizeObserver
 
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u-1', initial: 'R', avatarUrl: null, defaultSplitType: 'half' },
     partner: { id: 'u-2', initial: 'S', avatarUrl: null, displayName: 'Sam' },

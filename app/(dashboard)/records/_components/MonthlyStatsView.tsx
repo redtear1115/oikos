@@ -7,7 +7,8 @@ import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { CategoryStatRow, AssetStatRow, DailyTrendRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
-import { formatAmountParts, currencySymbol } from '@/lib/currency'
+import { formatLedgerAmountParts, currencySymbol } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { MonthlyStatsPieChart } from './MonthlyStatsPieChart'
 import { DailyTrendChart } from './DailyTrendChart'
@@ -361,26 +362,23 @@ function SummaryText({
   t: StatsT
 }) {
   const net = incomeTotal - expenseTotal
-  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
-  // baseCurrency here: the main ledger stores whole units as typed, but
-  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
-  // group would render this at 1/100th its actual size until that's fixed.
+  const baseCurrency = useBaseCurrency()
   // Three bare digits + one trailing currency anchor (per spec): the amounts
-  // below pull `digits` only from formatAmountParts, never the symbol.
+  // below pull `digits` only from formatLedgerAmountParts, never the symbol.
   const expenseStr = t.records.stats.summaryExpense.replace(
     '{amount}',
-    formatAmountParts(expenseTotal, 'twd').digits,
+    formatLedgerAmountParts(expenseTotal, baseCurrency).digits,
   )
   const incomeStr = t.records.stats.summaryIncome.replace(
     '{amount}',
-    formatAmountParts(incomeTotal, 'twd').digits,
+    formatLedgerAmountParts(incomeTotal, baseCurrency).digits,
   )
   const netStr =
     net === 0
       ? t.records.stats.summaryNetEven
       : net > 0
-        ? t.records.stats.summaryNetIncome.replace('{amount}', formatAmountParts(net, 'twd').digits)
-        : t.records.stats.summaryNetExpense.replace('{amount}', formatAmountParts(Math.abs(net), 'twd').digits)
+        ? t.records.stats.summaryNetIncome.replace('{amount}', formatLedgerAmountParts(net, baseCurrency).digits)
+        : t.records.stats.summaryNetExpense.replace('{amount}', formatLedgerAmountParts(Math.abs(net), baseCurrency).digits)
 
   return (
     <div className="text-xs tnum" style={{ color: 'var(--ink-2)' }}>

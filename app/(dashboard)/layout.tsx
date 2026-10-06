@@ -22,6 +22,7 @@ import { TodayProvider } from './_components/TodayProvider'
 import { getTodayYMD } from '@/lib/today-server'
 import { PastChapterBar } from './_components/PastChapterBar'
 import { QuickAddProvider } from './_components/QuickAddProvider'
+import { parseCurrencyCode } from '@/lib/currency'
 import { maskAvatarUrl } from '@/lib/avatar'
 import { TextScale } from '@/components/TextScale'
 import { TEXT_SCALE_INIT_SCRIPT } from '@/lib/textScale'
@@ -94,7 +95,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const viewerIsA = group.memberA === user.id
 
   const value: MemberContextValue = {
-    group: { id: group.id, name: group.name },
+    group: { id: group.id, name: group.name, baseCurrency: parseCurrencyCode(group.baseCurrency) ?? 'twd' },
     viewer: {
       id: viewerProfile.id,
       displayName: viewerProfile.displayName,
