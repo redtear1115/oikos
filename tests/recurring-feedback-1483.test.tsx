@@ -24,6 +24,7 @@ vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
     isSolo: false,
   }),
   whoToMemberRole: (w: 'M' | 'T') => (w === 'M' ? 'a' : 'b'),
+  useBaseCurrency: () => 'twd',
 }))
 
 const incomeActions = vi.hoisted(() => ({
