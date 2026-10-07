@@ -81,6 +81,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：畫面沒有變化；朋友打開出遊分享連結時，連結裡的金鑰不會出現在 PostHog、Sentry、Vercel Insights，Google Analytics 在分享連結頁不載入。
   技術：`urlSanitizer` 把 `outing/<token>` 跟 invite 一樣換成 `:token`（`/outings/<uuid>` 不動），Sentry 保留 `[shareToken]` 路由名；新增 `GoogleAnalyticsGate` 在 outing 路徑不渲染 GA，載入後導過去則設 `ga-disable-<id>`。
 
+### Security
+
+- **可以在設定讓已傳出的邀請連結失效（#1546）**
+  使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
+  技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。
