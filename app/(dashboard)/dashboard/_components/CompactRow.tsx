@@ -1,21 +1,22 @@
 'use client'
 
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateRelative } from '@/lib/format-date'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
-import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatLedgerAmount } from '@/lib/currency'
 import { toViewerShare } from '@/lib/splitRatio'
 import { isOutingFoldNote } from '@/lib/outing/foldNote'
 
 // Beyond 1億 the full number overflows the row on mobile widths.
 // Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
 // tapping the row reveals the exact amount in the detail sheet.
-// TODO(v0.17 currency): truncation is TWD-specific; move to lib/currency
-// when other currencies need abbreviation. For now NT$ is concatenated outside.
+// TODO(v0.17 currency): truncation is TWD-specific (億 / 兆); move to lib/currency
+// when other currencies need abbreviation. The currency symbol is concatenated
+// outside, from the ledger base currency (#1482).
 function formatRowAmount(amount: number, trillion: string, hundredMillion: string): string {
   const abs = Math.abs(amount)
   const sign = amount < 0 ? '-' : ''
@@ -46,11 +47,10 @@ export interface CompactRowProps {
   }
   isLast: boolean
   onClick?: () => void
-  /** The group's base currency. Used for dual-currency display when originalCurrency differs. Defaults to 'twd'. */
-  baseCurrency?: CurrencyCode
 }
 
-export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: CompactRowProps) {
+export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const locale = useLocale()
   const today = useToday()
@@ -163,7 +163,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
             className="tnum text-sm font-medium tracking-[-0.2px]"
             style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
           >
-            NT${formatRowAmount(tx.amount, t.compactRow.trillion, t.compactRow.hundredMillion)}
+            {currencySymbol(baseCurrency)}{formatRowAmount(tx.amount, t.compactRow.trillion, t.compactRow.hundredMillion)}
           </div>
         )}
         {showMyShare && (

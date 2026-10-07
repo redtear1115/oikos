@@ -384,7 +384,6 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                     originalAmount: r.originalAmount,
                   }}
                   isLast={i === records.length - 1}
-                  baseCurrency={baseCurrency}
                   onClick={onRowClick}
                 />
               )
@@ -507,7 +506,7 @@ function PerSideMemberCard(props: {
  * the native total + base equivalent + record count; the body (duo only)
  * carries per-side paid/share in NATIVE units of this currency.
  */
-function CurrencyBreakdownCard(props: {
+export function CurrencyBreakdownCard(props: {
   row: {
     currency: string
     native: number

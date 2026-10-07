@@ -389,7 +389,7 @@ function SummaryText({
       <span className="font-medium">{netStr}</span>
       {/* One currency mark per line, at the end (per spec). The three numbers
           above are bare; this symbol anchors them all. */}
-      <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>{currencySymbol('twd')}</span>
+      <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>{currencySymbol(baseCurrency)}</span>
     </div>
   )
 }

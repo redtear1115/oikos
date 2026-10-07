@@ -48,8 +48,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：`convertWholeUnits`（一次四捨五入、正數最小 1）取代 `convertAmount`；`endOuting` 以 `minorToWhole` 把 outing 最小單位換成整數單位；規格中「USD 以分儲存」的說法撤回。
 
 - **帳本幣別顯示跟著基準幣別（#1482）**跟著基準幣別（#1482）**
-  使用者：基準幣別不是台幣的帳本，儀表板、紀錄、愛物頁的金額會用對應的符號與格式，$45 不會再顯示成 $0.45。
-  技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（FX 最小單位）分開；`MemberContext.group.baseCurrency` ＋ `useBaseCurrency()` 取代各處寫死的 `'twd'`，台幣帳本輸出不變。
+  使用者：基準幣別不是台幣的帳本，儀表板、紀錄列、統計摘要、愛物頁與新增時的換算預覽會用對應的符號，$45 不會再顯示成 $0.45；表單輸入框、提示文字與回顧頁仍寫死 NT$。
+  技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（僅 outing 最小單位）分開；`useBaseCurrency()` 取代 `CompactRow`、統計錨點等處寫死的 `'twd'`／`NT$`，台幣帳本輸出不變。
 
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
