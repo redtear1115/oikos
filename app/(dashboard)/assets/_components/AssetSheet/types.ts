@@ -1,6 +1,7 @@
 import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
+import type { CurrencyCode } from '@/lib/currency'
 
 export interface AssetSheetInitial {
   id: string
@@ -82,6 +83,8 @@ export interface AssetSheetInitial {
   // #166 — current account value for investment-linked savings policies.
   // Only persisted when kind === 'savings'.
   insAccountValue?: number | null
+  // #1600 — the policy's own currency; null/absent = the ledger's base currency.
+  insCurrency?: CurrencyCode | null
   // House-specific
   /** #837 — address is encrypted at rest; the form never receives plaintext.
    *  Bool drives the 「先前已加密」 placeholder + 「清除」 button. */

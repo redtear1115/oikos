@@ -14,6 +14,9 @@ import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
 import { insuredDisplayName } from '@/lib/insuranceMemberLink'
+import { formatLedgerAmountSpaced, type CurrencyCode } from '@/lib/currency'
+import { policyCurrency } from '@/lib/insuranceCurrency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -47,6 +50,8 @@ interface InsuranceData {
   expiryDate: string | null
   termYears: number | null
   payCycle: string | null
+  /** #1600 — NULL reads as the ledger's base currency. */
+  currency?: CurrencyCode | null
   reminderDaysBefore: number
   notes: string | null
 }
@@ -57,12 +62,11 @@ interface Props {
   data: InsuranceData
 }
 
-function fmtNT(n: number) {
-  return n.toLocaleString('en-US')
-}
-
 export function InsuranceListItem({ id, name, data }: Props) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
+  const currency = policyCurrency(data.currency, baseCurrency)
+  const fmt = (n: number) => formatLedgerAmountSpaced(n, currency)
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [renewOpen, setRenewOpen] = useState(false)
@@ -299,7 +303,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 <div
                   className="tnum mt-px text-sm font-medium text-ink"
                 >
-                  {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
+                  {annualPremium > 0 ? fmt(annualPremium) : '—'}
                 </div>
               </div>
             </div>
@@ -324,7 +328,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 leftLabel={i.timelinePaid}
                 leftValue={i.timelinePaidYears.replace('{paid}', String(yearsPassed)).replace('{term}', String(termYears))}
                 rightLabel={i.timelineSumInsured}
-                rightValue={data.sumInsured ? `NT$ ${fmtNT(data.sumInsured)}` : '—'}
+                rightValue={data.sumInsured ? fmt(data.sumInsured) : '—'}
               />
             )}
             {isSavings && targetAmount > 0 && (
@@ -332,9 +336,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 pct={Math.min(100, Math.round((cumulativePaid / targetAmount) * 100))}
                 fillColor="var(--saving)"
                 leftLabel={i.timelineInvested}
-                leftValue={`NT$ ${fmtNT(cumulativePaid)}`}
+                leftValue={fmt(cumulativePaid)}
                 rightLabel={i.timelineTarget}
-                rightValue={`NT$ ${fmtNT(targetAmount)}`}
+                rightValue={fmt(targetAmount)}
               />
             )}
           </div>

@@ -1597,13 +1597,11 @@ export type Translations = {
     insuranceList: {
       /** Template with `{name}` placeholder. */
       insuredPrefix: string
-      /** Template with `{amount}` placeholder. Annual-premium pill, plain NT$. */
+      /** Template with `{amount}` placeholder. Annual-premium pill; `{amount}` is the caller-formatted amount with the policy's currency symbol (#1600). */
       annualPremium: string
       // ── savings ─────────────────────────────────────────────────────────
       /** Template with `{amount}` placeholder. Years-paid × annual premium. */
       savingsCumulative: string
-      /** Shown after cumulative when notes mention "USD". */
-      savingsForeignNote: string
       /** Shown when today > expiry for savings policies. */
       savingsMaturedBadge: string
       /** #260 — default fallback badge so every card has a visible state. */
@@ -2025,6 +2023,8 @@ export type Translations = {
       sectionPremium: string
       annualPremium: string
       annualPremiumPlaceholder: string
+      /** #1600 — label of the policy currency picker. */
+      currency: string
       sumInsured: string
       sumInsuredPlaceholder: string
       expectedMaturityAmount: string
@@ -2289,6 +2289,8 @@ export type Translations = {
        *  maturity/dividend/survival_annuity have non-zero totals.
        *  The component appends bucket labels + NT$ amounts itself. */
       heroBreakdownPrefix: string
+      /** #1600 — shown when the policy currency differs from the ledger's; `{policy}` / `{base}` are upper-case codes. */
+      crossCurrencyNote: string
       /** Template with `{date}`. */
       maturingSoonTitle: string
       maturingSoonSubtitle: string
@@ -4356,12 +4358,11 @@ export const zhTW: Translations = {
     typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
-      annualPremium: '年繳 NT$ {amount}',
-      savingsCumulative: '累積投入 NT$ {amount}',
-      savingsForeignNote: '保額 USD',
+      annualPremium: '年繳 {amount}',
+      savingsCumulative: '累積投入 {amount}',
       savingsMaturedBadge: '繳費期滿',
       activeBadge: '繳費中',
-      sumInsuredShort: '保額 NT$ {amount}',
+      sumInsuredShort: '保額 {amount}',
       yearsLeft: '剩 {n} 年',
       expired: '已到期',
       singleYearLabel: '單年期',
@@ -4750,6 +4751,7 @@ export const zhTW: Translations = {
       sectionPremium: '保費與保額',
       annualPremium: '年繳保費',
       annualPremiumPlaceholder: '24960',
+      currency: '幣別',
       sumInsured: '保額',
       sumInsuredPlaceholder: '3000000',
       expectedMaturityAmount: '預估滿期金',
@@ -4933,11 +4935,11 @@ export const zhTW: Translations = {
       yearSuffix: '年',
       daysSuffix: '天',
       annualPremiumLabel: '年繳保費',
-      annualPremiumPrefix: '年繳 NT$ {amount}',
+      annualPremiumPrefix: '年繳 {amount}',
       contractProgress: '合約進度',
       yearsLeft: '還剩 {years} 年',
       matured: '已滿期',
-      termAndSumLine: '{n} 年期 · 保額 NT$ {sum}',
+      termAndSumLine: '{n} 年期 · 保額 {sum}',
       kindLabels: {
         medical: '醫療',
         life: '壽險',
@@ -4976,6 +4978,7 @@ export const zhTW: Translations = {
       heroNoExpectedBar: '已拿回 {received} · 預估金額未設定',
       heroNoExpectedCta: '設定預估金額',
       heroBreakdownPrefix: '含',
+      crossCurrencyNote: '這張保單以 {policy} 計，帳本以 {base} 計。兩邊分開列出，不換算，也不比較進度。',
       maturingSoonTitle: '{date} 即將到期',
       maturingSoonSubtitle: '別忘了滿期金到帳要記',
       maturingSoonCta: '記滿期金 →',

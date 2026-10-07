@@ -59,6 +59,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：房屋購入價格、寵物購入費用、植物花費的詳情，以及汽車、加油、寵物、植物表單的金額單位，美金等非台幣帳本會顯示對應符號而不是 NT$；台幣帳本顯示不變，保單金額不在此列（見 #1600）。
   技術：以 `useBaseCurrency()` 帶入 `currencySymbol`；詳情列新增 `formatLedgerAmountSpaced`（保留「符號＋空格＋數字」、整數單位不除 100）；金額仍是整數，不動 schema。
 
+- **每張保單有自己的幣別（#1600）**
+  使用者：保單可選 TWD／CNY／USD／JPY，列表、詳情與編輯表單的保費、保額、預估滿期金、帳戶價值都用保單自己的符號；保單幣別和帳本不同時，兩邊分開列出，不換算、不畫進度條、不預填滿期金，年繳總額也依幣別分開加總。
+  技術：`0085` 為 `InsuranceDetails` 加可為空的 `currency`（以所屬帳本基準幣別回填，空值讀作帳本幣別）；必須先於讀它的程式碼上 prod（0084 之後）；`editInsurance` 未帶幣別時保留既有值。
+
 - **分類欄位寫入前先擋掉不合法的值（#1541）**
   使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
   技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。

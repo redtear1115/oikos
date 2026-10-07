@@ -10,14 +10,17 @@ import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
 import { AssetSwitcher, type SwitcherGroup } from '../AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from '../aibutsu-ui'
 import { SavingsHero } from './SavingsHero'
+import { SavingsLedgerTotals } from './SavingsLedgerTotals'
 import { MaturingSoonPrompt } from './MaturingSoonPrompt'
 import { MaturedAwaitingPrompt } from './MaturedAwaitingPrompt'
 import { computeSavingsProgress } from '@/lib/insuranceProgress'
+import { policyCurrency as resolvePolicyCurrency } from '@/lib/insuranceCurrency'
+import { formatLedgerAmountSpaced, type CurrencyCode } from '@/lib/currency'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateAbsolute } from '@/lib/format-date'
@@ -91,6 +94,10 @@ export function SavingsView({
   const td = t.assetDetail.insurance
   const ts = t.assetDetail.savings
   const { isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
+  const policyCurrency = resolvePolicyCurrency(details.currency, baseCurrency)
+  // #1600 — policy figures and ledger totals are only comparable in one currency.
+  const comparable = policyCurrency === baseCurrency
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editAssetOpen, setEditAssetOpen] = useState(false)
@@ -126,9 +133,13 @@ export function SavingsView({
   const progress = computeSavingsProgress({
     premiumTotal: premiumStats.total,
     returnTotal: returnStats.total,
-    annualPremium: details.annualPremium,
+    // #1600 — across currencies the amount inputs are withheld, so every
+    // ratio / bar / over-105% / awaitingMaturity result is null or false;
+    // only the date-derived fields (timeProgress, yearsLeft, isMatured,
+    // isMaturingSoon) are used.
+    annualPremium: comparable ? details.annualPremium : null,
     termYears: details.termYears,
-    expectedMaturity: details.expectedMaturityAmount,
+    expectedMaturity: comparable ? details.expectedMaturityAmount : null,
     startsAt: details.startsAt,
     endsAt: details.endsAt,
   })
@@ -156,7 +167,8 @@ export function SavingsView({
   }
 
   const openRecordReturn = (prefilledAmount?: number) => {
-    setIncomePrefillAmount(prefilledAmount)
+    // #1600 — never prefill a policy amount into a ledger of another currency.
+    setIncomePrefillAmount(comparable ? prefilledAmount : undefined)
     setIncomeSheetOpen(true)
   }
 
@@ -218,13 +230,22 @@ export function SavingsView({
               onClick={() => openRecordReturn(details.expectedMaturityAmount ?? undefined)}
             />
           )}
-          <SavingsHero
-            progress={progress}
-            startsAt={details.startsAt}
-            endsAt={details.endsAt}
-            returnBreakdown={returnBreakdown}
-            onSetExpectedMaturity={() => setEditAssetOpen(true)}
-          />
+          {comparable ? (
+            <SavingsHero
+              progress={progress}
+              startsAt={details.startsAt}
+              endsAt={details.endsAt}
+              returnBreakdown={returnBreakdown}
+              onSetExpectedMaturity={() => setEditAssetOpen(true)}
+            />
+          ) : (
+            <SavingsLedgerTotals
+              premiumTotal={premiumStats.total}
+              returnTotal={returnStats.total}
+              baseCurrency={baseCurrency}
+              policyCurrency={policyCurrency}
+            />
+          )}
         </>
       )}
 
@@ -324,7 +345,7 @@ export function SavingsView({
               <span
                 className="text-xl font-medium tabular-nums text-ink font-numeric"
               >
-                {/* TODO(v0.17 currency): "NT$ {amount}" with space */}NT$ {details.accountValue.toLocaleString()}
+                {formatLedgerAmountSpaced(details.accountValue, policyCurrency)}
               </span>
               <button
                 type="button"
@@ -346,6 +367,7 @@ export function SavingsView({
         rules={recurringRules}
         onAdd={() => setRecurringSheetState('create')}
         onEdit={(rule) => setRecurringSheetState(rule)}
+        currency={baseCurrency}
         translations={ts}
         locale={locale}
         intervalLabels={{
@@ -365,10 +387,9 @@ export function SavingsView({
         <InfoRow label={td.insurer} value={details.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details.payCycle, td)} />
-        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow
           label={td.expectedMaturity}
-          value={details.expectedMaturityAmount !== null ? `NT$ ${details.expectedMaturityAmount.toLocaleString()}` : ''}
+          value={details.expectedMaturityAmount !== null ? formatLedgerAmountSpaced(details.expectedMaturityAmount, policyCurrency) : ''}
           mono
           last
         />
@@ -465,6 +486,7 @@ function RecurringRulesSection({
   translations,
   intervalLabels,
   locale,
+  currency,
 }: {
   rules: RecurringRuleRow[]
   onAdd: () => void
@@ -472,6 +494,8 @@ function RecurringRulesSection({
   translations: Translations['assetDetail']['savings']
   intervalLabels: { 1: string; 3: string; 6: string; 12: string; fallback: string }
   locale: string
+  /** A recurring income rule is a ledger amount: the ledger's base currency, not the policy's (#1600). */
+  currency: CurrencyCode
 }) {
   const P = DEFAULT_INCOME_PALETTE
   return (
@@ -523,8 +547,7 @@ function RecurringRulesSection({
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="text-base font-medium tabular-nums text-ink font-numeric">
-                      {/* TODO(v0.17 currency): "NT$ {amount}" with space */}
-                      NT$ {rule.amount.toLocaleString()}
+                      {formatLedgerAmountSpaced(rule.amount, currency)}
                     </span>
                     {rule.pausedAt ? (
                       <span className="text-xs text-ink-3">{translations.recurringRulePaused}</span>
