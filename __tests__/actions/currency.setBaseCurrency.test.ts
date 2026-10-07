@@ -162,7 +162,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_68 cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-14T01:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(tx.id)
@@ -217,7 +217,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_68 past cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-13T23:59:59Z'), // before epoch start 2026-05-14T00:00:00Z
       createdAt: new Date('2026-05-13T23:59:59Z'),
     }).returning({ id: cashTransactions.id })
@@ -243,7 +243,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_68 deleted cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-14T01:00:00Z'),
       deletedAt: new Date(), // soft-deleted
     }).returning({ id: cashTransactions.id })
@@ -291,7 +291,7 @@ describe('setBaseCurrency — backdated records still lock (#1106)', () => {
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_1106 imported cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: BACKDATED,
       // createdAt left to defaultNow() — recorded during the current chapter.
     }).returning({ id: cashTransactions.id })
@@ -390,7 +390,7 @@ describe('currentEpochHasRecords — backs canChangeBase on the settings page', 
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_1106 imported cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: BACKDATED,
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(tx.id)
@@ -439,7 +439,7 @@ describe('currentEpochHasRecords — backs canChangeBase on the settings page', 
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_1106 previous chapter',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-13T23:59:59Z'),
       createdAt: new Date('2026-05-13T23:59:59Z'),
     }).returning({ id: cashTransactions.id })
@@ -458,7 +458,7 @@ describe('currentEpochHasRecords — backs canChangeBase on the settings page', 
       amount: 100,
       splitType: 'all_mine',
       description: 'TEST_1106 deleted cash',
-      category: 'food',
+      category: 'dining',
       transactedAt: BACKDATED,
       deletedAt: new Date(),
     }).returning({ id: cashTransactions.id })

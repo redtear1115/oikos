@@ -3066,6 +3066,7 @@ export type Translations = {
       outing_already_joined: string
       leave_active_outing: string
       category_empty: string
+      category_invalid: string
       split_ratio_required: string
       split_ratio_out_of_range: string
       split_ratio_not_applicable: string
@@ -6802,6 +6803,7 @@ export const zhTW: Translations = {
       outing_already_joined: '你已經在這次出遊裡了',
       leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
+      category_invalid: '分類不在可選清單內',
       split_ratio_required: '依比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之間',
       split_ratio_not_applicable: 'split_ratio 僅適用於依比例分',

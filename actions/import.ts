@@ -12,7 +12,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterImportMutation } from '@/lib/revalidate'
-import { isValidCategoryId } from '@/lib/categories'
+import { isWritableExpenseCategory } from '@/lib/categories'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { MAX_AMOUNT } from '@/lib/validators'
 import { DETECTED_SOURCES, type DetectedSource } from '@/lib/csvImport/detector'
@@ -167,7 +167,7 @@ function normaliseCategory(category: string, type: ImportRowType): string {
   const trimmed = (category ?? '').trim()
   if (!trimmed) return 'other'
   if (type === 'expense') {
-    return isValidCategoryId(trimmed) ? trimmed : 'other'
+    return isWritableExpenseCategory(trimmed) ? trimmed : 'other'
   }
   return isValidIncomeCategoryId(trimmed) ? trimmed : 'other'
 }

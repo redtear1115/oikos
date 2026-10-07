@@ -11,6 +11,7 @@ import { revalidatePath } from 'next/cache'
 import { convertWholeUnits } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
 import { action, actionError } from '@/lib/action-errors'
+import { isWritableExpenseCategory } from '@/lib/categories'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -129,8 +130,13 @@ function validateCommon(input: CreateTripExpenseInput, group: { memberA: string;
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     throw actionError('amount_not_positive')
   }
-  if (!input.category.trim()) {
+  const category = input.category.trim()
+  if (!category) {
     throw actionError('category_empty')
+  }
+  // Server backstop for the DB CHECK (0084): reject ids the CHECK would refuse (#1541).
+  if (!isWritableExpenseCategory(category)) {
+    throw actionError('category_invalid')
   }
   if (input.splitType === 'weighted') {
     if (input.splitRatio == null) throw actionError('split_ratio_required')
@@ -162,7 +168,7 @@ export const createTripExpense = action(async (input: CreateTripExpenseInput) =>
         amount: normalized.amount,
         originalCurrency: normalized.originalCurrency,
         originalAmount: normalized.originalAmount,
-        category: input.category,
+        category: input.category.trim(),
         splitType: input.splitType,
         splitRatio: input.splitRatio ?? null,
         description: input.description?.trim() ? input.description.trim() : null,
@@ -211,7 +217,7 @@ export const editTripExpense = action(async (input: EditTripExpenseInput) => {
         amount: normalized.amount,
         originalCurrency: normalized.originalCurrency,
         originalAmount: normalized.originalAmount,
-        category: input.category,
+        category: input.category.trim(),
         splitType: input.splitType,
         splitRatio: input.splitRatio ?? null,
         description: input.description?.trim() ? input.description.trim() : null,
