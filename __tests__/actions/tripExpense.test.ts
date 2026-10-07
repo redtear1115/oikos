@@ -245,6 +245,53 @@ describe('createTripExpense — happy paths', () => {
     expect(expense.originalAmount).toBe(10000)
   })
 
+  it('TWD base: USD $45 @32 stores 1440 whole units, originalAmount 45 (#1582)', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    const trip = unwrapAction(await createTrip({
+      name: 'US', startDate: '2026-05-10',
+      currencies: { default: 'TWD', entries: [{ code: 'TWD', label: null, rate: 1 }, { code: 'USD', label: null, rate: 32 }] },
+    }))
+    refs.tripIds.push(trip.id)
+    const e = unwrapAction(await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 45, currency: 'usd', category: '食', splitType: 'half',
+    }))
+    expect(e.amount).toBe(1440)
+    expect(e.originalCurrency).toBe('USD')
+    expect(e.originalAmount).toBe(45)
+  })
+
+  it('USD base: JPY 1000 @0.0067 stores 7; tiny amounts store 1 on create and edit (#1582)', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    await db.update(oikosGroups).set({ baseCurrency: 'usd' }).where(eq(oikosGroups.id, refs.groupId))
+    const trip = unwrapAction(await createTrip({
+      name: 'JP-USD', startDate: '2026-05-10',
+      currencies: { default: 'USD', entries: [
+        { code: 'USD', label: null, rate: 1 }, { code: 'JPY', label: null, rate: 0.0067 }, { code: 'TWD', label: null, rate: 0.031 },
+      ] },
+    }))
+    refs.tripIds.push(trip.id)
+    const mk = (amount: number, currency: string) => createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount, currency, category: '食', splitType: 'half',
+    })
+    expect(unwrapAction(await mk(1000, 'jpy')).amount).toBe(7)
+    const tiny1 = unwrapAction(await mk(50, 'jpy'))
+    const tiny2 = unwrapAction(await mk(15, 'twd'))
+    expect(tiny1.amount).toBe(1)
+    expect(tiny2.amount).toBe(1)
+    const edited = unwrapAction(await editTripExpense({
+      id: tiny1.id, tripId: trip.id, paidBy: refs.userId, amount: 15, currency: 'twd', category: '食', splitType: 'half',
+    }))
+    expect(edited.amount).toBe(1)
+    const edited2 = unwrapAction(await editTripExpense({
+      id: tiny2.id, tripId: trip.id, paidBy: refs.userId, amount: 50, currency: 'jpy', category: '食', splitType: 'half',
+    }))
+    expect(edited2.amount).toBe(1)
+  })
+
   it('accepts weighted split with splitRatio in [0,100]', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
