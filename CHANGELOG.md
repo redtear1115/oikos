@@ -43,6 +43,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **美金金額的換算與出遊結算不再差 100 倍（#1582）**
+  使用者：台幣帳本在旅行中記美金（$45 不再只記成 NT$14）、美金帳本用外幣記帳、出遊結束結算時，金額都是正確的整數；換算後不足 1 的小額記為 1，出遊結算不足 1 美元則不產生結算。
+  技術：`convertWholeUnits`（一次四捨五入、正數最小 1）取代 `convertAmount`；`endOuting` 以 `minorToWhole` 把 outing 最小單位換成整數單位；規格中「USD 以分儲存」的說法撤回。
+
+- **帳本幣別顯示跟著基準幣別（#1482）**
+  使用者：基準幣別不是台幣的帳本，儀表板、紀錄列、統計摘要、愛物頁與新增時的換算預覽會用對應的符號，$45 不會再顯示成 $0.45；表單輸入框、提示文字與回顧頁仍寫死 NT$。
+  技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（僅 outing 最小單位）分開；`useBaseCurrency()` 取代 `CompactRow`、統計錨點等處寫死的 `'twd'`／`NT$`，台幣帳本輸出不變。
+
 - **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
   使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
   技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。

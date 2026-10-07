@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { resolveDisplayName } from '@/lib/display-name'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { assetTypeMeta, type AssetType } from '@/lib/assets'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -23,6 +24,7 @@ interface Props {
 
 export function AssetListItem({ id, type, name, nickname, plate, monthAmount, isSavings, isLast }: Props) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const meta = assetTypeMeta(type)
   const subtitle = type === 'car' ? (plate ?? '') : meta.label
   const display = resolveDisplayName(name, nickname)
@@ -71,7 +73,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
       <div className="text-right shrink-0 ml-2">
         <div className="text-xs tracking-[0.4px] text-ink-3">{t.assetListItem.thisMonth}</div>
         <div className="tnum text-sm font-medium text-ink">
-          {formatAmount(monthAmount, 'twd')}
+          {formatLedgerAmount(monthAmount, baseCurrency)}
         </div>
       </div>
     </Link>

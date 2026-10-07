@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
@@ -12,7 +12,7 @@ import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
 import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
@@ -26,6 +26,7 @@ interface Props {
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
   const { viewer, partner, isPast, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const locale = useLocale()
   // Default to the full outstanding amount.
@@ -195,7 +196,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
               // --btn-primary-text on --btn-primary-bg is ~14.5:1 (#1197).
               className="flex-1 h-[46px] rounded-xl border-0 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-medium text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
             >
-              {pending ? t.common.processing : `${primaryText} ${formatAmount(parsed, 'twd')}`}
+              {pending ? t.common.processing : `${primaryText} ${formatLedgerAmount(parsed, baseCurrency)}`}
             </button>
           )}
           <button

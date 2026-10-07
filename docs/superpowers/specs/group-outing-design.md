@@ -72,7 +72,7 @@ related_issues: ["#943", "#870", "#1558"]
 
 - **`Outings`** — 出遊本體。`group_id` + `epoch_id`(折回歸屬用,與 Trip 一致)+ `created_by`(只有帳號用戶能開)+ `name` + `currency`(**單一幣別,建立後有支出即鎖**)+ `share_token`(加入連結)+ `status`(`active` / `settling` / `ended` / `archived`)+ `folded_at`(折回 idempotency)。
 - **`OutingParticipants`** — 出遊裡的「一個人」,與 Profile 解耦。`display_name`(臨時朋友只有名字)+ `profile_id`(**nullable**;Futari 用戶才填、認領後補上)+ `claim_token`(此 slot 的操作/認領密鑰,存 cookie)+ `claimed_at`。夫妻兩人參與時即兩個 `profile_id` 已填的 participant。可標記 inactive(中途退出,不刪歷史)。
-- **`OutingExpenses`** — 支出。`paid_by_participant_id`(任何參與者)+ `amount`(outing 幣別整數,依幣別小數規則同主 app)+ optional `description` / `category` + `entered_by_participant_id`(稽核:匿名多人寫入要可追)。
+- **`OutingExpenses`** — 支出。`paid_by_participant_id`(任何參與者)+ `amount`(outing 幣別的最小單位整數,USD 為分;主帳本是整數單位,兩者不同,只在 outing 結束 fold 成 Settlement 時由 `minorToWhole` 換算;撤回「同主 app」的舊說法,#1582)+ optional `description` / `category` + `entered_by_participant_id`(稽核:匿名多人寫入要可追)。
 - **`OutingExpenseShares`** — 一筆支出分給誰(挑參與者)。`participant_id` + `share_amount`(寫入時就算好的平分整數,含餘數分配;落地存而非每次除,避免 rounding drift 且可稽核)。不變量:同一支出 `Σ share_amount === amount`。
 - **`OutingSettlements`** — 出遊內還款。`from_participant_id` → `to_participant_id` + `amount`。
 

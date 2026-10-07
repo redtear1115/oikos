@@ -18,7 +18,7 @@ related_issues: ["#1086"]
 
 ## Balance 計算規則
 
-- 金額單位依 base currency 而異：TWD / CNY / JPY 為整數（無小數）；USD 以 *100 儲存為整數（即 1.50 USD 存為 150）。Balance 計算永遠看 base 幣別的 raw integer 值。
+- 主帳本金額（交易、收入、結算、旅行）一律存「整數單位」，不分幣別（USD 存 $45 就是 `45`）；Outing 三張表（OutingExpenses / OutingExpenseShares / OutingSettlements）才用最小單位（USD 為分），只在 outing 結束 fold 成 Settlement 時換算成整數單位。Balance 計算永遠看 base 幣別的 raw integer 值。（撤回：先前「USD 以 *100 儲存」的說法不成立，主帳本從來不是分，#1582。）
 - Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
 - 每次寫入後全量重算，cache 在 `GroupBalance`
 - 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`

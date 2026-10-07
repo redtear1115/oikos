@@ -1,4 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/app/(dashboard)/_components/MemberContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/app/(dashboard)/_components/MemberContext')>()),
+  useBaseCurrency: () => 'twd',
+}))
 import { render, screen } from '@testing-library/react'
 import { MonthSection } from '@/app/(dashboard)/records/_components/MonthSection'
 import { I18nWrapper } from './_mocks/i18n'

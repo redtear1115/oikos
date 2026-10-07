@@ -31,7 +31,7 @@ import { I18nWrapper } from './_mocks/i18n'
 import { TodayProvider } from '@/app/(dashboard)/_components/TodayProvider'
 import { todayYMDIn } from '@/lib/today'
 
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u-1', initial: 'R', avatarUrl: null, defaultSplitType: 'half' },
     partner: { id: 'u-2', initial: 'S', avatarUrl: null },
