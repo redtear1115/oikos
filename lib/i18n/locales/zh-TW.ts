@@ -313,8 +313,8 @@ export type Translations = {
     shared: string
     none: string
     deleteSoftDescription: string
-    /** Short transient toasts. `recorded` and `updated` carry the NT$ amount
-     *  inline via `{amount}`; `deleted` is a flat acknowledgement. Surfaced
+    /** Short transient toasts. `recorded` and `updated` carry the amount
+     *  inline via `{amount}` (caller passes formatLedgerAmount, symbol included); `deleted` is a flat acknowledgement. Surfaced
      *  by Dashboard.handleMutated for every successful create / edit / delete. */
     toast: {
       recorded: string
@@ -1196,8 +1196,8 @@ export type Translations = {
       expand: string
       summaryExpense: string    // {amount}
       summaryIncome: string     // {amount}
-      summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
-      summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
+      summaryNetIncome: string  // {amount} digits only; the symbol is a separate anchor
+      summaryNetExpense: string // {amount} digits only; the symbol is a separate anchor
       summaryNetEven: string    // "持平"
       /** A11y label for a stats bar that's NOT currently the drill target. {label} = bar's label. */
       drillFilterLabel: string  // {label}
@@ -3386,8 +3386,8 @@ export const zhTW: Translations = {
     none: '無',
     deleteSoftDescription: '這個動作無法復原，紀錄會立即從帳本移除，並於約 1 年後由系統永久清除。',
     toast: {
-      recorded: '已記錄 NT${amount}',
-      updated: '已更新 NT${amount}',
+      recorded: '已記錄 {amount}',
+      updated: '已更新 {amount}',
       deleted: '已刪除這筆',
     },
     navigation: {
@@ -4188,7 +4188,7 @@ export const zhTW: Translations = {
         finalConfirm: {
           title: '最後一步',
           balanceOk: '帳目已結清，可以離開',
-          balanceNotZero: '還有 NT$ {amount} 沒結清。要先在主畫面結算為 0，才能離開。',
+          balanceNotZero: '還有 {amount} 沒結清。要先在主畫面結算為 0，才能離開。',
           settleCta: '前往主畫面結算',
           typePromptPrefix: '請輸入「',
           typePromptSuffix: '」來確認',
@@ -4998,7 +4998,7 @@ export const zhTW: Translations = {
       heroNotStarted: '這筆每年放進去的，未來會回來',
       heroPartialWithYears: '已拿回 {pct}% · 距滿期還有 {years} 年',
       heroPartial: '已拿回 {pct}%',
-      heroMatured: '滿期了 · 共拿回 NT$ {total}',
+      heroMatured: '滿期了 · 共拿回 {total}',
       heroAwaitingMaturity: '滿期日已到 · 等候滿期金到帳',
       heroNotYetActive: '保單將於 {date} 生效',
       heroLabelIn: '入',
@@ -5006,7 +5006,7 @@ export const zhTW: Translations = {
       heroPaymentLabel: '累計繳',
       heroReturnLabel: '已拿回',
       heroExpectedTag: '估',
-      heroNoExpectedBar: '已拿回 NT$ {received} · 預估金額未設定',
+      heroNoExpectedBar: '已拿回 {received} · 預估金額未設定',
       heroNoExpectedCta: '設定預估金額',
       heroBreakdownPrefix: '含',
       maturingSoonTitle: '{date} 即將到期',
@@ -5015,7 +5015,7 @@ export const zhTW: Translations = {
       maturedAwaitingTitle: '滿期日已到 · {date}',
       maturedAwaitingStatus: '待入帳',
       maturedAwaitingCta: '我已經收到滿期金了 →',
-      maturedAwaitingPremiumNote: '累計繳 NT$ {total} 已記入 {count} 筆',
+      maturedAwaitingPremiumNote: '累計繳 {total} 已記入 {count} 筆',
       accountValueLabel: '目前帳戶價值',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期進帳',
@@ -5259,13 +5259,13 @@ export const zhTW: Translations = {
     savedFooter: '已儲存',
     errorFooter: '儲存失敗：{message}',
     card1Title: '最常一起花的類別',
-    card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
-    card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
+    card1Body: '這個月你們最常一起花在 {category}，共 {amount}',
+    card1BodySolo: '這個月你最常花在 {category}，共 {amount}',
     card2Title: '本月最大筆',
-    card2Body: '最大一筆：{name} 付的「{description}」，NT$ {amount}',
+    card2Body: '最大一筆：{name} 付的「{description}」，{amount}',
     card3Title: '定期入帳事件',
-    card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
-    card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
+    card3ExpenseTotal: '本月定期支出共 {amount}',
+    card3IncomeTotal: '本月定期進帳共 {amount}',
     card4Title: '愛物進度',
     emptyCardBody: '這個月沒留下花費紀錄',
     emptyCardCta: '現在去補登 →',

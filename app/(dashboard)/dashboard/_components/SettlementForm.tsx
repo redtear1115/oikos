@@ -12,7 +12,7 @@ import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
-import { formatLedgerAmount } from '@/lib/currency'
+import { currencySymbol, formatLedgerAmount } from '@/lib/currency'
 import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
@@ -107,7 +107,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             el.select()
           }}
         >
-          <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
+          <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>{currencySymbol(baseCurrency)}</span>
           <input
             ref={inputRef}
             type="text"
