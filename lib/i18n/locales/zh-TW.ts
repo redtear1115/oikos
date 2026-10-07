@@ -1724,6 +1724,12 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -2364,6 +2370,12 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -4423,9 +4435,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       sourceLabel: '來源名稱（選填）',
       sourcePlaceholder: '公司名稱或薪資來源',
       startsOnLabel: '開始日期',
@@ -4438,6 +4450,12 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -5021,9 +5039,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       descriptionLabel: '描述',
       descriptionPlaceholder: '例：房租、訂閱',
       startsOnLabel: '開始日期',
@@ -5036,6 +5054,12 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
