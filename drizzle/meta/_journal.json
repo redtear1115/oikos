@@ -589,6 +589,13 @@
       "when": 1784100000000,
       "tag": "0085_insurance_currency",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0086_former_member_rules",
+      "breakpoints": true
     }
   ]
 }

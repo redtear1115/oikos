@@ -3137,6 +3137,7 @@ export type Translations = {
       pending_expense_handled_elsewhere: string
       /** #1588 — confirming a pending expense card whose snapshot payer left the ledger. */
       pending_former_member: string
+      rule_person_not_member: string
       pending_income_not_found: string
       pending_income_handled_elsewhere: string
       review_month_locked: string
@@ -6906,6 +6907,7 @@ export const zhTW: Translations = {
       pending_expense_not_found: '待確認支出已被處理或找不到',
       pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
       pending_former_member: '這張卡片的付款人已離開這本帳本，請先改一下再確認。',
+      rule_person_not_member: '這條規則的付款人／收入歸屬已離開這本帳本，請先改一下再恢復。',
       pending_income_not_found: '待確認收入已被處理或找不到',
       pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
       review_month_locked: '這個月的留言已鎖定，無法再修改',

@@ -540,6 +540,12 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
  *   - Soft-delete the removed member's live InvoiceCredentials and clear
  *     their ciphertext (#1289) — the one exception to "data left in place":
  *     a credential is a live secret, not history
+ *   - Pause every live recurring rule of the removed member (income
+ *     recipient / expense payer) and delete their unprocessed pending
+ *     cards (#1588). Records already written, skipped and resolved cards
+ *     stay. Stale `proposed_paid_by` snapshots on the stayer's rules are reset
+ *     to the rule's payer. Failure looks like: cards of the ex keep appearing
+ *     every period and can never be confirmed.
  *   - Recalc balance (resolves to 0 — solo short-circuit)
  *
  * Irreversible.
@@ -631,6 +637,47 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
         eq(invoiceCredentials.userId, removedUserId),
         isNull(invoiceCredentials.deletedAt),
       ))
+
+    // #1588 — the removed member's recurring rules stop here. Same predicates
+    // as process_account_deletions (drizzle/0086) and the 0086 data repair:
+    // pause by person (COALESCE keeps an earlier paused_at), delete the
+    // unprocessed cards of those rules whatever their earlier paused state,
+    // and point stale payer snapshots on the stayer's rules back at the
+    // rule's payer (what cron would generate today).
+    await tx.execute(sql`
+      UPDATE "RecurringIncomeRules"
+      SET paused_at = COALESCE(paused_at, ${boundary})
+      WHERE group_id = ${groupId} AND recipient_id = ${removedUserId} AND deleted_at IS NULL
+    `)
+    await tx.execute(sql`
+      UPDATE "RecurringExpenseRules"
+      SET paused_at = COALESCE(paused_at, ${boundary})
+      WHERE group_id = ${groupId} AND paid_by = ${removedUserId} AND deleted_at IS NULL
+    `)
+    await tx.execute(sql`
+      DELETE FROM "PendingIncomeOccurrences"
+      WHERE group_id = ${groupId} AND skipped_at IS NULL AND resolved_tx_id IS NULL
+        AND rule_id IN (
+          SELECT id FROM "RecurringIncomeRules"
+          WHERE group_id = ${groupId} AND recipient_id = ${removedUserId} AND deleted_at IS NULL
+        )
+    `)
+    await tx.execute(sql`
+      DELETE FROM "PendingExpenseOccurrences"
+      WHERE group_id = ${groupId} AND skipped_at IS NULL AND resolved_tx_id IS NULL
+        AND rule_id IN (
+          SELECT id FROM "RecurringExpenseRules"
+          WHERE group_id = ${groupId} AND paid_by = ${removedUserId} AND deleted_at IS NULL
+        )
+    `)
+    await tx.execute(sql`
+      UPDATE "PendingExpenseOccurrences" p
+      SET proposed_paid_by = r.paid_by
+      FROM "RecurringExpenseRules" r
+      WHERE r.id = p.rule_id AND p.group_id = ${groupId}
+        AND p.skipped_at IS NULL AND p.resolved_tx_id IS NULL
+        AND p.proposed_paid_by = ${removedUserId} AND r.paid_by = ${group.memberA}
+    `)
 
     await recalcGroupBalance(groupId, tx)
   })

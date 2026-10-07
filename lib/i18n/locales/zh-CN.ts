@@ -3715,6 +3715,7 @@ export const zhCN: Translations = {
       pending_expense_not_found: '待确认支出已被处理或找不到',
       pending_expense_handled_elsewhere: '待确认支出已被其他设备处理',
       pending_former_member: '这张卡片的付款人已离开这本账本，请先改一下再确认。',
+      rule_person_not_member: '这条规则的付款人／收入归属已离开这本账本，请先改一下再恢复。',
       pending_income_not_found: '待确认收入已被处理或找不到',
       pending_income_handled_elsewhere: '待确认收入已被其他设备处理',
       review_month_locked: '这个月的留言已锁定，无法再修改',
