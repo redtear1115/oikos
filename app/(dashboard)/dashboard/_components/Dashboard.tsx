@@ -41,7 +41,7 @@ const TripSheet = dynamic(() => import('@/app/(dashboard)/trips/_components/Trip
 
 /** Info every sheet hands back through onMutated so Dashboard can drive a
  *  success toast + the first-record card without each sheet owning its own
- *  toast state. `savedAmount` is the integer TWD value just written;
+ *  toast state. `savedAmount` is the amount just written, in whole units of the ledger's base currency;
  *  `edit` distinguishes "updated" vs "recorded" copy; `deleted` overrides
  *  both with a flat acknowledgement. */
 export type MutatedInfo = {
