@@ -6,6 +6,8 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { currencySymbol } from '@/lib/currency'
 import { leaveGroup, proposeSwap } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
 import { unwrapAction } from '@/lib/action-errors'
@@ -523,6 +525,7 @@ function FinalConfirm({
   onSettle: () => void
   pending: boolean
 }) {
+  const baseCurrency = useBaseCurrency()
   const matched = confirmInput.trim() === t.confirmText
   const inputId = useId()
   return (
@@ -531,9 +534,8 @@ function FinalConfirm({
       {!balanceOk ? (
         <>
           <p className="text-sm mb-4" style={{ color: 'var(--debit-text)' }}>
-            {/* TODO(v0.17 currency): i18n template has `NT$ {amount}` baked in;
-                 needs digits-only mode or removing the symbol from translations. */}
-            {t.balanceNotZero.replace('{amount}', balanceAbs.toLocaleString())}
+            {/* {amount} carries the symbol (with a space), from the ledger base currency. */}
+            {t.balanceNotZero.replace('{amount}', `${currencySymbol(baseCurrency)} ${balanceAbs.toLocaleString()}`)}
           </p>
           <button
             type="button"

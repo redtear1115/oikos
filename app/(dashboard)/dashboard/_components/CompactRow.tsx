@@ -168,7 +168,9 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         )}
         {showMyShare && (
           <div className="tnum text-sm mt-px" style={{ color: myShareColor }}>
-            ${myShare.toLocaleString('en-US')}
+            {/* Compact secondary line: the main amount above carries the full
+                symbol (NT$ / CN¥), this one keeps just the sign ($ / ¥). */}
+            {currencySymbol(baseCurrency).replace(/^[A-Z]+/, '')}{myShare.toLocaleString('en-US')}
           </div>
         )}
       </div>

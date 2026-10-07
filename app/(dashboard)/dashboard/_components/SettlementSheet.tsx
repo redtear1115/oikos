@@ -1,8 +1,9 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
@@ -35,6 +36,7 @@ interface Props {
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   const { viewer, partner, isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
   const locale = useLocale()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -143,7 +145,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
             <AmountInput
               value={amount}
               onChange={setAmount}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={t.settlement.amountAriaLabel}
               inputRef={amountInputRef}
             />

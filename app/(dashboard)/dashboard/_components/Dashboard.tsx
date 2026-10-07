@@ -24,7 +24,7 @@ import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 import { useToast } from '@/components/Toast'
-import type { CurrencyCode } from '@/lib/currency'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
 import { DashboardFilterRow } from './DashboardFilterRow'
@@ -42,7 +42,7 @@ const TripSheet = dynamic(() => import('@/app/(dashboard)/trips/_components/Trip
 
 /** Info every sheet hands back through onMutated so Dashboard can drive a
  *  success toast + the first-record card without each sheet owning its own
- *  toast state. `savedAmount` is the integer TWD value just written;
+ *  toast state. `savedAmount` is the amount just written, in whole units of the ledger's base currency;
  *  `edit` distinguishes "updated" vs "recorded" copy; `deleted` overrides
  *  both with a flat acknowledgement. */
 export type MutatedInfo = {
@@ -285,9 +285,7 @@ export function Dashboard({
       showToast(t.common.toast.deleted, 1500)
     } else if (info?.savedAmount != null) {
       const tmpl = info.edit ? t.common.toast.updated : t.common.toast.recorded
-      // TODO(v0.17 currency): toast template has `NT${amount}` baked in;
-      // needs formatAmount digits-only mode or move the symbol into the format call.
-      showToast(tmpl.replace('{amount}', info.savedAmount.toLocaleString('en-US')), 1500)
+      showToast(tmpl.replace('{amount}', formatLedgerAmount(info.savedAmount, baseCurrency)), 1500)
     }
     router.refresh()
   }
