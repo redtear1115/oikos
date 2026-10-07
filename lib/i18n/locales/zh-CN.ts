@@ -3651,6 +3651,7 @@ export const zhCN: Translations = {
       outing_already_joined: '你已经在这次出游里了',
       leave_active_outing: '请先结束出游再离开章节',
       category_empty: '分类为空',
+      category_invalid: '分类不在可选列表内',
       split_ratio_required: '按比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之间',
       split_ratio_not_applicable: 'split_ratio 仅适用于按比例分',

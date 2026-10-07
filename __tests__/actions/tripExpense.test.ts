@@ -55,6 +55,7 @@ vi.mock('next/headers', () => ({
   headers: async () => new Headers(),
 }))
 
+const { PICKABLE_CATEGORIES } = await import('@/lib/categories')
 const { db } = await import('@/lib/db/client')
 const {
   profiles,
@@ -202,7 +203,7 @@ describe('createTripExpense — happy paths', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1500,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     }))
 
@@ -236,7 +237,7 @@ describe('createTripExpense — happy paths', () => {
       paidBy: refs.userId,
       amount: 10000,
       currency: 'jpy',
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     }))
 
@@ -256,7 +257,7 @@ describe('createTripExpense — happy paths', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 3000,
-      category: '住',
+      category: 'housing',
       splitType: 'weighted',
       splitRatio: 70,
     }))
@@ -285,7 +286,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     })).rejects.toThrow()
   })
@@ -302,7 +303,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     })).toEqual({ ok: false, code: 'trip_ended' })
   })
@@ -318,7 +319,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: randomUUID(),
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     })).toEqual({ ok: false, code: 'payer_not_in_trip_ledger' })
   })
@@ -334,7 +335,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 0,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     })).toEqual({ ok: false, code: 'amount_not_positive' })
   })
@@ -350,7 +351,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'weighted',
     })).toEqual({ ok: false, code: 'split_ratio_required' })
   })
@@ -366,7 +367,7 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
       splitRatio: 60,
     })).toEqual({ ok: false, code: 'split_ratio_not_applicable' })
@@ -383,11 +384,62 @@ describe('createTripExpense — rejections', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
-      category: '食',
+      category: 'dining',
       splitType: 'weighted',
       splitRatio: 150,
     })).toEqual({ ok: false, code: 'split_ratio_out_of_range' })
   })
+})
+
+describe('trip expense category allowlist (#1541)', () => {
+  let activeRefs: SeedRefs | null = null
+  afterEach(async () => {
+    if (activeRefs) { try { await cleanup(activeRefs) } catch (e) { console.error(e) }; activeRefs = null }
+  })
+
+  it.each(['settle', 'food', 'constructor', '', '   '])('create rejects %j', async (category) => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
+    refs.tripIds.push(trip.id)
+
+    const out = await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 100, category, splitType: 'half',
+    })
+    expect(out).toEqual({ ok: false, code: category.trim() ? 'category_invalid' : 'category_empty' })
+  })
+
+  it('edit rejects settle and keeps the old row', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
+    refs.tripIds.push(trip.id)
+    const original = unwrapAction(await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 100, category: 'dining', splitType: 'half',
+    }))
+
+    expect(await editTripExpense({
+      id: original.id, tripId: trip.id, paidBy: refs.userId, amount: 100, category: 'settle', splitType: 'half',
+    })).toEqual({ ok: false, code: 'category_invalid' })
+    expect(await listTripExpenses(trip.id)).toHaveLength(1)
+  })
+
+  it('accepts every pickable id, trimmed', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
+    refs.tripIds.push(trip.id)
+
+    for (const id of PICKABLE_CATEGORIES.map((c) => c.id)) {
+      const row = unwrapAction(await createTripExpense({
+        tripId: trip.id, paidBy: refs.userId, amount: 100, category: ` ${id} `, splitType: 'half',
+      }))
+      expect(row.category).toBe(id)
+    }
+  }, 30_000)
 })
 
 describe('editTripExpense', () => {
@@ -407,7 +459,7 @@ describe('editTripExpense', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 500,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     }))
 
@@ -416,7 +468,7 @@ describe('editTripExpense', () => {
       tripId: trip.id,
       paidBy: refs.partnerId,
       amount: 800,
-      category: '住',
+      category: 'housing',
       splitType: 'half',
     }))
 
@@ -441,7 +493,7 @@ describe('editTripExpense', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 500,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     }))
     unwrapAction(await softDeleteTripExpense({ id: original.id, tripId: trip.id }))
@@ -451,7 +503,7 @@ describe('editTripExpense', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 999,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     })).toEqual({ ok: false, code: 'record_deleted_or_missing' })
   })
@@ -474,7 +526,7 @@ describe('softDeleteTripExpense', () => {
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 200,
-      category: '食',
+      category: 'dining',
       splitType: 'half',
     }))
 

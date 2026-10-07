@@ -24,7 +24,7 @@
  * ja / en / zh-CN screens.
  */
 
-import { isValidCategoryId } from '@/lib/categories'
+import { isWritableExpenseCategory } from '@/lib/categories'
 import { MAX_AMOUNT } from '@/lib/validators'
 import type { PartialImportRow, ValidationResult } from './types'
 
@@ -75,7 +75,7 @@ export function validateRow(
   // ── category ── (warning only; mapper already falls back to 'other')
   if (!row.category) {
     warnings.push(`${prefix}: category fell back to 'other' (empty)`)
-  } else if (!isValidCategoryId(row.category)) {
+  } else if (!isWritableExpenseCategory(row.category)) {
     warnings.push(`${prefix}: unknown category "${row.category}", will fall back to 'other'`)
   }
 
