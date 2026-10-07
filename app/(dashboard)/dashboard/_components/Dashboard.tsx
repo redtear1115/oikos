@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { BrandHeader } from './BrandHeader'
@@ -23,6 +23,7 @@ import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
+import { useToast } from '@/components/Toast'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
@@ -143,20 +144,11 @@ export function Dashboard({
   // visible when both sides are selected — matches how the user reads
   // those records. See `useDashboardReducer.ts` for the full state shape.
   const [state, dispatch] = useDashboardReducer()
-  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard, toast } = state
+  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard } = state
 
   const [, startFuelLoad] = useTransition()
 
-  // Toast timer ref lives outside the reducer — clearing is a side effect,
-  // and we need a stable ref across renders. The reducer only owns the
-  // visible toast string; this ref owns the cleanup handle.
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showToast = useCallback((msg: string, durationMs = 2500) => {
-    dispatch({ type: 'setToast', toast: msg })
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => dispatch({ type: 'setToast', toast: null }), durationMs)
-  }, [dispatch])
-  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current) }, [])
+  const { showToast } = useToast()
 
   const setMode = useCallback((next: 'expense' | 'income') => dispatch({ type: 'setMode', mode: next }), [dispatch])
   const setPayerFilter = useCallback((next: DashboardPayer) => dispatch({ type: 'setPayerFilter', value: next }), [dispatch])
@@ -498,17 +490,6 @@ export function Dashboard({
           router.refresh()
         }}
       />
-
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed left-1/2 top-4 z-top-toast -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-bubble text-sm text-white text-center"
-          style={{ background: 'var(--ink)' }}
-        >
-          {toast}
-        </div>
-      )}
 
       <FirstRecordCard
         show={showFirstCard}
