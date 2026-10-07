@@ -111,6 +111,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Security
 
+- **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
+  使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
+  技術：`lib/insurancePolicyHolder.ts` 在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
+
 - **可以在設定讓已傳出的邀請連結失效（#1546）**
   使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
   技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。

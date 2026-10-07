@@ -32,6 +32,8 @@ interface InsuranceData {
   policyHolderUserId: string | null
   policyHolderDisplayName: string | null
   policyHolderAvatarUrl: string | null
+  /** #1486 — holder left the ledger: no name/avatar, show the neutral label. */
+  policyHolderIsFormer?: boolean
   insurer: string | null
   annualPremium: number | null
   sumInsured: number | null
@@ -254,6 +256,17 @@ export function InsuranceListItem({ id, name, data }: Props) {
               >
                 {data.insurer && (
                   <span className="text-ink-2">{data.insurer}</span>
+                )}
+                {data.policyHolderIsFormer && (
+                  <>
+                    {data.insurer && (
+                      <span
+                        aria-hidden="true"
+                        className="rounded-xs bg-ink-3 shrink-0 w-0.75 h-0.75"
+                      />
+                    )}
+                    <span>{i.policyHolderFormer}</span>
+                  </>
                 )}
                 {insuredName && (
                   <>

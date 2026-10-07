@@ -1662,6 +1662,7 @@ export type Translations = {
        *  recognised action code (network / unexpected). */
       lapseError: string
       insuredShort: string
+      policyHolderFormer: string
       annualLabel: string
       timelineStarts: string
       timelineEnds: string
@@ -4412,6 +4413,7 @@ export const zhTW: Translations = {
       lapseConfirm: '已停止',
       lapseError: '停止失敗，請再試一次',
       insuredShort: '保 {name}',
+      policyHolderFormer: '前伴侶',
       annualLabel: '年繳',
       timelineStarts: '生效',
       timelineEnds: '到期',

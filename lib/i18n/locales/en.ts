@@ -1255,6 +1255,7 @@ export const en: Translations = {
       lapseConfirm: 'Stop',
       lapseError: 'Couldn’t stop the policy, please try again',
       insuredShort: 'Insured: {name}',
+      policyHolderFormer: 'Former partner',
       annualLabel: 'Annual',
       timelineStarts: 'Effective',
       timelineEnds: 'Expires',

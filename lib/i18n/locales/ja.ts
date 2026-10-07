@@ -1256,6 +1256,7 @@ export const ja: Translations = {
       lapseConfirm: '停止',
       lapseError: '停止に失敗しました。もう一度お試しください',
       insuredShort: '被保険者 {name}',
+      policyHolderFormer: '元パートナー',
       annualLabel: '年払い',
       timelineStarts: '始期',
       timelineEnds: '満期',

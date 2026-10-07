@@ -50,6 +50,7 @@ export interface AssetsListItem {
     policyHolderUserId: string | null
     policyHolderDisplayName: string | null
     policyHolderAvatarUrl: string | null
+    policyHolderIsFormer?: boolean
     insurer: string | null
     annualPremium: number | null
     sumInsured: number | null
