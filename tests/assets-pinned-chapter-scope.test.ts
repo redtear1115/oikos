@@ -57,6 +57,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/supabase/server', () => ({ getCurrentUser: async () => ({ id: viewer }) }))
 vi.mock('@/lib/db/queries/epoch', () => ({
   resolveViewerEpochContext: async () => ({ group: GROUP, window: epochWindow }),
+  // #1579 — the pinned non-member's member-link scope reads the chapter pair.
+  getEpochMembers: async (id: string) => (id === 'e1' ? { memberAId: 'user-a', memberBId: 'user-b' } : { memberAId: 'user-a', memberBId: null }),
 }))
 vi.mock('@/lib/i18n/t', () => ({
   getTranslations: async () => ({

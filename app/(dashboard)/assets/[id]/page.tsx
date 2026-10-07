@@ -24,7 +24,8 @@ import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { TemplateAssetDetailClient } from './_components/TemplateAssetDetailClient'
-import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
+import { getChildDetails, getPetDetails, getPlantDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
+import { getInsuranceDetailsForViewer, loadMemberLinkScope } from '@/lib/db/queries/insuranceView'
 import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -333,7 +334,11 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   }
 
   if (asset.type === 'insurance') {
-    const insuranceDetailsData = await getInsuranceDetails(asset.id, group.id, user.id)
+    // #1579 — the only read of this policy's details. A 要保人 / member 被保人
+    // who left the ledger comes back with no id or name; everything below
+    // (the edit sheet's initial values, the detail views) gets this row.
+    const memberScope = await loadMemberLinkScope(context, user.id)
+    const insuranceDetailsData = await getInsuranceDetailsForViewer(asset.id, group.id, user.id, memberScope)
 
     // Resolve linked vehicle name if vehicleId is set (allAssetsData already excludes deleted)
     let linkedVehicle: { id: string; name: string } | null = null
@@ -353,7 +358,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insInsured: insuranceDetailsData?.insured ?? null,
       insInsuredChildId: insuranceDetailsData?.insuredChildId ?? null,
       insInsuredUserId: insuranceDetailsData?.insuredUserId ?? null,
+      insInsuredFormer: insuranceDetailsData?.insuredIsFormer ?? false,
       insPolicyHolderUserId: insuranceDetailsData?.policyHolderUserId ?? null,
+      insPolicyHolderFormer: insuranceDetailsData?.policyHolderIsFormer ?? false,
       insInsurer: insuranceDetailsData?.insurer ?? null,
       insPolicyNo: insuranceDetailsData?.policyNo ?? null,
       insAnnualPremium: insuranceDetailsData?.annualPremium ?? null,
