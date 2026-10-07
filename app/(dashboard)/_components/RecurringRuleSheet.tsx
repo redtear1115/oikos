@@ -1,5 +1,6 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
 import { useDirtyCheck } from './useUnsavedChangesGuard'
@@ -10,7 +11,7 @@ import { AmountInput } from './AmountInput'
 import { ScrollFadeRow } from './ScrollFadeRow'
 import { ConfirmModal } from './ConfirmModal'
 import { Avatar } from './Avatar'
-import { useMember, whoToMemberRole } from './MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from './MemberContext'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
@@ -63,6 +64,7 @@ type Props = IncomeProps | ExpenseProps
 export function RecurringRuleSheet(props: Props) {
   const { open, onClose, onMutated } = props
   const { viewer, partner, isSolo, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const isEdit = !!props.initial
   const isIncome = props.type === 'income'
@@ -325,7 +327,7 @@ export function RecurringRuleSheet(props: Props) {
             <AmountInput
               value={amount ? String(amount) : ''}
               onChange={(next) => setAmount(next ? parseInt(next, 10) : 0)}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={tNs.sheet.amountLabel}
               caretColor={isIncome ? P.ink : undefined}
             />

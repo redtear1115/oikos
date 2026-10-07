@@ -1,10 +1,11 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useState, useEffect, useId, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
@@ -82,6 +83,7 @@ interface Props {
 
 export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
   const { viewer, partner, isSolo, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const P = DEFAULT_INCOME_PALETTE
 
@@ -308,7 +310,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             <AmountInput
               value={amount}
               onChange={setAmount}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={t.incomeSheet.amountLabel}
               caretColor={P.ink}
               inputRef={amountInputRef}

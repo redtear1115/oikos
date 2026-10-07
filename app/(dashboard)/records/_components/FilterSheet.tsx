@@ -516,7 +516,7 @@ export function FilterSheet({
             ))}
           </Section>
 
-          {/* 金額範圍 — inclusive min/max in NT$ (integers; no decimals).
+          {/* 金額範圍 — inclusive min/max in the ledger base currency (whole units; no decimals).
               Empty input on either side = open bound. Applies to all kinds
               (cash / settlement / income), so it stays visible in lite mode. */}
           <Section title={t.filterSheet.amountSection}>
