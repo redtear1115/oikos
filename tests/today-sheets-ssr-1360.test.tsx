@@ -89,6 +89,7 @@ import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { SettlementSheet } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
+import { ToastProvider } from '@/components/Toast'
 import { NewFuelLog } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 
 const INSTANT = new Date('2026-09-20T23:30:00Z')
@@ -112,7 +113,7 @@ async function measure(node: ReactNode, deviceTZ = 'Asia/Taipei') {
   // Seeded the way the dashboard layout seeds it: today in the cookie zone.
   const tree = (
     <I18nWrapper>
-      <TodayProvider todayYMD={todayYMDIn(deviceTZ)}>{node}</TodayProvider>
+      <TodayProvider todayYMD={todayYMDIn(deviceTZ)}><ToastProvider>{node}</ToastProvider></TodayProvider>
     </I18nWrapper>
   )
   const html = renderToString(tree)

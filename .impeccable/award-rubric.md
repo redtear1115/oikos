@@ -64,3 +64,4 @@ Tracker #1528. Phase A: #1519 table marks, #1520 LCP/G1, #1521 CTA pre-hydration
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | 2026-10-03 | 1c94e1f | G1 FAIL (LCP landing 3.97 s local / 6.48 s prod; use-case 3.29 s; sign-in 2.70 s); G2–G5 pass | 5.92 | 6.25 | 6.17 | 7.25 | 6.20 | FAIL — [round-1.md](award-review/round-1.md) |
 | 2 | 2026-10-03 | 681655e | all pass (LCP 2.11–2.47 s) | 6.33 | 7.00 | 6.33 | 7.75 | 6.68 | FAIL — [round-2.md](award-review/round-2.md); P1 row bug fixed after (projected ~6.91) |
+| 3 | 2026-10-04 | c11ba45 (prod) | G1 FAIL (LCP bimodal ~2.0/~4.2 s; landing root + sign-in medians 4.18 s); G2–G5 pass | 6.58 | 7.17 | 6.33 | 7.75 | 6.83 | FAIL — [round-3.md](award-review/round-3.md); scored on production |
