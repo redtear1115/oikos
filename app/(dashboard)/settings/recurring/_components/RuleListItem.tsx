@@ -51,7 +51,10 @@ export function RuleListItem(props: Props) {
     personIsFormer = props.rule.paidByIsFormer
     tRule = t.recurringExpense.rule
     handleClick = () => props.onEdit(props.rule)
-    splitText = splitLabel(props.rule.splitType, personId === viewer.id, t)
+    // A former payer's split ("全部對方的" etc.) is relative to someone who is
+    // no longer here; the pill would point at the current partner. Hidden
+    // until the rule is re-assigned (#1588).
+    splitText = personIsFormer ? null : splitLabel(props.rule.splitType, personId === viewer.id, t)
   } else {
     const incomeCat = getIncomeCategory(props.rule.category)
     cat = incomeCat

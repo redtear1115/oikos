@@ -97,7 +97,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **定期收支的收入歸屬、付款人已離開帳本時，頁面不再帶出對方（#1588）**
   使用者：定期規則與待確認卡片把離開的人顯示為「前伴侶」，不再掛上現在伴侶的名字；編輯這類規則或卡片時不預選、提示重新選擇，選好才能儲存（單人帳本會說明改記在你名下）；確認付款人已離開的卡片時，提示先「改一下」。
-  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；不改資料；en／ja 譯文待確認。
+  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；前伴侶的規則在列表上不顯示分攤標籤（`全部對方的` 會被讀成現在的伴侶）；`recipient_not_in_group` 文案改為「收入歸屬已離開這本帳本，請重新選擇。」（一般收入新增／編輯也共用）；不改資料；en／ja 譯文待確認。
 
 ## [1.6.7] - 2026-10-04
 
