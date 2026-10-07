@@ -246,10 +246,20 @@ queueDbResult([GROUP])
 })
 
 describe('resumeRule', () => {
+  it('refuses a rule whose person left the ledger (#1588) and writes nothing', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'rule-1', groupId: GROUP.id, recipientId: 'former-user',
+      nextOccurrenceAt: '2026-02-01', intervalMonths: 1, dayOfMonth: 1,
+    }])
+    expect(await resumeRule('rule-1')).toMatchObject({ ok: false, code: 'rule_person_not_member' })
+    expect(mockBuilder.set).not.toHaveBeenCalled()
+  })
+
   it('clears paused_at AND snaps next_occurrence to future when in past', async () => {
 queueDbResult([GROUP])
     queueDbResult([{
-      id: 'rule-1', groupId: GROUP.id,
+      id: 'rule-1', groupId: GROUP.id, recipientId: 'user-a',
       nextOccurrenceAt: '2026-02-25',
       intervalMonths: 1, dayOfMonth: 25,
     }])
@@ -265,7 +275,7 @@ queueDbResult([GROUP])
   it('keeps next_occurrence when already in future', async () => {
 queueDbResult([GROUP])
     queueDbResult([{
-      id: 'rule-1', groupId: GROUP.id,
+      id: 'rule-1', groupId: GROUP.id, recipientId: 'user-a',
       nextOccurrenceAt: '2026-06-25', intervalMonths: 1, dayOfMonth: 25,
     }])
     queueDbResult([{ id: 'rule-1' }])

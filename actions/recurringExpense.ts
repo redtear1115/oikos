@@ -203,6 +203,7 @@ export const resumeRule = action(async (id: string): Promise<void> => {
   const [rule] = await db
     .select({
       id: recurringExpenseRules.id,
+      paidBy: recurringExpenseRules.paidBy,
       nextOccurrenceAt: recurringExpenseRules.nextOccurrenceAt,
       intervalMonths: recurringExpenseRules.intervalMonths,
       dayOfMonth: recurringExpenseRules.dayOfMonth,
@@ -217,6 +218,13 @@ export const resumeRule = action(async (id: string): Promise<void> => {
     ))
     .limit(1)
   if (!rule) throw actionError('recurring_rule_not_found')
+  // #1588 — a rule whose person left the ledger stays paused (removePartner /
+  // account deletion paused it). Resuming it would only make cron generate
+  // cards that can never be confirmed. The way out is editing the rule to
+  // pick a current member (`updateRule`), then resuming. paused_at is unchanged.
+  if (rule.paidBy !== group.memberA && rule.paidBy !== group.memberB) {
+    throw actionError('rule_person_not_member')
+  }
   // #1442 — a rule linked to a frozen copy (leaveGroup paused it) stays
   // paused: resuming would generate records on a read-only 愛物. The way out
   // is editing the rule to clear or change the 愛物, then resuming.
