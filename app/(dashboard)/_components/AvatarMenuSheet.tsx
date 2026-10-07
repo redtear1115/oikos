@@ -67,6 +67,7 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
                 displayName: partner.displayName,
                 email: '',
               } : null}
+              hasOpenInvite={data.hasOpenInvite}
             />
           </Section>
 
