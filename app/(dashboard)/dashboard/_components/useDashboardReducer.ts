@@ -22,6 +22,8 @@ export type FuelCar = {
   name: string
   fuelType: FuelType | null
   primaryUserId: string | null
+  /** #1589 — see FuelLogDetail.carPrimaryUserIsFormer. */
+  primaryUserIsFormer: boolean
 }
 
 export type FuelSheetState = {

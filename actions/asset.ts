@@ -168,7 +168,12 @@ export interface EditCarInput {
   plate?: string | null
   purchasedAt: string | null
   purchasePrice: number | null
-  primaryUserId?: string | null      // NEW — Slice 2
+  // #1589 — primary-user trinary, like plate: undefined = keep the stored
+  // value, null / '' = 共用, string = set (must be a current member). The edit
+  // sheet sends undefined while the stored primary user has left the ledger
+  // (the page never sends their id), so an unrelated edit keeps the car as it
+  // was instead of silently making it 共用.
+  primaryUserId?: string | null
   fuelType?: GasFuelType
   color?: string | null
   year?: number | null
@@ -180,6 +185,9 @@ export interface EditCarInput {
 
 export const editCar = action(async (input: EditCarInput): Promise<void> => {
   const validated = validateCarInput(input)
+  // validateCarInput folds undefined into null (共用) — read the trinary from
+  // the raw input before that happens.
+  const keepPrimaryUser = input.primaryUserId === undefined
   const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
@@ -198,7 +206,11 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
     // the car is accepted unchanged even when that person is no longer in the
     // group (removePartner leaves their data in place), so the edit form, which
     // sends the stored value back, keeps working for those cars.
+    // #1589 — the current sheet no longer receives that id and sends undefined
+    // (keep) instead; the exemption stays for a tab loaded before #1589. It
+    // can only re-write the value already stored, never pick a non-member.
     if (
+      !keepPrimaryUser &&
       validated.primaryUserId !== null &&
       validated.primaryUserId !== group.memberA &&
       validated.primaryUserId !== group.memberB
@@ -220,7 +232,7 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
     const carUpdates: {
       purchasedAt: string | null
       purchasePrice: number | null
-      primaryUserId: string | null
+      primaryUserId?: string | null
       fuelType: typeof validated.fuelType
       color: string | null
       year: number | null
@@ -239,6 +251,8 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
       model: validated.model,
       initialOdometer: validated.initialOdometer,
     }
+    // #1589 — keep-stored: leave primary_user_id out of the UPDATE entirely.
+    if (keepPrimaryUser) delete carUpdates.primaryUserId
     if (validated.plate !== undefined) {
       carUpdates.plateEncrypted = validated.plate === null ? null : encrypt(validated.plate, aadFor('CarDetails', 'plate_encrypted', updated[0].id))
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
@@ -31,7 +31,7 @@ const CAR_COLORS = [
 export type CarInitial = Pick<
   AssetSheetInitial,
   | 'id' | 'name' | 'notes'
-  | 'carHasPlate' | 'purchasedAt' | 'purchasePrice' | 'fuelType' | 'primaryUserId'
+  | 'carHasPlate' | 'purchasedAt' | 'purchasePrice' | 'fuelType' | 'primaryUserId' | 'primaryUserFormer'
   | 'color' | 'year' | 'brand' | 'model' | 'initialOdometer'
 >
 
@@ -53,6 +53,13 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
   const [purchasePrice, setPurchasePrice] = useState(initial?.purchasePrice ? String(initial.purchasePrice) : '')
   const [fuelType, setFuelType] = useState<GasFuelType>(initial?.fuelType ?? '95')
   const [primaryUserId, setPrimaryUserId] = useState<string | null>(initial?.primaryUserId ?? null)
+  // #1589 — the stored 主要使用人 left the ledger; the page sent no id, only
+  // `primaryUserFormer`. Until a person is picked, nothing is selected (a null
+  // primaryUserId would otherwise read as 共用) and save sends `undefined`, so
+  // editCar keeps the stored value: an edit of another field neither turns
+  // the car into 共用 nor hands it to the viewer. Picking is optional.
+  const [primaryUserUnresolved, setPrimaryUserUnresolved] = useState(initial?.primaryUserFormer === true)
+  const primaryUserHintId = useId()
   const [color, setColor] = useState<string | null>(initial?.color ?? null)
   const [year, setYear] = useState(initial?.year ? String(initial.year) : '')
   const [brand, setBrand] = useState(initial?.brand ?? '')
@@ -72,6 +79,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       setPurchasePrice(initial?.purchasePrice ? String(initial.purchasePrice) : '')
       setFuelType(initial?.fuelType ?? '95')
       setPrimaryUserId(initial?.primaryUserId ?? null)
+      setPrimaryUserUnresolved(initial?.primaryUserFormer === true)
       setColor(initial?.color ?? null)
       setYear(initial?.year ? String(initial.year) : '')
       setBrand(initial?.brand ?? '')
@@ -103,7 +111,8 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             purchasedAt,
             purchasePrice: price,
             fuelType,
-            primaryUserId,
+            // #1589 — undefined = keep the stored primary user (see above).
+            primaryUserId: primaryUserUnresolved ? undefined : primaryUserId,
             color,
             year: year ? parseInt(year, 10) : null,
             brand: brand.trim() || null,
@@ -136,7 +145,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
   const isDirty = useDirtyCheck(open, {
     name, notes, plate, wantClearPlate, purchasedAt, purchasePrice, fuelType,
-    primaryUserId, color, year, brand, model, initialOdometer,
+    primaryUserId, primaryUserUnresolved, color, year, brand, model, initialOdometer,
   })
 
   return (
@@ -326,7 +335,20 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
           with nothing under it since PrimaryUserToggle returns null). */}
       {!isSolo && (
         <Field label={ts.car.primaryUser}>
-          <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
+          <PrimaryUserToggle
+            value={primaryUserId}
+            onChange={(v) => {
+              setPrimaryUserId(v)
+              setPrimaryUserUnresolved(false)
+            }}
+            unresolved={primaryUserUnresolved}
+            describedBy={primaryUserUnresolved ? primaryUserHintId : undefined}
+          />
+          {primaryUserUnresolved && (
+            <p id={primaryUserHintId} className="mt-1.5 text-xs text-ink-3">
+              {ts.car.primaryUserFormerHint}
+            </p>
+          )}
         </Field>
       )}
 

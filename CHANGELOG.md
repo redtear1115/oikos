@@ -91,6 +91,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：保單頁與保單卡把離開的被保人顯示為「前伴侶」；編輯這張保單時要保人／被保人不預選、提示重新選擇，選好才能儲存，不再出現「必須是 group 成員」的錯誤，也不會默默改成自己。
   技術：限保險：`lib/insuranceMemberLink.ts` 在伺服端剔除非成員（釘選舊章節的離開者以該章節成員為準、不標「前伴侶」）的 id 與名字，詳情頁（只經 `getInsuranceDetailsForViewer`）、編輯表單初值、`/assets` 清單都只收剔除後的資料；`editInsurance` 拒絕以空值覆蓋已存的要保人（`policyholder_required`）；不改資料；en／ja 譯文待確認。
 
+- **車子的主要使用人、房子的建立者已離開帳本時，頁面不再帶出對方（#1589）**
+  使用者：編輯這台車時主要使用人不預選、提示重新選擇；不選直接儲存會保留原本的設定，不會默默變成「共用」；幫這台車記油錢時預設由自己付、不分攤。
+  技術：`lib/carMemberLink.ts` 沿用 #1579 的成員範圍，車子頁與 `getFuelLogById` 剔除非成員的 `primaryUserId`（改帶 `primaryUserIsFormer`）；`editCar` 收到 `primaryUserId: undefined` 時不動已存值；`getHouseDetails` 不再讀 `owner`；不改資料；en／ja 譯文待確認。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。

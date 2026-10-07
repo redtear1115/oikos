@@ -257,6 +257,7 @@ export function Dashboard({
             name: detail.carName,
             fuelType: detail.carFuelType,
             primaryUserId: detail.carPrimaryUserId,
+            primaryUserIsFormer: detail.carPrimaryUserIsFormer,
           },
         })
       })

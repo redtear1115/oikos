@@ -1506,6 +1506,7 @@ export const zhCN: Translations = {
       fuelType: '油种',
       fuelTypeDiesel: '柴油',
       primaryUser: '主要使用人',
+      primaryUserFormerHint: '原本的主要使用人已离开这本账本，请重新选择。',
     },
     child: {
       nickname: '小名',
