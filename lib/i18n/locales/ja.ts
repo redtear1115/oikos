@@ -1536,6 +1536,7 @@ export const ja: Translations = {
       fuelType: '燃料',
       fuelTypeDiesel: '軽油',
       primaryUser: '主な使用者',
+      primaryUserFormerHint: '元の主な使用者はこの家計簿を離れました。もう一度選んでください。',
     },
     child: {
       nickname: 'ニックネーム',

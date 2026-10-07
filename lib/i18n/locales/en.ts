@@ -1535,6 +1535,7 @@ export const en: Translations = {
       fuelType: 'Fuel',
       fuelTypeDiesel: 'Diesel',
       primaryUser: 'Primary driver',
+      primaryUserFormerHint: 'The original primary driver has left this ledger. Please choose again.',
     },
     child: {
       nickname: 'Nickname',

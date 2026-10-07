@@ -142,7 +142,7 @@ describe('closed sheets across the UTC → Taipei boundary (#1360)', () => {
     ['SettlementSheet', <SettlementSheet key="s" open={false} onClose={noop} initial={null} />],
     ['RecurringRuleSheet (expense)', <RecurringRuleSheet key="re" type="expense" open={false} onClose={noop} onMutated={noop} />],
     ['RecurringRuleSheet (income)', <RecurringRuleSheet key="ri" type="income" open={false} onClose={noop} onMutated={noop} insuranceAssets={[]} />],
-    ['NewFuelLog', <NewFuelLog key="f" open={false} onClose={noop} car={{ id: 'c1', name: '小白', fuelType: '95', primaryUserId: 'u-1' }} lastOdometer={null} mode="create" />],
+    ['NewFuelLog', <NewFuelLog key="f" open={false} onClose={noop} car={{ id: 'c1', name: '小白', fuelType: '95', primaryUserId: 'u-1', primaryUserIsFormer: false }} lastOdometer={null} mode="create" />],
   ])('%s', async (_name, node) => {
     // Control: same zone on both sides must hydrate cleanly, so any error
     // below is the zone boundary and not some other nondeterminism.

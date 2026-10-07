@@ -1944,6 +1944,8 @@ export type Translations = {
       fuelType: string
       fuelTypeDiesel: string
       primaryUser: string
+      /** #1589 — shown under 主要使用人 when the stored primary user left the ledger; nothing is preselected. */
+      primaryUserFormerHint: string
     }
     child: {
       nickname: string
@@ -4697,6 +4699,7 @@ export const zhTW: Translations = {
       fuelType: '油種',
       fuelTypeDiesel: '柴油',
       primaryUser: '主要使用人',
+      primaryUserFormerHint: '原本的主要使用人已離開這本帳本，請重新選擇。',
     },
     child: {
       nickname: '小名',

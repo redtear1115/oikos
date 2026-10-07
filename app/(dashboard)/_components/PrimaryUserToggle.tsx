@@ -6,13 +6,18 @@ import { useTranslations } from '@/lib/i18n/client'
 interface PrimaryUserToggleProps {
   value: string | null  // user UUID or null (shared)
   onChange: (value: string | null) => void
+  /** #1589 — no segment selected (the stored primary user left the ledger).
+   *  `value` null would otherwise show 共用 as selected. */
+  unresolved?: boolean
+  /** id of the hint shown under the toggle while unresolved. */
+  describedBy?: string
 }
 
 /**
  * 3-segment toggle: viewer / partner / shared. Uses MemberContext to resolve viewer/partner.
  * Solo mode (no partner): renders nothing — caller should not display the row.
  */
-export function PrimaryUserToggle({ value, onChange }: PrimaryUserToggleProps) {
+export function PrimaryUserToggle({ value, onChange, unresolved = false, describedBy }: PrimaryUserToggleProps) {
   const { viewer, partner } = useMember()
   const t = useTranslations()
 
@@ -28,9 +33,10 @@ export function PrimaryUserToggle({ value, onChange }: PrimaryUserToggleProps) {
     <div
       className="flex gap-1 rounded-xl p-1"
       style={{ background: 'var(--toggle-segment-track)' }}
+      aria-describedby={describedBy}
     >
       {opts.map(opt => {
-        const sel = value === opt.v
+        const sel = !unresolved && value === opt.v
         return (
           <button
             key={opt.v ?? 'shared'}
