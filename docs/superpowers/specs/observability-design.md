@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-10-04
+last_updated: 2026-10-07
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -12,6 +12,7 @@ updates:
   - v1.6.2: 補「`invite_created` 的真正語意」與「client 邀請事件補 group_id」兩條邊界（#1415）
   - v1.6.3: 補「DB 錯誤在 DB 層就被清洗」這條邊界（#1453）
   - v1.6.8: 補「iOS Apple 登入的瀏覽器備援事件與 `id_token_rejected` 細分」這條邊界（#1552）
+  - v1.7.0: 補「`invite_revoked` 只在真的讓一條有效連結失效時才發」這條邊界（#1546）
 related_specs: [conversion-analytics, product]
 related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453", "#1552"]
 ---
@@ -38,6 +39,7 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", 
     - **但這個配方會高估「送出 → 打開」**：`invite_link_opened` 也包含頭像選單送出的連結被打開，而那條路徑沒有 client 送出事件可以當分母。按 `group_id` 配對時，**只算只有一筆 `invite_created` 的群組**（而且那筆在 `/setup` 有 client 送出事件）。光看「該群組在 `/setup` 有送出事件」不夠：同一群組之後可能再從頭像選單產生新連結（新連結會取代舊的，#1288），而 `invite_link_opened` 只帶 `group_id`、不帶是哪條連結，後來那條被打開也會算到 `/setup` 的送出頭上。
     - `invite_link_opened` 在 `InviteConfirm` 每次 mount 都會發（`useEffect`），重新整理或再次造訪會重複計算——算「打開」時以群組去重，不要直接數事件。
   - **client 端邀請事件自 v1.6.2 起帶 `group_id`（#1415），不回填。** `invite_link_copied` / `invite_link_shared` / `invite_qr_revealed` / `invite_skipped` / `invite_copy_failed`（`app/setup/SetupForm.tsx`、`InviteQr.tsx`）與 `invite_link_opened`（`app/invite/[token]/InviteConfirm.tsx`）現在都帶 `group_id`，可以跟 server 端的 `invite_created` / `partner_joined` 用同一個 key 配對，量出「連結送出 → 對方打開 → 加入」這段——在此之前這幾個 client 事件是匿名 id，無法跟 server 事件關聯（見上面的 person join 例外那條）。**跨這個部署日的比較無效**：v1.6.2 之前的這幾個 client 事件沒有 `group_id`，query 只能配對 v1.6.2 之後才發生的事件，不能拿舊資料去補齊舊的漏斗。
+  - **`invite_revoked`（#1546）只在真的讓一條還能用的連結失效時才發，不是「按了讓連結失效」的次數。** `revokeOpenInvites()`（`actions/invite.ts`，設定的成員區塊）只帶 `group_id`、`count`；連結早已過期或被取代、或對方剛好先加入（`partnerJoined`）時，按鈕照樣按得下去、畫面照樣有回應，但不發事件，也沒有對應的 client 事件。所以拿它當「使用者想撤回邀請」的次數會偏低，要的話只能另外加 client 事件。
 - **`platform` 只在 client 事件上**：`detectPlatform()`（`lib/platform.ts`）在 SSR 回 `null`（server render 沒有平台可言）。server 端的 `signed_in` / `signed_up` 要改用 `path`（`web_oauth` / `ios_native`）分辨。所以「iOS 殼使用者的登入成功率」這類跨維度問題無解。
 - **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
 - **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
