@@ -12,6 +12,7 @@ import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { hasOpenInvite } from '@/lib/db/queries/invite'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
@@ -75,13 +76,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { group, window: epochWindow } = context
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t, locale, todayYMD] = await Promise.all([
+  // #1546 — only the viewer's own live solo ledger can hold a link they may
+  // revoke (revokeOpenInvites acts on the active group). A pinned past
+  // chapter or a duo skips the query.
+  const canHoldOpenInvite = !epochWindow.isPast && group.memberB === null && group.memberA === user.id
+  const [profilesRows, t, locale, todayYMD, openInvite] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
     // Today in the device's zone, so client components hydrate against the
     // same calendar day the browser will compute (#1360, lib/today.ts).
     getTodayYMD(),
+    canHoldOpenInvite ? hasOpenInvite(group.id) : Promise.resolve(false),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
@@ -126,6 +132,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     guardianBetaEnabled: group.guardianBetaEnabled,
     currentLocale: locale,
     avatarHidden: viewerProfile.avatarHidden,
+    hasOpenInvite: openInvite,
   }
 
   return (

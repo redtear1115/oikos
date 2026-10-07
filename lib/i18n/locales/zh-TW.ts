@@ -1284,6 +1284,18 @@ export type Translations = {
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
     inviteCta: string
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: string
+      confirmTitle: string
+      confirmBody: string
+      confirmLabel: string
+      done: string
+      /** An accept won the race: nothing was revoked. */
+      partnerJoined: string
+      /** The link had already died (expired, superseded) or never existed. */
+      noneOpen: string
+    }
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
     currency: string
@@ -3055,6 +3067,9 @@ export type Translations = {
       outing_epoch_closed: string
       outing_participant_not_found: string
       outing_participant_limit: string
+      group_full: string
+      inviter_not_member: string
+      invite_conflict: string
       outing_name_empty: string
       outing_name_too_long: string
       outing_participant_name_empty: string
@@ -4066,6 +4081,16 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: '讓邀請連結失效',
+      confirmTitle: '讓目前的邀請連結失效？',
+      confirmBody: '已經傳出去的連結會打不開。之後可以再產生一條新的。',
+      confirmLabel: '讓它失效',
+      done: '邀請連結已失效',
+      partnerJoined: '對方已經加入了',
+      noneOpen: '目前沒有有效的邀請連結',
+    },
     quickAccessRow: '個人與帳本設定',
     currency: '幣別',
     sectionApp: '應用',
@@ -6798,6 +6823,9 @@ export const zhTW: Translations = {
       outing_epoch_closed: '這次出遊在過去的章節裡，只能結束',
       outing_participant_not_found: '找不到這位參與者',
       outing_participant_limit: '一次出遊最多 20 人',
+      group_full: '這本帳本已經有兩位成員',
+      inviter_not_member: '你已經不在這本帳本裡',
+      invite_conflict: '邀請連結剛有變動，請再試一次',
       outing_name_empty: '出遊名稱為空',
       outing_name_too_long: '出遊名稱最長 100 字',
       outing_participant_name_empty: '名字為空',

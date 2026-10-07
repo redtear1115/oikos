@@ -87,6 +87,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Security
 
+- **可以在設定讓已傳出的邀請連結失效（#1546）**
+  使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
+  技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
 - **邀請連結的金鑰不會送到 Google Analytics（#1583）**
   使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
   技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
