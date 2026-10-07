@@ -196,7 +196,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — leaver with owned 愛物 (#1440)', (
     const [carTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userBId, assetId: car.id,
       amount: 500, splitType: 'all_mine',
-      description: 'TEST_1440 fuel', category: 'transport',
+      description: 'TEST_1440 fuel', category: 'transit',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(carTx.id)
@@ -259,7 +259,7 @@ describe.skipIf(!isLocalDb)('leaveGroup — leaver with owned 愛物 (#1440)', (
     const [danglingTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userBId, assetId: stayingCar.id,
       amount: 300, splitType: 'all_mine',
-      description: 'TEST_1440 borrowed A car fuel', category: 'transport',
+      description: 'TEST_1440 borrowed A car fuel', category: 'transit',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(danglingTx.id)

@@ -96,7 +96,7 @@ async function asset(groupId: string, name: string) {
 async function cashTx(groupId: string, paidBy: string, amount: number, assetId: string | null = null) {
   const [r] = await pg<{ id: string }[]>`
     INSERT INTO "CashTransactions" (group_id, paid_by, amount, split_type, description, category, transacted_at, asset_id)
-    VALUES (${groupId}, ${paidBy}, ${amount}, 'half', 'TEST_1494', 'food', ${TX_AT}, ${assetId}) RETURNING id`
+    VALUES (${groupId}, ${paidBy}, ${amount}, 'half', 'TEST_1494', 'dining', ${TX_AT}, ${assetId}) RETURNING id`
   return r.id
 }
 
@@ -111,7 +111,7 @@ async function expenseRule(groupId: string, paidBy: string, description: string)
   const [r] = await pg<{ id: string }[]>`
     INSERT INTO "RecurringExpenseRules"
       (group_id, paid_by, amount, split_type, description, category, day_of_month, starts_on, next_occurrence_at)
-    VALUES (${groupId}, ${paidBy}, 100, 'half', ${description}, 'food', 15, '2025-01-15', '2026-04-15') RETURNING id`
+    VALUES (${groupId}, ${paidBy}, 100, 'half', ${description}, 'dining', 15, '2025-01-15', '2026-04-15') RETURNING id`
   return r.id
 }
 

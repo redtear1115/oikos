@@ -41,12 +41,13 @@ import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { RuleListItem } from '@/app/(dashboard)/settings/recurring/_components/RuleListItem'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
+import { ToastProvider } from '@/components/Toast'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 
 function En({ children }: { children: ReactNode }) {
   return (
     <TranslationsProvider value={en} locale="en">
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </TranslationsProvider>
   )
 }

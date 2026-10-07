@@ -35,7 +35,7 @@ import {
   revalidateAfterRecurringIncomeRuleMutation,
   revalidateAfterIncomeMutation,
 } from '@/lib/revalidate'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
@@ -47,7 +47,7 @@ function assertRecipientInGroup(
   assertMemberInGroup(recipientId, group, 'recipient_not_in_group')
 }
 
-export const createRule = action(async (input: RecurringIncomeRuleInput): Promise<{ id: string }> => {
+export const createRule = action(async (input: RecurringIncomeRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -94,14 +94,14 @@ export const createRule = action(async (input: RecurringIncomeRuleInput): Promis
     frequency: v.intervalMonths,
   })
 
-  return { id: created.id }
+  return { id: created.id, nextOccurrenceAt }
 })
 
 export interface UpdateRuleInput extends RecurringIncomeRuleInput {
   id: string
 }
 
-export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -154,7 +154,7 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .returning({ id: recurringIncomeRules.id })
 
   revalidateAfterRecurringIncomeRuleMutation()
-  return { id: updated.id }
+  return { id: updated.id, nextOccurrenceAt }
 })
 
 export const pauseRule = action(async (id: string): Promise<void> => {
@@ -348,6 +348,38 @@ export const editAndConfirmPending = action(async (
 
   revalidateAfterIncomeMutation()
   return result
+})
+
+/**
+ * #1483 — how many pending cards `softDeleteRule` would remove along with the
+ * rule, for the delete confirmation. Same filter as the delete below
+ * (unskipped and unresolved), scoped to the viewer's group; a rule outside it
+ * is `recurring_rule_not_found`, like every other action here.
+ */
+export const countPendingForRule = action(async (id: string): Promise<number> => {
+  const { group } = await requireViewerGroup()
+
+  const [rule] = await db
+    .select({ id: recurringIncomeRules.id })
+    .from(recurringIncomeRules)
+    .where(and(
+      eq(recurringIncomeRules.id, id),
+      eq(recurringIncomeRules.groupId, group.id),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+    .limit(1)
+  if (!rule) throw actionError('recurring_rule_not_found')
+
+  const [row] = await db
+    .select({ n: count() })
+    .from(pendingIncomeOccurrences)
+    .where(and(
+      eq(pendingIncomeOccurrences.ruleId, id),
+      eq(pendingIncomeOccurrences.groupId, group.id),
+      isNull(pendingIncomeOccurrences.skippedAt),
+      isNull(pendingIncomeOccurrences.resolvedTxId),
+    ))
+  return row?.n ?? 0
 })
 
 export const softDeleteRule = action(async (id: string): Promise<void> => {
