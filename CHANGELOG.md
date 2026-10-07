@@ -59,6 +59,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：房屋購入價格、寵物購入費用、植物花費的詳情，以及汽車、加油、寵物、植物表單的金額單位，美金等非台幣帳本會顯示對應符號而不是 NT$；台幣帳本顯示不變，保單金額不在此列（見 #1600）。
   技術：以 `useBaseCurrency()` 帶入 `currencySymbol`；詳情列新增 `formatLedgerAmountSpaced`（保留「符號＋空格＋數字」、整數單位不除 100）；金額仍是整數，不動 schema。
 
+- **每張保單有自己的幣別（#1600）**
+  使用者：保單可選 TWD／CNY／USD／JPY，列表、詳情與編輯表單的保費、保額、預估滿期金、帳戶價值都用保單自己的符號；保單幣別和帳本不同時，兩邊分開列出，不換算、不畫進度條、不預填滿期金，年繳總額也依幣別分開加總。
+  技術：`0085` 為 `InsuranceDetails` 加可為空的 `currency`（以所屬帳本基準幣別回填，空值讀作帳本幣別）；必須先於讀它的程式碼上 prod（0084 之後）；`editInsurance` 未帶幣別時保留既有值。
+
 - **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
   使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
   技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。

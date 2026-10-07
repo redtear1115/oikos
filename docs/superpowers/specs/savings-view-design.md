@@ -83,6 +83,7 @@ SavingsView 把 accountValue 渲染成 hero 區下方的**獨立資訊區塊**�
 | `payRatio > 1.05`（已超繳） | 進度條顯示 100% 滿格，旁加小字「+ NT$ X 額外」；不顯示為「異常」 |
 | `returnRatio > 1.05`（已超領） | 同上：拿回 bar 顯示 100% +「+ NT$ X 額外配息」 |
 | `isMatured && returnTotal < expectedMaturity` | hero 變 MaturedAwaitingPrompt |
+| 保單幣別 ≠ 帳本基準幣別（#1600） | 不算 `payRatio` / `returnRatio`：不顯示 hero 雙 bar、超領提示與 MaturedAwaitingPrompt；hero 換成 SavingsLedgerTotals（帳本已繳 / 已回收＋一句說明），記滿期金不預填金額；時間進度與「即將到期」提示照常 |
 | `startsAt` 或 `endsAt` 缺一 | 不顯示 MaturityCountdown；副標 fallback 到 `partial` |
 | `now < startsAt`（保單未生效） | timeProgress = 0；副標：「保單將於 [startsAt] 生效」 |
 | `premiumTotal == 0` | hero 顯示 0 但保留版面；繳費紀錄 section 顯示 empty state CTA |

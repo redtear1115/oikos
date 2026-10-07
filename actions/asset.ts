@@ -925,6 +925,8 @@ export interface CreateInsuranceInput {
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
   accountValue?: number | null
+  /** #1600 — policy currency; create defaults to the ledger's, edit keeps the stored one when omitted. */
+  currency?: string | null
   reminderDaysBefore?: number | null
   notes?: string | null
 }
@@ -1056,6 +1058,7 @@ export const createInsurance = action(async (input: CreateInsuranceInput): Promi
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
       accountValue: validated.accountValue,
+      currency: validated.currency ?? group.baseCurrency,
       reminderDaysBefore: validated.reminderDaysBefore,
     })
     return [asset]
@@ -1145,6 +1148,8 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
         accountValue: validated.accountValue,
+        // #1600 — insert branch = no details row yet: caller's currency, else the ledger's.
+        currency: validated.currency ?? group.baseCurrency,
         reminderDaysBefore: validated.reminderDaysBefore,
       })
       .onConflictDoUpdate({
@@ -1167,6 +1172,8 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
           vehicleId: validated.vehicleId,
           expectedMaturityAmount: validated.expectedMaturityAmount,
           accountValue: validated.accountValue,
+          // #1600 — omitted currency leaves the stored one untouched (never NULLs it).
+          ...(validated.currency ? { currency: validated.currency } : {}),
           reminderDaysBefore: validated.reminderDaysBefore,
         },
       })

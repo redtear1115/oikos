@@ -1,7 +1,10 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CurrencySelector } from '@/app/(dashboard)/dashboard/_components/CurrencySelector'
+import { currencySymbol, parseCurrencyCode, type CurrencyCode } from '@/lib/currency'
+import { policyCurrency } from '@/lib/insuranceCurrency'
 import {
   createInsurance,
   editInsurance,
@@ -26,7 +29,7 @@ export type InsuranceInitial = Pick<
   | 'insPolicyHolderFormer' | 'insInsuredFormer'
   | 'insInsurer' | 'insPolicyNo' | 'insAnnualPremium' | 'insSumInsured'
   | 'insPayCycle' | 'insStartsAt' | 'insEndsAt' | 'insTermYears'
-  | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue'
+  | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue' | 'insCurrency'
 >
 
 interface Props extends BodySharedProps {
@@ -38,6 +41,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
   const { viewer, partner } = useMember()
+  const baseCurrency = useBaseCurrency()
   // #1174 — the 被保人 Field wraps a chip row plus a conditional text input,
   // so it can't use Field's render-prop id. Pass our own id through `htmlFor`
   // so the freeform input gets the Field label as its accessible name.
@@ -86,6 +90,9 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const [expectedMaturityAmount, setExpectedMaturityAmount] = useState(initial?.insExpectedMaturityAmount?.toString() ?? '')
   // #166 — only meaningful for kind === 'savings'; cleared on save when kind switches.
   const [accountValue, setAccountValue] = useState(initial?.insAccountValue?.toString() ?? '')
+  // #1600 — create: the ledger's currency. Edit: the stored one (NULL = the ledger's), so an
+  // unrelated edit re-sends the policy's own currency instead of resetting it.
+  const [currency, setCurrency] = useState<CurrencyCode>(policyCurrency(initial?.insCurrency, baseCurrency))
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [childAssets, setChildAssets] = useState<ChildAsset[]>([])
 
@@ -112,6 +119,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       setVehicleId(initial?.insVehicleId ?? null)
       setExpectedMaturityAmount(initial?.insExpectedMaturityAmount?.toString() ?? '')
       setAccountValue(initial?.insAccountValue?.toString() ?? '')
+      setCurrency(policyCurrency(initial?.insCurrency, baseCurrency))
       // Data loads — only fire on open, not every render. Errors swallowed so
       // a network blip doesn't prevent the sheet from opening (lists fall back
       // to empty arrays from initial state).
@@ -153,6 +161,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         kind === 'savings' && accountValue
           ? parseInt(accountValue, 10)
           : null,
+      currency,
       notes: notes.trim() || null,
     }
     runMutation(
@@ -172,7 +181,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const isDirty = useDirtyCheck(open, {
     name, notes, kind, insured, insuredChildId, insuredUserId, insuredUnresolved, policyHolderUserId, insurer,
     policyNo, premium, sumInsured, payCycle, startsAt, endsAt, termYears, vehicleId,
-    expectedMaturityAmount, accountValue,
+    expectedMaturityAmount, accountValue, currency,
   })
 
   return (
@@ -374,11 +383,19 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex-1 h-px bg-hairline" />
       </div>
 
+      <Field label={ts.insurance.currency}>
+        <CurrencySelector
+          value={currency.toUpperCase()}
+          onChange={(next) => setCurrency(parseCurrencyCode(next) ?? currency)}
+          ariaLabel={ts.insurance.currency}
+        />
+      </Field>
+
       <Field label={ts.insurance.annualPremium}>
         {id => (
           <TextInput id={id} value={premium} onChange={e => setPremium(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>} />
         )}
       </Field>
 
@@ -386,7 +403,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         {id => (
           <TextInput id={id} value={sumInsured} onChange={e => setSumInsured(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>} />
         )}
       </Field>
 
@@ -400,7 +417,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               type="number"
               inputMode="numeric"
               placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
-              rightAddon={<span className="text-xs text-ink-3">NT$</span>}
+              rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>}
             />
           )}
         </Field>
@@ -416,7 +433,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               type="number"
               inputMode="numeric"
               placeholder={ts.insurance.accountValuePlaceholder}
-              rightAddon={<span className="text-xs text-ink-3">NT$</span>}
+              rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>}
             />
           )}
         </Field>

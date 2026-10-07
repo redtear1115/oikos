@@ -16,6 +16,10 @@ vi.mock('@/actions/asset', () => ({
   lapseInsurance: (...args: unknown[]) => lapseInsuranceMock(...args),
 }))
 
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useBaseCurrency: () => 'twd' as const,
+}))
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }))

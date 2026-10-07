@@ -53,12 +53,15 @@ related_issues: []
 | 基本資訊 | `name` / `policy_number` / `company_name` / `insurance_type` | 保單身分 |
 | 期程 | `starts_at` / `ends_at` / `pay_cycle` | 繳費 cadence + 期程；空白允許部分輸入 |
 | 金額 | `sum_insured` / `expected_maturity_amount` / `account_value` | sum_insured = 身故金（非滿期金）；expected_maturity 是 savings 預估滿期金；account_value 是投資型保單帳戶價值 |
+| 幣別 | `currency`（#1600，`currency_code`，可為空） | 上列四個金額欄位（含 `annual_premium`）都是這個幣別的整數單位。每張保單自己一個，新增預設帳本基準幣別；NULL（0085 之前的列、舊版程式寫入）讀作帳本基準幣別。不做匯率換算 |
 | 關係人 | `policy_holder_user_id` / `insured_user_id` / `insured_child_id` | FK 到 Profiles 或 ChildDetails；多被保人不在 MVP scope |
 | PII | `policy_holder_pii` / `insured_pii`（加密欄位） | 身分證、健保卡 — AES-256-GCM in Server Action，DB 只看到 ciphertext |
 | 連結 | `vehicle_id` | 強連到 CarDetails（汽車險） |
 | `sum_insured` 限定 | 不等於 `expected_maturity_amount` | `sum_insured` = 身故金 / 死亡給付；儲蓄險滿期金可能高於或低於 sum_insured，把它當滿期金顯示會誤導 |
 
 `expected_maturity_amount` / `account_value` 在 non-savings kind 時 validator 會清成 null（避免 stale value）。
+
+**跨幣別規則（#1600）**：保單幣別 ≠ 帳本基準幣別時，保單數字（保額、預估滿期金、帳戶價值）用保單幣別顯示，帳本的已繳 / 已回收用基準幣別，兩邊分開列出；不算比例、不畫進度條、不判斷超領（105%）、不顯示滿期待領提示、記滿期金時不預填金額。失效的樣子不是報錯：USD 保單被當成台幣顯示，或 USD 預估滿期金除上台幣已繳畫出一條 3% 的進度條。愛物列表的年繳總額依幣別分開加總（`NT$ 30,000 · $ 1,200`）。
 
 ---
 

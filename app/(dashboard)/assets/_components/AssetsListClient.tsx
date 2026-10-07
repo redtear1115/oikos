@@ -13,7 +13,9 @@ import { CarHeroCard } from './CarHeroCard'
 import { ChildCard, PetCard, PlantCard, ItemCard, HouseCard } from './AibutsuCard'
 import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { formatLedgerAmountSpaced, type CurrencyCode } from '@/lib/currency'
+import { sumPremiumByCurrency } from '@/lib/insuranceCurrency'
 import { getFramingGroup } from '@/lib/insurance'
 import { parseLocalDate, daysBetween } from '@/lib/local-date'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
@@ -60,6 +62,8 @@ export interface AssetsListItem {
     expiryDate: string | null
     termYears: number | null
     payCycle: string | null
+    /** #1600 — NULL reads as the ledger's base currency. */
+    currency?: CurrencyCode | null
     reminderDaysBefore: number
     notes: string | null
   }
@@ -123,7 +127,12 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
   const i = t.assets.insuranceList
   // #1360 — from useToday(), not the clock, so SSR and hydration agree.
   const today = parseLocalDate(useToday())!
-  const totalAnnual = insurances.reduce((sum, a) => sum + (a.insurance?.annualPremium ?? 0), 0)
+  const baseCurrency = useBaseCurrency()
+  // #1600 — one amount per currency; no FX, so policies in different currencies are never added together.
+  const annualTotals = sumPremiumByCurrency(
+    insurances.map((a) => ({ annualPremium: a.insurance?.annualPremium ?? null, currency: a.insurance?.currency })),
+    baseCurrency,
+  )
   const count = insurances.length
   // `{count}` is rendered emphasised, so split the template around it rather
   // than string-replacing — word order differs per locale.
@@ -157,7 +166,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
         <div
           className="tnum mt-1 text-title font-medium text-ink"
         >
-          NT$ {totalAnnual.toLocaleString('en-US')}
+          {annualTotals.map((x) => formatLedgerAmountSpaced(x.total, x.currency)).join(' · ')}
         </div>
         <div className="mt-1.5 text-xs text-ink-3">
           {countBefore}

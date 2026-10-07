@@ -256,7 +256,7 @@ describe('createTripExpense — happy paths', () => {
     }))
     refs.tripIds.push(trip.id)
     const e = unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount: 45, currency: 'usd', category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.userId, amount: 45, currency: 'usd', category: 'dining', splitType: 'half',
     }))
     expect(e.amount).toBe(1440)
     expect(e.originalCurrency).toBe('USD')
@@ -276,7 +276,7 @@ describe('createTripExpense — happy paths', () => {
     }))
     refs.tripIds.push(trip.id)
     const mk = (amount: number, currency: string) => createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount, currency, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.userId, amount, currency, category: 'dining', splitType: 'half',
     })
     expect(unwrapAction(await mk(1000, 'jpy')).amount).toBe(7)
     const tiny1 = unwrapAction(await mk(50, 'jpy'))
@@ -284,11 +284,11 @@ describe('createTripExpense — happy paths', () => {
     expect(tiny1.amount).toBe(1)
     expect(tiny2.amount).toBe(1)
     const edited = unwrapAction(await editTripExpense({
-      id: tiny1.id, tripId: trip.id, paidBy: refs.userId, amount: 15, currency: 'twd', category: '食', splitType: 'half',
+      id: tiny1.id, tripId: trip.id, paidBy: refs.userId, amount: 15, currency: 'twd', category: 'dining', splitType: 'half',
     }))
     expect(edited.amount).toBe(1)
     const edited2 = unwrapAction(await editTripExpense({
-      id: tiny2.id, tripId: trip.id, paidBy: refs.userId, amount: 50, currency: 'jpy', category: '食', splitType: 'half',
+      id: tiny2.id, tripId: trip.id, paidBy: refs.userId, amount: 50, currency: 'jpy', category: 'dining', splitType: 'half',
     }))
     expect(edited2.amount).toBe(1)
   })

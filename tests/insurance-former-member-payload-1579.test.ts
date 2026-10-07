@@ -42,7 +42,7 @@ const insAsset = (id: string, insuranceType: string, holder: string | null, insu
   insurancePolicyHolderAvatarUrl: holder === EX ? EX_AVATAR : null,
   insuranceInsurer: 'Acme', insuranceAnnualPremium: 1000, insuranceSumInsured: null, insuranceStartsAt: null,
   insuranceExpiryDate: null, insuranceTermYears: null, insurancePayCycle: null, insuranceReminderDaysBefore: 30,
-  insuranceVehicleId: null,
+  insuranceVehicleId: null, insuranceCurrency: null,
 })
 const ASSETS = [
   // Both the holder and the insured left (B).

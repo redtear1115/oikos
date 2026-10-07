@@ -3,6 +3,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets, profiles } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { frozenCopyVisibleClause } from './_predicates'
+import type { CurrencyCode } from '@/lib/currency'
 
 export interface PetListDetail {
   species: string | null
@@ -205,6 +206,8 @@ export interface InsuranceDetailsRow {
   vehicleId: string | null
   expectedMaturityAmount: number | null
   accountValue: number | null
+  /** #1600 — NULL on a row older than the column; resolve with `policyCurrency`. */
+  currency: CurrencyCode | null
 }
 
 /**
@@ -246,6 +249,7 @@ export async function getInsuranceDetails(
       vehicleId: insuranceDetails.vehicleId,
       expectedMaturityAmount: insuranceDetails.expectedMaturityAmount,
       accountValue: insuranceDetails.accountValue,
+      currency: insuranceDetails.currency,
     })
     .from(insuranceDetails)
     // #1485 — group-scoped: the policy row must be in `groupId`, and the

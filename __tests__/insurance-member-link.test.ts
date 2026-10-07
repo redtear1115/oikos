@@ -120,6 +120,7 @@ const rawRow = (over: Partial<InsuranceDetailsRow> = {}): InsuranceDetailsRow =>
   vehicleId: null,
   expectedMaturityAmount: null,
   accountValue: null,
+  currency: null,
   ...over,
 })
 

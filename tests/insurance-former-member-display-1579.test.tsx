@@ -20,6 +20,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useBaseCurrency: () => 'twd' as const,
   useMember: () => ({ viewer: { id: 'user-a', displayName: 'Me' }, partner: null, isPast: false, canAccessGuardian: true }),
 }))
 vi.mock('@/app/(dashboard)/_components/BottomNav', () => ({ BottomNav: () => null }))
@@ -66,7 +67,7 @@ const row = {
   policyNo: null, kind: 'medical', insured: null, insuredChildId: null, insuredChildName: null,
   insuredUserId: 'user-gone', insuredUserDisplayName: 'Gone Current Name', policyHolderUserId: 'user-gone',
   insurer: 'Acme', annualPremium: 12000, payCycle: 'annual', startsAt: '2020-01-01', endsAt: '2040-01-01',
-  termYears: 20, sumInsured: null, vehicleId: null, expectedMaturityAmount: null, accountValue: null,
+  termYears: 20, sumInsured: null, vehicleId: null, expectedMaturityAmount: null, accountValue: null, currency: null,
 }
 
 describe('policy detail (#1579)', () => {

@@ -26,6 +26,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useBaseCurrency: () => 'twd' as const,
   useMember: () => ({ viewer: VIEWER, partner, isPast: false, canAccessGuardian: true }),
 }))
 const editInsurance = vi.fn(async (..._args: unknown[]) => ({ ok: true as const, data: undefined }))
