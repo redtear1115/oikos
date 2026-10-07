@@ -7,6 +7,7 @@ import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
+import { hasTokenBearingNext } from '@/lib/analytics/tokenBearingUrl'
 import { SignInActions } from './SignInActions'
 import { SignInNotice } from './SignInNotice'
 import { SignedInRedirect } from './SignedInRedirect'
@@ -76,12 +77,19 @@ export async function generateMetadata({
   // `robots: noindex` since it's a per-token entry point.
   const isInvite = search.from === 'invite'
   const t = isInvite ? seo.invite : seo
+  // #1583: when `next` carries an invite / outing token, this URL holds it too.
+  // Second layer behind the Referrer-Policy header (next.config.ts ›
+  // INVITE_REFERRER_RULES), and it covers a repeated `next` that header's
+  // last-value match can miss. Keyed on `next`, not `from`, because `next` is
+  // what carries the token.
+  const tokenInUrl = hasTokenBearingNext(search.next)
 
   return {
     title: t.title,
     description: t.description,
     alternates: buildAlternates('/sign-in', locale),
     ...(isInvite && { robots: { index: false, follow: false } }),
+    ...(tokenInUrl && { referrer: 'no-referrer' as const }),
     openGraph: {
       title: t.title,
       description: t.ogDescription,

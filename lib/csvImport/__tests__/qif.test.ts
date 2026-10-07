@@ -92,6 +92,11 @@ describe('parseQif — bank format', () => {
     expect(rows[2]!.category).toBe('housing')
   })
 
+  it("maps a QIF category of 'settle' to other (#1541)", () => {
+    const rows = parseQif('!Type:Bank\nD01/15/2026\nT-500.00\nMx\nLsettle\n^\n')
+    expect(rows[0]!.category).toBe('other')
+  })
+
   it('always sets paidBy=viewer and splitType=half', () => {
     const rows = parseQif(BANK_FIXTURE)
     for (const r of rows) {

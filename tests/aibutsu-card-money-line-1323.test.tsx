@@ -5,7 +5,12 @@
 // (a straight revert), or a past chapter keeps showing 「本月 NT$0」 instead of the
 // chapter total — a quiet 0 that draws the eye to the wrong thing.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/app/(dashboard)/_components/MemberContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/app/(dashboard)/_components/MemberContext')>()),
+  useBaseCurrency: () => 'twd',
+}))
 import { render, screen } from '@testing-library/react'
 import { ChildCard, PetCard, PlantCard, ItemCard, HouseCard } from '@/app/(dashboard)/assets/_components/AibutsuCard'
 import { CarHeroCard } from '@/app/(dashboard)/assets/_components/CarHeroCard'

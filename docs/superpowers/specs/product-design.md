@@ -73,7 +73,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 - **ID**：uuid，預設 `gen_random_uuid()`
 - **時間**：`timestamptz`
-- **金額**：`integer`，單位依 group `base_currency`——TWD / CNY / JPY 無小數，**USD 以分儲存**（1.50 USD = `150`）。權威 `lib/currency.ts › currencyPrecision()`；見 [locale-currency](locale-currency-design.md)
+- **金額**：`integer`，單位依 group `base_currency`——主帳本一律存整數單位（USD $45 = `45`，不存分）；只有 outing 表用最小單位（USD 為分），結束時才換算進主帳本。（撤回：「USD 以分儲存」的舊說法不成立，#1582。）`currencyPrecision()` 只用於 outing；見 [locale-currency](locale-currency-design.md)
 - **軟刪除**：Transaction / Settlement / FuelLog / Asset 用 `deleted_at`
 - **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction（規則詳見 `CLAUDE.md`「編輯模式」段）
 - **欠款計算**：每次寫入後全量重算，cache 在 `GroupBalance` table

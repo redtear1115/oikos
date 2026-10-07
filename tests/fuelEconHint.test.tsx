@@ -8,7 +8,12 @@
 //   2. `AssetHero` rendering — that each situation actually reaches its own
 //      string. A correct hint wired to the wrong key would pass layer 1 alone.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/app/(dashboard)/_components/MemberContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/app/(dashboard)/_components/MemberContext')>()),
+  useBaseCurrency: () => 'twd',
+}))
 import { render, screen } from '@testing-library/react'
 import { avgEconHint } from '@/lib/fuelEconHint'
 import { SIX_MONTHS_DAYS, computeAvgEcon } from '@/lib/fuelEcon'

@@ -16,6 +16,7 @@ import { getTranslations } from '@/lib/i18n/t'
 import { getTodayYMD } from '@/lib/today-server'
 import { ymdToUTCNoon } from '@/lib/local-date'
 import { splitEqual } from '@/lib/outing/split'
+import { minorToWhole } from '@/lib/currency'
 import { coupleNetFromOuting } from '@/lib/outing/foldback'
 import {
   type OutingActor,
@@ -530,10 +531,15 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
     // real debt. Throwing rolls back the status flip; nothing is written.
     if (ended.currency !== locked.baseCurrency) throw actionError('outing_currency_changed')
 
+    // Outing integers are minor units (USD cents); Settlements are whole units
+    // (#1582). A residual that rounds below 1 whole unit is not worth a row.
+    const foldAmount = minorToWhole(fold.amount, ended.currency)
+    if (foldAmount < 1) return { folded: false }
+
     await tx.insert(settlements).values({
       groupId: group.id,
       paidBy: fold.paidBy,
-      amount: fold.amount,
+      amount: foldAmount,
       note: t.outing.foldSettlementNote.replace('{name}', foldNoteName(ended.name)),
       settledAt: ymdToUTCNoon(todayYMD),
     })

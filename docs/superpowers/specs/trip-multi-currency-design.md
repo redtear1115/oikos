@@ -346,7 +346,7 @@ Trip 結束時 (`actions/trip.ts#endTrip`)：
 | 風險 | 緩解 |
 |---|---|
 | Trip 進行中阻止 epoch 結束 → 使用者誤會 | 文案：「請先結束旅行再離開章節」+ trip 結束捷徑連結 |
-| USD cent vs 整數的精度錯誤 | `lib/currency.ts` 的 `formatAmount` / `convertAmount` 集中處理 + 單元測試覆蓋 round-trip |
+| 主帳本與 outing 單位混用（整數單位 vs 分）造成 100 倍誤差 | 主帳本與旅行金額一律整數單位：`convertWholeUnits`（一次四捨五入、正數最小 1）+ `formatLedgerAmount`；outing 才用最小單位，fold 時走 `minorToWhole`。（撤回：原寫「cent vs 整數」由 `convertAmount` 集中處理，那個 minor-unit 轉換器已移除，#1582）|
 | Snapshot 語意被誤解（為何改 rate 後過去 record 不變） | Settings 頁加 hint card「過去的紀錄保留當時的匯率」 |
 | Trip 詳情頁混幣別總額語意 | 規定「依幣別」block 各幣別獨立小計、「誰花了多少」block 一律 base 視角 |
 | 整數 split ratio 導致 fold 後 balance delta 漂移 | `lib/tripSummary.ts` brute-force 0–100 挑最小誤差 ratio；0% / 100% 自動 collapse 成 `all_mine` / `all_theirs` |

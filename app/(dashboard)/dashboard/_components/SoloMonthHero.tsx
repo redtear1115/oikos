@@ -1,7 +1,8 @@
 'use client'
 
 import { useTranslations, useLocale } from '@/lib/i18n/client'
-import { formatAmountParts } from '@/lib/currency'
+import { formatLedgerAmountParts } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 
 interface Props {
   /** 'YYYY-MM' — the same month key the total and count were summed over, so
@@ -29,6 +30,7 @@ interface Props {
  */
 export function SoloMonthHero({ monthKey, total, count }: Props) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const locale = useLocale()
 
   // Let Intl name the month so each locale gets its own form and word order
@@ -36,11 +38,7 @@ export function SoloMonthHero({ monthKey, total, count }: Props) {
   const [year, month] = monthKey.split('-').map(Number)
   const monthName = new Intl.DateTimeFormat(locale, { month: 'long' })
     .format(new Date(year, month - 1, 1))
-  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
-  // baseCurrency here: the main ledger stores whole units as typed, but
-  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
-  // group would render this at 1/100th its actual size until that's fixed.
-  const totalParts = formatAmountParts(total, 'twd')
+  const totalParts = formatLedgerAmountParts(total, baseCurrency)
 
   return (
     <div className="px-5 pt-6 pb-5">

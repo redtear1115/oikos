@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useReducer, useRef } from 'react'
 import Link from 'next/link'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { viewerBalance } from '@/lib/balance'
 import { SettlementForm } from './SettlementForm'
@@ -10,7 +10,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
-import { formatAmount, formatAmountParts } from '@/lib/currency'
+import { formatLedgerAmount, formatLedgerAmountParts } from '@/lib/currency'
 import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
 
@@ -81,6 +81,7 @@ export function BalanceHero({
   recentIncomeLabel,
 }: Props) {
   const { viewer, partner, viewerIsA, isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   // Animation state — displayed value + fade flag + synced-prop tracker — all
   // in one reducer so the realtime fadeOut/fadeIn pair and the render-time
@@ -165,11 +166,7 @@ export function BalanceHero({
   }
 
   const amount = Math.abs(balance)
-  // TODO(v0.17 currency): 'twd' hard-coded — #1399 blocks wiring a real
-  // baseCurrency here: the main ledger stores whole units as typed, but
-  // formatAmountParts divides USD by 100 (cents semantics), so a USD-base
-  // group would render this at 1/100th its actual size until that's fixed.
-  const amountParts = formatAmountParts(amount, 'twd')
+  const amountParts = formatLedgerAmountParts(amount, baseCurrency)
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const owedByRole = whoToMemberRole(owedByWho, viewerIsA)
@@ -219,7 +216,7 @@ export function BalanceHero({
                     fontFeatureSettings: '"tnum"',
                   }}
                 >
-                  {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
+                  {incomeMonthTotal > 0 ? `+${formatLedgerAmount(incomeMonthTotal, baseCurrency)}` : formatLedgerAmount(0, baseCurrency)}
                 </span>
               )}
             </div>
@@ -241,7 +238,7 @@ export function BalanceHero({
                 letterSpacing: -1.2, marginTop: 4,
                 fontFeatureSettings: '"tnum"',
               }}>
-                {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
+                {incomeMonthTotal > 0 ? `+${formatLedgerAmount(incomeMonthTotal, baseCurrency)}` : formatLedgerAmount(0, baseCurrency)}
               </div>
               <div style={{
                 marginTop: 12, paddingTop: 12,
@@ -300,7 +297,7 @@ export function BalanceHero({
                     letterSpacing: '-0.6px',
                   }}
                 >
-                  {formatAmount(amount, 'twd')}
+                  {formatLedgerAmount(amount, baseCurrency)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">

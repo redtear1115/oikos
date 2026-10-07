@@ -12,7 +12,7 @@ import { zhTW } from '@/lib/i18n/locales/zh-TW'
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }))
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u-1', initial: 'R', avatarUrl: null, defaultSplitType: 'half' },
     partner: { id: 'u-2', initial: 'S', avatarUrl: null },

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-10-04
+last_updated: 2026-10-07
 status: shipped
 first_shipped_in: v1.2.0
 updates:
@@ -7,8 +7,9 @@ updates:
   - v1.5.11: `entry_source` 的 migrate 取值改為衍生自 `lib/migrate/sources.ts` registry（全部 15 個，原本只認 3 個有 CSV parser 的，其餘靜默落進 `direct`）；import-resume 軸拆出獨立命名並衍生自 `lib/csvImport/detector.ts`（#1062）
   - v1.6.3: 事件清單新增稽核事件 `transactions_exported`（#1290）
   - v1.6.8: 事件清單新增 iOS Apple 瀏覽器備援的 `sign_in_fallback_*` 事件（#1552）
+  - v1.7.0: 邀請漏斗新增 `invite_revoked`（#1546）
 related_specs: [csv-import, solo-mode, csv-export]
-related_issues: ["#734", "#1056", "#1062", "#1290", "#1552"]
+related_issues: ["#734", "#1056", "#1062", "#1290", "#1552", "#1546"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
@@ -179,10 +180,11 @@ migrate 流程 → `app/[locale]/migrate/_components/MigrateTool.tsx` + `Migrate
 | `partner_joined` | member_b 接受、加入 group | server | `group_id`、`inviter_id` |
 | `invite_superseded` | 重新產生連結，取代了仍開著的舊連結（#1288） | server | `group_id`、`count` |
 | `invite_preview_failed` | 被邀請者打開的連結無法使用（#1288） | server | `code`（`revoked` / `expired` / `already_used`…） |
+| `invite_revoked` | member_a 在設定讓仍有效的邀請連結失效（#1546）；沒有有效連結或對方已加入時不發 | server | `group_id`、`count` |
 
-`invite_superseded` 與 `invite_preview_failed` 只帶上列屬性，**永遠不帶 token**——token 在失效前是一把能進帳本的鑰匙。
+`invite_superseded`、`invite_revoked` 與 `invite_preview_failed` 只帶上列屬性，**永遠不帶 token**——token 在失效前是一把能進帳本的鑰匙。
 
-實作落地點：`invite_created` / `invite_superseded` / `partner_joined` / `invite_preview_failed` → `actions/invite.ts`（`createInvite` / `acceptInvite` / `previewInvite`）；
+實作落地點：`invite_created` / `invite_superseded` / `invite_revoked` / `partner_joined` / `invite_preview_failed` → `actions/invite.ts`（`createInvite` / `revokeOpenInvites` / `acceptInvite` / `previewInvite`）；
 `invite_link_opened` → `app/invite/[token]/InviteConfirm.tsx`；邀請頁匿名導向 sign-in
 夾帶 `from=invite` → `app/invite/[token]/page.tsx`。
 
