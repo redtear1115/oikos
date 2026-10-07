@@ -61,5 +61,17 @@ export function isValidCategoryId(id: string): boolean {
   return Object.hasOwn(BY_ID, id)
 }
 
+/**
+ * Ids that may be stored in an expense `category` column: every id except
+ * 'settle', which is only synthesized for feed rows (#1541).
+ *
+ * The DB enforces the same set with CHECK constraints (drizzle/0084_category_check.sql);
+ * `__tests__/categoryCheckDrift.test.ts` fails when this list and the SQL disagree.
+ * Adding a category id therefore needs a migration that widens the CHECKs.
+ */
+export function isWritableExpenseCategory(id: string): boolean {
+  return isValidCategoryId(id) && id !== 'settle'
+}
+
 // Categories shown in Add sheet (excludes 'settle' — auto-applied for settlements only)
 export const PICKABLE_CATEGORIES = CATEGORIES.filter(c => c.id !== 'settle')

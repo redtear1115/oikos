@@ -50,7 +50,7 @@ describe('createRule', () => {
       assetId: null,
     })
 
-    expect(out).toEqual({ ok: true, data: { id: 'rule-1' } })
+    expect(out).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-05-25' } })
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
     expect(values.amount).toBe(75000)
@@ -217,7 +217,7 @@ describe('updateRule', () => {
       endsOn: null,
       source: null,
       assetId: null,
-    })).toEqual({ ok: true, data: { id: 'rule-1' } })
+    })).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-05-28' } })
 
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setCall.dayOfMonth).toBe(28)
