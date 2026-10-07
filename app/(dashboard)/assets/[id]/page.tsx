@@ -20,12 +20,13 @@ import { deriveInsuranceBadge, deriveCarInsuranceBadge, insuranceSubtitle } from
 import type { SiblingChip } from './_components/AibutsuHeader'
 import type { SwitcherGroup } from './_components/AssetSwitcher'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
-import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
+import { listIncomeRulesForAssetForViewer } from '@/lib/db/queries/recurringView'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { TemplateAssetDetailClient } from './_components/TemplateAssetDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
 import { getInsuranceDetailsForViewer, loadMemberLinkScope } from '@/lib/db/queries/insuranceView'
+import { resolveCarPrimaryUser } from '@/lib/carMemberLink'
 import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -383,7 +384,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         getInsuranceReturnTotalsByCategory(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
         listInsuranceReturnsPaged(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, null, PAGE_SIZE, epochWindow),
-        listRulesForAsset(group.id, asset.id, createdBefore),
+        // #1588 — same member scope as the policy: a rule whose 收入歸屬 left
+        // the ledger comes back with no recipient id.
+        listIncomeRulesForAssetForViewer(group.id, asset.id, createdBefore, memberScope),
       ])
 
       // Plain-object shape for the client component (Map isn't serialisable
@@ -474,6 +477,12 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const initialTxns = serializeTxns(txnRows)
 
+  // #1589 — the only read of the car's 主要使用人 for the client. A primary
+  // user who left the ledger comes back as { primaryUserId: null,
+  // primaryUserIsFormer: true }: their profile id never reaches the payload,
+  // and the edit sheet keeps the stored value unless a new person is picked.
+  const primaryUser = resolveCarPrimaryUser(asset.primaryUserId, await loadMemberLinkScope(context, user.id))
+
   // Same function, same window as the assets-list hero card (#1095) — one car
   // must not report two different averages. `createdAt` is passed purely as the
   // same-day ordering tie-break `computeAvgEcon` uses.
@@ -528,7 +537,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         purchasePrice: asset.purchasePrice,
         // '92' and 'electric' are legacy enum values; coerce to '95' for UI
         fuelType: (asset.fuelType === '92' || asset.fuelType === 'electric' ? '95' : asset.fuelType) ?? '95',
-        primaryUserId: asset.primaryUserId,
+        primaryUserId: primaryUser.primaryUserId,
+        primaryUserFormer: primaryUser.primaryUserIsFormer,
         color: asset.color,
         year: asset.year,
         brand: asset.brand,
@@ -536,7 +546,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         initialOdometer: asset.initialOdometer,
       }}
       fuelType={asset.fuelType ?? '95'}
-      primaryUserId={asset.primaryUserId}
+      primaryUser={primaryUser}
       brand={asset.brand ?? null}
       model={asset.model ?? null}
       year={asset.year ?? null}

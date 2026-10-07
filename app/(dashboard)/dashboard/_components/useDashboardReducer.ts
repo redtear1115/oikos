@@ -22,6 +22,8 @@ export type FuelCar = {
   name: string
   fuelType: FuelType | null
   primaryUserId: string | null
+  /** #1589 — see FuelLogDetail.carPrimaryUserIsFormer. */
+  primaryUserIsFormer: boolean
 }
 
 export type FuelSheetState = {
@@ -42,7 +44,6 @@ export interface DashboardState {
   tripSheetOpen: boolean
   fuelSheet: FuelSheetState
   showFirstCard: boolean
-  toast: string | null
 }
 
 export type DashboardAction =
@@ -56,7 +57,6 @@ export type DashboardAction =
   | { type: 'openFuelSheet'; initial: NewFuelLogInitial; car: FuelCar }
   | { type: 'closeFuelSheet' }
   | { type: 'setShowFirstCard'; show: boolean }
-  | { type: 'setToast'; toast: string | null }
 
 export const initialDashboardState: DashboardState = {
   mode: 'expense',
@@ -66,7 +66,6 @@ export const initialDashboardState: DashboardState = {
   tripSheetOpen: false,
   fuelSheet: { open: false, initial: null, car: null },
   showFirstCard: false,
-  toast: null,
 }
 
 export function dashboardReducer(state: DashboardState, action: DashboardAction): DashboardState {
@@ -91,8 +90,6 @@ export function dashboardReducer(state: DashboardState, action: DashboardAction)
       return state.fuelSheet.open ? { ...state, fuelSheet: { ...state.fuelSheet, open: false } } : state
     case 'setShowFirstCard':
       return state.showFirstCard === action.show ? state : { ...state, showFirstCard: action.show }
-    case 'setToast':
-      return state.toast === action.toast ? state : { ...state, toast: action.toast }
   }
 }
 

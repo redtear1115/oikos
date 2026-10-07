@@ -462,11 +462,18 @@ describe('end vs a concurrent mutation (F4) — no expense can land after the fo
     const o = await seedOuting()
     let release!: () => void
     const held = new Promise<void>((r) => { release = r })
+    let flipped!: () => void
+    const flipDone = new Promise<void>((r) => { flipped = r })
     // Stand-in for endOuting between its status flip and its commit.
     const ending = db.transaction(async (tx) => {
       await tx.update(outings).set({ status: 'ended', endedAt: new Date(), foldedAt: new Date() }).where(eq(outings.id, o.outingId))
+      flipped()
       await held
     })
+    // The flip must hold the row lock before the action starts. Without this
+    // the action can win FOR SHARE first, the flip waits on it instead, and
+    // waitForLockWaiter sees that wrong waiter: the expense then lands (~3/10).
+    await Promise.race([flipDone, ending])
     const adding = addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 80, participantIds: [o.pA, o.pB] })
     await waitForLockWaiter()
     release()

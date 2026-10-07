@@ -60,7 +60,7 @@ describe('createRule', () => {
       assetId: null,
     })
 
-    expect(out).toEqual({ ok: true, data: { id: 'rule-1' } })
+    expect(out).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-06-01' } })
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
     expect(values.amount).toBe(25000)
@@ -274,7 +274,7 @@ describe('updateRule', () => {
       startsOn: '2026-05-01',
       endsOn: null,
       assetId: null,
-    })).toEqual({ ok: true, data: { id: 'rule-1' } })
+    })).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-06-05' } })
 
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setCall.dayOfMonth).toBe(5)
@@ -401,7 +401,8 @@ describe('confirmPending', () => {
     expect(await confirmPending('pend-x')).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 
-  it('returns race error code when proposedPaidBy left the group', async () => {
+  // #1588 — a former payer is not a race; the card asks for 「改一下」.
+  it('returns pending_former_member when proposedPaidBy left the group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{
@@ -412,8 +413,8 @@ describe('confirmPending', () => {
       category: 'housing', assetId: null,
     }])
 
-    expect(await confirmPending('pend-1')).toEqual({ ok: false, code: 'pending_expense_partner_handled' })
-    // No insert / update should have run when race-guard fired
+    expect(await confirmPending('pend-1')).toEqual({ ok: false, code: 'pending_former_member' })
+    // No insert / update should have run when the guard fired
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 })

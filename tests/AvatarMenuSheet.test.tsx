@@ -34,6 +34,7 @@ vi.mock('@/actions/profile', () => ({
 }))
 vi.mock('@/actions/invite', () => ({
   createInvite: vi.fn(),
+  revokeOpenInvites: vi.fn(),
 }))
 vi.mock('@/actions/auth', () => ({
   signOut: vi.fn(),
@@ -48,6 +49,7 @@ const data: AvatarMenuData = {
   guardianBetaEnabled: false,
   currentLocale: 'zh-TW',
   avatarHidden: false,
+  hasOpenInvite: false,
 }
 
 function makeCtx(opts: { solo: boolean }): MemberContextValue {

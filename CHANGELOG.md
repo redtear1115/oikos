@@ -63,9 +63,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：保單可選 TWD／CNY／USD／JPY，列表、詳情與編輯表單的保費、保額、預估滿期金、帳戶價值都用保單自己的符號；保單幣別和帳本不同時，兩邊分開列出，不換算、不畫進度條、不預填滿期金，年繳總額也依幣別分開加總。
   技術：`0085` 為 `InsuranceDetails` 加可為空的 `currency`（以所屬帳本基準幣別回填，空值讀作帳本幣別）；必須先於讀它的程式碼上 prod（0084 之後）；`editInsurance` 未帶幣別時保留既有值。
 
+- **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
+  使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
+  技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。
+
 - **分類欄位寫入前先擋掉不合法的值（#1541）**
   使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
   技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。
+
+- **定期規則存檔、預覽與刪除都有回饋（#1483）**
+  使用者：存好規則會跳「已儲存，下次在 …」；每月幾號下方預覽接下來三個日期，31 號等月底規則改用白話說明；刪除前會說明一起移除幾張待確認卡片。
+  技術：`createRule`／`updateRule` 多回 `nextOccurrenceAt`，新增 `countPendingForRule`、`previewNextDates`；dashboard 的 toast 抽成共用 `ToastProvider`；en／ja 譯文待確認。
 
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
@@ -114,6 +122,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **被保人、要保人已離開帳本時，保單資料不再帶出對方（#1579）**
   使用者：保單頁與保單卡把離開的被保人顯示為「前伴侶」；編輯這張保單時要保人／被保人不預選、提示重新選擇，選好才能儲存，不再出現「必須是 group 成員」的錯誤，也不會默默改成自己。
   技術：限保險：`lib/insuranceMemberLink.ts` 在伺服端剔除非成員（釘選舊章節的離開者以該章節成員為準、不標「前伴侶」）的 id 與名字，詳情頁（只經 `getInsuranceDetailsForViewer`）、編輯表單初值、`/assets` 清單都只收剔除後的資料；`editInsurance` 拒絕以空值覆蓋已存的要保人（`policyholder_required`）；不改資料；en／ja 譯文待確認。
+
+- **車子的主要使用人、房子的建立者已離開帳本時，頁面不再帶出對方（#1589）**
+  使用者：兩人帳本裡編輯這台車時，主要使用人不預選、提示重新選擇（單人帳本不顯示這個欄位）；不選直接儲存會保留原本的設定，不會默默變成「共用」；幫這台車記油錢時預設由自己付、不分攤。
+  技術：`lib/carMemberLink.ts` 沿用 #1579 的成員範圍，車子頁與 `getFuelLogById` 剔除非成員的 `primaryUserId`（改帶 `primaryUserIsFormer`）；`editCar` 收到 `primaryUserId: undefined` 時不動已存值；`getHouseDetails` 不再讀 `owner`；不改資料；en／ja 譯文待確認。
+
+- **定期收支的收入歸屬、付款人已離開帳本時，頁面不再帶出對方（#1588）**
+  使用者：定期規則與待確認卡片把離開的人顯示為「前伴侶」，不再掛上現在伴侶的名字；編輯這類規則或卡片時不預選、提示重新選擇，選好才能儲存（單人帳本會說明改記在你名下）；確認付款人已離開的卡片時，提示先「改一下」。
+  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；前伴侶的規則在列表上不顯示分攤標籤（`全部對方的` 會被讀成現在的伴侶）；`recipient_not_in_group` 文案改為「收入歸屬已離開這本帳本，請重新選擇。」（一般收入新增／編輯也共用）；不改資料；en／ja 譯文待確認。
+
+- **可以在設定讓已傳出的邀請連結失效（#1546）**
+  使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
+  技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
+- **邀請連結的金鑰不會送到 Google Analytics（#1583）**
+  使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
+  技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
 
 ## [1.6.7] - 2026-10-04
 

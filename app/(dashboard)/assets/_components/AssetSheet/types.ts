@@ -21,6 +21,11 @@ export interface AssetSheetInitial {
   purchasePrice?: number | null
   fuelType?: GasFuelType
   primaryUserId?: string | null
+  /** #1589 — the stored 主要使用人 left the ledger. The id is not sent
+   *  (primaryUserId is null, which here does NOT mean 共用); the sheet starts
+   *  with nothing selected and, unless a person is picked, saves with
+   *  primaryUserId undefined so editCar keeps the stored value. */
+  primaryUserFormer?: boolean
   // extended car fields
   color?: string | null
   year?: number | null

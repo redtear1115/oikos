@@ -154,7 +154,7 @@ describe('/assets i18n (#1173) — no zh-TW leaks under en / ja', () => {
       <NewFuelLog
         open
         onClose={() => {}}
-        car={{ id: 'c1', name: 'Car', fuelType: '95', primaryUserId: null }}
+        car={{ id: 'c1', name: 'Car', fuelType: '95', primaryUserId: null, primaryUserIsFormer: false }}
         lastOdometer={12000}
         mode="create"
       />,

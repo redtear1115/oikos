@@ -12,6 +12,8 @@ export type FuelCar = {
   name: string
   fuelType: FuelType | null
   primaryUserId: string | null
+  /** #1589 — see FuelLogDetail.carPrimaryUserIsFormer. */
+  primaryUserIsFormer: boolean
 }
 
 /**
@@ -49,6 +51,7 @@ export function useFuelSheet() {
         name: detail.carName,
         fuelType: detail.carFuelType,
         primaryUserId: detail.carPrimaryUserId,
+        primaryUserIsFormer: detail.carPrimaryUserIsFormer,
       })
       setOpen(true)
     })

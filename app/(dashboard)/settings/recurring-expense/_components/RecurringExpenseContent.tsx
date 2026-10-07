@@ -13,17 +13,17 @@ const RecurringRuleSheet = dynamic(
   { ssr: false },
 )
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { RecurringExpenseRuleView } from '@/lib/recurringMemberLink'
 
 interface Props {
-  rules: RecurringExpenseRuleRow[]
+  rules: RecurringExpenseRuleView[]
   groupDefaultRatioA?: number | null
 }
 
 export function RecurringExpenseContent({ rules, groupDefaultRatioA }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const [sheetState, setSheetState] = useState<null | 'create' | RecurringExpenseRuleRow>(null)
+  const [sheetState, setSheetState] = useState<null | 'create' | RecurringExpenseRuleView>(null)
 
   const isOpen = sheetState !== null
   const initial = typeof sheetState === 'object' && sheetState !== null ? sheetState : undefined

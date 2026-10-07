@@ -43,7 +43,7 @@ function renderHouse(hasAddress: boolean) {
       assetId="house-1"
       name="我們的家"
       notes="備註"
-      details={{ owner: 'both', hasAddress, purchasedAt: '2020-01-01', purchasePrice: 12000000 }}
+      details={{ hasAddress, purchasedAt: '2020-01-01', purchasePrice: 12000000 }}
       summary={{ monthAmount: 1580, totalAmount: 5000 }}
       assetSheetInitial={{ id: 'house-1', type: 'house', name: '我們的家', houseHasAddress: hasAddress }}
       initialTxns={[]}
