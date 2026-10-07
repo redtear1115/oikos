@@ -43,7 +43,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
-<<<<<<< HEAD
 - **美金金額的換算與出遊結算不再差 100 倍（#1582）**
   使用者：台幣帳本在旅行中記美金（$45 不再只記成 NT$14）、美金帳本用外幣記帳、出遊結束結算時，金額都是正確的整數；換算後不足 1 的小額記為 1，出遊結算不足 1 美元則不產生結算。
   技術：`convertWholeUnits`（一次四捨五入、正數最小 1）取代 `convertAmount`；`endOuting` 以 `minorToWhole` 把 outing 最小單位換成整數單位；規格中「USD 以分儲存」的說法撤回。
@@ -59,11 +58,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **愛物金額跟著帳本幣別（#1599）**
   使用者：房屋購入價格、寵物購入費用、植物花費的詳情，以及汽車、加油、寵物、植物表單的金額單位，美金等非台幣帳本會顯示對應符號而不是 NT$；台幣帳本顯示不變，保單金額不在此列（見 #1600）。
   技術：以 `useBaseCurrency()` 帶入 `currencySymbol`；詳情列新增 `formatLedgerAmountSpaced`（保留「符號＋空格＋數字」、整數單位不除 100）；金額仍是整數，不動 schema。
-=======
+
 - **分類欄位寫入前先擋掉不合法的值（#1541）**
   使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
   技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。
->>>>>>> origin/fix/1541-category-check
 
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
