@@ -1284,6 +1284,18 @@ export type Translations = {
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
     inviteCta: string
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: string
+      confirmTitle: string
+      confirmBody: string
+      confirmLabel: string
+      done: string
+      /** An accept won the race: nothing was revoked. */
+      partnerJoined: string
+      /** The link had already died (expired, superseded) or never existed. */
+      noneOpen: string
+    }
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
     currency: string
@@ -1724,6 +1736,12 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -2364,6 +2382,12 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -3043,6 +3067,9 @@ export type Translations = {
       outing_epoch_closed: string
       outing_participant_not_found: string
       outing_participant_limit: string
+      group_full: string
+      inviter_not_member: string
+      invite_conflict: string
       outing_name_empty: string
       outing_name_too_long: string
       outing_participant_name_empty: string
@@ -3061,6 +3088,7 @@ export type Translations = {
       outing_already_joined: string
       leave_active_outing: string
       category_empty: string
+      category_invalid: string
       split_ratio_required: string
       split_ratio_out_of_range: string
       split_ratio_not_applicable: string
@@ -4054,6 +4082,16 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: '讓邀請連結失效',
+      confirmTitle: '讓目前的邀請連結失效？',
+      confirmBody: '已經傳出去的連結會打不開。之後可以再產生一條新的。',
+      confirmLabel: '讓它失效',
+      done: '邀請連結已失效',
+      partnerJoined: '對方已經加入了',
+      noneOpen: '目前沒有有效的邀請連結',
+    },
     quickAccessRow: '個人與帳本設定',
     currency: '幣別',
     sectionApp: '應用',
@@ -4423,9 +4461,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       sourceLabel: '來源名稱（選填）',
       sourcePlaceholder: '公司名稱或薪資來源',
       startsOnLabel: '開始日期',
@@ -4438,6 +4476,12 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -5021,9 +5065,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       descriptionLabel: '描述',
       descriptionPlaceholder: '例：房租、訂閱',
       startsOnLabel: '開始日期',
@@ -5036,6 +5080,12 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -6242,8 +6292,8 @@ export const zhTW: Translations = {
         ogDescription: 'Manebo 用戶的下一站：匯出 CSV，搬進 Futari 情侶共同記帳。',
       },
       'simple-daily-money': {
-        title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
+        title: '從簡單記帳搬到 Futari｜兩人同步記帳、不用 VIP',
+        description: '想和伴侶兩支手機同步記同一本帳？簡單記帳的共享只能看、CSV 匯出要 VIP。截圖請 ChatGPT 整理成 CSV，免費搬進 Futari，兩個人都能記、都能改。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
@@ -6774,6 +6824,9 @@ export const zhTW: Translations = {
       outing_epoch_closed: '這次出遊在過去的章節裡，只能結束',
       outing_participant_not_found: '找不到這位參與者',
       outing_participant_limit: '一次出遊最多 20 人',
+      group_full: '這本帳本已經有兩位成員',
+      inviter_not_member: '你已經不在這本帳本裡',
+      invite_conflict: '邀請連結剛有變動，請再試一次',
       outing_name_empty: '出遊名稱為空',
       outing_name_too_long: '出遊名稱最長 100 字',
       outing_participant_name_empty: '名字為空',
@@ -6792,6 +6845,7 @@ export const zhTW: Translations = {
       outing_already_joined: '你已經在這次出遊裡了',
       leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
+      category_invalid: '分類不在可選清單內',
       split_ratio_required: '依比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之間',
       split_ratio_not_applicable: 'split_ratio 僅適用於依比例分',

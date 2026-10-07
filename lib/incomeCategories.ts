@@ -36,6 +36,8 @@ const PALETTE: Array<Pick<IncomeCategory, 'id' | 'label' | 'mono' | 'color' | 'i
   { id: 'other',            label: '其他',     mono: '其', color: '#A8998A', ink: '#7A6A5A' },
 ]
 
+// The DB enforces this id set with CHECK constraints (drizzle/0084_category_check.sql);
+// __tests__/categoryCheckDrift.test.ts fails when they disagree, so a new id needs a migration.
 export const INCOME_CATEGORIES: IncomeCategory[] = PALETTE.map((c) => ({
   ...c,
   tint: lightenHex(c.color),
