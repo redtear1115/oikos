@@ -88,6 +88,7 @@ export default async function AssetsPage() {
         insurer: a.insuranceInsurer,
         annualPremium: a.insuranceAnnualPremium,
         sumInsured: a.insuranceSumInsured,
+        currency: a.insuranceCurrency,
         startsAt: a.insuranceStartsAt,
         expiryDate: a.insuranceExpiryDate,
         termYears: a.insuranceTermYears,

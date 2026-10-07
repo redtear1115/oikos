@@ -372,6 +372,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insVehicleId: insuranceDetailsData?.vehicleId ?? null,
       insExpectedMaturityAmount: insuranceDetailsData?.expectedMaturityAmount ?? null,
       insAccountValue: insuranceDetailsData?.accountValue ?? null,
+      insCurrency: insuranceDetailsData?.currency ?? null,
     }
     const framingGroup = getFramingGroup(insuranceDetailsData?.kind)
 

@@ -7,6 +7,7 @@ import type { EpochWindow } from './epoch'
 import { andClause, cursorClause, epochClause, frozenCopyVisibleClause } from './_predicates'
 import type { AssetType } from '@/lib/assets'
 import type { FuelType } from '@/lib/fuel'
+import type { CurrencyCode } from '@/lib/currency'
 
 const policyHolderProfile = alias(profiles, 'policy_holder_profile')
 const insuredUserProfile = alias(profiles, 'insured_user_profile')
@@ -61,6 +62,7 @@ export interface AssetWithCar {
   insurancePolicyHolderAvatarUrl: string | null
   insuranceAnnualPremium: number | null
   insuranceSumInsured: number | null
+  insuranceCurrency: CurrencyCode | null
   insuranceStartsAt: string | null
   insuranceExpiryDate: string | null
   insuranceTermYears: number | null
@@ -125,6 +127,7 @@ export async function listAssetsForGroup(
       insurancePolicyHolderAvatarUrl: sql<string | null>`CASE WHEN ${policyHolderProfile.avatarHidden} THEN NULL ELSE ${policyHolderProfile.avatarUrl} END`,
       insuranceAnnualPremium: insuranceDetails.annualPremium,
       insuranceSumInsured: insuranceDetails.sumInsured,
+      insuranceCurrency: insuranceDetails.currency,
       insuranceStartsAt: insuranceDetails.startsAt,
       insuranceExpiryDate: insuranceDetails.expiryDate,
       insuranceTermYears: insuranceDetails.termYears,
@@ -259,6 +262,7 @@ export async function getAssetById(
       insurancePolicyHolderAvatarUrl: sql<string | null>`CASE WHEN ${policyHolderProfile.avatarHidden} THEN NULL ELSE ${policyHolderProfile.avatarUrl} END`,
       insuranceAnnualPremium: insuranceDetails.annualPremium,
       insuranceSumInsured: insuranceDetails.sumInsured,
+      insuranceCurrency: insuranceDetails.currency,
       insuranceStartsAt: insuranceDetails.startsAt,
       insuranceExpiryDate: insuranceDetails.expiryDate,
       insuranceTermYears: insuranceDetails.termYears,

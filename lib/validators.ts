@@ -3,6 +3,7 @@ import type { SplitType } from '@/lib/balance'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { GAS_FUEL_TYPES, type GasFuelType } from '@/lib/fuel'
 import { ymdToUTCNoon } from '@/lib/local-date'
+import { parseCurrencyCode, type CurrencyCode } from '@/lib/currency'
 
 /**
  * Upper bound for a single transaction / income amount (base-currency integer).
@@ -746,6 +747,8 @@ export interface InsuranceInput {
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
   accountValue?: number | null
+  /** #1600 — the policy's own currency; omitted/null = leave as stored (edit) or use the ledger's (create). */
+  currency?: string | null
   reminderDaysBefore?: number | null
   notes?: string | null
 }
@@ -768,6 +771,7 @@ export interface ValidatedInsuranceInput {
   vehicleId: string | null
   expectedMaturityAmount: number | null
   accountValue: number | null
+  currency: CurrencyCode | null
   reminderDaysBefore: number
   notes: string | null
 }
@@ -845,6 +849,12 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     accountValue = input.accountValue
   }
 
+  let currency: CurrencyCode | null = null
+  if (input.currency !== null && input.currency !== undefined) {
+    currency = parseCurrencyCode(input.currency)
+    if (!currency) throw new Error('幣別格式錯誤')
+  }
+
   let reminderDaysBefore = 30
   if (input.reminderDaysBefore !== null && input.reminderDaysBefore !== undefined) {
     if (!Number.isInteger(input.reminderDaysBefore) || input.reminderDaysBefore < 1 || input.reminderDaysBefore > 365)
@@ -859,6 +869,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     vehicleId: input.vehicleId?.trim() || null,
     expectedMaturityAmount,
     accountValue,
+    currency,
     reminderDaysBefore,
     notes: validateNotes(input.notes),
   }
