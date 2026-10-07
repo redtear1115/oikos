@@ -54,6 +54,7 @@ next-env.d.ts
 .claude/settings.local.json
 .superpowers/
 .worktrees/
+.playwright-mcp/
 
 # impeccable design skill — third-party install artifacts (the skill code is not
 # versioned here; the generated PRODUCT.md / DESIGN.md / .impeccable/design.json ARE,
