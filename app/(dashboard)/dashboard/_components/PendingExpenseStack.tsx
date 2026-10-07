@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { PendingExpenseCard } from './PendingExpenseCard'
 import { useTranslations } from '@/lib/i18n/client'
-import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
+import type { PendingExpenseView } from '@/lib/recurringMemberLink'
 
 export interface PendingExpenseStackProps {
-  pendings: PendingExpenseRow[]
-  onEdit?: (pending: PendingExpenseRow) => void
+  pendings: PendingExpenseView[]
+  onEdit?: (pending: PendingExpenseView) => void
 }
 
 export function PendingExpenseStack({ pendings, onEdit }: PendingExpenseStackProps) {

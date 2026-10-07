@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { PendingIncomeCard } from './PendingIncomeCard'
-import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import type { PendingIncomeView } from '@/lib/recurringMemberLink'
 import { useTranslations } from '@/lib/i18n/client'
 
 export interface PendingIncomeStackProps {
-  pendings: PendingRow[]
-  onEdit?: (pending: PendingRow) => void
+  pendings: PendingIncomeView[]
+  onEdit?: (pending: PendingIncomeView) => void
 }
 
 export function PendingIncomeStack({ pendings, onEdit }: PendingIncomeStackProps) {

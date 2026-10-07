@@ -6,16 +6,15 @@ import { RecurringExpenseContent } from '../../recurring-expense/_components/Rec
 import { useTranslations } from '@/lib/i18n/client'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { RecurringIncomeRuleView, RecurringExpenseRuleView } from '@/lib/recurringMemberLink'
 
 const INCOME_P = DEFAULT_INCOME_PALETTE
 
 type TabKey = 'income' | 'expense'
 
 interface Props {
-  incomeRules: RecurringRuleRow[]
-  expenseRules: RecurringExpenseRuleRow[]
+  incomeRules: RecurringIncomeRuleView[]
+  expenseRules: RecurringExpenseRuleView[]
   insuranceAssets: { id: string; name: string }[]
   groupDefaultRatioA: number | null
 }

@@ -20,7 +20,7 @@ import { deriveInsuranceBadge, deriveCarInsuranceBadge, insuranceSubtitle } from
 import type { SiblingChip } from './_components/AibutsuHeader'
 import type { SwitcherGroup } from './_components/AssetSwitcher'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
-import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
+import { listIncomeRulesForAssetForViewer } from '@/lib/db/queries/recurringView'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { TemplateAssetDetailClient } from './_components/TemplateAssetDetailClient'
@@ -383,7 +383,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         getInsuranceReturnTotalsByCategory(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
         listInsuranceReturnsPaged(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, null, PAGE_SIZE, epochWindow),
-        listRulesForAsset(group.id, asset.id, createdBefore),
+        // #1588 — same member scope as the policy: a rule whose 收入歸屬 left
+        // the ledger comes back with no recipient id.
+        listIncomeRulesForAssetForViewer(group.id, asset.id, createdBefore, memberScope),
       ])
 
       // Plain-object shape for the client component (Map isn't serialisable

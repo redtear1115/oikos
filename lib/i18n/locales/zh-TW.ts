@@ -311,6 +311,8 @@ export type Translations = {
     back: string
     edit: string
     shared: string
+    /** #1579 / #1588 — a person who left the ledger (rule / pending card payer or recipient). */
+    formerPartner: string
     none: string
     deleteSoftDescription: string
     /** Short transient toasts. `recorded` and `updated` carry the amount
@@ -1737,6 +1739,10 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      /** #1588 — duo edit of a rule / pending card whose 收入歸屬 left the ledger; nothing is preselected. */
+      recipientFormerHint: string
+      /** #1588 — solo: same case, saving records it under the viewer. */
+      recipientFormerSoloHint: string
       deleteConfirmDescriptionCount: string
       deleteConfirmDescriptionNone: string
       nextDatesPreview: string
@@ -2389,6 +2395,10 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      /** #1588 — duo edit of a rule / pending card whose 付款人 left the ledger; nothing is preselected. */
+      paidByFormerHint: string
+      /** #1588 — solo: same case, saving records it under the viewer. */
+      paidByFormerSoloHint: string
       deleteConfirmDescriptionCount: string
       deleteConfirmDescriptionNone: string
       nextDatesPreview: string
@@ -3123,7 +3133,8 @@ export type Translations = {
       recurring_rule_not_found: string
       pending_expense_not_found: string
       pending_expense_handled_elsewhere: string
-      pending_expense_partner_handled: string
+      /** #1588 — confirming a pending expense card whose snapshot payer left the ledger. */
+      pending_former_member: string
       pending_income_not_found: string
       pending_income_handled_elsewhere: string
       review_month_locked: string
@@ -3392,6 +3403,7 @@ export const zhTW: Translations = {
     back: '返回',
     edit: '編輯',
     shared: '共用',
+    formerPartner: '前伴侶',
     none: '無',
     deleteSoftDescription: '這個動作無法復原，紀錄會立即從帳本移除，並於約 1 年後由系統永久清除。',
     toast: {
@@ -4486,6 +4498,8 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
+      recipientFormerHint: '原本的收入歸屬已離開這本帳本，請重新選擇。',
+      recipientFormerSoloHint: '原本的收入歸屬已離開這本帳本，儲存後會改記在你名下。',
       deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
       deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
       nextDatesPreview: '接下來：{dates}',
@@ -5093,6 +5107,8 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
+      paidByFormerHint: '原本的付款人已離開這本帳本，請重新選擇。',
+      paidByFormerSoloHint: '原本的付款人已離開這本帳本，儲存後會改記在你名下。',
       deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
       deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
       nextDatesPreview: '接下來：{dates}',
@@ -6826,7 +6842,7 @@ export const zhTW: Translations = {
       group_not_found: '找不到家計簿',
       payer_not_in_group: '付款人不在家計簿內',
       payer_not_in_trip_ledger: '付款人不在帳本中',
-      recipient_not_in_group: '收入歸屬不在家計簿內',
+      recipient_not_in_group: '收入歸屬已離開這本帳本，請重新選擇。',
       record_not_found: '找不到該筆紀錄',
       record_deleted_or_missing: '紀錄已被刪除或不存在',
       amount_not_positive: '金額需大於 0',
@@ -6886,7 +6902,7 @@ export const zhTW: Translations = {
       recurring_rule_not_found: '找不到該定期規則',
       pending_expense_not_found: '待確認支出已被處理或找不到',
       pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
-      pending_expense_partner_handled: '這筆 partner 剛剛已處理',
+      pending_former_member: '這張卡片的付款人已離開這本帳本，請先改一下再確認。',
       pending_income_not_found: '待確認收入已被處理或找不到',
       pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
       review_month_locked: '這個月的留言已鎖定，無法再修改',

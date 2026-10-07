@@ -123,6 +123,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：兩人帳本裡編輯這台車時，主要使用人不預選、提示重新選擇（單人帳本不顯示這個欄位）；不選直接儲存會保留原本的設定，不會默默變成「共用」；幫這台車記油錢時預設由自己付、不分攤。
   技術：`lib/carMemberLink.ts` 沿用 #1579 的成員範圍，車子頁與 `getFuelLogById` 剔除非成員的 `primaryUserId`（改帶 `primaryUserIsFormer`）；`editCar` 收到 `primaryUserId: undefined` 時不動已存值；`getHouseDetails` 不再讀 `owner`；不改資料；en／ja 譯文待確認。
 
+- **定期收支的收入歸屬、付款人已離開帳本時，頁面不再帶出對方（#1588）**
+  使用者：定期規則與待確認卡片把離開的人顯示為「前伴侶」，不再掛上現在伴侶的名字；編輯這類規則或卡片時不預選、提示重新選擇，選好才能儲存（單人帳本會說明改記在你名下）；確認付款人已離開的卡片時，提示先「改一下」。
+  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；前伴侶的規則在列表上不顯示分攤標籤（`全部對方的` 會被讀成現在的伴侶）；`recipient_not_in_group` 文案改為「收入歸屬已離開這本帳本，請重新選擇。」（一般收入新增／編輯也共用）；不改資料；en／ja 譯文待確認。
+
 - **可以在設定讓已傳出的邀請連結失效（#1546）**
   使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
   技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。

@@ -3,18 +3,24 @@
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { confirmPending, skipPending } from '@/actions/recurringIncome'
 import { useTranslations } from '@/lib/i18n/client'
-import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import type { PendingIncomeView } from '@/lib/recurringMemberLink'
 import { PendingCard } from './PendingCard'
 
 export interface PendingIncomeCardProps {
-  pending: PendingRow
-  onEdit?: (pending: PendingRow) => void
+  pending: PendingIncomeView
+  onEdit?: (pending: PendingIncomeView) => void
 }
 
 export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
   const t = useTranslations()
   const cat = getIncomeCategory(pending.category)
   const title = pending.source ?? t.incomeCategory[cat.id] ?? cat.label
+  // #1588 — the card names no recipient normally. One who left the ledger is
+  // shown as 「前伴侶」 (nothing for a pinned non-member viewer), so the stayer
+  // can tell why 「就這樣」 asks them to pick again.
+  const meta = pending.recipientIsFormer && pending.formerLabel
+    ? t.common.formerPartner
+    : undefined
 
   return (
     <PendingCard
@@ -23,6 +29,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
       title={title}
       date={pending.proposedDate}
       amount={pending.proposedAmount}
+      meta={meta}
       confirmLabel={t.pendingIncomeCard.confirm}
       editLabel={t.pendingIncomeCard.edit}
       skipLabel={t.pendingIncomeCard.skip}

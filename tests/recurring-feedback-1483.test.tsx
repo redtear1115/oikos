@@ -5,8 +5,7 @@ import type { ReactNode } from 'react'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { en } from '@/lib/i18n/locales/en'
 import { ToastProvider } from '@/components/Toast'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { RecurringIncomeRuleView, RecurringExpenseRuleView } from '@/lib/recurringMemberLink'
 
 // #1483 — recurring rule feedback: save toast, next-dates preview, delete count.
 
@@ -51,31 +50,33 @@ function En({ children }: { children: ReactNode }) {
   )
 }
 
-const incomeRule: RecurringRuleRow = {
+const incomeRule: RecurringIncomeRuleView = {
   id: 'r1', recipientId: 'u-1', amount: 50000, category: 'salary', source: null, assetId: null,
   intervalMonths: 1, dayOfMonth: 5, startsOn: '2026-01-05', endsOn: null,
   nextOccurrenceAt: '2026-10-05', pausedAt: null,
+  recipientIsFormer: false, formerLabel: false,
 }
 const expenseRule = {
   id: 'e1', paidBy: 'u-1', amount: 20000, splitType: 'half', splitRatioA: null, description: 'Rent',
   category: 'housing', assetId: null, intervalMonths: 1, dayOfMonth: 1, startsOn: '2026-01-01',
   endsOn: null, nextOccurrenceAt: '2026-10-01', pausedAt: null,
-} as RecurringExpenseRuleRow
+  paidByIsFormer: false, formerLabel: false,
+} as RecurringExpenseRuleView
 
 type Kind = 'income' | 'expense'
 
-function renderSheet(kind: Kind, initial?: RecurringRuleRow | RecurringExpenseRuleRow) {
+function renderSheet(kind: Kind, initial?: RecurringIncomeRuleView | RecurringExpenseRuleView) {
   return render(
     <En>
       {kind === 'income' ? (
         <RecurringRuleSheet
           type="income" open onClose={() => {}} onMutated={() => {}}
-          initial={initial as RecurringRuleRow | undefined} insuranceAssets={[]}
+          initial={initial as RecurringIncomeRuleView | undefined} insuranceAssets={[]}
         />
       ) : (
         <RecurringRuleSheet
           type="expense" open onClose={() => {}} onMutated={() => {}}
-          initial={initial as RecurringExpenseRuleRow | undefined}
+          initial={initial as RecurringExpenseRuleView | undefined}
         />
       )}
     </En>,
@@ -91,7 +92,7 @@ async function clickSave() {
   await act(async () => { screen.getByRole('button', { name: en.common.save }).click() })
 }
 
-const KINDS: { kind: Kind; actions: typeof incomeActions; rule: RecurringRuleRow | RecurringExpenseRuleRow }[] = [
+const KINDS: { kind: Kind; actions: typeof incomeActions; rule: RecurringIncomeRuleView | RecurringExpenseRuleView }[] = [
   { kind: 'income', actions: incomeActions, rule: incomeRule },
   { kind: 'expense', actions: expenseActions, rule: expenseRule },
 ]

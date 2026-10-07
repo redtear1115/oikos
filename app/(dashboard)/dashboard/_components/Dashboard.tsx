@@ -20,8 +20,7 @@ import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
 import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
-import type { PendingRow } from '@/lib/db/queries/recurringIncome'
-import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
+import type { PendingIncomeView, PendingExpenseView } from '@/lib/recurringMemberLink'
 import { useTranslations } from '@/lib/i18n/client'
 import { useToast } from '@/components/Toast'
 import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
@@ -72,8 +71,8 @@ export interface DashboardProps {
   /** 'YYYY-MM' the two figures above were summed over; also what the hero
    *  labels itself with, so figure and label cannot drift apart. */
   expenseMonthKey: string
-  pendings: PendingRow[]
-  expensePendings: PendingExpenseRow[]
+  pendings: PendingIncomeView[]
+  expensePendings: PendingExpenseView[]
   feedDataPromise: Promise<DashboardFeedData>
   groupDefaultRatioA: number | null
   /** Group's base currency (default 'twd'). */
@@ -384,6 +383,8 @@ export function Dashboard({
                   splitType: p.proposedSplitType,
                   splitRatioA: p.proposedSplitRatioA,
                   payerId: p.proposedPaidBy,
+                  // #1588 — the payer left; AddSheet makes the user re-pick.
+                  payerFormer: p.proposedPaidByIsFormer,
                   // Construct as local midnight so AddSheet's getFullYear/Month/Date
                   // round-trip yields the original YYYY-MM-DD regardless of timezone.
                   transactedAt: `${p.proposedDate}T00:00:00`,
@@ -410,6 +411,8 @@ export function Dashboard({
                   category: p.category,
                   source: p.source,
                   recipientId: p.recipientId,
+                  // #1588 — the recipient left; IncomeSheet makes the user re-pick.
+                  recipientFormer: p.recipientIsFormer,
                   assetId: p.assetId,
                   occurredAt: p.proposedDate,
                 },

@@ -325,11 +325,14 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
     .limit(1)
   if (!row) throw actionError('pending_expense_not_found')
 
-  // Race guard: snapshot's paidBy may have left the group between cron generation
-  // and confirmation. Surfacing this as a race message lets the UI prompt the user
-  // to re-pick a payer via 「改一下」 instead of inserting an orphan.
+  // The snapshot payer may have left the group (removePartner / account
+  // deletion) after cron generated this card. Don't insert a record paid by a
+  // non-member; ask the user to re-pick the payer via 「改一下」
+  // (editAndConfirmPending). #1588: this used to answer
+  // `pending_expense_partner_handled` (「這筆 partner 剛剛已處理」), which read
+  // as a race and left the card stuck with no hint of what was wrong.
   if (row.proposedPaidBy !== group.memberA && row.proposedPaidBy !== group.memberB) {
-    throw actionError('pending_expense_partner_handled')
+    throw actionError('pending_former_member')
   }
   // The rule's asset is copied onto the new record, so it must still belong to
   // this group (an asset can move to another group after the rule was made).
