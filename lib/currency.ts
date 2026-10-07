@@ -101,6 +101,12 @@ export function formatLedgerAmount(amount: number, currency: string): string {
   return `${sign}${symbol}${digits}`
 }
 
+/** Same as `formatLedgerAmount` but "symbol + space + digits" (`NT$ 500,000`), for detail rows that keep that design. */
+export function formatLedgerAmountSpaced(amount: number, currency: string): string {
+  const { sign, symbol, digits } = formatLedgerAmountParts(amount, currency)
+  return `${sign}${symbol.trim()} ${digits}`
+}
+
 /**
  * Convert a main-ledger amount (whole units of the source currency) into whole
  * units of the target currency. `rate` is the composite rate: 1 whole unit of
