@@ -22,7 +22,9 @@ import * as expenseActions from '@/actions/recurringExpense'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { useToast } from '@/components/Toast'
+import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
@@ -64,6 +66,8 @@ export function RecurringRuleSheet(props: Props) {
   const { open, onClose, onMutated } = props
   const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
+  const locale = useLocale()
+  const { showToast } = useToast()
   const isEdit = !!props.initial
   const isIncome = props.type === 'income'
 
@@ -168,6 +172,20 @@ export function RecurringRuleSheet(props: Props) {
     }
   }, [open, isIncome, expenseInitial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA, viewerIsA])
 
+  // #1483 — confirm the save with the date the server settled on. It comes
+  // back from the action (UTC "today", the same clock the cron uses) rather
+  // than being recomputed here, so the toast cannot disagree with the list
+  // row. Paused rules and a first date past `endsOn` produce no upcoming run,
+  // which `ruleNextDateText` reports as null → plain「已儲存」.
+  const toastSaved = (saved: { nextOccurrenceAt: string }) => {
+    const dateText = ruleNextDateText(
+      { nextOccurrenceAt: saved.nextOccurrenceAt, endsOn: endsOn || null, pausedAt: props.initial?.pausedAt ?? null },
+      '{date}',
+      locale,
+    )
+    showToast(dateText ? tNs.sheet.savedToastNext.replace('{date}', dateText) : tNs.sheet.savedToast)
+  }
+
   const handleSave = () => {
     if (!amount || amount <= 0) { setError(tNs.errors.amountRequired); return }
 
@@ -194,6 +212,7 @@ export function RecurringRuleSheet(props: Props) {
           ? incomeActions.updateRule({ id: props.initial.id, ...payload })
           : incomeActions.createRule(payload),
         t.recurringIncome.errors.saveFailed,
+        toastSaved,
       )
       return
     }
@@ -225,6 +244,7 @@ export function RecurringRuleSheet(props: Props) {
         ? expenseActions.updateRule({ id: props.initial.id, ...payload })
         : expenseActions.createRule(payload),
       t.recurringExpense.errors.saveFailed,
+      toastSaved,
     )
   }
 

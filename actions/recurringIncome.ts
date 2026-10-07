@@ -47,7 +47,7 @@ function assertRecipientInGroup(
   assertMemberInGroup(recipientId, group, 'recipient_not_in_group')
 }
 
-export const createRule = action(async (input: RecurringIncomeRuleInput): Promise<{ id: string }> => {
+export const createRule = action(async (input: RecurringIncomeRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -94,14 +94,14 @@ export const createRule = action(async (input: RecurringIncomeRuleInput): Promis
     frequency: v.intervalMonths,
   })
 
-  return { id: created.id }
+  return { id: created.id, nextOccurrenceAt }
 })
 
 export interface UpdateRuleInput extends RecurringIncomeRuleInput {
   id: string
 }
 
-export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -154,7 +154,7 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .returning({ id: recurringIncomeRules.id })
 
   revalidateAfterRecurringIncomeRuleMutation()
-  return { id: updated.id }
+  return { id: updated.id, nextOccurrenceAt }
 })
 
 export const pauseRule = action(async (id: string): Promise<void> => {

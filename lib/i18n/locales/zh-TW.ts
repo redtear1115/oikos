@@ -1724,6 +1724,8 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -2364,6 +2366,8 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -4438,6 +4442,8 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -5036,6 +5042,8 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',

@@ -1310,6 +1310,8 @@ export const ja: Translations = {
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
       deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
       editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額と日付がそのままです。',
+      savedToast: '保存しました',
+      savedToastNext: '保存しました。次回は{date}です',
     },
     errors: {
       amountRequired: '金額を入力してください',
@@ -1910,6 +1912,8 @@ export const ja: Translations = {
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
       deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
       editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額・日付・分担がそのままです。',
+      savedToast: '保存しました',
+      savedToastNext: '保存しました。次回は{date}です',
     },
     errors: {
       amountRequired: '金額を入力してください',

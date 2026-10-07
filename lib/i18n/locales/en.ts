@@ -1309,6 +1309,8 @@ export const en: Translations = {
       deleteConfirmTitle: 'Delete this recurring rule?',
       deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
       editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount and date.',
+      savedToast: 'Saved',
+      savedToastNext: 'Saved. Next on {date}',
     },
     errors: {
       amountRequired: 'Enter an amount',
@@ -1909,6 +1911,8 @@ export const en: Translations = {
       deleteConfirmTitle: 'Delete this recurring rule?',
       deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
       editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount, date, and split.',
+      savedToast: 'Saved',
+      savedToastNext: 'Saved. Next on {date}',
     },
     errors: {
       amountRequired: 'Enter an amount',
