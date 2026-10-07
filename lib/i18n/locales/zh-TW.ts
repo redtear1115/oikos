@@ -1650,6 +1650,7 @@ export type Translations = {
        *  recognised action code (network / unexpected). */
       lapseError: string
       insuredShort: string
+      policyHolderFormer: string
       annualLabel: string
       timelineStarts: string
       timelineEnds: string
@@ -2013,6 +2014,10 @@ export type Translations = {
       insuredPlaceholder: string
       insuredFreeform: string
       policyHolder: string
+      /** #1579 — shown under 要保人 when the stored holder left the ledger; nothing is preselected. */
+      policyHolderFormerHint: string
+      /** #1579 — same, for a 被保人 who was a member and left. */
+      insuredFormerHint: string
       insurer: string
       insurerPlaceholder: string
       policyNo: string
@@ -3106,6 +3111,8 @@ export type Translations = {
       policy_expiry_unset: string
       policyholder_not_member: string
       insured_not_member: string
+      /** #1579 — editInsurance: a policy that has a 要保人 cannot be saved without one. */
+      policyholder_required: string
       insured_child_invalid: string
       fuel_log_deleted_or_missing: string
       fuel_transaction_not_found: string
@@ -4374,6 +4381,7 @@ export const zhTW: Translations = {
       lapseConfirm: '已停止',
       lapseError: '停止失敗，請再試一次',
       insuredShort: '保 {name}',
+      policyHolderFormer: '前伴侶',
       annualLabel: '年繳',
       timelineStarts: '生效',
       timelineEnds: '到期',
@@ -4732,6 +4740,8 @@ export const zhTW: Translations = {
       insuredPlaceholder: '小元',
       insuredFreeform: '自行輸入',
       policyHolder: '要保人',
+      policyHolderFormerHint: '原本的要保人已離開這本帳本，請重新選擇。',
+      insuredFormerHint: '原本的被保人已離開這本帳本，請重新選擇。',
       insurer: '保險公司',
       insurerPlaceholder: '南山人壽',
       policyNo: '保單號',
@@ -6837,6 +6847,7 @@ export const zhTW: Translations = {
       policy_expiry_unset: '保單尚未設定到期日',
       policyholder_not_member: '要保人必須是 group 成員',
       insured_not_member: '被保人必須是 group 成員',
+      policyholder_required: '請選擇要保人',
       insured_child_invalid: '無效的被保小孩',
       fuel_log_deleted_or_missing: '加油記錄已刪除或不存在',
       fuel_transaction_not_found: '找不到該筆加油交易',

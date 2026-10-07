@@ -9,7 +9,7 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { AssetSwitcher, type SwitcherGroup } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
-import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
+import { insuredDisplayName, type InsuranceDetailsView } from '@/lib/insuranceMemberLink'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -30,7 +30,7 @@ interface Props {
   assetId: string
   name: string
   notes: string | null
-  details: InsuranceDetailsRow | null
+  details: InsuranceDetailsView | null
   linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
   allInsuranceGroups?: SwitcherGroup[]
@@ -154,7 +154,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <InfoCard>
         <InfoRow label={td.kind} value={details?.kind ? `${lookupKindLabel(details.kind, td)}${details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : ''}` : ''} />
         {/* #167 + #237 — display precedence: Child 愛物 > group member > freeform. */}
-        <InfoRow label={td.insured} value={details?.insuredChildName ?? details?.insuredUserDisplayName ?? details?.insured ?? ''} />
+        <InfoRow label={td.insured} value={details ? (insuredDisplayName(details, t.assets.insuranceList.policyHolderFormer) ?? '') : ''} />
         <InfoRow label={td.insurer} value={details?.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details?.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details?.payCycle, td)} last />

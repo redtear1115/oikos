@@ -28,7 +28,7 @@ import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import type { PagedTxnRow } from '@/actions/transaction'
 import type { PagedIncomeRow } from '@/actions/income'
-import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
+import { insuredDisplayName, type InsuranceDetailsView } from '@/lib/insuranceMemberLink'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import { unwrapAction } from '@/lib/action-errors'
@@ -49,7 +49,7 @@ interface Props {
   assetId: string
   name: string
   notes: string | null
-  details: InsuranceDetailsRow
+  details: InsuranceDetailsView
   premiumStats: { total: number; count: number }
   returnStats: { total: number; count: number }
   /** v0.15.0 #132 — per-category totals across SAVINGS_RETURN_CATEGORIES.
@@ -361,7 +361,7 @@ export function SavingsView({
       <InfoCard>
         <InfoRow label={td.kind} value={lookupKindLabel(details.kind, td) + (details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : '')} />
         {/* #167 + #237 — display precedence: Child 愛物 > group member > freeform. */}
-        <InfoRow label={td.insured} value={details.insuredChildName ?? details.insuredUserDisplayName ?? details.insured ?? ''} />
+        <InfoRow label={td.insured} value={insuredDisplayName(details, t.assets.insuranceList.policyHolderFormer) ?? ''} />
         <InfoRow label={td.insurer} value={details.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details.payCycle, td)} />

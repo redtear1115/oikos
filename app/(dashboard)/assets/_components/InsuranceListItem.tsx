@@ -13,6 +13,7 @@ import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
+import { insuredDisplayName } from '@/lib/insuranceMemberLink'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -32,6 +33,13 @@ interface InsuranceData {
   policyHolderUserId: string | null
   policyHolderDisplayName: string | null
   policyHolderAvatarUrl: string | null
+  /** #1486 — holder left the ledger: no name/avatar, show the neutral label. */
+  policyHolderIsFormer?: boolean
+  /** #1579 — member insured left the ledger: no id/name. */
+  insuredIsFormer?: boolean
+  /** #1579 — a dropped person may be shown as 「前伴侶」. False for a viewer
+   *  pinned to a chapter of a group they left: the field stays empty. */
+  formerLabel?: boolean
   insurer: string | null
   annualPremium: number | null
   sumInsured: number | null
@@ -196,7 +204,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   // Target amount for savings = termYears * annualPremium
   const targetAmount = termYears > 0 && annualPremium > 0 ? termYears * annualPremium : 0
 
-  const insuredName = data.insuredChildName ?? data.insuredUserDisplayName ?? data.insured
+  const insuredName = insuredDisplayName(data, i.policyHolderFormer)
 
   const showActionRow = isSingleYear && expired
 
@@ -254,6 +262,17 @@ export function InsuranceListItem({ id, name, data }: Props) {
               >
                 {data.insurer && (
                   <span className="text-ink-2">{data.insurer}</span>
+                )}
+                {data.policyHolderIsFormer && data.formerLabel && (
+                  <>
+                    {data.insurer && (
+                      <span
+                        aria-hidden="true"
+                        className="rounded-xs bg-ink-3 shrink-0 w-0.75 h-0.75"
+                      />
+                    )}
+                    <span>{i.policyHolderFormer}</span>
+                  </>
                 )}
                 {insuredName && (
                   <>
