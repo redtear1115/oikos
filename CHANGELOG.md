@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
+  使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
+  技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
