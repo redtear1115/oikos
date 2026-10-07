@@ -51,6 +51,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：基準幣別不是台幣的帳本，儀表板、紀錄列、統計摘要、愛物頁與新增時的換算預覽會用對應的符號，$45 不會再顯示成 $0.45；表單輸入框、提示文字與回顧頁仍寫死 NT$。
   技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（僅 outing 最小單位）分開；`useBaseCurrency()` 取代 `CompactRow`、統計錨點等處寫死的 `'twd'`／`NT$`，台幣帳本輸出不變。
 
+- **記一筆、結算、月回顧的金額符號跟著帳本幣別（#1584）**
+  使用者：美金等非台幣帳本記完一筆後的提示、收入／結算／定期規則的輸入框、待確認卡、離開群組前的未結清提示、月回顧卡片與保單滿期提示不再寫死 NT$；台幣帳本顯示不變。保單金額欄位本身（年繳、保額）仍標 NT$。
+  技術：i18n 的 `NT$ {amount}` 改成只留 `{amount}`，由呼叫端帶入 `formatLedgerAmount`／`currencySymbol(baseCurrency)`（4 語同步，加上測試比對各語系佔位符）；月回顧快照沒有幣別欄位，以渲染時的群組 base currency 為準。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
