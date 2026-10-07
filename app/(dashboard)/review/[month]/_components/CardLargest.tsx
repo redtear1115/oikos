@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory } from '@/lib/categories'
 import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
-import { CardEmpty, CardShell, formatNT } from './CardShell'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CardEmpty, CardShell, formatRecapAmount } from './CardShell'
 
 export function CardLargest({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }) {
   const router = useRouter()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const tr = t.monthlyReview
 
@@ -24,7 +26,7 @@ export function CardLargest({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }
   const body = tr.card2Body
     .replace('{name}', snapshot.largestExpensePaidByName ?? '')
     .replace('{description}', snapshot.largestExpenseDescription ?? '')
-    .replace('{amount}', formatNT(snapshot.largestExpenseAmount ?? 0))
+    .replace('{amount}', formatRecapAmount(snapshot.largestExpenseAmount ?? 0, baseCurrency))
 
   return (
     <CardShell title={tr.card2Title} tint={tint}>
@@ -33,7 +35,7 @@ export function CardLargest({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }
       ) : (
         <div className="flex-1 flex flex-col">
           <div className="text-3xl font-medium mt-2" style={{ color: 'var(--ink)' }}>
-            NT$ {formatNT(snapshot.largestExpenseAmount ?? 0)}
+            {formatRecapAmount(snapshot.largestExpenseAmount ?? 0, baseCurrency)}
           </div>
           <div className="mt-2 text-base" style={{ color: 'var(--ink)' }}>
             {snapshot.largestExpenseDescription}
