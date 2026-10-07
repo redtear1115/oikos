@@ -1,9 +1,10 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useId, useState } from 'react'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createCar, editCar } from '@/actions/asset'
 import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
@@ -41,6 +42,7 @@ interface Props extends BodySharedProps {
 
 export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
   const { isSolo } = useMember()
+  const baseCurrency = useBaseCurrency()
 
   // #837 — plate is encrypted PII; the form always starts blank (we never
   // receive plaintext). `hasPlate` tells us an encrypted value exists so we can
@@ -306,7 +308,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             placeholder="0"
             inputMode="numeric"
             inputClassName="tnum"
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>}
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(baseCurrency)}</span>}
           />
         )}
       </Field>

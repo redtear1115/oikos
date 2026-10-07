@@ -1,6 +1,8 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useState } from 'react'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { createPlant, editPlant } from '@/actions/asset'
 import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
@@ -24,6 +26,7 @@ interface Props extends BodySharedProps {
 }
 
 export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
+  const baseCurrency = useBaseCurrency()
   const [species, setSpecies] = useState(initial?.plantSpecies ?? '')
   const [location, setLocation] = useState(initial?.plantLocation ?? '')
   const [sproutedAt, setSproutedAt] = useState(initial?.plantSproutedAt ?? '')
@@ -130,7 +133,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             {id => (
               <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
                 type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
-                rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+                rightAddon={<span className="text-xs text-ink-3">{currencySymbol(baseCurrency)}</span>} />
             )}
           </Field>
         </div>

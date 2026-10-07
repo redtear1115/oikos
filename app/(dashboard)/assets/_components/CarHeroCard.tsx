@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { isDarkColor, resolveCarColor } from './carColor'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
@@ -93,6 +94,7 @@ export function CarHeroCard({
   lastFuelDate,
 }: Props) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const swatch = resolveCarColor(color)
 
   const subtitleParts: string[] = []
@@ -155,7 +157,7 @@ export function CarHeroCard({
           </div>
           {displayAmount !== 0 && (
             <div className="tnum text-xs mt-1 text-ink-3">
-              {moneyLabel} {formatAmount(displayAmount, 'twd')}
+              {moneyLabel} {formatLedgerAmount(displayAmount, baseCurrency)}
             </div>
           )}
         </div>

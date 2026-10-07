@@ -21,6 +21,11 @@ interface Props {
 // search engines even though a search crawler would ignore that signal less
 // reliably than `robots.ts` alone (see app/robots.ts, which already
 // disallows /invite/ for well-behaved crawlers).
+//
+// `referrer: no-referrer` (#1583) is the second layer behind the
+// Referrer-Policy header (next.config.ts › INVITE_REFERRER_RULES): the token is
+// in this URL, and a full-page navigation away must not hand it to GA or
+// another site via document.referrer.
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   const t = await getTranslations()
@@ -28,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
+    referrer: 'no-referrer',
     robots: { index: false, follow: false },
     openGraph: {
       title,

@@ -15,6 +15,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
+import { ToastProvider } from '@/components/Toast'
 import { zhTW } from '@/lib/i18n/locales/zh-TW'
 import type {
   RecurringIncomeRuleView,
@@ -37,6 +38,7 @@ vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
     viewer: VIEWER, partner, viewerIsA: true, isSolo: partner === null, isPast: false, canAccessGuardian: true,
   }),
   whoToMemberRole: (w: 'M' | 'T') => (w === 'M' ? 'a' : 'b'),
+  useBaseCurrency: () => 'twd',
 }))
 vi.mock('@/actions/transaction', () => ({
   createTransaction: vi.fn(), editTransaction: vi.fn(), softDeleteTransaction: vi.fn(),
@@ -107,7 +109,7 @@ const formerExpensePending = (formerLabel = true): PendingExpenseView => ({
   proposedPaidBy: null, proposedPaidByIsFormer: true, formerLabel,
 })
 
-const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
+const wrap = (ui: React.ReactElement) => render(<I18nWrapper><ToastProvider>{ui}</ToastProvider></I18nWrapper>)
 const saveBtn = () => screen.getByRole('button', { name: zhTW.common.save })
 
 describe('T6 — labels: a former person is 「前伴侶」, never the current partner', () => {

@@ -122,6 +122,77 @@ export const createInvite = action(async (): Promise<string> => {
   return getInviteUrl(token)
 })
 
+export interface RevokeOpenInvitesResult {
+  /** Live (not yet expired) links this call made unusable. 0 or 1 since 0076. */
+  revoked: number
+  /**
+   * The partner joined before this call got the group lock. Nothing was
+   * revoked, and the caller must not report the revoke as done.
+   */
+  partnerJoined: boolean
+}
+
+/**
+ * #1546 — make the viewer's open invite link unusable, from settings.
+ *
+ * Zero parameters on purpose (#1031): the group is resolved from the viewer,
+ * never passed in. Same lock order and same UPDATE as createInvite's
+ * supersede, so the two serialise against each other and against acceptInvite:
+ *
+ * - group row FOR UPDATE first, then the invite rows. Touching the invite
+ *   rows first would invert acceptInvite's order; failure looks like a 40P01
+ *   deadlock surfacing as a generic error on one side.
+ * - only `revoked_at` is set. No DELETE and no `expires_at` change: either
+ *   would turn the invitee's message from `revoked` into
+ *   `invalid_or_expired` / `expired`, and a DELETE drops the audit row.
+ *   acceptInvite's atomic claim (`revoked_at IS NULL` under the same group
+ *   lock) is what actually makes the link dead.
+ *
+ * Membership is re-checked under the lock: the active group resolved above
+ * can be stale (a leave in another tab), so a viewer who is no longer
+ * member_a of that solo ledger gets `inviter_not_member` and touches nothing.
+ */
+export const revokeOpenInvites = action(async (): Promise<RevokeOpenInvitesResult> => {
+  const { user, group } = await requireViewerGroup()
+
+  const result = await db.transaction(async (tx): Promise<RevokeOpenInvitesResult> => {
+    const [locked] = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, group.id))
+      .for('update')
+
+    if (!locked) throw new Error('group_not_found')
+    if (locked.memberA !== user.id && locked.memberB !== user.id) throw new Error('inviter_not_member')
+    // An accept won the race (or the ledger is a duo): its invite is
+    // accepted, not open, and there is nothing to retire. Reported as such so
+    // the UI never says "revoked" when the partner is already in.
+    if (locked.memberB !== null) return { revoked: 0, partnerJoined: true }
+
+    // Expired-but-unrevoked rows are stamped too, as createInvite does, but
+    // only rows that were still usable count as "revoked".
+    const rows = await tx
+      .update(groupInvites)
+      .set({ revokedAt: sql`now()` })
+      .where(and(
+        eq(groupInvites.groupId, group.id),
+        isNull(groupInvites.acceptedAt),
+        isNull(groupInvites.revokedAt),
+      ))
+      .returning({ live: sql<boolean>`${groupInvites.expiresAt} > now()` })
+
+    return { revoked: rows.filter((r) => r.live).length, partnerJoined: false }
+  })
+
+  // #1546 — how often people kill a live link by hand. Group id and count
+  // only: never the token, its hash or the invite id.
+  if (result.revoked > 0) {
+    await captureServer(user.id, 'invite_revoked', { group_id: group.id, count: result.revoked })
+  }
+
+  return result
+})
+
 /** The Postgres SQLSTATE of a driver error, whether or not Drizzle wrapped it. */
 function pgErrorCode(e: unknown): string | undefined {
   let cur: unknown = e

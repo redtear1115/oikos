@@ -60,7 +60,7 @@ const EXPENSE_INPUT = {
   tripId: 'trip-1',
   paidBy: 'user-a',
   amount: 100,
-  category: 'food',
+  category: 'dining',
   splitType: 'all_mine' as const,
 }
 

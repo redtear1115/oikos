@@ -17,6 +17,12 @@ export interface AvatarMenuData {
   currentLocale: string
   /** #1328 — viewer's own avatar-visibility preference. */
   avatarHidden: boolean
+  /**
+   * #1546 — the solo ledger has an invite link that could still be accepted,
+   * so the member section offers to make it unusable. Read when the layout
+   * renders; the revoke re-checks under the group lock.
+   */
+  hasOpenInvite: boolean
 }
 
 interface AvatarMenuApi {

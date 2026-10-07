@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useTranslations } from '@/lib/i18n/client'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { currencySymbol } from '@/lib/currency'
 import { describeError } from '@/lib/errors'
 import { unwrapAction, type ActionResult } from '@/lib/action-errors'
 
@@ -73,6 +75,7 @@ export function PendingCard({
 }: PendingCardProps) {
   const router = useRouter()
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const [submitting, startTransition] = useTransition()
   const [fading, setFading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -132,10 +135,10 @@ export function PendingCard({
             <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>
               {date}
             </div>
-            {/* TODO(v0.17 currency): "NT$ {amount}" with space — design-driven,
-                 defer to design before migrating to formatAmount (which has no space). */}
+            {/* Symbol + space is design-driven, so this is not formatLedgerAmount
+                 (no space); the symbol still follows the ledger base currency. */}
             <div className="mt-1 text-title font-medium" style={{ color: 'var(--ink)' }}>
-              NT$ {amount.toLocaleString()}
+              {currencySymbol(baseCurrency)} {amount.toLocaleString()}
             </div>
             {meta && (
               <div className="mt-1 text-[var(--fs-xs)]" style={{ color: 'var(--ink-3)' }}>

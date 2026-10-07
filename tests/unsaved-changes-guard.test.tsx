@@ -5,7 +5,7 @@ import { I18nWrapper } from './_mocks/i18n'
 
 // #1183 — form sheets ask before a backdrop tap / Escape / Back discards input.
 
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u-1', initial: 'R', avatarUrl: null, defaultSplitType: 'half' },
     partner: { id: 'u-2', initial: 'S', avatarUrl: null },

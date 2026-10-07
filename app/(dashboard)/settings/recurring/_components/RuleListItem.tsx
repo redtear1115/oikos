@@ -4,11 +4,11 @@ import { getCategory } from '@/lib/categories'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { ruleNextDateText } from '@/lib/recurringNextDate'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringExpenseRuleView, RecurringIncomeRuleView } from '@/lib/recurringMemberLink'
 import type { SplitType } from '@/lib/balance'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
 
 // One list row for both rule lists. The two used to be separate copies, and
 // the income one drifted (raw zh-TW category label, #1189). Income has no
@@ -34,6 +34,7 @@ export function RuleListItem(props: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const { viewer, partner, viewerIsA, isSolo } = useMember()
+  const baseCurrency = useBaseCurrency()
   const { rule } = props
 
   let cat: { tint: string; ink: string; mono: string }
@@ -139,7 +140,7 @@ export function RuleListItem(props: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}{formatAmount(rule.amount, 'twd')}
+              {' · '}{formatLedgerAmount(rule.amount, baseCurrency)}
             </div>
             {nextDateText && (
               <div className="text-xs mt-0.5 text-ink-3">

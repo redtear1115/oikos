@@ -328,6 +328,32 @@ describe('endOuting folds the couple debt into the main ledger (S-D)', () => {
     expect(await balanceOf(seed.groupId)).toBe(-45)
   })
 
+  it('USD base: the fold converts outing cents to whole dollars ($45 split 2 → Settlement 23)', async () => {
+    const o = await seedOuting()
+    await db.update(oikosGroups).set({ baseCurrency: 'usd' }).where(eq(oikosGroups.id, o.groupId))
+    await db.update(outings).set({ currency: 'usd' }).where(eq(outings.id, o.outingId))
+    // 4500 cents paid by A, split A/B: B owes 2250 cents = $22.50 → rounds to 23.
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 4500, participantIds: [o.pA, o.pB] }))
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: true })
+    const rows = await db.select().from(settlements).where(eq(settlements.groupId, o.groupId))
+    expect(rows).toHaveLength(1)
+    expect(rows[0].amount).toBe(23)
+    expect(await balanceOf(o.groupId)).toBe(23)
+  })
+
+  it('USD base: a residual under $0.50 writes no Settlement (net $0.40)', async () => {
+    const o = await seedOuting()
+    await db.update(oikosGroups).set({ baseCurrency: 'usd' }).where(eq(oikosGroups.id, o.groupId))
+    await db.update(outings).set({ currency: 'usd' }).where(eq(outings.id, o.outingId))
+    // 80 cents paid by A, split A/B: B owes 40 cents.
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 80, participantIds: [o.pA, o.pB] }))
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: false })
+    expect(await db.select().from(settlements).where(eq(settlements.groupId, o.groupId))).toHaveLength(0)
+    expect(await balanceOf(o.groupId)).toBe(0)
+    const [ended] = await db.select().from(outings).where(eq(outings.id, o.outingId))
+    expect(ended.status).toBe('ended')
+  })
+
   it('net 0 and solo → no Settlement', async () => {
     const even = await seedOuting()
     ok(await addOutingExpense({ outingId: even.outingId, paidByParticipantId: even.pF, amount: 100, participantIds: [even.pA, even.pB] }))
@@ -436,11 +462,18 @@ describe('end vs a concurrent mutation (F4) — no expense can land after the fo
     const o = await seedOuting()
     let release!: () => void
     const held = new Promise<void>((r) => { release = r })
+    let flipped!: () => void
+    const flipDone = new Promise<void>((r) => { flipped = r })
     // Stand-in for endOuting between its status flip and its commit.
     const ending = db.transaction(async (tx) => {
       await tx.update(outings).set({ status: 'ended', endedAt: new Date(), foldedAt: new Date() }).where(eq(outings.id, o.outingId))
+      flipped()
       await held
     })
+    // The flip must hold the row lock before the action starts. Without this
+    // the action can win FOR SHARE first, the flip waits on it instead, and
+    // waitForLockWaiter sees that wrong waiter: the expense then lands (~3/10).
+    await Promise.race([flipDone, ending])
     const adding = addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 80, participantIds: [o.pA, o.pB] })
     await waitForLockWaiter()
     release()

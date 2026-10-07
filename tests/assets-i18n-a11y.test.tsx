@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/assets',
   useSearchParams: () => new URLSearchParams(),
 }))
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u1', displayName: 'Me' },
     partner: null,

@@ -30,6 +30,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/app/(dashboard)/_components/MemberContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/app/(dashboard)/_components/MemberContext')>()),
   useMember: () => ({ viewer: VIEWER, partner, isSolo: partner === null, isPast: false, canAccessGuardian: true, viewerIsA: true }),
+  useBaseCurrency: () => 'twd',
 }))
 const editCar = vi.fn(async (..._args: unknown[]) => ({ ok: true as const, data: undefined }))
 vi.mock('@/actions/asset', () => ({
