@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { BrandHeader } from './BrandHeader'
@@ -23,7 +23,8 @@ import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
-import type { CurrencyCode } from '@/lib/currency'
+import { useToast } from '@/components/Toast'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
 import { DashboardFilterRow } from './DashboardFilterRow'
@@ -41,7 +42,7 @@ const TripSheet = dynamic(() => import('@/app/(dashboard)/trips/_components/Trip
 
 /** Info every sheet hands back through onMutated so Dashboard can drive a
  *  success toast + the first-record card without each sheet owning its own
- *  toast state. `savedAmount` is the integer TWD value just written;
+ *  toast state. `savedAmount` is the amount just written, in whole units of the ledger's base currency;
  *  `edit` distinguishes "updated" vs "recorded" copy; `deleted` overrides
  *  both with a flat acknowledgement. */
 export type MutatedInfo = {
@@ -143,20 +144,11 @@ export function Dashboard({
   // visible when both sides are selected — matches how the user reads
   // those records. See `useDashboardReducer.ts` for the full state shape.
   const [state, dispatch] = useDashboardReducer()
-  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard, toast } = state
+  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard } = state
 
   const [, startFuelLoad] = useTransition()
 
-  // Toast timer ref lives outside the reducer — clearing is a side effect,
-  // and we need a stable ref across renders. The reducer only owns the
-  // visible toast string; this ref owns the cleanup handle.
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showToast = useCallback((msg: string, durationMs = 2500) => {
-    dispatch({ type: 'setToast', toast: msg })
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => dispatch({ type: 'setToast', toast: null }), durationMs)
-  }, [dispatch])
-  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current) }, [])
+  const { showToast } = useToast()
 
   const setMode = useCallback((next: 'expense' | 'income') => dispatch({ type: 'setMode', mode: next }), [dispatch])
   const setPayerFilter = useCallback((next: DashboardPayer) => dispatch({ type: 'setPayerFilter', value: next }), [dispatch])
@@ -294,9 +286,7 @@ export function Dashboard({
       showToast(t.common.toast.deleted, 1500)
     } else if (info?.savedAmount != null) {
       const tmpl = info.edit ? t.common.toast.updated : t.common.toast.recorded
-      // TODO(v0.17 currency): toast template has `NT${amount}` baked in;
-      // needs formatAmount digits-only mode or move the symbol into the format call.
-      showToast(tmpl.replace('{amount}', info.savedAmount.toLocaleString('en-US')), 1500)
+      showToast(tmpl.replace('{amount}', formatLedgerAmount(info.savedAmount, baseCurrency)), 1500)
     }
     router.refresh()
   }
@@ -499,17 +489,6 @@ export function Dashboard({
           router.refresh()
         }}
       />
-
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed left-1/2 top-4 z-top-toast -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-bubble text-sm text-white text-center"
-          style={{ background: 'var(--ink)' }}
-        >
-          {toast}
-        </div>
-      )}
 
       <FirstRecordCard
         show={showFirstCard}

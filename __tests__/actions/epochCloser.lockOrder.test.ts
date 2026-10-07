@@ -204,7 +204,7 @@ async function writerInsertAndCommit(
 ): Promise<string> {
   const [row] = await writer.run((t) => t`
     INSERT INTO "CashTransactions" (group_id, paid_by, amount, split_type, description, category, transacted_at)
-    VALUES (${groupId}, ${paidBy}, 100, 'half', 'TEST_1290_S0', 'food', now())
+    VALUES (${groupId}, ${paidBy}, 100, 'half', 'TEST_1290_S0', 'dining', now())
     RETURNING id`)
   await writer.commit()
   return row.id as string

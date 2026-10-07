@@ -1,5 +1,6 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
 import { useDirtyCheck } from './useUnsavedChangesGuard'
@@ -10,7 +11,7 @@ import { AmountInput } from './AmountInput'
 import { ScrollFadeRow } from './ScrollFadeRow'
 import { ConfirmModal } from './ConfirmModal'
 import { Avatar } from './Avatar'
-import { useMember, whoToMemberRole } from './MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from './MemberContext'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
@@ -22,7 +23,13 @@ import * as expenseActions from '@/actions/recurringExpense'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { useToast } from '@/components/Toast'
+import { ruleNextDateText } from '@/lib/recurringNextDate'
+import { previewNextDates } from '@/lib/recurring'
+import { formatDateShort } from '@/lib/format-date'
+import { useToday } from './TodayProvider'
 import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
@@ -63,7 +70,11 @@ type Props = IncomeProps | ExpenseProps
 export function RecurringRuleSheet(props: Props) {
   const { open, onClose, onMutated } = props
   const { viewer, partner, isSolo, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
+  const locale = useLocale()
+  const today = useToday()
+  const { showToast } = useToast()
   const isEdit = !!props.initial
   const isIncome = props.type === 'income'
 
@@ -168,6 +179,47 @@ export function RecurringRuleSheet(props: Props) {
     }
   }, [open, isIncome, expenseInitial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA, viewerIsA])
 
+  // #1483 — confirm the save with the date the server settled on. It comes
+  // back from the action (UTC "today", the same clock the cron uses) rather
+  // than being recomputed here, so the toast cannot disagree with the list
+  // row. Paused rules and a first date past `endsOn` produce no upcoming run,
+  // which `ruleNextDateText` reports as null → plain「已儲存」.
+  const toastSaved = (saved: { nextOccurrenceAt: string }) => {
+    const dateText = ruleNextDateText(
+      { nextOccurrenceAt: saved.nextOccurrenceAt, endsOn: endsOn || null, pausedAt: props.initial?.pausedAt ?? null },
+      '{date}',
+      locale,
+    )
+    showToast(dateText ? tNs.sheet.savedToastNext.replace('{date}', dateText) : tNs.sheet.savedToast)
+  }
+
+  // #1483 — how many pending cards deleting would take with it, fetched when
+  // the confirm opens. null = loading or failed: the modal falls back to the
+  // generic sentence and deleting is never blocked on this read.
+  const ruleId = props.initial?.id
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+  useEffect(() => {
+    setPendingCount(null)
+    if (!confirmingDelete || !ruleId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const n = unwrapAction(await actions.countPendingForRule(ruleId))
+        if (!cancelled) setPendingCount(n)
+      } catch {
+        // keep the generic description
+      }
+    })()
+    return () => { cancelled = true }
+  }, [confirmingDelete, ruleId, actions])
+
+  const deleteDescription =
+    pendingCount === null
+      ? tNs.sheet.deleteConfirmDescription
+      : pendingCount === 0
+        ? tNs.sheet.deleteConfirmDescriptionNone
+        : tNs.sheet.deleteConfirmDescriptionCount.replace('{count}', String(pendingCount))
+
   const handleSave = () => {
     if (!amount || amount <= 0) { setError(tNs.errors.amountRequired); return }
 
@@ -194,6 +246,7 @@ export function RecurringRuleSheet(props: Props) {
           ? incomeActions.updateRule({ id: props.initial.id, ...payload })
           : incomeActions.createRule(payload),
         t.recurringIncome.errors.saveFailed,
+        toastSaved,
       )
       return
     }
@@ -225,6 +278,7 @@ export function RecurringRuleSheet(props: Props) {
         ? expenseActions.updateRule({ id: props.initial.id, ...payload })
         : expenseActions.createRule(payload),
       t.recurringExpense.errors.saveFailed,
+      toastSaved,
     )
   }
 
@@ -240,6 +294,17 @@ export function RecurringRuleSheet(props: Props) {
       ? { incomeCategory, recipientWho, source, incomeAssetId }
       : { expenseCategory, payerWho, splitType, splitRatioA, description, expenseAssetId }),
   })
+
+  // #1483 — read-only "接下來" line under the day picker: the concrete dates
+  // the settings above produce (also what makes the end-of-month clamp visible).
+  const nextDates = open
+    ? previewNextDates({
+        startsOn, endsOn: endsOn || null, intervalMonths, dayOfMonth, today, isEdit,
+      })
+    : []
+  const nextDatesText = nextDates
+    .map((d) => formatDateShort(d, locale, { withYear: d.slice(0, 4) !== today.slice(0, 4) }))
+    .join(tNs.sheet.nextDatesSeparator)
 
   const saveColor = isIncome ? P.ink : 'var(--accent)'
   const saveDisabled = !amount || pending
@@ -325,7 +390,7 @@ export function RecurringRuleSheet(props: Props) {
             <AmountInput
               value={amount ? String(amount) : ''}
               onChange={(next) => setAmount(next ? parseInt(next, 10) : 0)}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={tNs.sheet.amountLabel}
               caretColor={isIncome ? P.ink : undefined}
             />
@@ -512,12 +577,14 @@ export function RecurringRuleSheet(props: Props) {
               {tNs.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
+            {nextDates.length > 0 && (
+              <div className="mt-2 text-xs text-ink-3">
+                {tNs.sheet.nextDatesPreview.replace('{dates}', nextDatesText)}
+              </div>
+            )}
             {dayOfMonth > 28 && (
-              <div
-                className="mt-2 text-xs"
-                style={{ color: 'var(--ink-3)' }}
-              >
-                {tNs.sheet.dayOfMonthFallbackHint}
+              <div className="mt-1 text-xs text-ink-3">
+                {tNs.sheet.dayOfMonthFallbackHint.replace('{day}', String(dayOfMonth))}
               </div>
             )}
           </div>
@@ -634,7 +701,7 @@ export function RecurringRuleSheet(props: Props) {
       <ConfirmModal
         open={confirmingDelete && open}
         title={tNs.sheet.deleteConfirmTitle}
-        description={tNs.sheet.deleteConfirmDescription}
+        description={deleteDescription}
         confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}

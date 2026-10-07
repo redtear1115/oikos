@@ -26,6 +26,7 @@ vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHintCard', () => ({ Ai
 // so a minimal stub is enough — present-epoch view (`isPast: false`) keeps
 // existing assertions identical to pre-gate behaviour.
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useBaseCurrency: () => 'twd',
   useMember: () => ({ isPast: false }),
 }))
 

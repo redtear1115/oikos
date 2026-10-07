@@ -32,7 +32,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
-import { convertAmount, type CurrencyCode } from '@/lib/currency'
+import { convertWholeUnits, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
@@ -109,12 +109,7 @@ export const createTransaction = action(async (
     if (!rate) {
       throw actionError('fx_rate_not_set', { from: inputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
-    baseAmount = convertAmount({
-      amount: validated.amount,
-      from: inputCurrency,
-      to: group.baseCurrency as CurrencyCode,
-      rate: parseFloat(rate.rate),
-    })
+    baseAmount = convertWholeUnits(validated.amount, parseFloat(rate.rate))
     originalCurrency = inputCurrency
     originalAmount = validated.amount
     rateSnapshot = rate.rate
@@ -264,12 +259,7 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
     if (!rate) {
       throw actionError('fx_rate_not_set', { from: editInputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
-    editBaseAmount = convertAmount({
-      amount: validated.amount,
-      from: editInputCurrency,
-      to: group.baseCurrency as CurrencyCode,
-      rate: parseFloat(rate.rate),
-    })
+    editBaseAmount = convertWholeUnits(validated.amount, parseFloat(rate.rate))
     editOriginalCurrency = editInputCurrency
     editOriginalAmount = validated.amount
     editRateSnapshot = rate.rate

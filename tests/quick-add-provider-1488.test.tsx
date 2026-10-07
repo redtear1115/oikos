@@ -91,11 +91,12 @@ import {
   QUICK_ADD_COLD_START_DEDUPE_MS,
   QUICK_ADD_HANDLED_PREFIX,
 } from '@/app/(dashboard)/_components/QuickAddProvider'
+import { ToastProvider } from '@/components/Toast'
 import { Dashboard, type DashboardProps } from '@/app/(dashboard)/dashboard/_components/Dashboard'
 
 function member(isPast = false): MemberContextValue {
   return {
-    group: { id: 'g1', name: '我們家' },
+    group: { id: 'g1', name: '我們家', baseCurrency: 'twd' },
     viewer: { id: 'u-me', initial: '我', displayName: '小明', avatarUrl: null, defaultSplitType: 'half', who: 'M' },
     partner: null,
     viewerIsA: true,
@@ -134,7 +135,7 @@ function Shell({ children, isPast = false }: { children: ReactNode; isPast?: boo
   return (
     <I18nWrapper>
       <MemberProvider value={member(isPast)}>
-        <QuickAddProvider>{children}</QuickAddProvider>
+        <ToastProvider><QuickAddProvider>{children}</QuickAddProvider></ToastProvider>
       </MemberProvider>
     </I18nWrapper>
   )

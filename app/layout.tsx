@@ -130,7 +130,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
         </PostHogProvider>
         <VercelInsights />
-        {/* Gated off the outing share link, whose path carries the token (#1558). */}
+        {/* Gated off URLs that carry a bearer token: outing share links (#1558),
+            invites and the sign-in bounce whose `next` is one (#1583). */}
         {IS_PROD_DEPLOY && <GoogleAnalyticsGate gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>

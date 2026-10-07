@@ -239,7 +239,7 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...`
 ### 顯示分工
 
 - **語言** 影響：所有文字 string、`Intl.DateTimeFormat` 日期格式
-- **幣別** 影響：金額符號、千分位、小數位數（USD 2 位、其他 0 位）
+- **幣別** 影響：金額符號、千分位、小數位數（帳本金額一律整數單位、不顯示小數；USD 2 位小數只用在出遊，見 #1582）
 - **不交叉**：locale 不改幣別符號（en + TWD = `NT$1,234`，不是 `$1,234`）
 
 ---

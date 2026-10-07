@@ -24,7 +24,7 @@ import { zhTW } from '@/lib/i18n/locales/zh-TW'
 afterEach(cleanup)
 
 const member: MemberContextValue = {
-  group: { id: 'g1', name: '測試帳本' },
+  group: { id: 'g1', name: '測試帳本', baseCurrency: 'twd' },
   viewer: { id: 'u1', initial: '我', displayName: '我', avatarUrl: null, defaultSplitType: 'half', who: 'M' },
   partner: { id: 'u2', initial: '伴', displayName: '伴侶', avatarUrl: null, defaultSplitType: 'half', who: 'T' },
   viewerIsA: true,
@@ -124,8 +124,57 @@ describe('SoloMonthHero amount split (#1358)', () => {
   })
 })
 
-// Non-TWD baseCurrency wiring for these heroes was reverted (#1398 A2 →
-// #1399): formatAmountParts divides USD by 100 (cents semantics) while the
-// main ledger stores whole units, so a real baseCurrency prop would render
-// a USD-base group's amounts at 1/100th their actual size. No non-TWD
-// render test here until #1399 resolves the unit mismatch.
+// #1482 — the main ledger stores whole units as typed, so a USD-base ledger
+// that recorded $45 must read $45 (not $0.45) on every hero.
+const usdMember: MemberContextValue = { ...member, group: { ...member.group, baseCurrency: 'usd' } }
+const jpyMember: MemberContextValue = { ...member, group: { ...member.group, baseCurrency: 'jpy' } }
+
+function withMember(m: MemberContextValue, children: React.ReactNode) {
+  return (
+    <TranslationsProvider value={zhTW} locale="zh-TW">
+      <MemberProvider value={m}>{children}</MemberProvider>
+    </TranslationsProvider>
+  )
+}
+
+describe('heroes follow the ledger base currency (#1482)', () => {
+  it('SoloMonthHero: USD base renders $ + whole-unit digits', () => {
+    render(withMember(usdMember, <SoloMonthHero monthKey="2026-03" total={45} count={1} />))
+    expect(screen.getByText('$')).toBeInTheDocument()
+    expect(screen.getByText('45')).toBeInTheDocument()
+    expect(screen.queryByText('0.45')).toBeNull()
+  })
+
+  it('BalanceHero: USD base renders $ + whole-unit digits', () => {
+    render(
+      withMember(
+        usdMember,
+        <BalanceHero
+          rawBalance={4500}
+          initialHeroCollapsed={false}
+          initialIncludePending={false}
+          mode="expense"
+          incomeMonthTotal={0}
+          incomeMonthCount={0}
+          recentIncomeLabel={null}
+        />,
+      ),
+    )
+    expect(screen.getByText('$')).toBeInTheDocument()
+    expect(screen.getByText('4,500')).toBeInTheDocument()
+  })
+
+  it('AssetHero: JPY base renders the yen symbol with no space', () => {
+    const { container } = render(
+      withMember(
+        jpyMember,
+        <AssetHero
+          name="小車" brand="Toyota" model="Corolla" year={2020} fuelType="95" color={null}
+          monthAmount={1234} totalAmount={56789} avgEcon={null} lastFuelAt={null} isPast={false}
+        />,
+      ),
+    )
+    expect(container.textContent).toContain('¥1,234')
+    expect(container.textContent).not.toContain('NT$')
+  })
+})

@@ -21,7 +21,7 @@ vi.mock('@/app/(dashboard)/dashboard/_components/AddSheet', () => ({ AddSheet: (
 vi.mock('@/app/(dashboard)/assets/_components/AssetSheet', () => ({ AssetSheet: () => null }))
 vi.mock('@/actions/transaction', () => ({ loadMoreTransactionsForAsset: vi.fn() }))
 vi.mock('@/actions/asset', () => ({ revealHouseAddress: vi.fn() }))
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useMember: () => ({ isPast: false }) }))
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd', useMember: () => ({ isPast: false }) }))
 
 import type { ReactNode } from 'react'
 import { render } from '@testing-library/react'

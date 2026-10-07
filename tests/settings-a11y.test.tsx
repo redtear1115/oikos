@@ -24,6 +24,7 @@ vi.mock('@/actions/group', () => ({
 }))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
   useMember: () => ({ viewerIsA: true }),
+  useBaseCurrency: () => 'twd',
 }))
 
 // SettingsContent is an async server component; stub its server-only

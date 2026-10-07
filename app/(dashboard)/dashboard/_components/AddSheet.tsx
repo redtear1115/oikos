@@ -38,7 +38,7 @@ import { PayerToggle } from './PayerToggle'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
-import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
 import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
@@ -601,7 +601,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               if (converted == null) return null
               return (
                 <div className="text-sm mt-2" style={{ color: 'var(--ink-3)' }}>
-                  ≈ {formatAmount(converted, baseCurrency)}
+                  ≈ {formatLedgerAmount(converted, baseCurrency)}
                 </div>
               )
             })()}

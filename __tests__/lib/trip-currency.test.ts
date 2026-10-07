@@ -221,8 +221,27 @@ describe('convertViaSnapshot', () => {
   })
 
   it('chains non-default → default → non-default', () => {
-    // USD stores cents → 100 = $1. $1 × 32 = 32 TWD → 32 / 0.2 = 160 JPY.
-    expect(convertViaSnapshot(100, 'USD', 'JPY', snap)).toBe(160)
+    // Whole units: $1 x 32 = 32 TWD → 32 / 0.2 = 160 JPY. $100 → 16000 JPY.
+    expect(convertViaSnapshot(1, 'USD', 'JPY', snap)).toBe(160)
+    expect(convertViaSnapshot(100, 'USD', 'JPY', snap)).toBe(16000)
+  })
+
+  it('chained conversion composes the rate and rounds once', () => {
+    const s2 = parseTripCurrencySnapshot(
+      { default: 'TWD', entries: [
+        { code: 'TWD', rate: 1 }, { code: 'USD', rate: 31.7 }, { code: 'JPY', rate: 0.2123 },
+      ] },
+      'TWD',
+    )
+    // Rounding mid-chain would give round(round(7 * 31.7) / 0.2123) = 1046; once = 1045.
+    expect(convertViaSnapshot(7, 'USD', 'JPY', s2)).toBe(1045)
+  })
+
+  it('minimum 1: a positive amount never converts to 0', () => {
+    expect(convertViaSnapshot(5, 'JPY', 'USD', {
+      default: 'USD',
+      entries: [{ code: 'USD', label: null, rate: 1 }, { code: 'JPY', label: null, rate: 0.0067 }],
+    })).toBe(1)
   })
 
   it('returns null when source code is not in snapshot', () => {

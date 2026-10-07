@@ -69,7 +69,7 @@ describe('copy share link', () => {
     expect(screen.getByTestId('outing-share-url').textContent).toBe(url)
     expect(writeText).toHaveBeenLastCalledWith(url)
 
-    fireEvent.click(screen.getByRole('button', { name: '複製連結' }))
+    fireEvent.click(await screen.findByRole('button', { name: '複製連結' }))
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
     expect(writeText).toHaveBeenLastCalledWith(url)
     expect(screen.getByTestId('outing-share-url').textContent).toBe(url)

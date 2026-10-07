@@ -2,7 +2,8 @@
 
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { useTranslations } from '@/lib/i18n/client'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -25,36 +26,37 @@ interface SplitTypeSelectorProps {
 
 type STS = Translations['splitTypeSelector']
 
-function weightedSub(sts: STS, payerWho: 'M' | 'T', amount: number, ratioA: number): string {
+function weightedSub(sts: STS, payerWho: 'M' | 'T', amount: number, ratioA: number, baseCurrency: CurrencyCode): string {
   const otherShare = 100 - ratioA
   const myShare = ratioA
   if (ratioA === 50) {
     if (!amount) return sts.evenSub
     const half = Math.ceil(amount / 2)
     return payerWho === 'M'
-      ? sts.partnerOwesYouAmount.replace('{amount}', formatAmount(half, 'twd'))
-      : sts.youOwePartnerAmount.replace('{amount}', formatAmount(half, 'twd'))
+      ? sts.partnerOwesYouAmount.replace('{amount}', formatLedgerAmount(half, baseCurrency))
+      : sts.youOwePartnerAmount.replace('{amount}', formatLedgerAmount(half, baseCurrency))
   }
   if (!amount) return sts.ratioNoAmount.replace('{me}', String(ratioA)).replace('{other}', String(otherShare))
   const otherOwed = Math.ceil(amount * otherShare / 100)
   const myOwed = Math.ceil(amount * myShare / 100)
   return payerWho === 'M'
-    ? sts.partnerOwesYouAmount.replace('{amount}', formatAmount(otherOwed, 'twd'))
-    : sts.youOwePartnerAmount.replace('{amount}', formatAmount(myOwed, 'twd'))
+    ? sts.partnerOwesYouAmount.replace('{amount}', formatLedgerAmount(otherOwed, baseCurrency))
+    : sts.youOwePartnerAmount.replace('{amount}', formatLedgerAmount(myOwed, baseCurrency))
 }
 
-function splitSub(sts: STS, splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amount: number): string {
+function splitSub(sts: STS, splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amount: number, baseCurrency: CurrencyCode): string {
   if (splitId === 'all_mine') {
     return payerWho === 'M' ? sts.allMineSelfPaid : sts.allMinePartnerPaid
   }
   if (!amount) return payerWho === 'M' ? sts.allTheirsNoAmount : sts.allTheirsPartnerNoAmount
   return payerWho === 'M'
-    ? sts.allTheirsYouPaid.replace('{amount}', formatAmount(amount, 'twd'))
-    : sts.allTheirsPartnerPaid.replace('{amount}', formatAmount(amount, 'twd'))
+    ? sts.allTheirsYouPaid.replace('{amount}', formatLedgerAmount(amount, baseCurrency))
+    : sts.allTheirsPartnerPaid.replace('{amount}', formatLedgerAmount(amount, baseCurrency))
 }
 
 export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onChange, amount, payerWho, defaultViewerShare }: SplitTypeSelectorProps) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const sts = t.splitTypeSelector
   const weightedLabel = splitRatioA === 50 ? t.splitType.even : t.splitType.weighted
   const isWeighted = value === 'weighted' || value === 'half'
@@ -62,8 +64,8 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
   const anyChecked = isWeighted || value === 'all_mine' || value === 'all_theirs'
 
   const staticOptions = [
-    { id: 'all_mine'   as const, label: t.splitType.allMine,     sub: splitSub(sts, 'all_mine',   payerWho, amount) },
-    { id: 'all_theirs' as const, label: t.splitType.allPartners, sub: splitSub(sts, 'all_theirs', payerWho, amount) },
+    { id: 'all_mine'   as const, label: t.splitType.allMine,     sub: splitSub(sts, 'all_mine',   payerWho, amount, baseCurrency) },
+    { id: 'all_theirs' as const, label: t.splitType.allPartners, sub: splitSub(sts, 'all_theirs', payerWho, amount, baseCurrency) },
   ]
 
   return (
@@ -92,7 +94,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               {weightedLabel}
             </div>
             <div className="text-sm mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              {weightedSub(sts, payerWho, amount, splitRatioA)}
+              {weightedSub(sts, payerWho, amount, splitRatioA, baseCurrency)}
             </div>
           </div>
           <div className="w-5 h-5 rounded-full transition-all duration-150"

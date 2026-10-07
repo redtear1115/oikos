@@ -187,7 +187,7 @@ async function world(tx: TransactionSql): Promise<World> {
   const cash = async (group: string, payer: string, at: string) => {
     const [r] = await tx<{ id: string }[]>`
       INSERT INTO "CashTransactions" (group_id, paid_by, amount, split_type, split_ratio_a, description, category, transacted_at, created_at)
-      VALUES (${group}, ${payer}, 100, 'weighted', 60, 'TEST_1518', 'food', ${at}, ${at}) RETURNING id`
+      VALUES (${group}, ${payer}, 100, 'weighted', 60, 'TEST_1518', 'dining', ${at}, ${at}) RETURNING id`
     return r.id
   }
   const income = async (at: string) => {
@@ -360,7 +360,7 @@ describe.skipIf(!isLocalDb)('0080 chapter-scoped RLS — fresh local stand-in', 
         // A new row now (the realtime INSERT case) reaches both members.
         const [n] = await tx<{ id: string }[]>`
           INSERT INTO "CashTransactions" (group_id, paid_by, amount, split_type, description, category, transacted_at)
-          VALUES (${w.G}, ${w.C}, 5, 'half', 'TEST_1518 new', 'food', now()) RETURNING id`
+          VALUES (${w.G}, ${w.C}, 5, 'half', 'TEST_1518 new', 'dining', now()) RETURNING id`
         expect(await realtimeSees(tx, w.C, 'CashTransactions', n.id)).toBe(true)
         expect(await realtimeSees(tx, w.A, 'CashTransactions', n.id)).toBe(true)
         // Ledger-scoped tables still reach the later partner (GroupBalance, recurring rules, Assets, the group row).

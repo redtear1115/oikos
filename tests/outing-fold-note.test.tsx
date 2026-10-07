@@ -42,7 +42,7 @@ describe('isOutingFoldNote', () => {
 })
 
 const member: MemberContextValue = {
-  group: { id: 'g1', name: 'G' },
+  group: { id: 'g1', name: 'G', baseCurrency: 'twd' },
   viewer: { id: 'viewer-1', initial: 'V', displayName: 'Viewer', avatarUrl: null, defaultSplitType: 'half', who: 'M' },
   partner: { id: 'partner-1', initial: 'P', displayName: 'Partner', avatarUrl: null, defaultSplitType: 'half', who: 'T' },
   viewerIsA: true,

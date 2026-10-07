@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, formatAmountParts, convertAmount, parseCurrencyCode } from '@/lib/currency'
+import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, formatAmountParts, formatLedgerAmount, formatLedgerAmountParts, convertWholeUnits, minorToWhole, parseCurrencyCode } from '@/lib/currency'
 
 describe('CURRENCIES constant', () => {
   it('contains the four MVP currencies in canonical order', () => {
@@ -78,40 +78,70 @@ describe('formatAmountParts', () => {
   })
 })
 
-describe('convertAmount', () => {
-  // Rate semantics: `rate` is "1 display unit of `from` = rate display units of `to`".
-  // Display unit examples: 1 TWD, 1 USD ($1.00, NOT 1 cent), 1 JPY.
-
-  it('same currency returns unchanged amount', () => {
-    expect(convertAmount({ amount: 100, from: 'twd', to: 'twd', rate: 1 })).toBe(100)
+describe('formatLedgerAmount (#1482: main-ledger integers, whole units)', () => {
+  it('TWD is byte-identical to the minor-unit path', () => {
+    for (const n of [0, 500, 12345, -500, 1234567]) {
+      expect(formatLedgerAmount(n, 'twd')).toBe(formatAmount(n, 'twd'))
+      expect(formatLedgerAmountParts(n, 'twd')).toEqual(formatAmountParts(n, 'twd'))
+    }
   })
-
-  it('TWD → JPY: 100 TWD × 5.0 = 500 JPY (both integer-unit)', () => {
-    expect(convertAmount({ amount: 100, from: 'twd', to: 'jpy', rate: 5.0 })).toBe(500)
+  it('USD base: $45 stays $45, not $0.45', () => {
+    expect(formatLedgerAmount(45, 'usd')).toBe('$45')
+    expect(formatLedgerAmount(1234, 'usd')).toBe('$1,234')
+    expect(formatLedgerAmount(-45, 'usd')).toBe('-$45')
+    expect(formatLedgerAmountParts(45, 'usd')).toEqual({ sign: '', symbol: '$', digits: '45' })
   })
-
-  it('TWD → USD: 1000 TWD × 0.032 = $32.00 stored as 3200 cents', () => {
-    expect(convertAmount({ amount: 1000, from: 'twd', to: 'usd', rate: 0.032 })).toBe(3200)
+  it('JPY / CNY base use their symbol, whole units', () => {
+    expect(formatLedgerAmount(50000, 'jpy')).toBe('¥50,000')
+    expect(formatLedgerAmount(1000, 'cny')).toBe('CN¥1,000')
   })
-
-  it('USD → TWD: $12.50 (1250 cents) × (1/0.032) ≈ 391 TWD', () => {
-    expect(convertAmount({ amount: 1250, from: 'usd', to: 'twd', rate: 1 / 0.032 })).toBe(391)
+  it('the FX path keeps minor units: same number, different source, different text', () => {
+    expect(formatAmount(4500, 'usd')).toBe('$45.00')
+    expect(formatLedgerAmount(4500, 'usd')).toBe('$4,500')
+    expect(formatAmount(45, 'usd')).toBe('$0.45')
   })
+})
 
-  it('JPY → TWD: 500 JPY × 0.2 = 100 TWD', () => {
-    expect(convertAmount({ amount: 500, from: 'jpy', to: 'twd', rate: 0.2 })).toBe(100)
+describe('convertWholeUnits', () => {
+  // Ledger amounts are whole units of every currency (#1582). `rate` is the
+  // composite "1 whole source unit = rate whole target units".
+  it('TWD → JPY: 100 x 5 = 500', () => {
+    expect(convertWholeUnits(100, 5)).toBe(500)
   })
-
-  it('USD → JPY: $1.00 (100 cents) × 150 = ¥150', () => {
-    expect(convertAmount({ amount: 100, from: 'usd', to: 'jpy', rate: 150 })).toBe(150)
+  it('USD → TWD: $45 x 32 = 1440 (not 14.40 and not 144000)', () => {
+    expect(convertWholeUnits(45, 32)).toBe(1440)
   })
-
-  it('TWD → CNY: 1000 TWD × 0.22 = 220 CNY', () => {
-    expect(convertAmount({ amount: 1000, from: 'twd', to: 'cny', rate: 0.22 })).toBe(220)
+  it('JPY → USD: 1000 x 0.0067 = 7', () => {
+    expect(convertWholeUnits(1000, 0.0067)).toBe(7)
   })
+  it('TWD → USD: 1000 x 0.032 = $32', () => {
+    expect(convertWholeUnits(1000, 0.032)).toBe(32)
+  })
+  it('rounds half up', () => {
+    expect(convertWholeUnits(100, 4.995)).toBe(500)
+    expect(convertWholeUnits(45, 0.5)).toBe(23)
+  })
+  it('minimum 1: a positive amount never converts to 0', () => {
+    expect(convertWholeUnits(15, 0.031)).toBe(1)
+    expect(convertWholeUnits(50, 0.0067)).toBe(1)
+    expect(convertWholeUnits(1, 0.0001)).toBe(1)
+  })
+  it('zero stays zero', () => {
+    expect(convertWholeUnits(0, 32)).toBe(0)
+  })
+})
 
-  it('rounds half to nearest integer for integer target', () => {
-    expect(convertAmount({ amount: 100, from: 'twd', to: 'jpy', rate: 4.995 })).toBe(500)
+describe('minorToWhole', () => {
+  it('USD cents → whole dollars, half up', () => {
+    expect(minorToWhole(2250, 'usd')).toBe(23)
+    expect(minorToWhole(4500, 'usd')).toBe(45)
+    expect(minorToWhole(40, 'usd')).toBe(0)
+    expect(minorToWhole(49, 'usd')).toBe(0)
+    expect(minorToWhole(50, 'usd')).toBe(1)
+  })
+  it('precision-0 currencies pass through', () => {
+    expect(minorToWhole(1500, 'twd')).toBe(1500)
+    expect(minorToWhole(1500, 'jpy')).toBe(1500)
   })
 })
 
