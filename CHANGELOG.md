@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **分類欄位寫入前先擋掉不合法的值（#1541）**
+  使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
+  技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
