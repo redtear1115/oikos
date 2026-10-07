@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
+  使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
+  技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。
+
 - **分類欄位寫入前先擋掉不合法的值（#1541）**
   使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
   技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。

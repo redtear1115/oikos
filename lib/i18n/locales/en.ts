@@ -3196,8 +3196,8 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
       },
       'simple-daily-money': {
-        title: 'Move from Simple Daily Money to Futari · screenshot to CSV',
-        description: 'CSV export locked behind VIP? Screenshot Simple Daily Money, let ChatGPT convert it, and import into Futari, the shared ledger for couples. Free, ad-free.',
+        title: 'Move from Simple Daily Money to Futari · sync as a couple, no VIP',
+        description: 'One ledger on both phones? Simple Daily Money sharing is view-only and CSV export needs VIP. Screenshot it, let ChatGPT make a CSV, move to Futari free.',
         ogDescription: 'Leaving Simple Daily Money — screenshot → ChatGPT → CSV → Futari.',
       },
       // TODO(#839): en seo copy below pending native review

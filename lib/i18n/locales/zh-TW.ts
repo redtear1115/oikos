@@ -6292,8 +6292,8 @@ export const zhTW: Translations = {
         ogDescription: 'Manebo 用戶的下一站：匯出 CSV，搬進 Futari 情侶共同記帳。',
       },
       'simple-daily-money': {
-        title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
+        title: '從簡單記帳搬到 Futari｜兩人同步記帳、不用 VIP',
+        description: '想和伴侶兩支手機同步記同一本帳？簡單記帳的共享只能看、CSV 匯出要 VIP。截圖請 ChatGPT 整理成 CSV，免費搬進 Futari，兩個人都能記、都能改。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
