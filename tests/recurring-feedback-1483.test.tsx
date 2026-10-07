@@ -124,3 +124,34 @@ describe.each(KINDS)('#1483 save feedback ($kind)', ({ kind, actions, rule }) =>
     expect(screen.queryByRole('status')).toBeNull()
   })
 })
+
+describe.each(KINDS)('#1483 next-dates preview ($kind)', ({ kind, rule }) => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 7, 12, 0, 0)) // local 2026-10-07
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('day 31: three clamped dates and the new plain-language hint', () => {
+    renderSheet(kind)
+    expect(screen.queryByText(/Months without a day/)).toBeNull() // day 7 → no hint
+    act(() => { screen.getByRole('button', { name: 'Day 31' }).click() })
+    expect(screen.getByText('Next: Oct 31, Nov 30, Dec 31')).toBeInTheDocument()
+    expect(screen.getByText('Months without a day 31 use the last day of the month.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/fallback/i)
+  })
+
+  it('day 28 or less: preview but no hint', () => {
+    renderSheet(kind)
+    expect(screen.getByText('Next: Oct 7, Nov 7, Dec 7')).toBeInTheDocument()
+    expect(screen.queryByText(/use the last day/)).toBeNull()
+  })
+
+  it('edit mode starts from the next period; create includes today', () => {
+    const { unmount } = renderSheet(kind)
+    expect(screen.getByText(/^Next: Oct 7,/)).toBeInTheDocument()
+    unmount()
+    renderSheet(kind, { ...rule, dayOfMonth: 7, startsOn: '2026-01-07' })
+    expect(screen.getByText('Next: Nov 7, Dec 7, Jan 7, 2027')).toBeInTheDocument()
+  })
+})

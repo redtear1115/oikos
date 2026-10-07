@@ -25,6 +25,9 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { useToast } from '@/components/Toast'
 import { ruleNextDateText } from '@/lib/recurringNextDate'
+import { previewNextDates } from '@/lib/recurring'
+import { formatDateShort } from '@/lib/format-date'
+import { useToday } from './TodayProvider'
 import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
@@ -67,6 +70,7 @@ export function RecurringRuleSheet(props: Props) {
   const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const locale = useLocale()
+  const today = useToday()
   const { showToast } = useToast()
   const isEdit = !!props.initial
   const isIncome = props.type === 'income'
@@ -260,6 +264,17 @@ export function RecurringRuleSheet(props: Props) {
       ? { incomeCategory, recipientWho, source, incomeAssetId }
       : { expenseCategory, payerWho, splitType, splitRatioA, description, expenseAssetId }),
   })
+
+  // #1483 — read-only "接下來" line under the day picker: the concrete dates
+  // the settings above produce (also what makes the end-of-month clamp visible).
+  const nextDates = open
+    ? previewNextDates({
+        startsOn, endsOn: endsOn || null, intervalMonths, dayOfMonth, today, isEdit,
+      })
+    : []
+  const nextDatesText = nextDates
+    .map((d) => formatDateShort(d, locale, { withYear: d.slice(0, 4) !== today.slice(0, 4) }))
+    .join(tNs.sheet.nextDatesSeparator)
 
   const saveColor = isIncome ? P.ink : 'var(--accent)'
   const saveDisabled = !amount || pending
@@ -532,12 +547,14 @@ export function RecurringRuleSheet(props: Props) {
               {tNs.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
+            {nextDates.length > 0 && (
+              <div className="mt-2 text-xs text-ink-3">
+                {tNs.sheet.nextDatesPreview.replace('{dates}', nextDatesText)}
+              </div>
+            )}
             {dayOfMonth > 28 && (
-              <div
-                className="mt-2 text-xs"
-                style={{ color: 'var(--ink-3)' }}
-              >
-                {tNs.sheet.dayOfMonthFallbackHint}
+              <div className="mt-1 text-xs text-ink-3">
+                {tNs.sheet.dayOfMonthFallbackHint.replace('{day}', String(dayOfMonth))}
               </div>
             )}
           </div>
