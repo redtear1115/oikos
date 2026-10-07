@@ -18,7 +18,7 @@ related_issues: ["#1086"]
 
 ## Balance 計算規則
 
-- 金額單位依 base currency 而異：TWD / CNY / JPY 為整數（無小數）；USD 以 *100 儲存為整數（即 1.50 USD 存為 150）。Balance 計算永遠看 base 幣別的 raw integer 值。
+- 主帳本金額（交易、收入、結算、旅行）一律存「整數單位」，不分幣別（USD 存 $45 就是 `45`）；Outing 三張表（OutingExpenses / OutingExpenseShares / OutingSettlements）才用最小單位（USD 為分），只在 outing 結束 fold 成 Settlement 時換算成整數單位。Balance 計算永遠看 base 幣別的 raw integer 值。（撤回：先前「USD 以 *100 儲存」的說法不成立，主帳本從來不是分，#1582。）
 - Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
 - 每次寫入後全量重算，cache 在 `GroupBalance`
 - 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`
@@ -95,3 +95,4 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 - 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance,item}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
 - 圖表專用色票：`lib/chartPalette.ts` — chart 自己挑的色（per-asset hash palette `ASSET_PALETTE`、未歸屬 fallback `ASSET_NULL_COLOR`、active bar track `ACTIVE_BAR_TRACK`）；donut 與 detail bars 共用同一 source of truth。分類／收入分類 slice 色不在此，仍在各自 domain 檔。
 - 派生 helper：`lib/colors.ts#lightenHex(hex, amount = 0.35)` — chip `tint` 從每個 `Category.color` deterministic 推得；新增分類只需給 `color` + `ink`，不必再挑 tint。
+- 分類 id 的 DB 約束（#1541）：`CashTransactions` / `RecurringExpenseRules` / `TripExpenses`（支出 id，不含只供顯示的 `settle`）與 `IncomeTransactions` / `RecurringIncomeRules`（收入 id）的 `category` 有 CHECK 約束（`drizzle/0084_category_check.sql`），`OutingExpenses.category` 不在內。代價：**新增分類 id 要連同 migration 一起放寬 CHECK**，否則該 id 在 prod 的每次寫入都以 23514 失敗、前端只看到泛用錯誤；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL，不一致時 CI 失敗。

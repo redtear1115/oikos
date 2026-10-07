@@ -257,6 +257,8 @@ related_issues: ["#18", "#166", "#1243", "#1244", "#1262"]
 | 用戶建立規則時 day_of_month 就是今天（表單預設） | 第一期就是今天，今晚的 cron 會產這一期的待確認卡 |
 | 用戶建立規則時 startsOn 回填、而系列剛好落在今天 | 同上——第一期就是今天。起始日怎麼填不改變答案 |
 | 用戶編輯規則，系列落在今天 | 第一期是下一期——`editEffectHint` 承諾「改動從下一期開始套用」 |
+| 用戶在規則表單設定每月幾號／週期 | 日期欄位下方即時預覽「接下來」三個日期（#1483）：沿用 create `>=`／edit `>` 的首期語意，受 `endsOn` 截斷；day 29–31 另有一行白話說明（沒有該號數的月份記在月底）。預覽用裝置本地日，與伺服器 UTC 日可能在 UTC 午夜前後差一天，所以不是承諾 |
+| 用戶儲存規則 | 儲存後跳 toast「已儲存，下次在 {date}」（#1483），日期取自 action 回傳的 `nextOccurrenceAt`（伺服器權威值）；暫停中或首期已超過 `endsOn` 只顯示「已儲存」 |
 | 用戶 pause 期間錯過 2 期 | resume 不補登。`resumeRule` snap next_occurrence_at 到未來最近 anchor，pending 卡片 0 張 |
 | 用戶 pause 期間有未確認 pending | pause 不影響既有 pending；用戶仍可 confirm/skip/edit 該卡片 |
 | 用戶 delete（軟刪）規則 | 同 transaction：UPDATE rule SET deleted_at + DELETE active pendings；已 resolved 的 pending 不動（指向真實 tx，留作審計）；已 skipped 的不動（90 天後 pg_cron purge） |

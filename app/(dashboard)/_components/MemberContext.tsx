@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from 'react'
 import type { SplitType } from '@/lib/balance'
+import type { CurrencyCode } from '@/lib/currency'
 
 export interface MemberInfo {
   id: string
@@ -12,7 +13,9 @@ export interface MemberInfo {
 }
 
 export interface MemberContextValue {
-  group: { id: string; name: string }
+  /** `baseCurrency` = OikosGroups.base_currency — the symbol / format for every
+   *  main-ledger amount (see `formatLedgerAmount`, #1482). */
+  group: { id: string; name: string; baseCurrency: CurrencyCode }
   viewer: MemberInfo & { who: 'M' }      // the signed-in user
   partner: (MemberInfo & { who: 'T' }) | null  // null until invite accepted
   viewerIsA: boolean  // true if viewer === group.memberA
@@ -40,6 +43,11 @@ export function useMember(): MemberContextValue {
   const ctx = useContext(MemberContext)
   if (!ctx) throw new Error('useMember must be inside <MemberContext.Provider>')
   return ctx
+}
+
+/** The ledger's base currency, for `formatLedgerAmount*`. */
+export function useBaseCurrency(): CurrencyCode {
+  return useMember().group.baseCurrency
 }
 
 export const MemberProvider = MemberContext.Provider

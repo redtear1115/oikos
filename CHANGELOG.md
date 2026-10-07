@@ -43,6 +43,34 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **美金金額的換算與出遊結算不再差 100 倍（#1582）**
+  使用者：台幣帳本在旅行中記美金（$45 不再只記成 NT$14）、美金帳本用外幣記帳、出遊結束結算時，金額都是正確的整數；換算後不足 1 的小額記為 1，出遊結算不足 1 美元則不產生結算。
+  技術：`convertWholeUnits`（一次四捨五入、正數最小 1）取代 `convertAmount`；`endOuting` 以 `minorToWhole` 把 outing 最小單位換成整數單位；規格中「USD 以分儲存」的說法撤回。
+
+- **帳本幣別顯示跟著基準幣別（#1482）**
+  使用者：基準幣別不是台幣的帳本，儀表板、紀錄列、統計摘要、愛物頁與新增時的換算預覽會用對應的符號，$45 不會再顯示成 $0.45（輸入框、提示與月回顧見 #1584）。
+  技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（僅 outing 最小單位）分開；`useBaseCurrency()` 取代 `CompactRow`、統計錨點等處寫死的 `'twd'`／`NT$`，台幣帳本輸出不變。
+
+- **記一筆、結算、月回顧的金額符號跟著帳本幣別（#1584）**
+  使用者：美金等非台幣帳本記完一筆後的提示、收入／結算／定期規則的輸入框、待確認卡、離開群組前的未結清提示、月回顧卡片與保單滿期提示不再寫死 NT$；台幣帳本顯示不變。保單的金額欄位（年繳、保額、保單帳戶價值、滿期金額等）沒有幣別欄位，仍標 NT$（見 #1600）；愛物金額見 #1599。
+  技術：i18n 的 `NT$ {amount}` 改成只留 `{amount}`，由呼叫端帶入 `formatLedgerAmount`／`currencySymbol(baseCurrency)`（4 語同步，加上測試比對各語系佔位符）；月回顧快照沒有幣別欄位，以渲染時的群組 base currency 為準。
+
+- **愛物金額跟著帳本幣別（#1599）**
+  使用者：房屋購入價格、寵物購入費用、植物花費的詳情，以及汽車、加油、寵物、植物表單的金額單位，美金等非台幣帳本會顯示對應符號而不是 NT$；台幣帳本顯示不變，保單金額不在此列（見 #1600）。
+  技術：以 `useBaseCurrency()` 帶入 `currencySymbol`；詳情列新增 `formatLedgerAmountSpaced`（保留「符號＋空格＋數字」、整數單位不除 100）；金額仍是整數，不動 schema。
+
+- **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
+  使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
+  技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。
+
+- **分類欄位寫入前先擋掉不合法的值（#1541）**
+  使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
+  技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。
+
+- **定期規則存檔、預覽與刪除都有回饋（#1483）**
+  使用者：存好規則會跳「已儲存，下次在 …」；每月幾號下方預覽接下來三個日期，31 號等月底規則改用白話說明；刪除前會說明一起移除幾張待確認卡片。
+  技術：`createRule`／`updateRule` 多回 `nextOccurrenceAt`，新增 `countPendingForRule`、`previewNextDates`；dashboard 的 toast 抽成共用 `ToastProvider`；en／ja 譯文待確認。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
@@ -90,6 +118,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **被保人、要保人已離開帳本時，保單資料不再帶出對方（#1579）**
   使用者：保單頁與保單卡把離開的被保人顯示為「前伴侶」；編輯這張保單時要保人／被保人不預選、提示重新選擇，選好才能儲存，不再出現「必須是 group 成員」的錯誤，也不會默默改成自己。
   技術：限保險：`lib/insuranceMemberLink.ts` 在伺服端剔除非成員（釘選舊章節的離開者以該章節成員為準、不標「前伴侶」）的 id 與名字，詳情頁（只經 `getInsuranceDetailsForViewer`）、編輯表單初值、`/assets` 清單都只收剔除後的資料；`editInsurance` 拒絕以空值覆蓋已存的要保人（`policyholder_required`）；不改資料；en／ja 譯文待確認。
+
+- **可以在設定讓已傳出的邀請連結失效（#1546）**
+  使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
+  技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
+- **邀請連結的金鑰不會送到 Google Analytics（#1583）**
+  使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
+  技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
 
 ## [1.6.7] - 2026-10-04
 

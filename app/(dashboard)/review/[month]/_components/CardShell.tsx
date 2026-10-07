@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { currencySymbol, type CurrencyCode } from '@/lib/currency'
 
 /**
  * Visual shell shared by all 4 review cards — fixed minimum height so the
@@ -71,9 +72,17 @@ export function CardEmpty({
   )
 }
 
-// TODO(v0.17 currency): formatNT returns digits-only; callers prepend "NT$ "
-// (with space). Migrate to formatAmount once it gains a digits-only/no-symbol
-// mode, or once design accepts the symbol-no-space convention.
+// Digits-only grouping, for lines that carry no symbol of their own (the
+// recurring-event rows). Symbol-bearing amounts go through formatRecapAmount.
 export function formatNT(amount: number): string {
   return new Intl.NumberFormat('en-US').format(amount)
+}
+
+// Recap amounts: whole units of the ledger's base currency, symbol + space
+// ("NT$ 1,234" — design-driven spacing, unlike formatLedgerAmount). The
+// snapshot row has no currency column; the cron computes from main-ledger
+// rows, so the group's base currency at render time is the right symbol
+// (it is locked once the epoch has records, so it cannot drift under a snapshot).
+export function formatRecapAmount(amount: number, currency: CurrencyCode): string {
+  return `${currencySymbol(currency)} ${formatNT(amount)}`
 }

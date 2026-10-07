@@ -1,6 +1,8 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useState } from 'react'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { createPet, editPet } from '@/actions/asset'
 import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
@@ -24,6 +26,7 @@ interface Props extends BodySharedProps {
 }
 
 export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
+  const baseCurrency = useBaseCurrency()
   const initSex = (initial?.petSex === 'male' || initial?.petSex === 'female' || initial?.petSex === 'unknown') ? initial.petSex : null
   const [species, setSpecies] = useState(initial?.petSpecies ?? '')
   const [breed, setBreed] = useState(initial?.petBreed ?? '')
@@ -168,7 +171,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         {id => (
           <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(baseCurrency)}</span>} />
         )}
       </Field>
 

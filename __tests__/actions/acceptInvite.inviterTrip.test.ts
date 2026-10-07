@@ -224,7 +224,7 @@ async function seedTrip(
       tripId: t.id,
       paidBy,
       amount,
-      category: 'food',
+      category: 'dining',
       splitType: 'all_mine',
     }).returning({ id: tripExpenses.id })
     expenseIds.push(x.id)
@@ -401,10 +401,10 @@ describe.skipIf(!isLocalDb)('acceptInvite ends the inviter\'s active trip (#1438
     })))
     await as(inviter, async () => {
       unwrapAction(await createTripExpense({
-        tripId: trip.id, paidBy: inviter, amount: 10000, currency: 'JPY', category: 'food', splitType: 'all_mine',
+        tripId: trip.id, paidBy: inviter, amount: 10000, currency: 'JPY', category: 'dining', splitType: 'all_mine',
       }))
       unwrapAction(await createTripExpense({
-        tripId: trip.id, paidBy: inviter, amount: 555, category: 'food', splitType: 'all_mine',
+        tripId: trip.id, paidBy: inviter, amount: 555, category: 'dining', splitType: 'all_mine',
       }))
     })
     const expenseRows = await db.select().from(tripExpenses).where(eq(tripExpenses.tripId, trip.id))
@@ -591,7 +591,7 @@ describe.skipIf(!isLocalDb)('acceptInvite vs createTripExpense (#1438)', () => {
     const holder = await openTx(holderConn)
     await holder.run((t) => t`SELECT id FROM "Profiles" WHERE id = ${s.inviter} FOR UPDATE`)
     const write = as(s.inviter, () => createTripExpense({
-      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'food', splitType: 'all_mine',
+      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'dining', splitType: 'all_mine',
     }))
     write.catch(() => {})
     await waitBlockedBy(monitor, holder.pid)
@@ -616,7 +616,7 @@ describe.skipIf(!isLocalDb)('acceptInvite vs createTripExpense (#1438)', () => {
     const { accept, release } = await acceptPausedAtClaim(s.joiner, s.invite)
 
     const write = as(s.inviter, () => createTripExpense({
-      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'food', splitType: 'all_mine',
+      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'dining', splitType: 'all_mine',
     }))
     write.catch(() => {})
     await waitLockWaitersOr(monitor, 2, write)
@@ -636,7 +636,7 @@ describe.skipIf(!isLocalDb)('acceptInvite vs createTripExpense (#1438)', () => {
     const { accept, release } = await acceptPausedHoldingChapter(s.joiner, s.invite)
 
     const write = as(s.inviter, () => createTripExpense({
-      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'food', splitType: 'all_mine',
+      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'dining', splitType: 'all_mine',
     }))
     write.catch(() => {})
     await waitLockWaiters(monitor, 2)

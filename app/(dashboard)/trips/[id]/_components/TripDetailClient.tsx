@@ -21,7 +21,7 @@ const TripSheet = dynamic(
   () => import('@/app/(dashboard)/trips/_components/TripSheet').then(m => m.TripSheet),
   { ssr: false },
 )
-import { formatAmount, type CurrencyCode } from '@/lib/currency'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
 import type { SplitType } from '@/lib/balance'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
@@ -250,7 +250,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 className="mt-1 text-page font-medium tnum tracking-[-0.5px]"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
               >
-                {formatAmount(totalBase, baseCurrency)}
+                {formatLedgerAmount(totalBase, baseCurrency)}
               </p>
             </div>
             <span
@@ -384,7 +384,6 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                     originalAmount: r.originalAmount,
                   }}
                   isLast={i === records.length - 1}
-                  baseCurrency={baseCurrency}
                   onClick={onRowClick}
                 />
               )
@@ -492,10 +491,10 @@ function PerSideMemberCard(props: {
           className="mt-0.5 text-base font-medium tnum tracking-[-0.2px]"
           style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
         >
-          {formatAmount(props.paid, props.currency)}
+          {formatLedgerAmount(props.paid, props.currency)}
         </div>
         <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
-          {props.shareLabel}: {formatAmount(props.share, props.currency)}
+          {props.shareLabel}: {formatLedgerAmount(props.share, props.currency)}
         </div>
       </div>
     </div>
@@ -507,7 +506,7 @@ function PerSideMemberCard(props: {
  * the native total + base equivalent + record count; the body (duo only)
  * carries per-side paid/share in NATIVE units of this currency.
  */
-function CurrencyBreakdownCard(props: {
+export function CurrencyBreakdownCard(props: {
   row: {
     currency: string
     native: number
@@ -556,11 +555,11 @@ function CurrencyBreakdownCard(props: {
             className="text-base font-medium tnum"
             style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
           >
-            {formatAmount(row.native, row.currency)}
+            {formatLedgerAmount(row.native, row.currency)}
           </div>
           {!isBase && (
             <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              ≈ {formatAmount(row.base, baseCurrency)}
+              ≈ {formatLedgerAmount(row.base, baseCurrency)}
             </div>
           )}
         </div>

@@ -10,7 +10,8 @@ import { ymdToUTCNoon } from '@/lib/local-date'
  * `validateIncomeInput`) and the CSV import path so both reject the same
  * ceiling — previously only import enforced it, letting a manual entry sail
  * through to the `integer` column and surface a raw "out of range" Postgres
- * error. ~10M base units; for USD (*100 storage) this stays well under int4.
+ * error. ~10M whole base units (every currency, USD included, is stored as whole
+ * units; the earlier "USD *100" note was wrong, #1582), well under int4.
  *
  * NOTE: this is deliberately NOT the default for `validateAmount` — asset
  * prices (house, insurance coverage…) legitimately exceed it, so those callers

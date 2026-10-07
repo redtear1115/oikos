@@ -20,8 +20,17 @@ vi.mock('@/actions/membership', () => ({
 }))
 
 import { LeaveGroupFlow } from '@/app/(dashboard)/settings/_components/LeaveGroupFlow'
+import { MemberProvider, type MemberContextValue } from '@/app/(dashboard)/_components/MemberContext'
+import type { CurrencyCode } from '@/lib/currency'
 
-const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
+const member = (baseCurrency: CurrencyCode): MemberContextValue => ({
+  group: { id: 'g1', name: 'G', baseCurrency },
+  viewer: { id: 'v', initial: 'V', displayName: 'V', avatarUrl: null, defaultSplitType: 'half', who: 'M' },
+  partner: null, viewerIsA: false, isSolo: false, isPast: false, canAccessGuardian: false,
+  epochStartedAt: '2026-01-01', epochEndedAt: null,
+})
+const wrap = (ui: React.ReactElement, base: CurrencyCode = 'twd') =>
+  render(<I18nWrapper><MemberProvider value={member(base)}>{ui}</MemberProvider></I18nWrapper>)
 
 beforeEach(() => {
   proposeSwap.mockReset()
@@ -107,6 +116,24 @@ describe('LeaveGroupFlow — member_b path (can leave directly)', () => {
     fireEvent.click(screen.getByText('前往主畫面結算'))
     expect(push).toHaveBeenCalledWith('/dashboard')
     expect(leaveGroup).not.toHaveBeenCalled()
+  })
+
+  it('USD base: the outstanding balance reads $ 1,234, never NT$ (#1584)', () => {
+    wrap(
+      <LeaveGroupFlow
+        open
+        onClose={() => {}}
+        viewerIsMemberA={false}
+        viewerName="小明"
+        partnerName="小華"
+        groupBalance={-1234}
+      />,
+      'usd',
+    )
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByText('下一步'))
+    fireEvent.click(screen.getByText('是的，我要離開'))
+    expect(screen.getByText(/還有 \$ 1,234 沒結清/)).toBeTruthy()
+    expect(screen.queryByText(/NT\$/)).toBeNull()
   })
 
   it('calls leaveGroup when the user types the magic word and confirms', async () => {

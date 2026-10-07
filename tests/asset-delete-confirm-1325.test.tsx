@@ -22,6 +22,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u1', displayName: 'Me' },
     partner: null,

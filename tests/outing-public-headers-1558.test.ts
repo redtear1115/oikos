@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { readdirSync, readFileSync } from 'fs'
 import { join, relative } from 'path'
 import { getPathMatch } from 'next/dist/shared/lib/router/utils/path-match'
+import { matchHas } from 'next/dist/shared/lib/router/utils/prepare-destination'
 import { headerRules, OUTING_PUBLIC_SOURCES } from '@/next.config'
 import robots from '@/app/robots'
 import sitemap from '@/app/sitemap'
@@ -29,9 +30,12 @@ const ID = '0b0e7d3c-6b7e-4c8e-9a51-2f7d3c6b7e4c'
 
 function headersFor(pathname: string): Record<string, string> {
   const out: Record<string, string> = {}
-  for (const rule of headerRules) {
+  for (const rule of headerRules as Array<(typeof headerRules)[number] & { has?: Parameters<typeof matchHas>[2] }>) {
     const match = getPathMatch(rule.source, { strict: true, removeUnnamedParams: true, sensitive: false })
-    if (match(pathname)) for (const x of rule.headers) out[x.key.toLowerCase()] = x.value
+    if (!match(pathname)) continue
+    // Conditional rules (#1583 sign-in `has: next=…`) need their query; these paths have none.
+    if (rule.has && !matchHas({ headers: {} } as unknown as Parameters<typeof matchHas>[0], {}, rule.has, undefined)) continue
+    for (const x of rule.headers) out[x.key.toLowerCase()] = x.value
   }
   return out
 }
