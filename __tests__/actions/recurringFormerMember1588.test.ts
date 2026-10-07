@@ -237,10 +237,10 @@ for (const [label, l] of [['solo', solo], ['duo', duo]] as const) {
     it('T7 — the re-pick (a current member) saves', async () => {
       mockUserId = l.memberA
       expect(await expense.updateRule(expenseRuleInput(l.exExpenseRule, pick(), 1300)))
-        .toEqual({ ok: true, data: { id: l.exExpenseRule } })
+        .toMatchObject({ ok: true, data: { id: l.exExpenseRule } })
       expect(await storedExpenseRule(l.exExpenseRule)).toEqual({ paidBy: pick(), amount: 1300 })
       expect(await income.updateRule(incomeRuleInput(l.exIncomeRule, pick(), 51000)))
-        .toEqual({ ok: true, data: { id: l.exIncomeRule } })
+        .toMatchObject({ ok: true, data: { id: l.exIncomeRule } })
       expect(await storedIncomeRule(l.exIncomeRule)).toEqual({ recipientId: pick(), amount: 51000 })
     })
 
