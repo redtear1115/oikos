@@ -92,6 +92,7 @@ describe('policyCurrency / sameCurrency / sumPremiumByCurrency (#1600)', () => {
   })
   it('single currency: one entry, base first, 0 for no policies', () => {
     expect(sumPremiumByCurrency([], 'twd')).toEqual([{ currency: 'twd', total: 0 }])
+    expect(sumPremiumByCurrency([{ annualPremium: 1200, currency: 'usd' }], 'twd')).toEqual([{ currency: 'usd', total: 1200 }])
     expect(sumPremiumByCurrency([{ annualPremium: 10, currency: null }, { annualPremium: 5, currency: 'twd' }], 'twd'))
       .toEqual([{ currency: 'twd', total: 15 }])
   })

@@ -28,9 +28,10 @@ export function sameCurrency(
 
 /**
  * #1600 — total annual premium across policies, one amount per currency (no
- * FX). The ledger's base currency comes first, the rest in code order; the
- * base currency is always present (0 when there are no policies) so a ledger
- * with only same-currency policies renders exactly as before.
+ * FX). The ledger's base currency comes first, the rest in code order. With
+ * no policies the base currency still shows (0), so an empty or same-currency
+ * ledger renders exactly as before; a zero base total next to foreign ones is
+ * dropped.
  */
 export function sumPremiumByCurrency(
   policies: ReadonlyArray<{ annualPremium: number | null; currency: CurrencyCode | null | undefined }>,
@@ -41,6 +42,7 @@ export function sumPremiumByCurrency(
     const c = policyCurrency(p.currency, base)
     totals.set(c, (totals.get(c) ?? 0) + (p.annualPremium ?? 0))
   }
+  if (policies.length > 0 && totals.get(base) === 0 && totals.size > 1) totals.delete(base)
   return [...totals.entries()]
     .map(([currency, total]) => ({ currency, total }))
     .sort((a, b) => Number(b.currency === base) - Number(a.currency === base) || a.currency.localeCompare(b.currency))
