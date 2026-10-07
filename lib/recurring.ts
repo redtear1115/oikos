@@ -1,6 +1,8 @@
 // Pure date helpers shared by recurring income + recurring expense rules.
 // No DB / server imports — safe for client bundles.
 
+import { previousDay } from '@/lib/local-date'
+
 export type IsoDate = string
 
 function lastDayOfMonth(year: number, monthIndex: number): number {
@@ -59,4 +61,41 @@ export function firstAnchorFromStart(
   const candThis = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(dayOfMonth, lastThis)).padStart(2, '0')}`
   if (candThis >= startsOn) return candThis
   return computeNextOccurrence(candThis, intervalMonths, dayOfMonth)
+}
+
+/**
+ * #1483 — the next occurrence dates the rule form previews under the
+ * day-of-month field. Mirrors what `createRule` / `updateRule` settle on for
+ * the first date (create keeps today, edit does not — see the long comment in
+ * `actions/recurringExpense.ts › createRule`), then walks the series with
+ * `computeNextOccurrence`, stopping past `endsOn`.
+ *
+ * `today` is the device's local day, while the actions use UTC "today", so the
+ * first date can differ by one day around UTC midnight. The save toast shows
+ * the authoritative server date.
+ */
+export function previewNextDates(opts: {
+  startsOn: IsoDate
+  endsOn: IsoDate | null
+  intervalMonths: number
+  dayOfMonth: number
+  today: IsoDate
+  isEdit: boolean
+  count?: number
+}): IsoDate[] {
+  const { startsOn, endsOn, intervalMonths, dayOfMonth, today, isEdit, count = 3 } = opts
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startsOn)) return []
+  const anchor = firstAnchorFromStart(startsOn, dayOfMonth, intervalMonths)
+  let curr: IsoDate
+  if (isEdit) {
+    curr = anchor > today ? anchor : snapToFuture(anchor, intervalMonths, dayOfMonth, today)
+  } else {
+    curr = anchor >= today ? anchor : snapToFuture(anchor, intervalMonths, dayOfMonth, previousDay(today))
+  }
+  const out: IsoDate[] = []
+  while (out.length < count && (!endsOn || curr <= endsOn)) {
+    out.push(curr)
+    curr = computeNextOccurrence(curr, intervalMonths, dayOfMonth)
+  }
+  return out
 }
