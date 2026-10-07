@@ -116,7 +116,7 @@ export function MemberListSection({ viewer, partner, hasOpenInvite = false }: Pr
             type="button"
             onClick={handleInvite}
             disabled={invitePending}
-            className="w-full h-12 rounded-bubble border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
+            className="w-full h-control-md rounded-bubble border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
           >
             {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
