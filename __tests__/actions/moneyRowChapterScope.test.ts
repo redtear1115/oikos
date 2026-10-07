@@ -200,7 +200,7 @@ const IN_CLOSED_CHAPTER = () => hoursAgo(48)
 async function cashRow(groupId: string, paidBy: string, createdAt?: Date) {
   const [r] = await db.insert(cashTransactions).values({
     groupId, paidBy, amount: 100, splitType: 'all_mine', description: 'TEST_1290_S1',
-    category: 'food', transactedAt: new Date(), ...(createdAt ? { createdAt } : {}),
+    category: 'dining', transactedAt: new Date(), ...(createdAt ? { createdAt } : {}),
   }).returning({ id: cashTransactions.id })
   return r.id
 }
@@ -242,7 +242,7 @@ async function fuelRow(groupId: string, carId: string, paidBy: string, createdAt
 }
 
 const cashInput = (oldId: string, payerId: string) => ({
-  oldId, amount: 250, description: 'TEST_1290_S1_edited', category: 'food',
+  oldId, amount: 250, description: 'TEST_1290_S1_edited', category: 'dining',
   splitType: 'all_mine' as const, payerId, transactedAt: '2026-01-20',
 })
 const incomeInput = (oldId: string, recipientId: string) => ({

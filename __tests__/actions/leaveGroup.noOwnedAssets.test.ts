@@ -183,7 +183,7 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
     const [cashTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userBId,
       amount: 100, splitType: 'all_mine',
-      description: 'TEST_139 leaver cash', category: 'food',
+      description: 'TEST_139 leaver cash', category: 'dining',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(cashTx.id)
@@ -224,7 +224,7 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
     const [aCashTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userAId,
       amount: 200, splitType: 'all_mine',
-      description: 'TEST_139 stayer cash', category: 'food',
+      description: 'TEST_139 stayer cash', category: 'dining',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(aCashTx.id)

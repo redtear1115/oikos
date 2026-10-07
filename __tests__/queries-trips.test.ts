@@ -293,7 +293,7 @@ describe('trips query helpers', () => {
       amount: 500,
       splitType: 'all_mine',
       description: 'Earlier tx',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-10T10:00:00Z'),
       tripId: trip.id,
     }).returning({ id: cashTransactions.id })
@@ -305,7 +305,7 @@ describe('trips query helpers', () => {
       amount: 1000,
       splitType: 'all_mine',
       description: 'Later tx',
-      category: 'transport',
+      category: 'transit',
       transactedAt: new Date('2026-05-10T14:00:00Z'),
       tripId: trip.id,
     }).returning({ id: cashTransactions.id })
@@ -318,7 +318,7 @@ describe('trips query helpers', () => {
       amount: 200,
       splitType: 'all_mine',
       description: 'Deleted tx',
-      category: 'food',
+      category: 'dining',
       transactedAt: new Date('2026-05-10T12:00:00Z'),
       tripId: trip.id,
       deletedAt: new Date(),

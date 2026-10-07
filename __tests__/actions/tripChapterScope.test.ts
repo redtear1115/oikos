@@ -168,7 +168,7 @@ async function seedSoloTripThenAccept() {
     tripId: trip.id,
     paidBy: ownerId,
     amount: 1000,
-    category: '食',
+    category: 'dining',
     splitType: 'half',
   }))
 
@@ -252,11 +252,11 @@ describe('trip in a closed chapter', () => {
     const { ownerId, trip, expense } = await seedSoloTripThenAccept()
 
     expect(await createTripExpense({
-      tripId: trip.id, paidBy: ownerId, amount: 500, category: '食', splitType: 'all_mine',
+      tripId: trip.id, paidBy: ownerId, amount: 500, category: 'dining', splitType: 'all_mine',
     })).toEqual({ ok: false, code: 'trip_not_found' })
 
     expect(await editTripExpense({
-      id: expense.id, tripId: trip.id, paidBy: ownerId, amount: 9999, category: '食', splitType: 'half',
+      id: expense.id, tripId: trip.id, paidBy: ownerId, amount: 9999, category: 'dining', splitType: 'half',
     })).toEqual({ ok: false, code: 'trip_not_found' })
 
     expect(await softDeleteTripExpense({ id: expense.id, tripId: trip.id }))
@@ -302,13 +302,13 @@ describe('trip in a closed chapter', () => {
     expect(updated.name).toBe('Duo trip 2')
 
     const exp = unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: ownerId, amount: 1000, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: ownerId, amount: 1000, category: 'dining', splitType: 'half',
     }))
     const edited = unwrapAction(await editTripExpense({
-      id: exp.id, tripId: trip.id, paidBy: ownerId, amount: 1200, category: '食', splitType: 'half',
+      id: exp.id, tripId: trip.id, paidBy: ownerId, amount: 1200, category: 'dining', splitType: 'half',
     }))
     const extra = unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: joinerId, amount: 100, category: '食', splitType: 'all_mine',
+      tripId: trip.id, paidBy: joinerId, amount: 100, category: 'dining', splitType: 'all_mine',
     }))
     unwrapAction(await softDeleteTripExpense({ id: extra.id, tripId: trip.id }))
     expect(await liveExpenses(trip.id)).toEqual([{ id: edited.id, amount: 1200 }])
@@ -453,7 +453,7 @@ describe('trip writes while pinned to a past chapter', () => {
     mockUserId = a
     const trip = unwrapAction(await createTrip({ name: 'Current trip', startDate: TRIP_START }))
     const expense = unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: a, amount: 1000, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: a, amount: 1000, category: 'dining', splitType: 'half',
     }))
     return { a, groupId: group.id, pastEpochId: past.id, trip, expense }
   }
@@ -467,10 +467,10 @@ describe('trip writes while pinned to a past chapter', () => {
     await expect(updateTrip({ tripId: trip.id, name: 'renamed' })).rejects.toThrow()
     await expect(softDeleteTrip({ tripId: trip.id })).rejects.toThrow()
     await expect(createTripExpense({
-      tripId: trip.id, paidBy: a, amount: 500, category: '食', splitType: 'all_mine',
+      tripId: trip.id, paidBy: a, amount: 500, category: 'dining', splitType: 'all_mine',
     })).rejects.toThrow()
     await expect(editTripExpense({
-      id: expense.id, tripId: trip.id, paidBy: a, amount: 9999, category: '食', splitType: 'half',
+      id: expense.id, tripId: trip.id, paidBy: a, amount: 9999, category: 'dining', splitType: 'half',
     })).rejects.toThrow()
     await expect(softDeleteTripExpense({ id: expense.id, tripId: trip.id })).rejects.toThrow()
 

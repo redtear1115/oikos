@@ -364,7 +364,7 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     refs.tripIds.push(trip.id)
 
     unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: 'dining', splitType: 'half',
     }))
 
     unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
@@ -388,10 +388,10 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     refs.tripIds.push(trip.id)
 
     unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: 'dining', splitType: 'half',
     }))
     unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.partnerId, amount: 600, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.partnerId, amount: 600, category: 'dining', splitType: 'half',
     }))
 
     unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
@@ -417,7 +417,7 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     // B paid 1000, B's share = 70%, so A's share = 30%.
     unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.partnerId, amount: 1000,
-      category: '食', splitType: 'weighted', splitRatio: 70,
+      category: 'dining', splitType: 'weighted', splitRatio: 70,
     }))
 
     unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
@@ -440,7 +440,7 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     const trip = unwrapAction(await createTrip({ name: 'Idempotent', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
     unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount: 500, category: '食', splitType: 'half',
+      tripId: trip.id, paidBy: refs.userId, amount: 500, category: 'dining', splitType: 'half',
     }))
 
     unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
@@ -474,7 +474,7 @@ describe('endTrip — solo group', () => {
     const trip = unwrapAction(await createTrip({ name: 'Solo', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
     unwrapAction(await createTripExpense({
-      tripId: trip.id, paidBy: refs.userId, amount: 800, category: '食', splitType: 'all_mine',
+      tripId: trip.id, paidBy: refs.userId, amount: 800, category: 'dining', splitType: 'all_mine',
     }))
 
     unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
@@ -566,7 +566,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
-      category: '食',
+      category: 'dining',
       splitType: 'all_mine',
     }))
     const originalBaseAmount = tripExpense.amount  // 1000 * 0.22 = 220
@@ -618,7 +618,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
-      category: '食',
+      category: 'dining',
       splitType: 'all_mine',
     }))
 
@@ -693,7 +693,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
-      category: '食',
+      category: 'dining',
       splitType: 'all_mine',
     }))
 
@@ -740,7 +740,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
-      category: '食',
+      category: 'dining',
       splitType: 'all_mine',
     }))
 
