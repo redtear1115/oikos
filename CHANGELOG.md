@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **定期規則存檔、預覽與刪除都有回饋（#1483）**
+  使用者：存好規則會跳「已儲存，下次在 …」；每月幾號下方預覽接下來三個日期，31 號等月底規則改用白話說明；刪除前會說明一起移除幾張待確認卡片。
+  技術：`createRule`／`updateRule` 多回 `nextOccurrenceAt`，新增 `countPendingForRule`、`previewNextDates`；dashboard 的 toast 抽成共用 `ToastProvider`；en／ja 譯文待確認。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
@@ -86,6 +90,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **可以在設定讓已傳出的邀請連結失效（#1546）**
   使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
   技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
+- **邀請連結的金鑰不會送到 Google Analytics（#1583）**
+  使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
+  技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
 
 ## [1.6.7] - 2026-10-04
 

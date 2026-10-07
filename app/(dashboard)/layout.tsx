@@ -22,6 +22,7 @@ import { ShellTopStack } from './_components/ShellTopStack'
 import { TodayProvider } from './_components/TodayProvider'
 import { getTodayYMD } from '@/lib/today-server'
 import { PastChapterBar } from './_components/PastChapterBar'
+import { ToastProvider } from '@/components/Toast'
 import { QuickAddProvider } from './_components/QuickAddProvider'
 import { maskAvatarUrl } from '@/lib/avatar'
 import { TextScale } from '@/components/TextScale'
@@ -171,7 +172,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 {/* Shortcut / `#add=` quick add (#1488): owns the shell URL
                     listener and hands Dashboard a prefill in memory. Inside the
                     dashboard group so it unmounts on sign-out. */}
-                <QuickAddProvider>{children}</QuickAddProvider>
+                <ToastProvider>
+                  <QuickAddProvider>{children}</QuickAddProvider>
+                </ToastProvider>
               </div>
             </AvatarMenuProvider>
           </RealtimeProvider>
