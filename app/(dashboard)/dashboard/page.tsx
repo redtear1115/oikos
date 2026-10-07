@@ -14,8 +14,8 @@ import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incom
 import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
-import { listActivePendings } from '@/lib/db/queries/recurringIncome'
-import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
+import { listExpensePendingsForViewer, listIncomePendingsForViewer } from '@/lib/db/queries/recurringView'
+import { loadMemberLinkScope } from '@/lib/db/queries/insuranceView'
 import { listActiveTrips } from '@/lib/db/queries/trips'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
@@ -61,6 +61,12 @@ export default async function DashboardPage() {
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
+
+  // #1588 — pending cards name a recipient / payer by profile id; one who left
+  // the ledger is dropped here, before anything reaches the client (see
+  // lib/recurringMemberLink.ts). Pinned to a chapter of a group the viewer
+  // left: that chapter's members, no 「前伴侶」 label.
+  const memberScope = await loadMemberLinkScope(context, user.id)
 
   // Post-leave cards (PR 4/4): only when not pinned to a past epoch (we want
   // these on the live current view, not on a historical snapshot).
@@ -119,8 +125,8 @@ export default async function DashboardPage() {
     getGroupBalance(group.id),
     getGroupPendingBalanceDelta(group.id),
     listIncomeMonthSummary(group.id, yyyymm, epochWindow),
-    listActivePendings(group.id),
-    listActiveExpensePendings(group.id),
+    listIncomePendingsForViewer(group.id, memberScope),
+    listExpensePendingsForViewer(group.id, memberScope),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
     // Solo expense hero (#1118): the month total + record count that replace
     // the balance a solo ledger cannot have. Reuses the stats donut's query and

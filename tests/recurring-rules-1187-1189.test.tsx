@@ -3,8 +3,10 @@ import { act, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { en } from '@/lib/i18n/locales/en'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type {
+  RecurringIncomeRuleView as RecurringRuleRow,
+  RecurringExpenseRuleView as RecurringExpenseRuleRow,
+} from '@/lib/recurringMemberLink'
 
 // #1187 / #1189 — recurring rules: next-run date on list rows, localized
 // income category names, selection state exposed beyond colour, headings,
@@ -54,6 +56,8 @@ function En({ children }: { children: ReactNode }) {
 const incomeRule: RecurringRuleRow = {
   id: 'r1',
   recipientId: 'u-1',
+  recipientIsFormer: false,
+  formerLabel: true,
   amount: 50000,
   category: 'salary',
   source: null,
@@ -69,6 +73,8 @@ const incomeRule: RecurringRuleRow = {
 const expenseRule: RecurringExpenseRuleRow = {
   id: 'e1',
   paidBy: 'u-1',
+  paidByIsFormer: false,
+  formerLabel: true,
   amount: 20000,
   splitType: 'half',
   splitRatioA: null,

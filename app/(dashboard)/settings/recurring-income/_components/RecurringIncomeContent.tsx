@@ -14,20 +14,20 @@ const RecurringRuleSheet = dynamic(
 )
 import { useTranslations } from '@/lib/i18n/client'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import type { RecurringIncomeRuleView } from '@/lib/recurringMemberLink'
 
 const P = DEFAULT_INCOME_PALETTE
 
 interface Props {
-  rules: RecurringRuleRow[]
+  rules: RecurringIncomeRuleView[]
   insuranceAssets: { id: string; name: string }[]
 }
 
 export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  // null = closed, 'create' = new rule sheet, RecurringRuleRow = edit sheet
-  const [sheetState, setSheetState] = useState<null | 'create' | RecurringRuleRow>(null)
+  // null = closed, 'create' = new rule sheet, RecurringIncomeRuleView = edit sheet
+  const [sheetState, setSheetState] = useState<null | 'create' | RecurringIncomeRuleView>(null)
 
   const isOpen = sheetState !== null
   const initial = typeof sheetState === 'object' && sheetState !== null ? sheetState : undefined

@@ -60,7 +60,11 @@ export interface AddSheetInitial {
   category: string
   splitType: SplitType
   splitRatioA: number | null
-  payerId: string
+  /** null only with `payerFormer` (a pending card whose payer left, #1588). */
+  payerId: string | null
+  /** #1588 — the stored payer left the ledger; nothing is preselected and the
+   *  user re-picks (duo) or it is recorded under the viewer (solo). */
+  payerFormer?: boolean
   transactedAt: string  // ISO
   assetId?: string | null
   notes?: string | null
@@ -146,6 +150,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [split, setSplit] = useState<SplitType>('half')
   const [splitRatioA, setSplitRatioA] = useState<number>(50)
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
+  // #1588 — editing a pending card whose payer left the ledger: no payer is
+  // selected until the user picks one (duo; save stays disabled), so the card
+  // is never silently handed to the current partner. Solo has no picker; the
+  // sheet says the record goes under the viewer.
+  const [payerUnresolved, setPayerUnresolved] = useState(false)
+  const payerHintId = useId()
   // Seeded from useToday(), not the clock: this closed sheet is in the
   // server HTML, and the clock disagrees with it after Taipei midnight
   // (#1360). Opening for a new record still resets to the device's today.
@@ -217,7 +227,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setSplitRatioA(
         loadedSplitRatioToViewerShare(initial.splitRatioA, viewerIsA, groupDefaultRatioA ?? 50),
       )
-      setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
+      setPayerWho(!initial.payerFormer && initial.payerId !== viewer.id ? 'T' : 'M')
+      setPayerUnresolved(initial.payerFormer === true)
       // Use LOCAL date components, not the UTC ISO prefix — otherwise a row stored at
       // local midnight (e.g. 2026-05-02 00:00 in UTC+8 = 2026-05-01T16:00:00Z) would
       // show as 2026-05-01 in the picker and silently shift one day on save.
@@ -241,6 +252,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setSplit(isSolo ? 'all_mine' : 'weighted')
       setSplitRatioA(groupDefaultRatioA ?? 50)
       setPayerWho('M')
+      setPayerUnresolved(false)
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
       setNotes('')
@@ -275,7 +287,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const statusLabelId = useId()
   const notesId = useId()
   const isDirty = useDirtyCheck(open, {
-    amount, desc, category, split, splitRatioA, payerWho, date, notes, status, assetId, tripId, currency,
+    amount, desc, category, split, splitRatioA, payerWho, payerUnresolved, date, notes, status, assetId, tripId, currency,
   })
 
   const isPending = !!pendingExpenseId
@@ -332,6 +344,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       return
     }
     if (!desc.trim()) { setError(t.addSheet.errors.descriptionRequired); return }
+    if (!isSolo && payerUnresolved) { setError(t.recurringExpense.sheet.paidByFormerHint); return }
     if (payerWho === 'T' && !partner) { setError(t.addSheet.errors.noPartner); return }
     const payerId = isSolo ? viewer.id : (payerWho === 'M' ? viewer.id : partner!.id)
     const splitType: SplitType = isSolo ? 'all_mine' : split
@@ -500,7 +513,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             variant="ghost"
             size="sm"
             onClick={handleSave}
-            disabled={!amount || pending}
+            disabled={!amount || pending || (!isSolo && payerUnresolved)}
             className="relative font-medium before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"
             style={{ color: 'var(--accent)' }}
           >
@@ -607,7 +620,20 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             })()}
 
             {!isSolo && (
-              <PayerToggle value={payerWho} onChange={setPayerWho} />
+              <PayerToggle
+                value={payerWho}
+                onChange={(w) => {
+                  setPayerWho(w)
+                  setPayerUnresolved(false)
+                }}
+                unresolved={payerUnresolved}
+                describedBy={payerUnresolved ? payerHintId : undefined}
+              />
+            )}
+            {payerUnresolved && (
+              <p id={payerHintId} className="mt-2 text-xs text-ink-3">
+                {isSolo ? t.recurringExpense.sheet.paidByFormerSoloHint : t.recurringExpense.sheet.paidByFormerHint}
+              </p>
             )}
           </div>
 

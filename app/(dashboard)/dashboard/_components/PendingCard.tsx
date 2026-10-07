@@ -18,7 +18,7 @@ export interface PendingCardProps {
   date: string
   /** Proposed amount in base-currency integer units. */
   amount: number
-  /** Optional payer/split line — only the expense card renders this. */
+  /** Optional payer/split line (expense), or 「前伴侶」 on a card whose person left the ledger (#1588). */
   meta?: string
   confirmLabel: string
   editLabel: string

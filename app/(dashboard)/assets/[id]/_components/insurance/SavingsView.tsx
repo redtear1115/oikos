@@ -30,7 +30,7 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import type { PagedIncomeRow } from '@/actions/income'
 import { insuredDisplayName, type InsuranceDetailsView } from '@/lib/insuranceMemberLink'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import type { RecurringIncomeRuleView } from '@/lib/recurringMemberLink'
 import { unwrapAction } from '@/lib/action-errors'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
@@ -63,7 +63,7 @@ interface Props {
   linkedVehicle?: { id: string; name: string } | null
   /** #166 — recurring income rules already tied to this savings policy.
    *  Surfaced inline so users can see / create rules without leaving the page. */
-  recurringRules: RecurringRuleRow[]
+  recurringRules: RecurringIncomeRuleView[]
   allInsuranceGroups?: SwitcherGroup[]
 }
 
@@ -96,8 +96,8 @@ export function SavingsView({
   const [editAssetOpen, setEditAssetOpen] = useState(false)
   const [incomeSheetOpen, setIncomeSheetOpen] = useState(false)
   const [incomePrefillAmount, setIncomePrefillAmount] = useState<number | undefined>(undefined)
-  // #166 — null = closed; 'create' = new rule sheet; RecurringRuleRow = edit existing.
-  const [recurringSheetState, setRecurringSheetState] = useState<null | 'create' | RecurringRuleRow>(null)
+  // #166 — null = closed; 'create' = new rule sheet; RecurringIncomeRuleView = edit existing.
+  const [recurringSheetState, setRecurringSheetState] = useState<null | 'create' | RecurringIncomeRuleView>(null)
   const tint = useTint('insurance')
 
   useRealtimeEvents((event) => {
@@ -466,9 +466,9 @@ function RecurringRulesSection({
   intervalLabels,
   locale,
 }: {
-  rules: RecurringRuleRow[]
+  rules: RecurringIncomeRuleView[]
   onAdd: () => void
-  onEdit: (rule: RecurringRuleRow) => void
+  onEdit: (rule: RecurringIncomeRuleView) => void
   translations: Translations['assetDetail']['savings']
   intervalLabels: { 1: string; 3: string; 6: string; 12: string; fallback: string }
   locale: string

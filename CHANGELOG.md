@@ -95,6 +95,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：兩人帳本裡編輯這台車時，主要使用人不預選、提示重新選擇（單人帳本不顯示這個欄位）；不選直接儲存會保留原本的設定，不會默默變成「共用」；幫這台車記油錢時預設由自己付、不分攤。
   技術：`lib/carMemberLink.ts` 沿用 #1579 的成員範圍，車子頁與 `getFuelLogById` 剔除非成員的 `primaryUserId`（改帶 `primaryUserIsFormer`）；`editCar` 收到 `primaryUserId: undefined` 時不動已存值；`getHouseDetails` 不再讀 `owner`；不改資料；en／ja 譯文待確認。
 
+- **定期收支的收入歸屬、付款人已離開帳本時，頁面不再帶出對方（#1588）**
+  使用者：定期規則與待確認卡片把離開的人顯示為「前伴侶」，不再掛上現在伴侶的名字；編輯這類規則或卡片時不預選、提示重新選擇，選好才能儲存（單人帳本會說明改記在你名下）；確認付款人已離開的卡片時，提示先「改一下」。
+  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；不改資料；en／ja 譯文待確認。
+
 ## [1.6.7] - 2026-10-04
 
 主題：**登入前的門面，登入後的界線**——品牌頁換成同一個暖燈世界、載入更快、換行與文案都順了；帳本資料在資料庫層收到自己在場的章節，正式站改用權限受限的資料庫角色。
