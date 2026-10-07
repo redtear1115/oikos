@@ -574,8 +574,12 @@ describe('createInsurance', () => {
 // ── editInsurance ────────────────────────────────────────────────────────────
 
 describe('editInsurance', () => {
+  // #1579 — editInsurance always reads the policy's stored links first.
+  const STORED_LEGACY = { vehicleId: null, insuredChildId: null, policyHolderUserId: null }
+
   it('updates asset name + sets insuranceDetails fields', async () => {
     queueDbResult([GROUP])
+    queueDbResult([STORED_LEGACY])       // stored links
     queueDbResult([{ id: 'asset-1' }])  // assets update .returning
     queueDbResult([])                    // insuranceDetails upsert
 
@@ -585,8 +589,61 @@ describe('editInsurance', () => {
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([])  // stored links: no row in the viewer's group
     queueDbResult([])  // assets update returning empty
     expect(await editInsurance({ id: 'missing', name: '壽險A' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
+  })
+
+  // #1579 — the stored holder / member insured left the ledger (not memberA
+  // or memberB any more). Sending their id back is refused, and so is
+  // sending no holder over a stored one; nothing is written either way.
+  const EX = '99999999-9999-4999-8999-999999999999'
+  const ME = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  const NEW = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  // Members today: ME + NEW (the validator wants uuids, so not GROUP's ids).
+  const GROUP_NOW = { ...GROUP, memberA: ME, memberB: NEW }
+  const STORED_EX = { vehicleId: null, insuredChildId: null, policyHolderUserId: EX }
+
+  it("rejects a former member's id as 要保人 (policyholder_not_member)", async () => {
+    queueDbResult([GROUP_NOW])
+    queueDbResult([STORED_EX])
+    expect(await editInsurance({ id: 'asset-1', name: '壽險A', policyHolderUserId: EX }))
+      .toEqual({ ok: false, code: 'policyholder_not_member' })
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it("rejects a former member's id as 被保人 (insured_not_member)", async () => {
+    queueDbResult([GROUP_NOW])
+    queueDbResult([STORED_EX])
+    expect(await editInsurance({ id: 'asset-1', name: '壽險A', policyHolderUserId: ME, insuredUserId: EX }))
+      .toEqual({ ok: false, code: 'insured_not_member' })
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('rejects a null 要保人 over a stored one (policyholder_required)', async () => {
+    queueDbResult([GROUP_NOW])
+    queueDbResult([STORED_EX])
+    expect(await editInsurance({ id: 'asset-1', name: '壽險A', policyHolderUserId: null, annualPremium: 9000 }))
+      .toEqual({ ok: false, code: 'policyholder_required' })
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('accepts a current member as the new 要保人 for that policy', async () => {
+    queueDbResult([GROUP_NOW])
+    queueDbResult([STORED_EX])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+    expect(await editInsurance({ id: 'asset-1', name: '壽險A', policyHolderUserId: ME }))
+      .toEqual({ ok: true, data: undefined })
+  })
+
+  it('a legacy policy with no stored holder may still be saved without one', async () => {
+    queueDbResult([GROUP_NOW])
+    queueDbResult([STORED_LEGACY])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+    expect(await editInsurance({ id: 'asset-1', name: '壽險A', policyHolderUserId: null }))
+      .toEqual({ ok: true, data: undefined })
   })
 
   it('throws unauthorized when no user', async () => {

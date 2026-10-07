@@ -113,7 +113,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
   使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
-  技術：`lib/insurancePolicyHolder.ts` 在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
+  技術：`lib/insurancePolicyHolder.ts`（#1579 改名為 `lib/insuranceMemberLink.ts`）在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
+
+- **被保人、要保人已離開帳本時，保單資料不再帶出對方（#1579）**
+  使用者：保單頁與保單卡把離開的被保人顯示為「前伴侶」；編輯這張保單時要保人／被保人不預選、提示重新選擇，選好才能儲存，不再出現「必須是 group 成員」的錯誤，也不會默默改成自己。
+  技術：限保險：`lib/insuranceMemberLink.ts` 在伺服端剔除非成員（釘選舊章節的離開者以該章節成員為準、不標「前伴侶」）的 id 與名字，詳情頁（只經 `getInsuranceDetailsForViewer`）、編輯表單初值、`/assets` 清單都只收剔除後的資料；`editInsurance` 拒絕以空值覆蓋已存的要保人（`policyholder_required`）；不改資料；en／ja 譯文待確認。
 
 - **可以在設定讓已傳出的邀請連結失效（#1546）**
   使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。

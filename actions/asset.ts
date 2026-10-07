@@ -1058,12 +1058,15 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
   const { group } = await requireViewerGroup()
 
   // #1442 — the links this policy already has, read from its own stored row
-  // in the viewer's group (only when there is a link to check). A frozen copy
-  // may be *kept* (leaveGroup re-pointed the link at it), never newly chosen.
-  const [stored] = !input.vehicleId && !validated.insuredChildId ? [] : await db
+  // in the viewer's group. A frozen copy may be *kept* (leaveGroup re-pointed
+  // the link at it), never newly chosen.
+  // #1579 — always read: the stored 要保人 decides whether a null holder is
+  // allowed below.
+  const [stored] = await db
     .select({
       vehicleId: insuranceDetails.vehicleId,
       insuredChildId: insuranceDetails.insuredChildId,
+      policyHolderUserId: insuranceDetails.policyHolderUserId,
     })
     .from(insuranceDetails)
     .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
@@ -1079,6 +1082,12 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
 
   if (validated.policyHolderUserId) {
     assertPolicyHolderInGroup(validated.policyHolderUserId, group)
+  } else if (stored?.policyHolderUserId) {
+    // #1579 — a policy that has a 要保人 keeps one. Only legacy rows (NULL
+    // since before #142) may stay NULL. Without this, any caller sending no
+    // holder — e.g. an edit sheet whose stored holder left the ledger — would
+    // erase the holder as a side effect of editing another field.
+    throw actionError('policyholder_required')
   }
 
   if (validated.insuredChildId) {

@@ -207,6 +207,12 @@ export interface InsuranceDetailsRow {
   accountValue: number | null
 }
 
+/**
+ * Raw policy details, including the stored 要保人 / 被保人 profile ids and the
+ * member insured's CURRENT name. Not for pages: a page reads
+ * `getInsuranceDetailsForViewer` (lib/db/queries/insuranceView.ts), which
+ * drops anyone who left the ledger before the row reaches a client (#1579).
+ */
 export async function getInsuranceDetails(
   assetId: string,
   groupId: string,

@@ -64,6 +64,11 @@ export interface AssetSheetInitial {
   insInsuredChildId?: string | null
   insInsuredUserId?: string | null
   insPolicyHolderUserId?: string | null
+  /** #1579 — the stored 要保人 / member 被保人 left the ledger. The id is not
+   *  sent (insPolicyHolderUserId / insInsuredUserId are null); the sheet starts
+   *  with nothing selected and cannot save until a current person is picked. */
+  insPolicyHolderFormer?: boolean
+  insInsuredFormer?: boolean
   insInsurer?: string | null
   insPolicyNo?: string | null
   insAnnualPremium?: number | null
