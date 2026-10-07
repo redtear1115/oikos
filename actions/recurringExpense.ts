@@ -37,7 +37,7 @@ import {
   revalidateAfterRecurringExpenseRuleMutation,
   revalidateAfterTransactionMutation,
 } from '@/lib/revalidate'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
@@ -234,6 +234,38 @@ export const resumeRule = action(async (id: string): Promise<void> => {
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
+})
+
+/**
+ * #1483 — how many pending cards `softDeleteRule` would remove along with the
+ * rule, for the delete confirmation. Same filter as the delete below
+ * (unskipped and unresolved), scoped to the viewer's group; a rule outside it
+ * is `recurring_rule_not_found`, like every other action here.
+ */
+export const countPendingForRule = action(async (id: string): Promise<number> => {
+  const { group } = await requireViewerGroup()
+
+  const [rule] = await db
+    .select({ id: recurringExpenseRules.id })
+    .from(recurringExpenseRules)
+    .where(and(
+      eq(recurringExpenseRules.id, id),
+      eq(recurringExpenseRules.groupId, group.id),
+      isNull(recurringExpenseRules.deletedAt),
+    ))
+    .limit(1)
+  if (!rule) throw actionError('recurring_rule_not_found')
+
+  const [row] = await db
+    .select({ n: count() })
+    .from(pendingExpenseOccurrences)
+    .where(and(
+      eq(pendingExpenseOccurrences.ruleId, id),
+      eq(pendingExpenseOccurrences.groupId, group.id),
+      isNull(pendingExpenseOccurrences.skippedAt),
+      isNull(pendingExpenseOccurrences.resolvedTxId),
+    ))
+  return row?.n ?? 0
 })
 
 export const softDeleteRule = action(async (id: string): Promise<void> => {

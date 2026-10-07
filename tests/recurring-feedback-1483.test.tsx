@@ -155,3 +155,37 @@ describe.each(KINDS)('#1483 next-dates preview ($kind)', ({ kind, rule }) => {
     expect(screen.getByText('Next: Nov 7, Dec 7, Jan 7, 2027')).toBeInTheDocument()
   })
 })
+
+describe.each(KINDS)('#1483 delete count ($kind)', ({ kind, actions, rule }) => {
+  async function openConfirm() {
+    renderSheet(kind, rule)
+    await act(async () => { screen.getByRole('button', { name: en.recurringIncome.sheet.deleteRuleAction }).click() })
+  }
+  const generic = en.recurringIncome.sheet.deleteConfirmDescription
+
+  it('count 3 names the cards that go with the rule', async () => {
+    actions.countPendingForRule.mockResolvedValue({ ok: true, data: 3 })
+    await openConfirm()
+    expect(actions.countPendingForRule).toHaveBeenCalledWith(rule.id)
+    expect(screen.getByText(/Pending cards waiting for you \(3\) will be removed too\./)).toBeInTheDocument()
+  })
+
+  it('count 0 only says what stays', async () => {
+    actions.countPendingForRule.mockResolvedValue({ ok: true, data: 0 })
+    await openConfirm()
+    expect(screen.getByText("Records already saved stay. This can't be undone.")).toBeInTheDocument()
+  })
+
+  it('while loading, shows the generic text (delete is not blocked)', async () => {
+    actions.countPendingForRule.mockReturnValue(new Promise(() => {}))
+    await openConfirm()
+    expect(screen.getByText(generic)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: en.common.delete })).not.toBeDisabled()
+  })
+
+  it('on error, falls back to the generic text', async () => {
+    actions.countPendingForRule.mockResolvedValue({ ok: false, code: 'recurring_rule_not_found' })
+    await openConfirm()
+    expect(screen.getByText(generic)).toBeInTheDocument()
+  })
+})

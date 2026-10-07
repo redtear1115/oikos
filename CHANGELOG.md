@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **定期規則存檔、預覽與刪除都有回饋（#1483）**
+  使用者：存好規則會跳「已儲存，下次在 …」；每月幾號下方預覽接下來三個日期，31 號等月底規則改用白話說明；刪除前會說明一起移除幾張待確認卡片。
+  技術：`createRule`／`updateRule` 多回 `nextOccurrenceAt`，新增 `countPendingForRule`、`previewNextDates`；dashboard 的 toast 抽成共用 `ToastProvider`；en／ja 譯文待確認。
+
 - **朋友打開出遊連結就能加入（#1558）**
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。

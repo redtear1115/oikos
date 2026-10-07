@@ -23,6 +23,7 @@ import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
 import { useToast } from '@/components/Toast'
 import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { previewNextDates } from '@/lib/recurring'
@@ -189,6 +190,33 @@ export function RecurringRuleSheet(props: Props) {
     )
     showToast(dateText ? tNs.sheet.savedToastNext.replace('{date}', dateText) : tNs.sheet.savedToast)
   }
+
+  // #1483 — how many pending cards deleting would take with it, fetched when
+  // the confirm opens. null = loading or failed: the modal falls back to the
+  // generic sentence and deleting is never blocked on this read.
+  const ruleId = props.initial?.id
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+  useEffect(() => {
+    setPendingCount(null)
+    if (!confirmingDelete || !ruleId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const n = unwrapAction(await actions.countPendingForRule(ruleId))
+        if (!cancelled) setPendingCount(n)
+      } catch {
+        // keep the generic description
+      }
+    })()
+    return () => { cancelled = true }
+  }, [confirmingDelete, ruleId, actions])
+
+  const deleteDescription =
+    pendingCount === null
+      ? tNs.sheet.deleteConfirmDescription
+      : pendingCount === 0
+        ? tNs.sheet.deleteConfirmDescriptionNone
+        : tNs.sheet.deleteConfirmDescriptionCount.replace('{count}', String(pendingCount))
 
   const handleSave = () => {
     if (!amount || amount <= 0) { setError(tNs.errors.amountRequired); return }
@@ -671,7 +699,7 @@ export function RecurringRuleSheet(props: Props) {
       <ConfirmModal
         open={confirmingDelete && open}
         title={tNs.sheet.deleteConfirmTitle}
-        description={tNs.sheet.deleteConfirmDescription}
+        description={deleteDescription}
         confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
