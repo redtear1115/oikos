@@ -3,6 +3,7 @@ last_updated: 2026-10-08
 status: shipped
 first_shipped_in: v1.6.0
 updates:
+  - v1.7.1: 結束出遊時把折回的那一條（from／to／amount）存在出遊上，結束後的建議轉帳不再列出它（#1635，migration 0091）
   - v1.7.1: 折回金額改為「兩位成員之間的那一條建議轉帳」,撤回交叉項規則,結束前預覽折回金額（#1634）
   - v1.7.0: 公開加入面——分享連結、認領 slot、匿名寫入、註冊後帶走歷史；管理者＝開局帳本的兩位成員；重設連結與釋放 slot（#1558）
 related_specs: [solo-trip, trip-multi-currency, epoch-readonly, onboarding, transactions, conversion-analytics, locale-currency]
