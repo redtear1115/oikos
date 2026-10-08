@@ -6971,7 +6971,7 @@ export const zhTW: Translations = {
       linkChip: '出遊連結',
       claimed: '已選',
       expensesTitle: '支出',
-      settleTitle: '誰該轉給誰',
+      settleTitle: '誰付給誰',
       paidBy: '{name} 付',
       splitEvenly: '四人平分',
     },
