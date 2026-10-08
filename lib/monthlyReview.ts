@@ -108,7 +108,6 @@ export function isMonthInChapter(ym: YearMonth, chapter: { startedAt: Date; ende
     && (chapter.endedAt === null || end <= chapter.endedAt.getTime())
 }
 
-/** True if `a` is strictly after `b` (later year, or same year & later month). */
 /**
  * #1618 — the name card 2 (largest expense) shows for its payer, resolved on
  * the server and only against the two people of the chapter being viewed.
@@ -157,6 +156,7 @@ export function toClientReviewSnapshot(row: MonthlyReviewSnapshotRow): ClientRev
   return rest
 }
 
+/** True if `a` is strictly after `b` (later year, or same year & later month). */
 export function isAfter(a: YearMonth, b: YearMonth): boolean {
   if (a.year !== b.year) return a.year > b.year
   return a.month > b.month
