@@ -1,5 +1,6 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useEffect, useState, useMemo, useTransition } from 'react'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
@@ -9,7 +10,7 @@ import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { HeaderOverflowMenu } from '@/app/(dashboard)/assets/_components/shared/HeaderOverflowMenu'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { localTodayISO } from '@/lib/local-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
@@ -24,6 +25,9 @@ interface CarLite {
   name: string
   fuelType: FuelType | null
   primaryUserId: string | null
+  /** #1589 — the stored primary user left the ledger (primaryUserId is null
+   *  but the car is not 共用). Required, so every caller must resolve it. */
+  primaryUserIsFormer: boolean
 }
 
 export interface NewFuelLogInitial {
@@ -65,6 +69,7 @@ function toGasFuelType(ft: string | null | undefined): GasFuelType {
 
 export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: NewFuelLogProps) {
   const { viewer, partner, isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const locale = useLocale()
   const [pending, startTransition] = useTransition()
@@ -73,17 +78,21 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const tf = t.assetDetail.fuelLog
 
-  // Default payer/split derived from car's primary user
+  // Default payer/split derived from car's primary user. #1589 — a primary
+  // user who left the ledger defaults like "someone else's car, I'm filling
+  // it": payer = viewer, all_mine (never 共用's half, never the partner).
   const defaultPayerWho = useMemo<'M' | 'T'>(() => {
+    if (car.primaryUserIsFormer) return 'M'
     if (partner && car.primaryUserId === partner.id) return 'T'
     return 'M'
-  }, [car.primaryUserId, partner])
+  }, [car.primaryUserId, car.primaryUserIsFormer, partner])
 
   const defaultSplit = useMemo<'all_mine' | 'all_theirs' | 'half'>(() => {
     if (!partner) return 'all_mine'
+    if (car.primaryUserIsFormer) return 'all_mine'
     if (car.primaryUserId === null) return 'half'
     return 'all_mine'
-  }, [car.primaryUserId, partner])
+  }, [car.primaryUserId, car.primaryUserIsFormer, partner])
 
   const [liters, setLiters] = useState('')
   const [odometer, setOdometer] = useState('')
@@ -286,7 +295,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             />
           </FormRow>
 
-          <FormRow label={tf.cost} unit="NT$">
+          <FormRow label={tf.cost} unit={currencySymbol(baseCurrency)}>
             <TextInput
               value={cost}
               onChange={e => setCost(e.target.value)}

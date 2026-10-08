@@ -1,7 +1,10 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CurrencySelector } from '@/app/(dashboard)/dashboard/_components/CurrencySelector'
+import { currencySymbol, parseCurrencyCode, type CurrencyCode } from '@/lib/currency'
+import { policyCurrency } from '@/lib/insuranceCurrency'
 import {
   createInsurance,
   editInsurance,
@@ -23,9 +26,10 @@ export type InsuranceInitial = Pick<
   AssetSheetInitial,
   | 'id' | 'name' | 'notes'
   | 'insKind' | 'insInsured' | 'insInsuredChildId' | 'insInsuredUserId' | 'insPolicyHolderUserId'
+  | 'insPolicyHolderFormer' | 'insInsuredFormer'
   | 'insInsurer' | 'insPolicyNo' | 'insAnnualPremium' | 'insSumInsured'
   | 'insPayCycle' | 'insStartsAt' | 'insEndsAt' | 'insTermYears'
-  | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue'
+  | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue' | 'insCurrency'
 >
 
 interface Props extends BodySharedProps {
@@ -37,10 +41,24 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
   const { viewer, partner } = useMember()
+  const baseCurrency = useBaseCurrency()
   // #1174 — the 被保人 Field wraps a chip row plus a conditional text input,
   // so it can't use Field's render-prop id. Pass our own id through `htmlFor`
   // so the freeform input gets the Field label as its accessible name.
   const insuredInputId = useId()
+  const policyHolderHintId = useId()
+  const insuredHintId = useId()
+
+  // #1579 — the stored 要保人 / member 被保人 left the ledger. The page sent no
+  // id for them, only these flags. Nothing is preselected (the legacy
+  // viewer default below must NOT apply: it would silently hand the policy to
+  // the viewer), a hint asks for a new choice, and save stays disabled until
+  // a current person is picked — so an edit of another field can neither
+  // write NULL over the stored holder nor send the old id back.
+  const holderFormer = initial?.insPolicyHolderFormer === true
+  const insuredFormer = initial?.insInsuredFormer === true
+  const initialPolicyHolder = (): string | null =>
+    holderFormer ? null : (initial?.insPolicyHolderUserId ?? viewer.id)
 
   const [kind, setKind] = useState(initial?.insKind ?? 'medical')
   const [insured, setInsured] = useState(initial?.insInsured ?? '')
@@ -56,7 +74,10 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   // #142 — Legacy rows (created before 0032) have NULL policy_holder.
   // Default to viewer on prefill so editing fills it in gracefully, same
   // as the create flow. User can still flip to partner via the toggle.
-  const [policyHolderUserId, setPolicyHolderUserId] = useState<string | null>(initial?.insPolicyHolderUserId ?? viewer.id)
+  const [policyHolderUserId, setPolicyHolderUserId] = useState<string | null>(initialPolicyHolder)
+  // #1579 — 被保人 not chosen yet. Distinct from freeform, whose state is
+  // also insuredUserId === null && insuredChildId === null.
+  const [insuredUnresolved, setInsuredUnresolved] = useState(insuredFormer)
   const [insurer, setInsurer] = useState(initial?.insInsurer ?? '')
   const [policyNo, setPolicyNo] = useState(initial?.insPolicyNo ?? '')
   const [premium, setPremium] = useState(initial?.insAnnualPremium?.toString() ?? '')
@@ -69,6 +90,9 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const [expectedMaturityAmount, setExpectedMaturityAmount] = useState(initial?.insExpectedMaturityAmount?.toString() ?? '')
   // #166 — only meaningful for kind === 'savings'; cleared on save when kind switches.
   const [accountValue, setAccountValue] = useState(initial?.insAccountValue?.toString() ?? '')
+  // #1600 — create: the ledger's currency. Edit: the stored one (NULL = the ledger's), so an
+  // unrelated edit re-sends the policy's own currency instead of resetting it.
+  const [currency, setCurrency] = useState<CurrencyCode>(policyCurrency(initial?.insCurrency, baseCurrency))
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [childAssets, setChildAssets] = useState<ChildAsset[]>([])
 
@@ -82,7 +106,8 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       setInsured(initial?.insInsured ?? '')
       setInsuredChildId(initial?.insInsuredChildId ?? null)
       setInsuredUserId(initial?.insInsuredUserId ?? null)
-      setPolicyHolderUserId(initial?.insPolicyHolderUserId ?? viewer.id)
+      setPolicyHolderUserId(initialPolicyHolder())
+      setInsuredUnresolved(insuredFormer)
       setInsurer(initial?.insInsurer ?? '')
       setPolicyNo(initial?.insPolicyNo ?? '')
       setPremium(initial?.insAnnualPremium?.toString() ?? '')
@@ -94,6 +119,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       setVehicleId(initial?.insVehicleId ?? null)
       setExpectedMaturityAmount(initial?.insExpectedMaturityAmount?.toString() ?? '')
       setAccountValue(initial?.insAccountValue?.toString() ?? '')
+      setCurrency(policyCurrency(initial?.insCurrency, baseCurrency))
       // Data loads — only fire on open, not every render. Errors swallowed so
       // a network blip doesn't prevent the sheet from opening (lists fall back
       // to empty arrays from initial state).
@@ -102,9 +128,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
     },
   })
 
-  const canSave = name.trim() !== '' && !pending
+  const holderUnresolved = holderFormer && policyHolderUserId === null
+  const canSave = name.trim() !== '' && !pending && !holderUnresolved && !insuredUnresolved
+  const insuredFreeformSelected = !insuredUnresolved && insuredUserId === null && insuredChildId === null
 
   const handleSave = () => {
+    if (holderUnresolved || insuredUnresolved) return
     const payload = {
       name: name.trim(),
       kind: kind || null,
@@ -132,6 +161,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         kind === 'savings' && accountValue
           ? parseInt(accountValue, 10)
           : null,
+      currency,
       notes: notes.trim() || null,
     }
     runMutation(
@@ -149,9 +179,9 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.insurance) : ts.titleNew
 
   const isDirty = useDirtyCheck(open, {
-    name, notes, kind, insured, insuredChildId, insuredUserId, policyHolderUserId, insurer,
+    name, notes, kind, insured, insuredChildId, insuredUserId, insuredUnresolved, policyHolderUserId, insurer,
     policyNo, premium, sumInsured, payCycle, startsAt, endsAt, termYears, vehicleId,
-    expectedMaturityAmount, accountValue,
+    expectedMaturityAmount, accountValue, currency,
   })
 
   return (
@@ -196,13 +226,18 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
 
       {/* #142 — 要保人 (policy holder). Always a group member, so bound
           to Profile via FK. Toggle is hidden in solo mode (only one
-          possible value; form defaults to viewer.id). */}
-      {partner && (
+          possible value; form defaults to viewer.id) — except #1579: when
+          the stored holder left, it shows even in solo mode, nothing
+          selected, so the viewer picks 我 deliberately. */}
+      {(partner || holderFormer) && (
         <Field label={ts.insurance.policyHolder}>
-          <div className="flex gap-1 rounded-xl p-1 bg-[var(--toggle-segment-track)]">
+          <div
+            className="flex gap-1 rounded-xl p-1 bg-[var(--toggle-segment-track)]"
+            aria-describedby={holderUnresolved ? policyHolderHintId : undefined}
+          >
             {[
               { id: viewer.id, label: t.common.me },
-              { id: partner.id, label: partner.displayName ?? t.common.partner },
+              ...(partner ? [{ id: partner.id, label: partner.displayName ?? t.common.partner }] : []),
             ].map(opt => {
               const active = policyHolderUserId === opt.id
               return (
@@ -225,6 +260,11 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               )
             })}
           </div>
+          {holderUnresolved && (
+            <p id={policyHolderHintId} className="mt-1.5 text-xs text-ink-3">
+              {ts.insurance.policyHolderFormerHint}
+            </p>
+          )}
         </Field>
       )}
 
@@ -235,13 +275,17 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
           picking 自行輸入 reveals the text input. */}
       <Field label={ts.insurance.insured} htmlFor={insuredInputId}>
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-1.5">
+          <div
+            className="flex flex-wrap gap-1.5"
+            aria-describedby={insuredUnresolved ? insuredHintId : undefined}
+          >
             <button
               type="button"
               onClick={() => {
                 setInsuredUserId(viewer.id)
                 setInsuredChildId(null)
                 setInsured('')
+                setInsuredUnresolved(false)
               }}
               className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
               style={{
@@ -259,6 +303,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredUserId(partner.id)
                   setInsuredChildId(null)
                   setInsured('')
+                  setInsuredUnresolved(false)
                 }}
                 className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
                 style={{
@@ -278,6 +323,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredChildId(child.id)
                   setInsuredUserId(null)
                   setInsured('')
+                  setInsuredUnresolved(false)
                 }}
                 className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
                 style={{
@@ -294,20 +340,26 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               onClick={() => {
                 setInsuredUserId(null)
                 setInsuredChildId(null)
+                setInsuredUnresolved(false)
               }}
               className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
               style={{
-                border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
-                color: insuredUserId === null && insuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
+                border: insuredFreeformSelected ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                background: insuredFreeformSelected ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
+                color: insuredFreeformSelected ? 'var(--ink)' : 'var(--ink-2)',
               }}
             >
               {ts.insurance.insuredFreeform}
             </button>
           </div>
-          {insuredUserId === null && insuredChildId === null && (
+          {insuredFreeformSelected && (
             <TextInput id={insuredInputId} value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
               placeholder={ts.insurance.insuredPlaceholder} />
+          )}
+          {insuredUnresolved && (
+            <p id={insuredHintId} className="text-xs text-ink-3">
+              {ts.insurance.insuredFormerHint}
+            </p>
           )}
         </div>
       </Field>
@@ -331,11 +383,19 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex-1 h-px bg-hairline" />
       </div>
 
+      <Field label={ts.insurance.currency}>
+        <CurrencySelector
+          value={currency.toUpperCase()}
+          onChange={(next) => setCurrency(parseCurrencyCode(next) ?? currency)}
+          ariaLabel={ts.insurance.currency}
+        />
+      </Field>
+
       <Field label={ts.insurance.annualPremium}>
         {id => (
           <TextInput id={id} value={premium} onChange={e => setPremium(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>} />
         )}
       </Field>
 
@@ -343,7 +403,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         {id => (
           <TextInput id={id} value={sumInsured} onChange={e => setSumInsured(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
-            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>} />
         )}
       </Field>
 
@@ -357,7 +417,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               type="number"
               inputMode="numeric"
               placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
-              rightAddon={<span className="text-xs text-ink-3">NT$</span>}
+              rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>}
             />
           )}
         </Field>
@@ -373,7 +433,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               type="number"
               inputMode="numeric"
               placeholder={ts.insurance.accountValuePlaceholder}
-              rightAddon={<span className="text-xs text-ink-3">NT$</span>}
+              rightAddon={<span className="text-xs text-ink-3">{currencySymbol(currency)}</span>}
             />
           )}
         </Field>

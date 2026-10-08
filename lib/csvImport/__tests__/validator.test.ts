@@ -61,6 +61,12 @@ describe('validateRow', () => {
     expect(out.warnings.some(w => /unknown category/.test(w))).toBe(true)
   })
 
+  it("warns (does not error) on 'settle' — falls back to other (#1541)", () => {
+    const out = validateRow({ ...good, category: 'settle' }, 0)
+    expect(out.ok).toBe(true)
+    expect(out.warnings.some(w => /unknown category "settle"/.test(w))).toBe(true)
+  })
+
   it('warns on empty description', () => {
     const out = validateRow({ ...good, description: '' }, 0)
     expect(out.ok).toBe(true)

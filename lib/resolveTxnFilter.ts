@@ -24,6 +24,13 @@ import type { ResolvedIncomeFilter } from './db/queries/incomes'
  */
 export const NO_PARTNER_SENTINEL = '00000000-0000-0000-0000-000000000000'
 
+/**
+ * The pair whose rows are being filtered. Callers pass
+ * `resolveViewedPair(context, viewerId)` (lib/db/queries/epoch.ts), never the
+ * raw group row: in a pinned past chapter the pair is that chapter's members,
+ * so 「對方」 means the ex, not today's partner (#1604). Passing the group row
+ * fails silently — the filter returns zero of the ex's rows.
+ */
 export interface ResolverGroup {
   memberA: string
   memberB: string | null

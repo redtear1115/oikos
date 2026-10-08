@@ -8,11 +8,13 @@ import { loadEnvLocal } from '../outing/_setup'
 // ─── 0077: compute_monthly_review_snapshot hardening (#1494) ───────────────
 //
 // LOCAL THROWAWAY DATABASE ONLY. This file commits the current function
-// (0077's) and swaps in 0061's for the control runs. It skips itself unless
+// (0089's since #1618 — 0077's hardening plus card 2 storing the payer id, never
+// a name) and swaps in 0061's for the control runs. It never leaves the
+// database on a body that writes names (0061 / 0077). It skips itself unless
 // DATABASE_URL points at localhost — never run it against dev or prod.
 //
 // Database: postgres:17 plus the Supabase stand-ins (see PR #1445's
-// description), then `drizzle-kit migrate` through 0077.
+// description), then `drizzle-kit migrate` through 0089.
 //
 //   DATABASE_URL=postgres://postgres:<pw>@localhost:<port>/postgres \
 //     npx vitest run __tests__/actions/monthlyReviewSnapshot0077.test.ts
@@ -49,10 +51,11 @@ const isLocalDb = (() => {
 const postgres = (await import('postgres')).default
 
 const migration = (file: string) => readFileSync(resolve(__dirname, '../../drizzle', file), 'utf-8')
-const FILE_0077 = migration('0077_monthly_review_snapshot_hardening.sql')
-const STATEMENTS_0077 = FILE_0077.split('--> statement-breakpoint')
-// The current definition; every control run restores it.
-const FN_0077 = STATEMENTS_0077.find((s) => s.includes('CREATE OR REPLACE FUNCTION public.compute_monthly_review_snapshot'))!
+// #1618: the current definition is 0089's (0077's body; card 2 stores the
+// payer id and writes the name NULL). Every control run restores it.
+const FILE_CURRENT = migration('0089_review_payer_id.sql')
+const STATEMENTS_CURRENT = FILE_CURRENT.split('--> statement-breakpoint')
+const FN_CURRENT = STATEMENTS_CURRENT.find((s) => s.includes('CREATE OR REPLACE FUNCTION public.compute_monthly_review_snapshot'))!
 // 0061 has no breakpoints: take its CREATE OR REPLACE FUNCTION … $$; only
 // (not its cron block).
 const FN_0061 = (() => {
@@ -96,7 +99,7 @@ async function asset(groupId: string, name: string) {
 async function cashTx(groupId: string, paidBy: string, amount: number, assetId: string | null = null) {
   const [r] = await pg<{ id: string }[]>`
     INSERT INTO "CashTransactions" (group_id, paid_by, amount, split_type, description, category, transacted_at, asset_id)
-    VALUES (${groupId}, ${paidBy}, ${amount}, 'half', 'TEST_1494', 'food', ${TX_AT}, ${assetId}) RETURNING id`
+    VALUES (${groupId}, ${paidBy}, ${amount}, 'half', 'TEST_1494', 'dining', ${TX_AT}, ${assetId}) RETURNING id`
   return r.id
 }
 
@@ -111,7 +114,7 @@ async function expenseRule(groupId: string, paidBy: string, description: string)
   const [r] = await pg<{ id: string }[]>`
     INSERT INTO "RecurringExpenseRules"
       (group_id, paid_by, amount, split_type, description, category, day_of_month, starts_on, next_occurrence_at)
-    VALUES (${groupId}, ${paidBy}, 100, 'half', ${description}, 'food', 15, '2025-01-15', '2026-04-15') RETURNING id`
+    VALUES (${groupId}, ${paidBy}, 100, 'half', ${description}, 'dining', 15, '2025-01-15', '2026-04-15') RETURNING id`
   return r.id
 }
 
@@ -159,18 +162,18 @@ async function under0061<T>(fn: () => Promise<T>): Promise<T> {
     await pg.unsafe(FN_0061)
     return await fn()
   } finally {
-    await pg.unsafe(FN_0077)
+    await pg.unsafe(FN_CURRENT)
   }
 }
 
 describe.skipIf(!isLocalDb)('0077 compute_monthly_review_snapshot hardening (#1494) — local throwaway DB', () => {
   beforeAll(async () => {
     pg = postgres(databaseUrl, { max: 1, prepare: false, connection: { application_name: 'main_1494' } })
-    await pg.unsafe(FN_0077)
+    await pg.unsafe(FN_CURRENT)
   })
 
   afterAll(async () => {
-    await pg?.unsafe(FN_0077)
+    await pg?.unsafe(FN_CURRENT)
     await pg?.end()
   })
 
@@ -237,6 +240,30 @@ describe.skipIf(!isLocalDb)('0077 compute_monthly_review_snapshot hardening (#14
     ])
   })
 
+  // ─── card 2: payer id, never a name (#1618, 0089) ──────────────────────
+  async function card2(groupId: string) {
+    await pg`DELETE FROM "MonthlyReviewSnapshots" WHERE group_id = ${groupId}`
+    await pg`SELECT public.compute_monthly_review_snapshot(${groupId}, ${YEAR}, ${MONTH})`
+    const [row] = await pg<{ paid_by: string | null; has_name: boolean }[]>`
+      SELECT largest_expense_paid_by AS paid_by, largest_expense_paid_by_name IS NOT NULL AS has_name
+        FROM "MonthlyReviewSnapshots" WHERE group_id = ${groupId} AND year = ${YEAR} AND month = ${MONTH}`
+    return row
+  }
+
+  it('control: under 0061 card 2 stores the payer\'s display name', async () => {
+    const g = await group()
+    await cashTx(g.id, g.b, 900)
+    const row = await under0061(() => card2(g.id))
+    expect(row).toEqual({ paid_by: null, has_name: true })
+  })
+
+  it('0089: card 2 stores the payer id and no name', async () => {
+    const g = await group()
+    await cashTx(g.id, g.a, 100)
+    await cashTx(g.id, g.b, 900)
+    expect(await card2(g.id)).toEqual({ paid_by: g.b, has_name: false })
+  })
+
   // ─── search_path pin and EXECUTE ACL ───────────────────────────────────
   const proconfig = async () =>
     (await pg<{ proconfig: string[] | null }[]>`
@@ -248,10 +275,11 @@ describe.skipIf(!isLocalDb)('0077 compute_monthly_review_snapshot hardening (#14
     expect(await proconfig()).toEqual(['search_path=public, pg_temp'])
   })
 
-  it('0077: pinned search_path; EXECUTE only for postgres / service_role, also after re-applying 0077', async () => {
-    // Re-apply every 0077 statement: CREATE OR REPLACE must keep the revoked
+  it('0077/0089: pinned search_path; EXECUTE only for postgres / service_role, also after re-applying 0089', async () => {
+    // Re-apply every 0089 statement (it carries 0077's SET / REVOKE / GRANT
+    // unchanged): CREATE OR REPLACE must keep the revoked
     // ACL (a DROP + CREATE would bring the default grants back).
-    for (const stmt of STATEMENTS_0077) await pg.unsafe(stmt)
+    for (const stmt of STATEMENTS_CURRENT) await pg.unsafe(stmt)
 
     expect(await proconfig()).toEqual(['search_path=public, pg_temp'])
 

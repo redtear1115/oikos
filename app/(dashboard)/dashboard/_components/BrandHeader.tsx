@@ -1,6 +1,6 @@
 'use client'
 
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useViewedPartner } from '@/app/(dashboard)/_components/MemberContext'
 import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
 import { FutariMark } from '@/app/(dashboard)/_components/FutariMark'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -31,7 +31,10 @@ function PlaneIcon({ size = 14, color = 'currentColor' }: { size?: number; color
 }
 
 export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = {}) {
-  const { group, viewer, partner, viewerIsA } = useMember()
+  const { group, viewer, viewerIsA } = useMember()
+  // #1604 — in a past chapter: that chapter's partner, initial only (avatarUrl
+  // is null), or nobody if the chapter was solo. Never today's partner.
+  const { partner } = useViewedPartner()
   const { open } = useAvatarMenu()
   const t = useTranslations()
   const viewerRole = viewerIsA ? 'a' : 'b'

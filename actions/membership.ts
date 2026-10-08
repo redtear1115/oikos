@@ -12,7 +12,7 @@ import {
   invoiceCredentials,
   monthlyReviewMessages,
   oikosGroups,
-  profiles,
+  pushTokens,
   settlements,
 } from '@/lib/db/schema'
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
@@ -29,6 +29,7 @@ import {
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
+import { dictionaries, getLocale } from '@/lib/i18n/t'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -226,16 +227,12 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
   const leaver = user.id
   const oldGroupId = group.id
 
-  // Fetch leaver's display name BEFORE the transaction so we can name the new
-  // solo group sensibly. Falls back to "我的家計簿" if profile is somehow gone.
-  const [leaverProfile] = await db
-    .select({ displayName: profiles.displayName })
-    .from(profiles)
-    .where(eq(profiles.id, leaver))
-    .limit(1)
-  const newGroupName = leaverProfile?.displayName
-    ? `${leaverProfile.displayName} 的家計簿`
-    : '我的家計簿'
+  // The new solo ledger gets a neutral name in the leaver's locale (#1622).
+  // Never derive it from a display name: a ledger name outlives the person's
+  // account deletion (process_account_deletions does not rewrite it), and the
+  // ledger may later be shared with a new partner. drizzle/0090 renamed the
+  // legacy "<name> 的家計簿" ledgers to the zh-TW value of this key.
+  const newGroupName = dictionaries[await getLocale()].postLeave.newLedgerName
 
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
     // 0. Lock the group row and its open chapter row, take the chapter
@@ -427,6 +424,16 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         isNull(invoiceCredentials.deletedAt),
       ))
 
+    // 10a. #1605 — the leaver's push tokens follow them to the new solo
+    // ledger. Left on the old group they would be sent the stayer's "pending
+    // card due" push (the sender now filters by membership too, and 0087
+    // refuses re-binding to a group the owner is not in; this keeps the rows
+    // pointed where the device's next push should come from).
+    await tx
+      .update(pushTokens)
+      .set({ groupId: newGroup.id })
+      .where(and(eq(pushTokens.groupId, oldGroupId), eq(pushTokens.userId, leaver)))
+
     // 11. Move MonthlyReviewMessages where member_id = leaver
     await tx
       .update(monthlyReviewMessages)
@@ -540,6 +547,12 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
  *   - Soft-delete the removed member's live InvoiceCredentials and clear
  *     their ciphertext (#1289) — the one exception to "data left in place":
  *     a credential is a live secret, not history
+ *   - Pause every live recurring rule of the removed member (income
+ *     recipient / expense payer) and delete their unprocessed pending
+ *     cards (#1588). Records already written, skipped and resolved cards
+ *     stay. Stale `proposed_paid_by` snapshots on the stayer's rules are reset
+ *     to the rule's payer. Failure looks like: cards of the ex keep appearing
+ *     every period and can never be confirmed.
  *   - Recalc balance (resolves to 0 — solo short-circuit)
  *
  * Irreversible.
@@ -631,6 +644,55 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
         eq(invoiceCredentials.userId, removedUserId),
         isNull(invoiceCredentials.deletedAt),
       ))
+
+    // #1605 — the removed member's devices stop receiving this ledger's
+    // pushes. Deleted rather than moved: no group is created for them (see
+    // above), and their own ledger's registrar re-registers the device the
+    // next time they open the app. Their tokens on other ledgers stay.
+    await tx
+      .delete(pushTokens)
+      .where(and(eq(pushTokens.groupId, groupId), eq(pushTokens.userId, removedUserId)))
+
+    // #1588 — the removed member's recurring rules stop here. Same predicates
+    // as process_account_deletions (drizzle/0086) and the 0086 data repair:
+    // pause by person (COALESCE keeps an earlier paused_at), delete the
+    // unprocessed cards of those rules whatever their earlier paused state,
+    // and point stale payer snapshots on the stayer's rules back at the
+    // rule's payer (what cron would generate today).
+    await tx.execute(sql`
+      UPDATE "RecurringIncomeRules"
+      SET paused_at = COALESCE(paused_at, ${boundary})
+      WHERE group_id = ${groupId} AND recipient_id = ${removedUserId} AND deleted_at IS NULL
+    `)
+    await tx.execute(sql`
+      UPDATE "RecurringExpenseRules"
+      SET paused_at = COALESCE(paused_at, ${boundary})
+      WHERE group_id = ${groupId} AND paid_by = ${removedUserId} AND deleted_at IS NULL
+    `)
+    await tx.execute(sql`
+      DELETE FROM "PendingIncomeOccurrences"
+      WHERE group_id = ${groupId} AND skipped_at IS NULL AND resolved_tx_id IS NULL
+        AND rule_id IN (
+          SELECT id FROM "RecurringIncomeRules"
+          WHERE group_id = ${groupId} AND recipient_id = ${removedUserId} AND deleted_at IS NULL
+        )
+    `)
+    await tx.execute(sql`
+      DELETE FROM "PendingExpenseOccurrences"
+      WHERE group_id = ${groupId} AND skipped_at IS NULL AND resolved_tx_id IS NULL
+        AND rule_id IN (
+          SELECT id FROM "RecurringExpenseRules"
+          WHERE group_id = ${groupId} AND paid_by = ${removedUserId} AND deleted_at IS NULL
+        )
+    `)
+    await tx.execute(sql`
+      UPDATE "PendingExpenseOccurrences" p
+      SET proposed_paid_by = r.paid_by
+      FROM "RecurringExpenseRules" r
+      WHERE r.id = p.rule_id AND p.group_id = ${groupId}
+        AND p.skipped_at IS NULL AND p.resolved_tx_id IS NULL
+        AND p.proposed_paid_by = ${removedUserId} AND r.paid_by = ${group.memberA}
+    `)
 
     await recalcGroupBalance(groupId, tx)
   })

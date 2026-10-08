@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
 import type { YearMonth } from '@/lib/monthlyReview'
 import type { PartnerQuizQuestionKey, PartnerQuizStatus } from '@/lib/partnerQuiz'
 import { Carousel } from './Carousel'
@@ -46,7 +46,10 @@ export interface ReviewQuizState {
 export interface ReviewClientProps {
   reviewedMonth: YearMonth
   editorMonth: YearMonth
-  snapshot: MonthlyReviewSnapshotRow | null
+  /** The snapshot without its payer id (#1618, toClientReviewSnapshot). */
+  snapshot: ClientReviewSnapshot | null
+  /** Card 2's payer, resolved on the server within the viewed chapter; null = unknown. */
+  payerName: string | null
   pastMessages: ReviewPastMessage[]
   ownEditorMessage: ReviewEditorMessage | null
   partnerEditorMessage: ReviewPartnerMessage | null
@@ -63,6 +66,7 @@ export function ReviewClient({
   reviewedMonth,
   editorMonth,
   snapshot,
+  payerName,
   pastMessages,
   ownEditorMessage,
   partnerEditorMessage,
@@ -131,7 +135,7 @@ export function ReviewClient({
         <div className="px-2 pb-2">
           <Carousel>
             <CardCategory snapshot={snapshot} isSolo={isSolo} />
-            <CardLargest snapshot={snapshot} />
+            <CardLargest snapshot={snapshot} payerName={payerName} />
             <CardRecurring snapshot={snapshot} />
             <CardAssets snapshot={snapshot} />
           </Carousel>

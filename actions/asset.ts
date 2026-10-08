@@ -168,7 +168,12 @@ export interface EditCarInput {
   plate?: string | null
   purchasedAt: string | null
   purchasePrice: number | null
-  primaryUserId?: string | null      // NEW — Slice 2
+  // #1589 — primary-user trinary, like plate: undefined = keep the stored
+  // value, null / '' = 共用, string = set (must be a current member). The edit
+  // sheet sends undefined while the stored primary user has left the ledger
+  // (the page never sends their id), so an unrelated edit keeps the car as it
+  // was instead of silently making it 共用.
+  primaryUserId?: string | null
   fuelType?: GasFuelType
   color?: string | null
   year?: number | null
@@ -180,6 +185,9 @@ export interface EditCarInput {
 
 export const editCar = action(async (input: EditCarInput): Promise<void> => {
   const validated = validateCarInput(input)
+  // validateCarInput folds undefined into null (共用) — read the trinary from
+  // the raw input before that happens.
+  const keepPrimaryUser = input.primaryUserId === undefined
   const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
@@ -198,7 +206,11 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
     // the car is accepted unchanged even when that person is no longer in the
     // group (removePartner leaves their data in place), so the edit form, which
     // sends the stored value back, keeps working for those cars.
+    // #1589 — the current sheet no longer receives that id and sends undefined
+    // (keep) instead; the exemption stays for a tab loaded before #1589. It
+    // can only re-write the value already stored, never pick a non-member.
     if (
+      !keepPrimaryUser &&
       validated.primaryUserId !== null &&
       validated.primaryUserId !== group.memberA &&
       validated.primaryUserId !== group.memberB
@@ -220,7 +232,7 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
     const carUpdates: {
       purchasedAt: string | null
       purchasePrice: number | null
-      primaryUserId: string | null
+      primaryUserId?: string | null
       fuelType: typeof validated.fuelType
       color: string | null
       year: number | null
@@ -239,6 +251,8 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
       model: validated.model,
       initialOdometer: validated.initialOdometer,
     }
+    // #1589 — keep-stored: leave primary_user_id out of the UPDATE entirely.
+    if (keepPrimaryUser) delete carUpdates.primaryUserId
     if (validated.plate !== undefined) {
       carUpdates.plateEncrypted = validated.plate === null ? null : encrypt(validated.plate, aadFor('CarDetails', 'plate_encrypted', updated[0].id))
     }
@@ -911,6 +925,8 @@ export interface CreateInsuranceInput {
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
   accountValue?: number | null
+  /** #1600 — policy currency; create defaults to the ledger's, edit keeps the stored one when omitted. */
+  currency?: string | null
   reminderDaysBefore?: number | null
   notes?: string | null
 }
@@ -1042,6 +1058,7 @@ export const createInsurance = action(async (input: CreateInsuranceInput): Promi
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
       accountValue: validated.accountValue,
+      currency: validated.currency ?? group.baseCurrency,
       reminderDaysBefore: validated.reminderDaysBefore,
     })
     return [asset]
@@ -1058,12 +1075,15 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
   const { group } = await requireViewerGroup()
 
   // #1442 — the links this policy already has, read from its own stored row
-  // in the viewer's group (only when there is a link to check). A frozen copy
-  // may be *kept* (leaveGroup re-pointed the link at it), never newly chosen.
-  const [stored] = !input.vehicleId && !validated.insuredChildId ? [] : await db
+  // in the viewer's group. A frozen copy may be *kept* (leaveGroup re-pointed
+  // the link at it), never newly chosen.
+  // #1579 — always read: the stored 要保人 decides whether a null holder is
+  // allowed below.
+  const [stored] = await db
     .select({
       vehicleId: insuranceDetails.vehicleId,
       insuredChildId: insuranceDetails.insuredChildId,
+      policyHolderUserId: insuranceDetails.policyHolderUserId,
     })
     .from(insuranceDetails)
     .innerJoin(assets, eq(assets.id, insuranceDetails.assetId))
@@ -1079,6 +1099,12 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
 
   if (validated.policyHolderUserId) {
     assertPolicyHolderInGroup(validated.policyHolderUserId, group)
+  } else if (stored?.policyHolderUserId) {
+    // #1579 — a policy that has a 要保人 keeps one. Only legacy rows (NULL
+    // since before #142) may stay NULL. Without this, any caller sending no
+    // holder — e.g. an edit sheet whose stored holder left the ledger — would
+    // erase the holder as a side effect of editing another field.
+    throw actionError('policyholder_required')
   }
 
   if (validated.insuredChildId) {
@@ -1122,6 +1148,8 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
         accountValue: validated.accountValue,
+        // #1600 — insert branch = no details row yet: caller's currency, else the ledger's.
+        currency: validated.currency ?? group.baseCurrency,
         reminderDaysBefore: validated.reminderDaysBefore,
       })
       .onConflictDoUpdate({
@@ -1144,6 +1172,8 @@ export const editInsurance = action(async (input: EditInsuranceInput): Promise<v
           vehicleId: validated.vehicleId,
           expectedMaturityAmount: validated.expectedMaturityAmount,
           accountValue: validated.accountValue,
+          // #1600 — omitted currency leaves the stored one untouched (never NULLs it).
+          ...(validated.currency ? { currency: validated.currency } : {}),
           reminderDaysBefore: validated.reminderDaysBefore,
         },
       })

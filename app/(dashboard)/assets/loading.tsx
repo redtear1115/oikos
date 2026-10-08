@@ -23,7 +23,7 @@ export default function Loading() {
       {/* BottomNav placeholder */}
       <div
         className="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-bg border-t border-t-hairline"
-        style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }}
+        style={{ minHeight: 'calc(64px + env(safe-area-inset-bottom))' }}
       />
     </div>
   )

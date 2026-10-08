@@ -22,6 +22,8 @@ import {
   isAfter,
   isMonthInChapter,
   nextMonth,
+  resolveReviewPayerName,
+  toClientReviewSnapshot,
 } from '@/lib/monthlyReview'
 import { ReviewClient } from './_components/ReviewClient'
 
@@ -55,12 +57,16 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   // side (lib/monthlyReview.ts › isMonthInChapter).
   if (!isMonthInChapter(reviewedMonth, context.window)) notFound()
 
-  // Members of the chapter being viewed, not of the group today (#1384). A
-  // partner who left views their old chapter through the past-times pin
-  // (resolveViewerEpochContext accepts it only for that chapter's members);
-  // the group row no longer names them, the epoch row does. Reading the group
-  // row sent them to /sign-in, and showed the stayer the NEXT partner as the
-  // other half of an old chapter.
+  // Members of the chapter being viewed, not of the group today (#1384). The
+  // group row no longer names a partner who left; the epoch row does. Reading
+  // the group row showed the stayer the NEXT partner as the other half of an
+  // old chapter.
+  //
+  // A partner who left cannot reach this page today: since #1603
+  // resolveViewerEpochContext ignores a pin into a ledger the viewer is no
+  // longer a member of, and the dashboard layout above this page requires
+  // current membership. The leaver path here is unreachable until #1612
+  // (read-only look-back for former members), which reuses this logic.
   const chapter = context.window.epochId ? await getEpochMembers(context.window.epochId) : null
   const memberA = chapter ? chapter.memberAId : group.memberA
   const memberB = chapter ? chapter.memberBId : group.memberB
@@ -82,15 +88,32 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     .where(inArray(profiles.id, memberIds))
 
   const viewerProfile = profileRows.find((p) => p.id === user.id)
-  if (!viewerProfile) redirect('/sign-in')
-  const partnerProfile = memberB
-    ? profileRows.find((p) => p.id !== user.id)
-    : null
-  const isSolo = !memberB
+  // 404, never /sign-in: the viewer is signed in, and /sign-in would bounce
+  // them back to /dashboard in a loop (#1603).
+  if (!viewerProfile) notFound()
   // A closed chapter is read-only (epoch-readonly): no next-month editor, and
   // no partner quiz — the quiz session is the group's live one, which after a
   // leave belongs to a different pair.
   const readOnly = context.window.isPast
+  const liveMember = memberB
+    ? profileRows.find((p) => p.id !== user.id)
+    : null
+  // #1604 part 2 — in a closed chapter the other person is shown as they were
+  // when it closed: the name getEpochMembers returns (the snapshot) and no
+  // avatar (after-leaving spec,「人：停在當時」). Never the live profile, whose
+  // name and photo may be from long after the chapter ended. The open chapter
+  // keeps the live profile.
+  const chapterPartnerName = readOnly && chapter
+    ? ((chapter.memberAId === user.id ? chapter.memberBName : chapter.memberAName) ?? null)
+    : null
+  const partnerProfile = !liveMember
+    ? null
+    : readOnly
+      ? (chapterPartnerName === null
+          ? null
+          : { id: liveMember.id, displayName: chapterPartnerName, avatarUrl: null })
+      : liveMember
+  const isSolo = !memberB
 
   const editorMonth = nextMonth(reviewedMonth)
 
@@ -125,6 +148,13 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     ? quizSession.questionKeys.filter(isPartnerQuizQuestionKey)
     : []
 
+  // #1618 — card 2's payer: the snapshot stores an id; the name comes only from
+  // this chapter's two people (lib/monthlyReview.ts › resolveReviewPayerName),
+  // and the id itself never reaches the client.
+  const payerName = snapshot
+    ? resolveReviewPayerName(snapshot.largestExpensePaidBy, chapter, profileRows)
+    : null
+
   // Snapshot may be missing for the current (still-in-progress) month or for
   // any month that pre-dates the group. Spec: render a friendly "not ready"
   // surface rather than 404, so the editor for next month still works.
@@ -137,7 +167,8 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     <ReviewClient
       reviewedMonth={reviewedMonth}
       editorMonth={editorMonth}
-      snapshot={snapshot}
+      snapshot={snapshot ? toClientReviewSnapshot(snapshot) : null}
+      payerName={payerName}
       pastMessages={pastMessages.map((m) => ({
         id: m.id,
         memberId: m.memberId,

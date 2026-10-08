@@ -58,7 +58,7 @@ async function seedTwoChapters() {
     { groupId: g.id, startedAt: handover, memberAId: a, memberBId: c },
   ])
   await db.insert(monthlyReviewSnapshots).values(
-    [3, 4, 5, 6, 7, 8].map((month) => ({ groupId: g.id, year: 2026, month, largestExpensePaidByName: month <= 6 ? 'B' : 'C' })),
+    [3, 4, 5, 6, 7, 8].map((month) => ({ groupId: g.id, year: 2026, month, largestExpensePaidBy: month <= 6 ? b : c })),
   )
   cleanups.push(async () => {
     await db.delete(monthlyReviewSnapshots).where(eq(monthlyReviewSnapshots.groupId, g.id))
@@ -79,7 +79,7 @@ describe('reviews follow the chapter (#1380)', () => {
     expect(months.map((m) => m.month)).toEqual([8, 7])
     for (const m of months) {
       const snap = await loadMonthlyReviewSnapshot(s.groupId, m.year, m.month)
-      expect(snap?.largestExpensePaidByName).toBe('C') // nothing from B's chapter reaches C
+      expect(snap?.largestExpensePaidBy).toBe(s.c) // nothing from B's chapter reaches C (#1618: the payer id, no name)
     }
   })
 

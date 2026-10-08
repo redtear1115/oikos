@@ -20,7 +20,7 @@ import {
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { listIncomesMonthSummaries } from '@/lib/db/queries/incomes'
 import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
-import { lockOpenChapterForWrite, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { lockOpenChapterForWrite, resolveViewedPair, resolveViewerEpochContext, type ViewerEpochContext } from '@/lib/db/queries/epoch'
 import { openChapterCreatedClause, openEpochClause } from '@/lib/db/queries/_predicates'
 import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
@@ -32,7 +32,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
-import { convertAmount, type CurrencyCode } from '@/lib/currency'
+import { convertWholeUnits, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
@@ -109,12 +109,7 @@ export const createTransaction = action(async (
     if (!rate) {
       throw actionError('fx_rate_not_set', { from: inputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
-    baseAmount = convertAmount({
-      amount: validated.amount,
-      from: inputCurrency,
-      to: group.baseCurrency as CurrencyCode,
-      rate: parseFloat(rate.rate),
-    })
+    baseAmount = convertWholeUnits(validated.amount, parseFloat(rate.rate))
     originalCurrency = inputCurrency
     originalAmount = validated.amount
     rateSnapshot = rate.rate
@@ -264,12 +259,7 @@ export const editTransaction = action(async (input: EditTransactionInput): Promi
     if (!rate) {
       throw actionError('fx_rate_not_set', { from: editInputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
-    editBaseAmount = convertAmount({
-      amount: validated.amount,
-      from: editInputCurrency,
-      to: group.baseCurrency as CurrencyCode,
-      rate: parseFloat(rate.rate),
-    })
+    editBaseAmount = convertWholeUnits(validated.amount, parseFloat(rate.rate))
     editOriginalCurrency = editInputCurrency
     editOriginalAmount = validated.amount
     editRateSnapshot = rate.rate
@@ -368,13 +358,14 @@ export interface PagedTxnRow {
  * resolved in `app/(dashboard)/records/page.tsx`. Returns `undefined` for an
  * absent filter (the queries then skip the filter entirely).
  */
-function resolveWireFilter(
+async function resolveWireFilter(
   filterWire: TxnFilterWire | undefined,
   viewerId: string,
-  group: { memberA: string; memberB: string | null },
-): ResolvedTxnFilter | undefined {
+  context: ViewerEpochContext,
+): Promise<ResolvedTxnFilter | undefined> {
   if (!filterWire) return undefined
-  return resolveTxnFilter(fromWire(filterWire), viewerId, group)
+  // #1604 — the viewed chapter's pair, as on the records page's first render.
+  return resolveTxnFilter(fromWire(filterWire), viewerId, await resolveViewedPair(context, viewerId))
 }
 
 export const loadMoreTransactions = action(async (
@@ -391,7 +382,7 @@ export const loadMoreTransactions = action(async (
   if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
-  const resolved = resolveWireFilter(filterWire, user.id, group)
+  const resolved = await resolveWireFilter(filterWire, user.id, context)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const rows = await listTransactionsPaged({
     groupId: group.id,
@@ -424,7 +415,7 @@ export const loadMoreFeedAll = action(async (
   if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
-  const resolved = resolveWireFilter(filterWire, user.id, group)
+  const resolved = await resolveWireFilter(filterWire, user.id, context)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const rows = await listFeedAllPaged({
     groupId: group.id,
@@ -466,12 +457,12 @@ export const loadRecordsMonthSummaries = action(async (
 
   if (tab === 'income') {
     const incomeFilter = filterWire
-      ? resolveIncomeFilter(fromWire(filterWire), user.id, group)
+      ? resolveIncomeFilter(fromWire(filterWire), user.id, await resolveViewedPair(context, user.id))
       : undefined
     return listIncomesMonthSummaries(group.id, monthKey, drill, incomeFilter, dateRange, epochWindow)
   }
 
-  const resolved = resolveWireFilter(filterWire, user.id, group)
+  const resolved = await resolveWireFilter(filterWire, user.id, context)
   const opts = { groupId: group.id, filter: resolved, monthKey, drill, dateRange, epochWindow }
   return tab === 'expense'
     ? listTransactionsMonthSummaries(opts)

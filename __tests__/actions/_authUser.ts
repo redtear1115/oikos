@@ -9,9 +9,15 @@
 // like: `{ ok: false, code: 'profile_not_found' }` where the test expected
 // ok: true, or an `ActionError: profile_not_found` from a seed step.
 //
-// Insert the Profiles row first, then call this: handle_new_user (the
-// on_auth_user_created trigger) does ON CONFLICT DO NOTHING, so the fixture's
-// row is kept as written.
+// Callers insert the Profiles row first, then call this. On dev the
+// handle_new_user trigger (on_auth_user_created) inserts a Profiles row
+// WITHOUT ON CONFLICT, so inserting the auth user while the fixture's row
+// exists fails with `duplicate key ... "Profiles_pkey"` (#1596; failure looks
+// like 16 red invite tests unrelated to the change under test). So per user,
+// in one transaction: drop the fixture's just-inserted row (nothing references
+// it yet), create the auth user (the trigger re-creates the profile from
+// full_name), then upsert the row so it ends up as the fixture wrote it
+// whether or not the database's trigger inserts one.
 //
 // Connection: on a local throwaway DB, DATABASE_URL (it is the superuser
 // there). Anywhere else DATABASE_URL is the runtime role (futari_app), which
@@ -48,12 +54,19 @@ async function withAdmin<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
 export async function seedAuthUsers(users: Array<{ id: string; displayName: string }>): Promise<void> {
   if (users.length === 0) return
   await withAdmin(async (sql) => {
-    for (const u of users) {
-      await sql`
-        INSERT INTO auth.users (id, raw_user_meta_data)
-        VALUES (${u.id}, jsonb_build_object('full_name', ${u.displayName}::text))
-        ON CONFLICT (id) DO NOTHING`
-    }
+    await sql.begin(async (tx) => {
+      for (const u of users) {
+        await tx`DELETE FROM "Profiles" WHERE id = ${u.id}`
+        await tx`
+          INSERT INTO auth.users (id, raw_user_meta_data)
+          VALUES (${u.id}, jsonb_build_object('full_name', ${u.displayName}::text))
+          ON CONFLICT (id) DO NOTHING`
+        await tx`
+          INSERT INTO "Profiles" (id, display_name)
+          VALUES (${u.id}, ${u.displayName})
+          ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name`
+      }
+    })
   })
 }
 

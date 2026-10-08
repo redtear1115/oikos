@@ -547,3 +547,78 @@ describe('real @sentry/browser client', () => {
     expect(sent).not.toContain(`${MASKED_VALUE}${MASKED_VALUE}`)
   })
 })
+
+describe('scrubSentryEvent — outing share token (#1558)', () => {
+  const UUID = '2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10'
+
+  it('masks the share token in request url, Referer and drops a shareToken body', () => {
+    const event: Event = {
+      request: {
+        method: 'POST',
+        url: `https://futari.example/en/outing/${TOKEN}`,
+        headers: { Referer: `https://futari.example/sign-in?next=%2Fen%2Fouting%2F${TOKEN}` },
+        data: { shareToken: TOKEN, displayName: 'friend' },
+      },
+    }
+    const out = scrubSentryEvent(event)
+    expectClean(out)
+    expect(out.request?.url).toBe('https://futari.example/en/outing/:token')
+    expect(out.request).not.toHaveProperty('headers')
+    expect(out.request).not.toHaveProperty('data')
+    // String body form (serialized server action arguments).
+    const str = scrubSentryEvent({ request: { method: 'POST', data: `{"shareToken":"${TOKEN}"}` } })
+    expectClean(str)
+  })
+
+  it('masks the share token in transaction name, trace data referer and request_path', () => {
+    const out = scrubSentryEvent({
+      type: 'transaction',
+      transaction: `GET /en/outing/${TOKEN}`,
+      contexts: {
+        nextjs: { request_path: `/outing/${TOKEN}` },
+        trace: {
+          span_id: 'a'.repeat(16),
+          trace_id: 'b'.repeat(32),
+          data: {
+            'url.full': `https://futari.example/zh-CN/outing/${TOKEN}`,
+            'http.request.header.referer': `https://futari.example/sign-in?next=/en/outing/${TOKEN}`,
+          },
+        },
+      },
+    })
+    expectClean(out)
+    expect(out.transaction).toBe('GET /en/outing/:token')
+    expect((out.contexts?.nextjs as Record<string, unknown>).request_path).toBe('/outing/:token')
+    const data = out.contexts?.trace?.data as Record<string, unknown>
+    expect(data['url.full']).toBe('https://futari.example/zh-CN/outing/:token')
+    // Request headers in span data are filtered outright (stricter than masking).
+    expect(data['http.request.header.referer']).not.toContain(TOKEN)
+  })
+
+  it('masks a bare outing path in free text and breadcrumbs', () => {
+    expect(scrubSentryBreadcrumb({ category: 'console', message: `failed /en/outing/${TOKEN} and GET /records` }).message).toBe(
+      'failed /en/outing/:token and GET /records',
+    )
+    expect(scrubSentryBreadcrumb({ category: 'navigation', data: { to: `/en/outing/${TOKEN}` } }).data).toEqual({
+      to: '/en/outing/:token',
+    })
+  })
+
+  it('keeps the parameterized outing route name byte-identical', () => {
+    for (const name of [
+      '/[locale]/outing/[shareToken]',
+      'GET /[locale]/outing/[shareToken]',
+      '/outing/[shareToken]',
+      '/[locale]/outing/[shareToken]/join',
+    ]) {
+      expect(scrubSentryEvent({ type: 'transaction', transaction: name }).transaction).toBe(name)
+    }
+  })
+
+  it('leaves the signed-in /outings/<uuid> path alone', () => {
+    expect(scrubSentryEvent({ request: { url: `https://futari.example/outings/${UUID}` } }).request?.url).toBe(
+      `https://futari.example/outings/${UUID}`,
+    )
+    expect(scrubSentryBreadcrumb({ category: 'console', message: `GET /outings/${UUID}` }).message).toBe(`GET /outings/${UUID}`)
+  })
+})

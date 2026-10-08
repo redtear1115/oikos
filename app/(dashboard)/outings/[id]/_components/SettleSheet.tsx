@@ -9,7 +9,7 @@ import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
 import { currencyPrecision } from '@/lib/currency'
 import { recordOutingSettlement } from '@/actions/outing'
-import { Field, ChipRow, Chip } from './sheetBits'
+import { Field, ChipRow, Chip } from '@/app/(dashboard)/outings/_components/sheetBits'
 
 interface Props {
   open: boolean

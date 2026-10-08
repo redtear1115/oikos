@@ -3,8 +3,10 @@ import { act, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { en } from '@/lib/i18n/locales/en'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type {
+  RecurringIncomeRuleView as RecurringRuleRow,
+  RecurringExpenseRuleView as RecurringExpenseRuleRow,
+} from '@/lib/recurringMemberLink'
 
 // #1187 / #1189 — recurring rules: next-run date on list rows, localized
 // income category names, selection state exposed beyond colour, headings,
@@ -17,7 +19,7 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 } as unknown as typeof ResizeObserver
 
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd',
   useMember: () => ({
     viewer: { id: 'u-1', initial: 'R', avatarUrl: null, defaultSplitType: 'half' },
     partner: { id: 'u-2', initial: 'S', avatarUrl: null, displayName: 'Sam' },
@@ -41,12 +43,13 @@ import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { RuleListItem } from '@/app/(dashboard)/settings/recurring/_components/RuleListItem'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
+import { ToastProvider } from '@/components/Toast'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 
 function En({ children }: { children: ReactNode }) {
   return (
     <TranslationsProvider value={en} locale="en">
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </TranslationsProvider>
   )
 }
@@ -54,6 +57,8 @@ function En({ children }: { children: ReactNode }) {
 const incomeRule: RecurringRuleRow = {
   id: 'r1',
   recipientId: 'u-1',
+  recipientIsFormer: false,
+  formerLabel: true,
   amount: 50000,
   category: 'salary',
   source: null,
@@ -69,6 +74,8 @@ const incomeRule: RecurringRuleRow = {
 const expenseRule: RecurringExpenseRuleRow = {
   id: 'e1',
   paidBy: 'u-1',
+  paidByIsFormer: false,
+  formerLabel: true,
   amount: 20000,
   splitType: 'half',
   splitRatioA: null,

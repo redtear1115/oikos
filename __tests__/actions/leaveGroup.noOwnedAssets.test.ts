@@ -51,6 +51,9 @@ vi.mock('next/cache', () => ({
   revalidatePath: () => {},
   revalidateTag: () => {},
 }))
+// leaveGroup reads the locale cookie to name the new solo ledger (#1622); no
+// request scope here, so cookies() would throw. No cookie -> zh-TW default.
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => undefined }) }))
 
 const { db } = await import('@/lib/db/client')
 const {
@@ -183,7 +186,7 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
     const [cashTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userBId,
       amount: 100, splitType: 'all_mine',
-      description: 'TEST_139 leaver cash', category: 'food',
+      description: 'TEST_139 leaver cash', category: 'dining',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(cashTx.id)
@@ -224,7 +227,7 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
     const [aCashTx] = await db.insert(cashTransactions).values({
       groupId: refs.oldGroupId, paidBy: refs.userAId,
       amount: 200, splitType: 'all_mine',
-      description: 'TEST_139 stayer cash', category: 'food',
+      description: 'TEST_139 stayer cash', category: 'dining',
       transactedAt: new Date('2026-05-01T00:00:00Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(aCashTx.id)
@@ -242,6 +245,9 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
       .where(eq(oikosGroups.id, result.groupId)).limit(1)
     expect(newGroup.memberA).toBe(refs.userBId)
     expect(newGroup.memberB).toBeNull()
+    // #1622: neutral default (no locale cookie -> zh-TW), never the leaver's name.
+    expect(newGroup.name).toBe('家計簿')
+    expect(newGroup.name).not.toContain('TEST_139_userB')
 
     // ── Assert: old group is now solo, member A intact ──
     const [oldGroup] = await db.select().from(oikosGroups)

@@ -6,6 +6,11 @@ import { useLocale, useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { SAVINGS_RETURN_CATEGORIES, getIncomeCategory } from '@/lib/incomeCategories'
 import { formatDateAbsolute } from '@/lib/format-date'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { currencySymbol } from '@/lib/currency'
+
+// Symbol + space, whole units of the ledger base currency (design-driven spacing).
+const money = (n: number, currency: string) => `${currencySymbol(currency)} ${n.toLocaleString()}`
 
 interface Props {
   progress: SavingsProgress
@@ -22,8 +27,9 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
   const t = useTranslations()
   const locale = useLocale()
   const ts = t.assetDetail.savings
+  const baseCurrency = useBaseCurrency()
   const hasExpected = progress.expectedMaturity !== null
-  const subCopy = computeSub(progress, endsAt, startsAt, ts, locale)
+  const subCopy = computeSub(progress, endsAt, startsAt, ts, locale, baseCurrency)
 
   // Breakdown row: only render when at least two buckets carry money. A
   // single non-zero bucket already tells the full story via the main bar.
@@ -71,16 +77,15 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
           className="mt-1.5 ml-[26px] text-xs tabular-nums text-ink-3 font-numeric"
         >
           {ts.heroBreakdownPrefix}{' '}
-          {/* TODO(v0.17 currency): "NT$ {amount}" with space + i18n templates have
-               "NT$" baked in (heroMatured, savings*, etc.) — defer until formatAmount
-               gains digits-only mode. */}
+          {/* Symbol + space is design-driven (not formatLedgerAmount); the symbol
+               follows the ledger base currency. */}
           {breakdownParts.map((p, idx) => (
             <span key={p.cat}>
               {idx > 0 && ' · '}
               {/* #1249 — `.label` is the hard-coded zh-TW string in
                   lib/incomeCategories.ts; `t.incomeCategory[id]` is the
                   localized name, same lookup as the 5 callsites on /records. */}
-              {t.incomeCategory[getIncomeCategory(p.cat).id] ?? getIncomeCategory(p.cat).label} NT$ {p.amount.toLocaleString()}
+              {t.incomeCategory[getIncomeCategory(p.cat).id] ?? getIncomeCategory(p.cat).label} {money(p.amount, baseCurrency)}
             </span>
           ))}
         </div>
@@ -110,6 +115,7 @@ function ProgressBar({
   actualLabel: string
   expectedTag: string
 }) {
+  const baseCurrency = useBaseCurrency()
   const pct = progress !== null ? Math.round(progress * 100) : null
   return (
     <div>
@@ -137,10 +143,10 @@ function ProgressBar({
         </span>
       </div>
       <div className="mt-1.5 ml-[26px] text-xs tabular-nums text-ink-3 font-numeric">
-        <span className="text-ink">NT$ {actual.toLocaleString()}</span>
+        <span className="text-ink">{money(actual, baseCurrency)}</span>
         <span> {actualLabel}</span>
         {expected !== null && (
-          <span> / {expectedTag} NT$ {expected.toLocaleString()}</span>
+          <span> / {expectedTag} {money(expected, baseCurrency)}</span>
         )}
       </div>
     </div>
@@ -160,6 +166,7 @@ function NoExpectedMaturityRow({
   barTemplate: string
   ctaLabel: string
 }) {
+  const baseCurrency = useBaseCurrency()
   return (
     <div>
       <div className="flex items-center gap-3">
@@ -169,7 +176,7 @@ function NoExpectedMaturityRow({
           {labelOut}
         </span>
         <div className="flex-1 text-xs text-ink-2 font-numeric">
-          {barTemplate.replace('{received}', received.toLocaleString())}
+          {barTemplate.replace('{received}', money(received, baseCurrency))}
         </div>
       </div>
       {onSetExpected && (
@@ -185,7 +192,7 @@ function NoExpectedMaturityRow({
   )
 }
 
-function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null, ts: Translations['assetDetail']['savings'], locale: string): string {
+function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null, ts: Translations['assetDetail']['savings'], locale: string, currency: string): string {
   if (p.awaitingMaturity) return ts.heroAwaitingMaturity
   // Not yet active: only when we have a start date and we're before it
   if (startsAt && p.timeProgress === 0) return ts.heroNotYetActive.replace('{date}', formatDateAbsolute(startsAt, locale))
@@ -200,5 +207,5 @@ function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string 
       ? ts.heroPartialWithYears.replace('{pct}', pct).replace('{years}', p.yearsLeft.toFixed(1))
       : ts.heroPartial.replace('{pct}', pct)
   }
-  return ts.heroMatured.replace('{total}', p.returnTotal.toLocaleString())
+  return ts.heroMatured.replace('{total}', money(p.returnTotal, currency))
 }

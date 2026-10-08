@@ -69,7 +69,7 @@ const {
   currencyRates,
   trips,
 } = await import('@/lib/db/schema')
-const { createTransaction } = await import('@/actions/transaction')
+const { createTransaction, editTransaction } = await import('@/actions/transaction')
 const { eq, inArray, isNull, and } = await import('drizzle-orm')
 const { unwrapAction } = await import('@/lib/action-errors')
 
@@ -183,9 +183,8 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    // Set USD → TWD rate: 1 USD = 32 TWD (so 1250 cents USD = $12.50 → 400 TWD)
-    // But since input is integer and USD precision=2, 1250 cents input:
-    // fromDisplay = 1250 / 100 = 12.50, toDisplay = 12.50 * 32 = 400, toStorage = 400
+    // Set USD → TWD rate: 1 USD = 32 TWD. Ledger amounts are whole units, so
+    // $45 → 1440 TWD (#1582; the old cents semantics read 1250 as $12.50).
     await db.insert(currencyRates).values({
       groupId: refs.groupId,
       fromCurrency: 'usd',
@@ -194,7 +193,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     })
 
     const result = unwrapAction(await createTransaction({
-      amount: 1250,  // 1250 cents = $12.50 USD
+      amount: 45,  // $45 USD, whole units
       currency: 'usd',
       description: 'USD test',
       category: 'dining',
@@ -215,9 +214,9 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       .where(eq(cashTransactions.id, result.id))
       .limit(1)
 
-    expect(row.amount).toBe(400)  // 12.50 * 32 = 400 TWD
+    expect(row.amount).toBe(1440)  // 45 * 32
     expect(row.originalCurrency).toBe('usd')
-    expect(row.originalAmount).toBe(1250)
+    expect(row.originalAmount).toBe(45)
     expect(row.rateSnapshot).toBe('32.000')
   })
 
@@ -357,5 +356,33 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     await db.delete(profiles).where(eq(profiles.id, userId2))
 
     expect(result).toEqual({ ok: false, code: 'trip_missing' })
+  })
+
+  it('USD base: JPY 1000 @0.0067 stores 7; tiny amounts store 1 on create and edit (#1582)', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+    await db.update(oikosGroups).set({ baseCurrency: 'usd' }).where(eq(oikosGroups.id, refs.groupId))
+    await db.insert(currencyRates).values([
+      { groupId: refs.groupId, fromCurrency: 'jpy', toCurrency: 'usd', rate: '0.0067' },
+      { groupId: refs.groupId, fromCurrency: 'twd', toCurrency: 'usd', rate: '0.031' },
+    ])
+    const base = { description: 'fx', category: 'dining', splitType: 'all_mine' as const, payerId: refs.userId, transactedAt: '2026-05-14' }
+    const amountOf = async (id: string) => (await db.select({ a: cashTransactions.amount }).from(cashTransactions).where(eq(cashTransactions.id, id)))[0].a
+
+    const a = unwrapAction(await createTransaction({ ...base, amount: 1000, currency: 'jpy' }))
+    const b = unwrapAction(await createTransaction({ ...base, amount: 50, currency: 'jpy' }))
+    const c = unwrapAction(await createTransaction({ ...base, amount: 15, currency: 'twd' }))
+    refs.txIds.push(a.id, b.id, c.id)
+    expect(await amountOf(a.id)).toBe(7)
+    expect(await amountOf(b.id)).toBe(1)
+    expect(await amountOf(c.id)).toBe(1)
+
+    const e = unwrapAction(await editTransaction({ ...base, oldId: b.id, amount: 15, currency: 'twd' }))
+    refs.txIds.push(e.id)
+    expect(await amountOf(e.id)).toBe(1)
+    const e2 = unwrapAction(await editTransaction({ ...base, oldId: c.id, amount: 50, currency: 'jpy' }))
+    refs.txIds.push(e2.id)
+    expect(await amountOf(e2.id)).toBe(1)
   })
 })

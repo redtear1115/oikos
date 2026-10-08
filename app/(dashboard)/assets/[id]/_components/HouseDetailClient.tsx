@@ -18,7 +18,8 @@ import { useTranslations } from '@/lib/i18n/client'
 import { daysSince } from '@/lib/age'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { formatLedgerAmountSpaced } from '@/lib/currency'
 import { unwrapAction } from '@/lib/action-errors'
 
 // #826 — address subtitle is masked at the header. The actual address text
@@ -64,6 +65,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
   const t = useTranslations()
   const td = t.assetDetail.house
   const { isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -128,8 +130,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
           revealAction={async () => unwrapAction(await revealHouseAddress(assetId))}
         />
         <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
-        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
-        <InfoRow label={td.purchasePrice} value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />
+        <InfoRow label={td.purchasePrice} value={details?.purchasePrice ? formatLedgerAmountSpaced(details.purchasePrice, baseCurrency) : ''} mono last />
       </InfoCard>
 
       {notes && (

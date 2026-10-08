@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { create, getNumericDate } from 'https://deno.land/x/djwt@v3.0.2/mod.ts'
 import { taipeiDateISO } from './taipeiDate.ts'
+import { tokensOfCurrentMembers, type TokenRow } from './memberTokens.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -106,13 +107,18 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
   }
 
-  const { data: tokens, error: tokenErr } = await supabase
+  // #1605 — only tokens whose owner is still a member of the token's group.
+  // The embed rides the existing group_id FK; the filter is in memberTokens.ts.
+  const { data: tokenRows, error: tokenErr } = await supabase
     .from('PushTokens')
-    .select('token')
+    .select('token, user_id, group_id, OikosGroups!inner(member_a, member_b)')
     .in('group_id', allGroupIds)
     .eq('platform', 'apns')
 
-  if (tokenErr || !tokens?.length) {
+  if (tokenErr) console.error('[push] token query error', tokenErr)
+  const tokens = tokensOfCurrentMembers((tokenRows ?? []) as TokenRow[]).map((token) => ({ token }))
+
+  if (tokenErr || !tokens.length) {
     return new Response(JSON.stringify({ sent: 0 }), { status: 200 })
   }
 

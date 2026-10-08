@@ -2,7 +2,7 @@
 //
 // What it does
 // ------------
-// For each encrypted column (lib/crypto.ts ENCRYPTED_COLUMNS — all six,
+// For each encrypted column (lib/crypto.ts ENCRYPTED_COLUMNS — all seven,
 // soft-deleted rows included, because a soft-deleted row can be restored and
 // is still revealed from the same bytes), every value that is not already
 // `v1:<ENCRYPTION_WRITE_KID>:…` is decrypted and re-encrypted under the write

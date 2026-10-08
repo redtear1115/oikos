@@ -5,7 +5,7 @@ import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useViewedPartner } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetGroupSection, Chip, Section } from './FilterSheetChrome'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { PICKABLE_INCOME_CATEGORIES, type IncomeCategoryId } from '@/lib/incomeCategories'
@@ -143,7 +143,12 @@ export function FilterSheet({
   onReset,
   onShare,
 }: Props) {
-  const { isSolo, canAccessGuardian } = useMember()
+  const { canAccessGuardian } = useMember()
+  // #1604 — the 誰付 / 分攤 sections follow the chapter being viewed, not
+  // today: a stayer who is solo now, pinned to a duo chapter, can still filter
+  // 「對方」 (resolveViewedPair maps it to that chapter's partner); a solo
+  // chapter hides them even when the viewer has a partner today.
+  const { isSolo } = useViewedPartner()
   const t = useTranslations()
 
   // Lite mode: no date range / asset / share when the parent doesn't provide
@@ -516,7 +521,7 @@ export function FilterSheet({
             ))}
           </Section>
 
-          {/* 金額範圍 — inclusive min/max in NT$ (integers; no decimals).
+          {/* 金額範圍 — inclusive min/max in the ledger base currency (whole units; no decimals).
               Empty input on either side = open bound. Applies to all kinds
               (cash / settlement / income), so it stays visible in lite mode. */}
           <Section title={t.filterSheet.amountSection}>

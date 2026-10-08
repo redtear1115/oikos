@@ -33,7 +33,7 @@ import { ContextStrip } from '@/app/(dashboard)/_components/ContextStrip'
 // ── base fixtures ──────────────────────────────────────────────────────────
 
 const baseMember: MemberContextValue = {
-  group: { id: 'g1', name: '我們家' },
+  group: { id: 'g1', name: '我們家', baseCurrency: 'twd' },
   viewer: {
     id: 'u-me',
     initial: '我',

@@ -1,11 +1,13 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
-import { CardShell, formatNT } from './CardShell'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CardShell, formatRecapAmount } from './CardShell'
 
-export function CardAssets({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }) {
+export function CardAssets({ snapshot }: { snapshot: ClientReviewSnapshot }) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const tr = t.monthlyReview
   const breakdown = snapshot.assetBreakdown
 
@@ -29,7 +31,7 @@ export function CardAssets({ snapshot }: { snapshot: MonthlyReviewSnapshotRow })
                 <div className="flex items-center justify-between text-sm" style={{ color: 'var(--ink)' }}>
                   <span className="truncate pr-2">{row.assetName || '—'}</span>
                   <span className="tabular-nums shrink-0" style={{ color: 'var(--ink-2)' }}>
-                    NT$ {formatNT(row.total)}
+                    {formatRecapAmount(row.total, baseCurrency)}
                   </span>
                 </div>
                 <div

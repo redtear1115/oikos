@@ -4,19 +4,18 @@ import { getCategory } from '@/lib/categories'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { ruleNextDateText } from '@/lib/recurringNextDate'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import type { RecurringExpenseRuleView, RecurringIncomeRuleView } from '@/lib/recurringMemberLink'
 import type { SplitType } from '@/lib/balance'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount } from '@/lib/currency'
 
 // One list row for both rule lists. The two used to be separate copies, and
 // the income one drifted (raw zh-TW category label, #1189). Income has no
 // split pill on purpose — a recipient is a single choice, not a split (#1187).
 type Props =
-  | { type: 'expense'; rule: RecurringExpenseRuleRow; onEdit: (rule: RecurringExpenseRuleRow) => void }
-  | { type: 'income'; rule: RecurringRuleRow; onEdit: (rule: RecurringRuleRow) => void }
+  | { type: 'expense'; rule: RecurringExpenseRuleView; onEdit: (rule: RecurringExpenseRuleView) => void }
+  | { type: 'income'; rule: RecurringIncomeRuleView; onEdit: (rule: RecurringIncomeRuleView) => void }
 
 function splitLabel(
   split: SplitType,
@@ -35,11 +34,13 @@ export function RuleListItem(props: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const { viewer, partner, viewerIsA, isSolo } = useMember()
+  const baseCurrency = useBaseCurrency()
   const { rule } = props
 
   let cat: { tint: string; ink: string; mono: string }
   let title: string
-  let personId: string
+  let personId: string | null
+  let personIsFormer: boolean
   let tRule: typeof t.recurringExpense.rule | typeof t.recurringIncome.rule
   let handleClick: () => void
   let splitText: string | null = null
@@ -48,9 +49,13 @@ export function RuleListItem(props: Props) {
     cat = getCategory(props.rule.category)
     title = props.rule.description
     personId = props.rule.paidBy
+    personIsFormer = props.rule.paidByIsFormer
     tRule = t.recurringExpense.rule
     handleClick = () => props.onEdit(props.rule)
-    splitText = splitLabel(props.rule.splitType, personId === viewer.id, t)
+    // A former payer's split ("全部對方的" etc.) is relative to someone who is
+    // no longer here; the pill would point at the current partner. Hidden
+    // until the rule is re-assigned (#1588).
+    splitText = personIsFormer ? null : splitLabel(props.rule.splitType, personId === viewer.id, t)
   } else {
     const incomeCat = getIncomeCategory(props.rule.category)
     cat = incomeCat
@@ -58,6 +63,7 @@ export function RuleListItem(props: Props) {
     // from the locale table like every other income-category surface (#1189).
     title = props.rule.source ?? t.incomeCategory[incomeCat.id] ?? incomeCat.label
     personId = props.rule.recipientId
+    personIsFormer = props.rule.recipientIsFormer
     tRule = t.recurringIncome.rule
     handleClick = () => props.onEdit(props.rule)
   }
@@ -65,11 +71,16 @@ export function RuleListItem(props: Props) {
   const isPaused = !!rule.pausedAt
 
   // Payer for expense, recipient for income.
-  const personIsViewer = personId === viewer.id
+  // #1588 — a person who left the ledger has no id here (the server dropped
+  // it). They are 「前伴侶」 (or unnamed for a pinned non-member viewer),
+  // never the current partner: any non-viewer id used to read as `partner`.
+  const personIsViewer = !personIsFormer && personId === viewer.id
   const personRole = whoToMemberRole(personIsViewer ? 'M' : 'T', viewerIsA)
   const personInitial = personIsViewer ? viewer.initial : (partner?.initial ?? '?')
   const personAvatar = personIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
-  const personName = personIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
+  const personName = personIsFormer
+    ? (rule.formerLabel ? t.common.formerPartner : null)
+    : personIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
 
   const intervalLabel: Record<number, string> = {
     1: tRule.intervalEveryMonth,
@@ -129,7 +140,7 @@ export function RuleListItem(props: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}{formatAmount(rule.amount, 'twd')}
+              {' · '}{formatLedgerAmount(rule.amount, baseCurrency)}
             </div>
             {nextDateText && (
               <div className="text-xs mt-0.5 text-ink-3">
@@ -141,8 +152,10 @@ export function RuleListItem(props: Props) {
                 className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"
                 style={{ color: 'var(--ink-3)' }}
               >
-                <Avatar memberRole={personRole} initial={personInitial} src={personAvatar} size={16} />
-                <span className="truncate">{personName}</span>
+                {!personIsFormer && (
+                  <Avatar memberRole={personRole} initial={personInitial} src={personAvatar} size={16} />
+                )}
+                {personName && <span className="truncate">{personName}</span>}
                 {splitText && (
                   <span
                     className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-xs font-medium leading-none"

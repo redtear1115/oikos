@@ -5,6 +5,8 @@ import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { nonMemberPinCutoff } from '@/lib/pinnedChapterScope'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames, getPetListDetailsBatch, getPlantListDetailsBatch } from '@/lib/db/queries/aibutsu'
+import { resolveInsuredMember, resolvePolicyHolder } from '@/lib/insuranceMemberLink'
+import { loadMemberLinkScope } from '@/lib/db/queries/insuranceView'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
@@ -20,7 +22,10 @@ export default async function AssetsPage() {
   // Known limit: those assets still show their current field values — see
   // lib/pinnedChapterScope.ts.
   const createdBefore = nonMemberPinCutoff(context, user.id)
-  const assetRows = await listAssetsForGroup(group.id, user.id, createdBefore)
+  const [assetRows, memberScope] = await Promise.all([
+    listAssetsForGroup(group.id, user.id, createdBefore),
+    loadMemberLinkScope(context, user.id),
+  ])
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
   const petIds = assetRows.filter((a) => a.type === 'pet').map((a) => a.id)
@@ -53,19 +58,37 @@ export default async function AssetsPage() {
       isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
     if (a.type === 'insurance') {
+      // #1486 / #1579 — a holder or member insured who left the ledger is
+      // dropped server-side: no id, name or avatar in the client payload.
+      const holder = resolvePolicyHolder(
+        {
+          userId: a.insurancePolicyHolderUserId,
+          displayName: a.insurancePolicyHolderDisplayName,
+          avatarUrl: a.insurancePolicyHolderAvatarUrl,
+        },
+        memberScope,
+      )
+      const insuredMember = resolveInsuredMember(
+        { userId: a.insuranceInsuredUserId, displayName: a.insuranceInsuredUserDisplayName },
+        memberScope,
+      )
       base.insurance = {
         insuranceType: a.insuranceType,
         insured: a.insuranceInsured,
         insuredChildId: a.insuranceInsuredChildId,
         insuredChildName: a.insuranceInsuredChildName,
-        insuredUserId: a.insuranceInsuredUserId,
-        insuredUserDisplayName: a.insuranceInsuredUserDisplayName,
-        policyHolderUserId: a.insurancePolicyHolderUserId,
-        policyHolderDisplayName: a.insurancePolicyHolderDisplayName,
-        policyHolderAvatarUrl: a.insurancePolicyHolderAvatarUrl,
+        insuredUserId: insuredMember.userId,
+        insuredUserDisplayName: insuredMember.displayName,
+        insuredIsFormer: insuredMember.isFormer,
+        policyHolderUserId: holder.userId,
+        policyHolderDisplayName: holder.displayName,
+        policyHolderAvatarUrl: holder.avatarUrl,
+        policyHolderIsFormer: holder.isFormer,
+        formerLabel: memberScope.labelFormer,
         insurer: a.insuranceInsurer,
         annualPremium: a.insuranceAnnualPremium,
         sumInsured: a.insuranceSumInsured,
+        currency: a.insuranceCurrency,
         startsAt: a.insuranceStartsAt,
         expiryDate: a.insuranceExpiryDate,
         termYears: a.insuranceTermYears,

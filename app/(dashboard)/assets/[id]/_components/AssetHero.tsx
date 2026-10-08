@@ -3,7 +3,8 @@
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
 import { avgEconHint } from '@/lib/fuelEconHint'
-import { formatAmount, formatAmountParts } from '@/lib/currency'
+import { formatLedgerAmount, formatLedgerAmountParts } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import type { FuelType } from '@/lib/fuel'
 
 interface AssetHeroProps {
@@ -58,6 +59,7 @@ export function AssetHero({
   monthAmount, totalAmount, avgEcon, lastFuelAt, isPast, onEdit,
 }: AssetHeroProps) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const isElectric = fuelType === 'electric'
   const econHint = avgEconHint(avgEcon, lastFuelAt ? new Date(lastFuelAt) : null)
   const swatch = resolveCarColor(color)
@@ -144,23 +146,17 @@ export function AssetHero({
           </div>
         </div>
 
-        {/* TODO(v0.17 currency): 'twd' hard-coded. #1399 blocks wiring a real
-             baseCurrency: the main ledger stores whole units as typed, but
-             formatAmountParts divides USD by 100 (cents semantics), so a
-             USD-base group would render this at 1/100th its actual size
-             until that's fixed — on top of AssetHero having no
-             base-currency prop path today either. */}
         <div
           className="mt-5 flex rounded-2xl px-4 py-3 gap-2 border border-hairline"
           style={{ background: 'rgba(58,36,25,0.04)' }}
         >
           {!isPast && (
             <>
-              <MiniStat label={t.assetDetail.money.thisMonth} value={formatAmount(monthAmount, 'twd')} />
+              <MiniStat label={t.assetDetail.money.thisMonth} value={formatLedgerAmount(monthAmount, baseCurrency)} />
               <div className="w-px bg-hairline" />
             </>
           )}
-          <MiniStat label={t.assetDetail.money.thisChapter} value={formatAmount(totalAmount, 'twd')} />
+          <MiniStat label={t.assetDetail.money.thisChapter} value={formatLedgerAmount(totalAmount, baseCurrency)} />
         </div>
       </div>
     </div>
@@ -169,8 +165,8 @@ export function AssetHero({
 
 function Stat({ label, amount, accent }: { label: string; amount: number; accent: boolean }) {
   const dim = amount === 0
-  // TODO(v0.17 currency): 'twd' hard-coded — #1399, see the MiniStat block above for why.
-  const { symbol, digits } = formatAmountParts(amount, 'twd')
+  const baseCurrency = useBaseCurrency()
+  const { symbol, digits } = formatLedgerAmountParts(amount, baseCurrency)
   return (
     <div>
       <div className="text-xs tracking-label mb-1 text-ink-3">{label}</div>

@@ -5,13 +5,13 @@ import { confirmPending, skipPending } from '@/actions/recurringExpense'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateAbsolute } from '@/lib/format-date'
-import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
+import type { PendingExpenseView } from '@/lib/recurringMemberLink'
 import type { SplitType } from '@/lib/balance'
 import { PendingCard } from './PendingCard'
 
 export interface PendingExpenseCardProps {
-  pending: PendingExpenseRow
-  onEdit?: (pending: PendingExpenseRow) => void
+  pending: PendingExpenseView
+  onEdit?: (pending: PendingExpenseView) => void
 }
 
 function splitLabel(split: SplitType, t: ReturnType<typeof useTranslations>): string {
@@ -30,15 +30,22 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
   const { viewer, partner, isSolo } = useMember()
   const cat = getCategory(pending.category)
 
-  const payerName = pending.proposedPaidBy === viewer.id
-    ? t.common.you
-    : (partner?.displayName ?? t.common.partner)
+  // #1588 — a snapshot payer who left the ledger has no id here; they are
+  // 「前伴侶」 (or unnamed for a pinned non-member viewer), never the current
+  // partner. Shown in solo too: the card can't be confirmed as is.
+  const payerName = pending.proposedPaidByIsFormer
+    ? (pending.formerLabel ? t.common.formerPartner : null)
+    : pending.proposedPaidBy === viewer.id
+      ? t.common.you
+      : (partner?.displayName ?? t.common.partner)
 
-  const meta = isSolo
-    ? undefined
-    : t.recurringExpense.pending.payerLine
-        .replace('{payer}', payerName)
-        .replace('{splitType}', splitLabel(pending.proposedSplitType, t))
+  const meta = pending.proposedPaidByIsFormer
+    ? (payerName ?? undefined)
+    : isSolo || payerName === null
+      ? undefined
+      : t.recurringExpense.pending.payerLine
+          .replace('{payer}', payerName)
+          .replace('{splitType}', splitLabel(pending.proposedSplitType, t))
 
   return (
     <PendingCard

@@ -575,6 +575,62 @@
       "when": 1783850000000,
       "tag": "0082_backup_auth_views",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1783900000000,
+      "tag": "0083_outing_link_join",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1784000000000,
+      "tag": "0084_category_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1784100000000,
+      "tag": "0085_insurance_currency",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0086_former_member_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0087_push_token_membership",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1784400000000,
+      "tag": "0088_epoch_name_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1784500000000,
+      "tag": "0089_review_payer_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1784600000000,
+      "tag": "0090_ledger_autoname",
+      "breakpoints": true
     }
   ]
 }

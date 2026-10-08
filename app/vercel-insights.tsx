@@ -23,7 +23,8 @@ interface SpeedInsightsBeforeSendEvent {
  *
  * Both SDKs' `beforeSend` receives an event carrying the page's own `url`
  * (query included), which is enough to leak an invite token
- * (`/invite/<token>`, `?next=/invite/<token>`) or a ledger filter value
+ * (`/invite/<token>`, `?next=/invite/<token>`), an outing share token
+ * (`/<locale>/outing/<token>`, #1558) or a ledger filter value
  * (`/records?fAmtMin=…`). Rules are the shared ones from
  * `lib/analytics/urlSanitizer.ts`.
  *

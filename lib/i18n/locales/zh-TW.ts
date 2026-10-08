@@ -311,10 +311,12 @@ export type Translations = {
     back: string
     edit: string
     shared: string
+    /** #1579 / #1588 — a person who left the ledger (rule / pending card payer or recipient). */
+    formerPartner: string
     none: string
     deleteSoftDescription: string
-    /** Short transient toasts. `recorded` and `updated` carry the NT$ amount
-     *  inline via `{amount}`; `deleted` is a flat acknowledgement. Surfaced
+    /** Short transient toasts. `recorded` and `updated` carry the amount
+     *  inline via `{amount}` (caller passes formatLedgerAmount, symbol included); `deleted` is a flat acknowledgement. Surfaced
      *  by Dashboard.handleMutated for every successful create / edit / delete. */
     toast: {
       recorded: string
@@ -819,6 +821,8 @@ export type Translations = {
     /** Participant count tag on a list row. `{count}` = number of participants. */
     countTag: string
     addCta: string
+    /** 我參與的出遊 (#1558): other ledgers' outings the user joined. */
+    participating: { title: string; hint: string }
     empty: { heading: string; body: string }
   }
 
@@ -850,6 +854,44 @@ export type Translations = {
     /** Participant name for a group member whose profile name is blank. */
     memberFallbackName: string
     endConfirmBody: string
+    // ── #1558 admin side (dashboard) ──
+    rename: string
+    editExpense: string
+    deleteExpense: string
+    deleteExpenseConfirmTitle: string
+    deleteExpenseConfirmBody: string
+    settlementsLabel: string
+    /** aria-label of a repayment row's delete; `{row}` = "A → B". */
+    deleteSettlementAria: string
+    deleteSettlementConfirmTitle: string
+    /** `{row}` = "A → B", `{amount}` = formatted amount. */
+    deleteSettlementConfirmBody: string
+    share: {
+      label: string
+      hint: string
+      copy: string
+      copied: string
+      /** Clipboard refused; the URL is on screen to select by hand. */
+      copyFailed: string
+      reset: string
+      resetConfirmTitle: string
+      resetConfirmBody: string
+      resetConfirm: string
+      resetDone: string
+    }
+    participant: {
+      /** Claim status under a participant's name (簡潔中性). */
+      claim: { unclaimed: string; claimed: string; bound: string }
+      removedTag: string
+      /** "⋯" menu label; `{name}` = participant. */
+      actionsAria: string
+      release: string
+      releaseConfirmTitle: string
+      releaseConfirmBody: string
+      remove: string
+      removeConfirmTitle: string
+      removeConfirmBody: string
+    }
     form: {
       nameLabel: string
       namePlaceholder: string
@@ -952,6 +994,42 @@ export type Translations = {
       USD: string
       JPY: string
     }
+  }
+
+  /** Public outing share pages (#1558): /outing/<shareToken>, /outing/r/<outingId>. */
+  outingPublic: {
+    /** Generic page title / OG title. Same for every outing: no outing name (link previewers cache it). */
+    metaTitle: string
+    metaDescription: string
+    whoAreYou: string
+    whoAreYouHint: string
+    /** "以「{name}」加入" — confirm button after picking a slot. */
+    joinAs: string
+    /** Under a slot someone already picked. */
+    slotTakenHint: string
+    notListed: string
+    addSelfLabel: string
+    addSelfPlaceholder: string
+    addSelfSave: string
+    /** Landing (share token, not joined yet) for an ended outing: no joining. */
+    endedLanding: string
+    /** Full view of an ended outing: read-only. */
+    endedNote: string
+    invalidTitle: string
+    invalidBody: string
+    /** /outing/r/<id> without a claim cookie or bound session. */
+    noAccessTitle: string
+    noAccessBody: string
+    youTag: string
+    bindTitle: string
+    /** {name} = the slot this device claimed. */
+    bindBody: string
+    bindConfirm: string
+    bindDismiss: string
+    signUpTitle: string
+    /** {name} = the viewer's slot. */
+    signUpBody: string
+    signUpCta: string
   }
 
   /** Trip detail page (#42). */
@@ -1120,8 +1198,8 @@ export type Translations = {
       expand: string
       summaryExpense: string    // {amount}
       summaryIncome: string     // {amount}
-      summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
-      summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
+      summaryNetIncome: string  // {amount} digits only; the symbol is a separate anchor
+      summaryNetExpense: string // {amount} digits only; the symbol is a separate anchor
       summaryNetEven: string    // "持平"
       /** A11y label for a stats bar that's NOT currently the drill target. {label} = bar's label. */
       drillFilterLabel: string  // {label}
@@ -1208,6 +1286,18 @@ export type Translations = {
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
     inviteCta: string
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: string
+      confirmTitle: string
+      confirmBody: string
+      confirmLabel: string
+      done: string
+      /** An accept won the race: nothing was revoked. */
+      partnerJoined: string
+      /** The link had already died (expired, superseded) or never existed. */
+      noneOpen: string
+    }
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
     currency: string
@@ -1438,6 +1528,27 @@ export type Translations = {
     removedPartnerHeading: string
     removedPartnerBody: string
     dismissAria: string
+    /**
+     * Name of the solo ledger a leaver gets (#1622). Neutral on purpose: it
+     * used to be "{displayName} 的家計簿", which put a person's name into a
+     * ledger name that outlived their account deletion. Never interpolate a
+     * name here. The zh-TW value must equal the literal drizzle/0090 renames
+     * legacy names to (tests/ledger-autoname.test.ts asserts it).
+     */
+    newLedgerName: string
+  }
+
+  /**
+   * Dashboard invite card for Android web users to join the Play closed test
+   * (#1553). Temporary: remove the card, this namespace and the
+   * `android_beta_invite_*` events once Play production access is granted.
+   * `cta` repeats `landing.androidBetaCta` on purpose: different namespace,
+   * same string, so the two buttons read as one offer.
+   */
+  androidBetaInvite: {
+    heading: string
+    body: string
+    cta: string
   }
 
   pastTimes: {
@@ -1521,13 +1632,11 @@ export type Translations = {
     insuranceList: {
       /** Template with `{name}` placeholder. */
       insuredPrefix: string
-      /** Template with `{amount}` placeholder. Annual-premium pill, plain NT$. */
+      /** Template with `{amount}` placeholder. Annual-premium pill; `{amount}` is the caller-formatted amount with the policy's currency symbol (#1600). */
       annualPremium: string
       // ── savings ─────────────────────────────────────────────────────────
       /** Template with `{amount}` placeholder. Years-paid × annual premium. */
       savingsCumulative: string
-      /** Shown after cumulative when notes mention "USD". */
-      savingsForeignNote: string
       /** Shown when today > expiry for savings policies. */
       savingsMaturedBadge: string
       /** #260 — default fallback badge so every card has a visible state. */
@@ -1574,6 +1683,7 @@ export type Translations = {
        *  recognised action code (network / unexpected). */
       lapseError: string
       insuredShort: string
+      policyHolderFormer: string
       annualLabel: string
       timelineStarts: string
       timelineEnds: string
@@ -1648,6 +1758,16 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      /** #1588 — duo edit of a rule / pending card whose 收入歸屬 left the ledger; nothing is preselected. */
+      recipientFormerHint: string
+      /** #1588 — solo: same case, saving records it under the viewer. */
+      recipientFormerSoloHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -1849,6 +1969,8 @@ export type Translations = {
       fuelType: string
       fuelTypeDiesel: string
       primaryUser: string
+      /** #1589 — shown under 主要使用人 when the stored primary user left the ledger; nothing is preselected. */
+      primaryUserFormerHint: string
     }
     child: {
       nickname: string
@@ -1937,6 +2059,10 @@ export type Translations = {
       insuredPlaceholder: string
       insuredFreeform: string
       policyHolder: string
+      /** #1579 — shown under 要保人 when the stored holder left the ledger; nothing is preselected. */
+      policyHolderFormerHint: string
+      /** #1579 — same, for a 被保人 who was a member and left. */
+      insuredFormerHint: string
       insurer: string
       insurerPlaceholder: string
       policyNo: string
@@ -1944,6 +2070,8 @@ export type Translations = {
       sectionPremium: string
       annualPremium: string
       annualPremiumPlaceholder: string
+      /** #1600 — label of the policy currency picker. */
+      currency: string
       sumInsured: string
       sumInsuredPlaceholder: string
       expectedMaturityAmount: string
@@ -2208,6 +2336,8 @@ export type Translations = {
        *  maturity/dividend/survival_annuity have non-zero totals.
        *  The component appends bucket labels + NT$ amounts itself. */
       heroBreakdownPrefix: string
+      /** #1600 — shown when the policy currency differs from the ledger's; `{policy}` / `{base}` are upper-case codes. */
+      crossCurrencyNote: string
       /** Template with `{date}`. */
       maturingSoonTitle: string
       maturingSoonSubtitle: string
@@ -2288,6 +2418,16 @@ export type Translations = {
       deleteConfirmDescription: string
       /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
       editEffectHint: string
+      /** #1588 — duo edit of a rule / pending card whose 付款人 left the ledger; nothing is preselected. */
+      paidByFormerHint: string
+      /** #1588 — solo: same case, saving records it under the viewer. */
+      paidByFormerSoloHint: string
+      deleteConfirmDescriptionCount: string
+      deleteConfirmDescriptionNone: string
+      nextDatesPreview: string
+      nextDatesSeparator: string
+      savedToast: string
+      savedToastNext: string
     }
     errors: {
       amountRequired: string
@@ -2509,6 +2649,8 @@ export type Translations = {
     card2Title: string
     /** Card 2 body template with `{name}`, `{description}`, `{amount}`. */
     card2Body: string
+    /** #1618 — card 2 body when the payer is unknown in this chapter (no name). */
+    card2BodyNoName: string
     /** Card 3 heading. */
     card3Title: string
     /** Card 3 expense total template with `{amount}`. */
@@ -2967,6 +3109,9 @@ export type Translations = {
       outing_epoch_closed: string
       outing_participant_not_found: string
       outing_participant_limit: string
+      group_full: string
+      inviter_not_member: string
+      invite_conflict: string
       outing_name_empty: string
       outing_name_too_long: string
       outing_participant_name_empty: string
@@ -2975,8 +3120,17 @@ export type Translations = {
       outing_settlement_same_party: string
       outing_description_too_long: string
       outing_currency_changed: string
+      outing_admin_only: string
+      outing_viewing_past_chapter: string
+      outing_expense_not_found: string
+      outing_settlement_not_found: string
+      outing_link_invalid: string
+      outing_slot_taken: string
+      outing_slot_bound: string
+      outing_already_joined: string
       leave_active_outing: string
       category_empty: string
+      category_invalid: string
       split_ratio_required: string
       split_ratio_out_of_range: string
       split_ratio_not_applicable: string
@@ -3004,7 +3158,10 @@ export type Translations = {
       recurring_rule_not_found: string
       pending_expense_not_found: string
       pending_expense_handled_elsewhere: string
-      pending_expense_partner_handled: string
+      /** #1588 — confirming a pending expense card whose snapshot payer left the ledger. */
+      pending_former_member: string
+      rule_payer_not_member: string
+      rule_recipient_not_member: string
       pending_income_not_found: string
       pending_income_handled_elsewhere: string
       review_month_locked: string
@@ -3022,6 +3179,8 @@ export type Translations = {
       policy_expiry_unset: string
       policyholder_not_member: string
       insured_not_member: string
+      /** #1579 — editInsurance: a policy that has a 要保人 cannot be saved without one. */
+      policyholder_required: string
       insured_child_invalid: string
       fuel_log_deleted_or_missing: string
       fuel_transaction_not_found: string
@@ -3271,11 +3430,12 @@ export const zhTW: Translations = {
     back: '返回',
     edit: '編輯',
     shared: '共用',
+    formerPartner: '前伴侶',
     none: '無',
     deleteSoftDescription: '這個動作無法復原，紀錄會立即從帳本移除，並於約 1 年後由系統永久清除。',
     toast: {
-      recorded: '已記錄 NT${amount}',
-      updated: '已更新 NT${amount}',
+      recorded: '已記錄 {amount}',
+      updated: '已更新 {amount}',
       deleted: '已刪除這筆',
     },
     navigation: {
@@ -3622,6 +3782,10 @@ export const zhTW: Translations = {
     endedTag: '已結束',
     countTag: '{count} 人',
     addCta: '開一個出遊',
+    participating: {
+      title: '我參與的出遊',
+      hint: '朋友開的出遊，你從連結加入的。',
+    },
     empty: {
       heading: '還沒有出遊',
       body: '揪朋友出門時，開一個出遊，誰付了什麼、誰該還誰，一起看得清楚。',
@@ -3648,6 +3812,42 @@ export const zhTW: Translations = {
     foldSettlementNote: '出遊『{name}』結算',
     memberFallbackName: '成員',
     endConfirmBody: '結束後就不能再記帳了。你們倆之間的部分會折回主帳本，朋友的部分留在這裡結算。',
+    rename: '改名',
+    editExpense: '編輯支出',
+    deleteExpense: '刪除這筆支出',
+    deleteExpenseConfirmTitle: '刪除這筆支出？',
+    deleteExpenseConfirmBody: '刪除後，每個人的淨額會重新計算。',
+    settlementsLabel: '還款紀錄',
+    deleteSettlementAria: '刪除還款 {row}',
+    deleteSettlementConfirmTitle: '刪除這筆還款？',
+    deleteSettlementConfirmBody: '{row}，{amount}。刪除後，每個人的淨額會重新計算。',
+    share: {
+      label: '分享連結',
+      hint: '朋友點開連結，選自己的名字或加入自己，就能一起記。',
+      copy: '複製連結',
+      copied: '已複製連結',
+      copyFailed: '沒能自動複製，可以直接選取上面的連結。',
+      reset: '重設連結',
+      resetConfirmTitle: '重設分享連結？',
+      resetConfirmBody: '舊連結會立刻失效。已經加入的人不受影響，照常記帳。',
+      resetConfirm: '重設',
+      resetDone: '已換成新連結，舊連結不能再用了。',
+    },
+    participant: {
+      claim: {
+        unclaimed: '未認領',
+        claimed: '已認領',
+        bound: '已綁帳號',
+      },
+      removedTag: '已移除',
+      actionsAria: '{name} 的操作',
+      release: '釋放',
+      releaseConfirmTitle: '釋放「{name}」？',
+      releaseConfirmBody: '目前認領這個名字的裝置會失去身分，朋友可以從連結重新認領。記過的帳都留著。',
+      remove: '移除',
+      removeConfirmTitle: '移除「{name}」？',
+      removeConfirmBody: '之後的新支出不能再分給這個人，記過的帳都留著。',
+    },
     form: {
       nameLabel: '出遊名稱',
       namePlaceholder: '例如：九份兩日',
@@ -3709,6 +3909,34 @@ export const zhTW: Translations = {
       USD: '美元',
       JPY: '日圓',
     },
+  },
+
+  /** Public outing share pages (#1558): /outing/<shareToken>, /outing/r/<outingId>. */
+  outingPublic: {
+    metaTitle: '出遊分帳 · Futari',
+    metaDescription: '朋友傳來的出遊分帳連結。',
+    whoAreYou: '你是哪一位？',
+    whoAreYouHint: '選你的名字，就能一起記這次出遊的帳。',
+    joinAs: '以「{name}」加入',
+    slotTakenHint: '已經有人選了。如果這是你，請開這次出遊的人幫你釋放。',
+    notListed: '名單上沒有你？',
+    addSelfLabel: '你的名字',
+    addSelfPlaceholder: '大家會看到這個名字',
+    addSelfSave: '加入',
+    endedLanding: '這次出遊已經結束，不能再加入。',
+    endedNote: '這次出遊已經結束，帳目只能查看。',
+    invalidTitle: '這個連結已經失效',
+    invalidBody: '可能已經被重設。請向開這次出遊的人要新的連結。',
+    noAccessTitle: '看不到這次出遊',
+    noAccessBody: '這台裝置還沒加入這次出遊。請用朋友傳來的連結打開。',
+    youTag: '你',
+    bindTitle: '這是你嗎？',
+    bindBody: '把「{name}」連到你的帳號，換手機也找得回這次出遊。',
+    bindConfirm: '是我，連到帳號',
+    bindDismiss: '不是我',
+    signUpTitle: '之後也想找得到這次出遊？',
+    signUpBody: '登入後，「{name}」會連到你的帳號。不登入也能繼續記。',
+    signUpCta: '登入',
   },
 
   tripDetail: {
@@ -3902,6 +4130,16 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
+    /** #1546 — make the open invite link unusable (solo member section). */
+    revokeInvite: {
+      cta: '讓邀請連結失效',
+      confirmTitle: '讓目前的邀請連結失效？',
+      confirmBody: '已經傳出去的連結會打不開。之後可以再產生一條新的。',
+      confirmLabel: '讓它失效',
+      done: '邀請連結已失效',
+      partnerJoined: '對方已經加入了',
+      noneOpen: '目前沒有有效的邀請連結',
+    },
     quickAccessRow: '個人與帳本設定',
     currency: '幣別',
     sectionApp: '應用',
@@ -3998,7 +4236,7 @@ export const zhTW: Translations = {
         finalConfirm: {
           title: '最後一步',
           balanceOk: '帳目已結清，可以離開',
-          balanceNotZero: '還有 NT$ {amount} 沒結清。要先在主畫面結算為 0，才能離開。',
+          balanceNotZero: '還有 {amount} 沒結清。要先在主畫面結算為 0，才能離開。',
           settleCta: '前往主畫面結算',
           typePromptPrefix: '請輸入「',
           typePromptSuffix: '」來確認',
@@ -4128,6 +4366,13 @@ export const zhTW: Translations = {
     removedPartnerHeading: '回到一個人',
     removedPartnerBody: '帳本完整地留著。從今天起，可以慢慢來。',
     dismissAria: '關閉',
+    newLedgerName: '家計簿',
+  },
+
+  androidBetaInvite: {
+    heading: 'Android App 正在找測試夥伴',
+    body: '你用 Android 開 Futari。想先試試 App 版的話，用 Play 商店的 Google 帳號報名，我們會寄測試邀請給你；加入名單後就刪除報名資料。',
+    cta: '報名 Android 測試版',
   },
 
   pastTimes: {
@@ -4196,12 +4441,11 @@ export const zhTW: Translations = {
     typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
-      annualPremium: '年繳 NT$ {amount}',
-      savingsCumulative: '累積投入 NT$ {amount}',
-      savingsForeignNote: '保額 USD',
+      annualPremium: '年繳 {amount}',
+      savingsCumulative: '累積投入 {amount}',
       savingsMaturedBadge: '繳費期滿',
       activeBadge: '繳費中',
-      sumInsuredShort: '保額 NT$ {amount}',
+      sumInsuredShort: '保額 {amount}',
       yearsLeft: '剩 {n} 年',
       expired: '已到期',
       singleYearLabel: '單年期',
@@ -4222,6 +4466,7 @@ export const zhTW: Translations = {
       lapseConfirm: '已停止',
       lapseError: '停止失敗，請再試一次',
       insuredShort: '保 {name}',
+      policyHolderFormer: '前伴侶',
       annualLabel: '年繳',
       timelineStarts: '生效',
       timelineEnds: '到期',
@@ -4271,9 +4516,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       sourceLabel: '來源名稱（選填）',
       sourcePlaceholder: '公司名稱或薪資來源',
       startsOnLabel: '開始日期',
@@ -4286,6 +4531,14 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
+      recipientFormerHint: '原本的收入歸屬已離開這本帳本，請重新選擇。',
+      recipientFormerSoloHint: '原本的收入歸屬已離開這本帳本，儲存後會改記在你名下。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -4493,6 +4746,7 @@ export const zhTW: Translations = {
       fuelType: '油種',
       fuelTypeDiesel: '柴油',
       primaryUser: '主要使用人',
+      primaryUserFormerHint: '原本的主要使用人已離開這本帳本，可以重新選擇。',
     },
     child: {
       nickname: '小名',
@@ -4580,6 +4834,8 @@ export const zhTW: Translations = {
       insuredPlaceholder: '小元',
       insuredFreeform: '自行輸入',
       policyHolder: '要保人',
+      policyHolderFormerHint: '原本的要保人已離開這本帳本，請重新選擇。',
+      insuredFormerHint: '原本的被保人已離開這本帳本，請重新選擇。',
       insurer: '保險公司',
       insurerPlaceholder: '南山人壽',
       policyNo: '保單號',
@@ -4587,6 +4843,7 @@ export const zhTW: Translations = {
       sectionPremium: '保費與保額',
       annualPremium: '年繳保費',
       annualPremiumPlaceholder: '24960',
+      currency: '幣別',
       sumInsured: '保額',
       sumInsuredPlaceholder: '3000000',
       expectedMaturityAmount: '預估滿期金',
@@ -4770,11 +5027,11 @@ export const zhTW: Translations = {
       yearSuffix: '年',
       daysSuffix: '天',
       annualPremiumLabel: '年繳保費',
-      annualPremiumPrefix: '年繳 NT$ {amount}',
+      annualPremiumPrefix: '年繳 {amount}',
       contractProgress: '合約進度',
       yearsLeft: '還剩 {years} 年',
       matured: '已滿期',
-      termAndSumLine: '{n} 年期 · 保額 NT$ {sum}',
+      termAndSumLine: '{n} 年期 · 保額 {sum}',
       kindLabels: {
         medical: '醫療',
         life: '壽險',
@@ -4802,7 +5059,7 @@ export const zhTW: Translations = {
       heroNotStarted: '這筆每年放進去的，未來會回來',
       heroPartialWithYears: '已拿回 {pct}% · 距滿期還有 {years} 年',
       heroPartial: '已拿回 {pct}%',
-      heroMatured: '滿期了 · 共拿回 NT$ {total}',
+      heroMatured: '滿期了 · 共拿回 {total}',
       heroAwaitingMaturity: '滿期日已到 · 等候滿期金到帳',
       heroNotYetActive: '保單將於 {date} 生效',
       heroLabelIn: '入',
@@ -4810,16 +5067,17 @@ export const zhTW: Translations = {
       heroPaymentLabel: '累計繳',
       heroReturnLabel: '已拿回',
       heroExpectedTag: '估',
-      heroNoExpectedBar: '已拿回 NT$ {received} · 預估金額未設定',
+      heroNoExpectedBar: '已拿回 {received} · 預估金額未設定',
       heroNoExpectedCta: '設定預估金額',
       heroBreakdownPrefix: '含',
+      crossCurrencyNote: '這張保單以 {policy} 計，帳本以 {base} 計。兩邊分開列出，不換算，也不比較進度。',
       maturingSoonTitle: '{date} 即將到期',
       maturingSoonSubtitle: '別忘了滿期金到帳要記',
       maturingSoonCta: '記滿期金 →',
       maturedAwaitingTitle: '滿期日已到 · {date}',
       maturedAwaitingStatus: '待入帳',
       maturedAwaitingCta: '我已經收到滿期金了 →',
-      maturedAwaitingPremiumNote: '累計繳 NT$ {total} 已記入 {count} 筆',
+      maturedAwaitingPremiumNote: '累計繳 {total} 已記入 {count} 筆',
       accountValueLabel: '目前帳戶價值',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期進帳',
@@ -4869,9 +5127,9 @@ export const zhTW: Translations = {
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
-      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayOfMonthFallbackHint: '沒有 {day} 號的月份，會在月底那天記下。',
       dayAriaLabel: '{day} 號',
-      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      dayFallbackTitle: '沒有這個號數的月份，會在月底那天記下',
       descriptionLabel: '描述',
       descriptionPlaceholder: '例：房租、訂閱',
       startsOnLabel: '開始日期',
@@ -4884,6 +5142,14 @@ export const zhTW: Translations = {
       deleteConfirmTitle: '刪除這個定期規則？',
       deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
       editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
+      paidByFormerHint: '原本的付款人已離開這本帳本，請重新選擇。',
+      paidByFormerSoloHint: '原本的付款人已離開這本帳本，儲存後會改記在你名下。',
+      deleteConfirmDescriptionCount: '會一起移除 {count} 張待確認卡片，已經記下的紀錄會留著。此動作無法復原。',
+      deleteConfirmDescriptionNone: '已經記下的紀錄會留著。此動作無法復原。',
+      nextDatesPreview: '接下來：{dates}',
+      nextDatesSeparator: '、',
+      savedToast: '已儲存',
+      savedToastNext: '已儲存，下次在 {date}',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -5005,7 +5271,7 @@ export const zhTW: Translations = {
     sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記約 1 年，之後由系統自動清除。在設定頁提出刪除帳號後，有 14 天的緩衝期（日曆天，不是工作天），期間隨時可以取消；期滿由系統自動執行。執行時會發生什麼，取決於這本帳本是您一個人的，還是和伴侶共用的：',
     sectionRetentionItems: [
       '一個人的帳本：整本一起刪除——交易、結算、定期收支規則、愛物與旅行紀錄都會移除，您的個人資料（姓名、頭像、Email）也一併刪除。',
-      '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算與愛物紀錄會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
+      '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算、愛物紀錄與月回顧留言會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
       '如果您希望共用帳本裡的內容也一併移除，請在刪除帳號前與伴侶談過，或先寫信告訴我們。',
       '已刪除的資料（包括刪除帳號時移除的內容），在刪除前就做好的加密備份裡最多還會留存約 60 天，之後隨舊備份清除而消失。這段期間我們不會用備份把它們找回來；只有在整個服務需要從備份還原時才會用到備份，而那時我們會重新套用這些刪除。',
     ],
@@ -5057,13 +5323,14 @@ export const zhTW: Translations = {
     savedFooter: '已儲存',
     errorFooter: '儲存失敗：{message}',
     card1Title: '最常一起花的類別',
-    card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
-    card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
+    card1Body: '這個月你們最常一起花在 {category}，共 {amount}',
+    card1BodySolo: '這個月你最常花在 {category}，共 {amount}',
     card2Title: '本月最大筆',
-    card2Body: '最大一筆：{name} 付的「{description}」，NT$ {amount}',
+    card2Body: '最大一筆：{name} 付的「{description}」，{amount}',
+    card2BodyNoName: '最大一筆：「{description}」，{amount}',
     card3Title: '定期入帳事件',
-    card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
-    card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
+    card3ExpenseTotal: '本月定期支出共 {amount}',
+    card3IncomeTotal: '本月定期進帳共 {amount}',
     card4Title: '愛物進度',
     emptyCardBody: '這個月沒留下花費紀錄',
     emptyCardCta: '現在去補登 →',
@@ -6090,8 +6357,8 @@ export const zhTW: Translations = {
         ogDescription: 'Manebo 用戶的下一站：匯出 CSV，搬進 Futari 情侶共同記帳。',
       },
       'simple-daily-money': {
-        title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
+        title: '從簡單記帳搬到 Futari｜兩人同步記帳、不用 VIP',
+        description: '想和伴侶兩支手機同步記同一本帳？簡單記帳的共享只能看、CSV 匯出要 VIP。截圖請 ChatGPT 整理成 CSV，免費搬進 Futari，兩個人都能記、都能改。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
@@ -6611,7 +6878,7 @@ export const zhTW: Translations = {
       group_not_found: '找不到家計簿',
       payer_not_in_group: '付款人不在家計簿內',
       payer_not_in_trip_ledger: '付款人不在帳本中',
-      recipient_not_in_group: '收入歸屬不在家計簿內',
+      recipient_not_in_group: '收入歸屬已離開這本帳本，請重新選擇。',
       record_not_found: '找不到該筆紀錄',
       record_deleted_or_missing: '紀錄已被刪除或不存在',
       amount_not_positive: '金額需大於 0',
@@ -6622,6 +6889,9 @@ export const zhTW: Translations = {
       outing_epoch_closed: '這次出遊在過去的章節裡，只能結束',
       outing_participant_not_found: '找不到這位參與者',
       outing_participant_limit: '一次出遊最多 20 人',
+      group_full: '這本帳本已經有兩位成員',
+      inviter_not_member: '你已經不在這本帳本裡',
+      invite_conflict: '邀請連結剛有變動，請再試一次',
       outing_name_empty: '出遊名稱為空',
       outing_name_too_long: '出遊名稱最長 100 字',
       outing_participant_name_empty: '名字為空',
@@ -6630,8 +6900,17 @@ export const zhTW: Translations = {
       outing_settlement_same_party: '付款人與收款人不可相同',
       outing_description_too_long: '說明最長 100 字',
       outing_currency_changed: '這次出遊的幣別和帳本目前的基準幣別不一致，所以不能折回主帳本。',
+      outing_admin_only: '只有開這次出遊的帳本成員可以這樣做',
+      outing_viewing_past_chapter: '你正在看過去的章節，回到目前的章節才能修改',
+      outing_expense_not_found: '找不到這筆支出',
+      outing_settlement_not_found: '找不到這筆還款',
+      outing_link_invalid: '這個連結已失效，請向開局的人要新連結',
+      outing_slot_taken: '這個名字已經有人認領了。如果是你，請開局的人幫你釋放',
+      outing_slot_bound: '這個名字已綁定帳號，不能釋放',
+      outing_already_joined: '你已經在這次出遊裡了',
       leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
+      category_invalid: '分類不在可選清單內',
       split_ratio_required: '依比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之間',
       split_ratio_not_applicable: 'split_ratio 僅適用於依比例分',
@@ -6659,7 +6938,9 @@ export const zhTW: Translations = {
       recurring_rule_not_found: '找不到該定期規則',
       pending_expense_not_found: '待確認支出已被處理或找不到',
       pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
-      pending_expense_partner_handled: '這筆 partner 剛剛已處理',
+      pending_former_member: '這張卡片的付款人已離開這本帳本，請先改一下再確認。',
+      rule_payer_not_member: '這條規則的付款人已離開這本帳本，請先修改再恢復。',
+      rule_recipient_not_member: '這條規則的收入歸屬已離開這本帳本，請先修改再恢復。',
       pending_income_not_found: '待確認收入已被處理或找不到',
       pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
       review_month_locked: '這個月的留言已鎖定，無法再修改',
@@ -6677,6 +6958,7 @@ export const zhTW: Translations = {
       policy_expiry_unset: '保單尚未設定到期日',
       policyholder_not_member: '要保人必須是 group 成員',
       insured_not_member: '被保人必須是 group 成員',
+      policyholder_required: '請選擇要保人',
       insured_child_invalid: '無效的被保小孩',
       fuel_log_deleted_or_missing: '加油記錄已刪除或不存在',
       fuel_transaction_not_found: '找不到該筆加油交易',

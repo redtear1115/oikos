@@ -10,6 +10,10 @@ import { join, relative } from 'path'
 // 頁面看起來也正常，但 proxy 不再替它 refresh session、未登入也不導轉；
 // 錯誤只會在 session 過期的那一刻以「莫名被登出」或空資料出現。
 // 真的需要把 auth 頁放進 [locale]，要先改 proxy 的 auth-skip，不是改這份測試。
+//
+// #1558 例外：app/[locale]/outing 匿名可看、但會透過 lib/outing/access 讀
+// session（認出已登入的朋友）。proxy 對這條路徑仍 refresh session、不導轉
+// （lib/i18n/path.ts › isOutingPublicPath）；守在 tests/outing-public-headers-1558.test.ts。
 
 const ROOT = join(process.cwd(), 'app', '[locale]')
 

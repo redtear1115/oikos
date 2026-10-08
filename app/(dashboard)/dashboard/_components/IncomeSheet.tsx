@@ -1,10 +1,11 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useState, useEffect, useId, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
-import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
@@ -51,7 +52,11 @@ export interface IncomeSheetInitial {
   id: string
   amount: number
   category: string
-  recipientId: string
+  /** null only with `recipientFormer` (a pending card whose recipient left, #1588). */
+  recipientId: string | null
+  /** #1588 — the stored recipient left the ledger; nothing is preselected and
+   *  the user re-picks (duo) or it is recorded under the viewer (solo). */
+  recipientFormer?: boolean
   occurredAt: string   // ISO date YYYY-MM-DD
   source: string | null
   assetId: string | null
@@ -82,12 +87,19 @@ interface Props {
 
 export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
   const { viewer, partner, isSolo, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const P = DEFAULT_INCOME_PALETTE
 
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<IncomeCategoryId>('salary')
   const [recipientWho, setRecipientWho] = useState<'M' | 'T'>('M')
+  // #1588 — editing a pending card whose recipient left the ledger: nothing
+  // is selected until the user picks (duo; save stays disabled), so the
+  // income is never silently handed to the current partner. Solo has no
+  // picker; the sheet says the income goes under the viewer.
+  const [recipientUnresolved, setRecipientUnresolved] = useState(false)
+  const recipientHintId = useId()
   // Seeded from useToday(), not the clock: this closed sheet is in the
   // server HTML, and the clock disagrees with it after Taipei midnight
   // (#1360). Opening for a new record still resets to the device's today.
@@ -128,7 +140,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       setCategory(
         PICKABLE_INCOME_CATEGORIES.find(c => c.id === initial.category)?.id ?? 'salary'
       )
-      setRecipientWho(initial.recipientId === viewer.id ? 'M' : 'T')
+      setRecipientWho(!initial.recipientFormer && initial.recipientId !== viewer.id ? 'T' : 'M')
+      setRecipientUnresolved(initial.recipientFormer === true)
       const dt = new Date(initial.occurredAt + 'T00:00:00')
       setDate(
         `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
@@ -139,6 +152,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       setAmount(prefilledAmount !== undefined ? String(prefilledAmount) : '')
       setCategory(prefilledCategory ?? 'salary')
       setRecipientWho('M')
+      setRecipientUnresolved(false)
       setDate(localTodayISO())
       setNote('')
       setAssetId(prefilledAssetId ?? null)
@@ -169,7 +183,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   // Focus + select amount input after sheet slides up
   useFocusAndSelectOnOpen(open, amountInputRef)
 
-  const isDirty = useDirtyCheck(open, { amount, category, recipientWho, date, note, assetId })
+  const isDirty = useDirtyCheck(open, { amount, category, recipientWho, recipientUnresolved, date, note, assetId })
   const noteId = useId()
 
   const recipientId = isSolo
@@ -179,6 +193,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const handleSave = () => {
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.incomeSheet.errors.amountRequired); return }
+    if (!isSolo && recipientUnresolved) { setError(t.recurringIncome.sheet.recipientFormerHint); return }
     if (n > MAX_AMOUNT) {
       setError(t.incomeSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US')))
       return
@@ -288,7 +303,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             variant="ghost"
             size="sm"
             onClick={handleSave}
-            disabled={!amount || pending}
+            disabled={!amount || pending || (!isSolo && recipientUnresolved)}
             className="p-1 font-medium"
             style={{ color: P.ink }}
           >
@@ -308,7 +323,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             <AmountInput
               value={amount}
               onChange={setAmount}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={t.incomeSheet.amountLabel}
               caretColor={P.ink}
               inputRef={amountInputRef}
@@ -325,17 +340,24 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
                   style={{ background: 'var(--toggle-segment-track)' }}
+                  aria-describedby={recipientUnresolved ? recipientHintId : undefined}
                 >
-                  {(['M', 'T'] as const).map(w => (
+                  {(['M', 'T'] as const).map(w => {
+                    const sel = !recipientUnresolved && recipientWho === w
+                    return (
                     <button
                       key={w}
                       type="button"
-                      onClick={() => setRecipientWho(w)}
+                      aria-pressed={sel}
+                      onClick={() => {
+                        setRecipientWho(w)
+                        setRecipientUnresolved(false)
+                      }}
                       className="oik-segment h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5"
                       style={{
-                        background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
-                        color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
-                        boxShadow: recipientWho === w
+                        background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                        color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: sel
                           ? `var(--toggle-segment-thumb-shadow), 0 0 0 1px ${P.tint}`
                           : 'none',
                         transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
@@ -349,9 +371,15 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                       />
                       {w === 'M' ? t.common.me : t.common.partner}
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
+            )}
+            {recipientUnresolved && (
+              <p id={recipientHintId} className="mt-2 text-xs text-ink-3">
+                {isSolo ? t.recurringIncome.sheet.recipientFormerSoloHint : t.recurringIncome.sheet.recipientFormerHint}
+              </p>
             )}
           </div>
 

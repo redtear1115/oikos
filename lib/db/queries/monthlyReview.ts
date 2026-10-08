@@ -26,7 +26,13 @@ export interface MonthlyReviewSnapshotRow {
   largestExpenseAmount: number | null
   largestExpenseDescription: string | null
   largestExpenseCategory: string | null
-  largestExpensePaidByName: string | null
+  /**
+   * The largest expense's payer id (#1618). SERVER ONLY: resolve it with
+   * resolveReviewPayerName and strip it (toClientReviewSnapshot, both in
+   * lib/monthlyReview.ts) before the snapshot reaches a client component. It
+   * may be a former partner's id.
+   */
+  largestExpensePaidBy: string | null
   recurringEvents: RecurringEvent[]
   recurringTotalIncome: number
   recurringTotalExpense: number
@@ -34,6 +40,9 @@ export interface MonthlyReviewSnapshotRow {
   bannerDismissedByMemberAAt: Date | null
   bannerDismissedByMemberBAt: Date | null
 }
+
+/** What a client component may receive: the snapshot without the payer id. */
+export type ClientReviewSnapshot = Omit<MonthlyReviewSnapshotRow, 'largestExpensePaidBy'>
 
 export interface MonthlyReviewMessageRow {
   id: string
@@ -62,7 +71,7 @@ function rehydrate(row: typeof monthlyReviewSnapshots.$inferSelect): MonthlyRevi
     largestExpenseAmount: row.largestExpenseAmount,
     largestExpenseDescription: row.largestExpenseDescription,
     largestExpenseCategory: row.largestExpenseCategory,
-    largestExpensePaidByName: row.largestExpensePaidByName,
+    largestExpensePaidBy: row.largestExpensePaidBy,
     recurringEvents: events,
     recurringTotalIncome: row.recurringTotalIncome ?? 0,
     recurringTotalExpense: row.recurringTotalExpense ?? 0,

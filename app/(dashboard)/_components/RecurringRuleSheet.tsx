@@ -1,5 +1,6 @@
 'use client'
 
+import { currencySymbol } from '@/lib/currency'
 import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
 import { useDirtyCheck } from './useUnsavedChangesGuard'
@@ -10,7 +11,7 @@ import { AmountInput } from './AmountInput'
 import { ScrollFadeRow } from './ScrollFadeRow'
 import { ConfirmModal } from './ConfirmModal'
 import { Avatar } from './Avatar'
-import { useMember, whoToMemberRole } from './MemberContext'
+import { useBaseCurrency, useMember, whoToMemberRole } from './MemberContext'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
@@ -22,11 +23,16 @@ import * as expenseActions from '@/actions/recurringExpense'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { useToast } from '@/components/Toast'
+import { ruleNextDateText } from '@/lib/recurringNextDate'
+import { previewNextDates } from '@/lib/recurring'
+import { formatDateShort } from '@/lib/format-date'
+import { useToday } from './TodayProvider'
 import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
-import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { RecurringIncomeRuleView, RecurringExpenseRuleView } from '@/lib/recurringMemberLink'
 import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
 
 const INTERVAL_VALUES: (1 | 3 | 6 | 12)[] = [1, 3, 6, 12]
@@ -41,7 +47,7 @@ type CommonProps = {
 type IncomeProps = CommonProps & {
   type: 'income'
   /** undefined = create mode; set = edit mode */
-  initial?: RecurringRuleRow
+  initial?: RecurringIncomeRuleView
   insuranceAssets: { id: string; name: string }[]
   /** #166 — create-mode prefill from contexts outside Settings (e.g. SavingsView).
    *  Ignored in edit mode so the rule's own values still win. */
@@ -54,7 +60,7 @@ type IncomeProps = CommonProps & {
 
 type ExpenseProps = CommonProps & {
   type: 'expense'
-  initial?: RecurringExpenseRuleRow
+  initial?: RecurringExpenseRuleView
   groupDefaultRatioA?: number | null
 }
 
@@ -63,7 +69,11 @@ type Props = IncomeProps | ExpenseProps
 export function RecurringRuleSheet(props: Props) {
   const { open, onClose, onMutated } = props
   const { viewer, partner, isSolo, viewerIsA } = useMember()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
+  const locale = useLocale()
+  const today = useToday()
+  const { showToast } = useToast()
   const isEdit = !!props.initial
   const isIncome = props.type === 'income'
 
@@ -119,6 +129,16 @@ export function RecurringRuleSheet(props: Props) {
   const [description, setDescription] = useState('')
   const [expenseAssetId, setExpenseAssetId] = useState<string | null>(null)
 
+  // #1588 — editing a rule whose 收入歸屬 / 付款人 left the ledger (the page
+  // sent no id, only the *IsFormer flag): nothing is selected until the user
+  // picks a person. Duo: save stays disabled until then — `updateRule` only
+  // accepts a current member, and keeping the old person would leave a rule
+  // whose cards can never be confirmed. Solo: no picker; the sheet says the
+  // rule goes under the viewer. Never silently the current partner.
+  const [recipientUnresolved, setRecipientUnresolved] = useState(false)
+  const [payerUnresolved, setPayerUnresolved] = useState(false)
+  const personHintId = useId()
+
   // Reset / prefill on open — income variant
   const incomeInitial = isIncome ? props.initial : undefined
   const incomePrefill = isIncome ? props.prefill : undefined
@@ -126,7 +146,8 @@ export function RecurringRuleSheet(props: Props) {
     if (!open || !isIncome) return
     if (incomeInitial) {
       setIncomeCategory(incomeInitial.category)
-      setRecipientWho(incomeInitial.recipientId === viewer.id ? 'M' : 'T')
+      setRecipientWho(!incomeInitial.recipientIsFormer && incomeInitial.recipientId !== viewer.id ? 'T' : 'M')
+      setRecipientUnresolved(incomeInitial.recipientIsFormer)
       setSource(incomeInitial.source ?? '')
       setIncomeAssetId(incomeInitial.assetId ?? '')
     } else {
@@ -135,6 +156,7 @@ export function RecurringRuleSheet(props: Props) {
       // sensible values; user can still change anything before saving.
       setIncomeCategory(incomePrefill?.category ?? 'salary')
       setRecipientWho('M')
+      setRecipientUnresolved(false)
       setSource(incomePrefill?.source ?? '')
       setIncomeAssetId(incomePrefill?.assetId ?? '')
     }
@@ -149,7 +171,8 @@ export function RecurringRuleSheet(props: Props) {
       setExpenseCategory(
         PICKABLE_CATEGORIES.find((c) => c.id === expenseInitial.category)?.id ?? 'other',
       )
-      setPayerWho(expenseInitial.paidBy === viewer.id ? 'M' : 'T')
+      setPayerWho(!expenseInitial.paidByIsFormer && expenseInitial.paidBy !== viewer.id ? 'T' : 'M')
+      setPayerUnresolved(expenseInitial.paidByIsFormer)
       setSplitType(expenseInitial.splitType)
       // DB stores member A's share; slider tracks viewer's share. Flip for
       // viewer = B so the labels read truthfully (#783 / PR #784).
@@ -161,6 +184,7 @@ export function RecurringRuleSheet(props: Props) {
     } else {
       setExpenseCategory('housing')
       setPayerWho('M')
+      setPayerUnresolved(false)
       setSplitType(isSolo ? 'all_mine' : viewer.defaultSplitType)
       setSplitRatioA(groupDefaultRatioA ?? 50)
       setDescription('')
@@ -168,8 +192,62 @@ export function RecurringRuleSheet(props: Props) {
     }
   }, [open, isIncome, expenseInitial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA, viewerIsA])
 
+  const personUnresolved = isIncome ? recipientUnresolved : payerUnresolved
+  const personFormerHint = isIncome
+    ? (isSolo ? t.recurringIncome.sheet.recipientFormerSoloHint : t.recurringIncome.sheet.recipientFormerHint)
+    : (isSolo ? t.recurringExpense.sheet.paidByFormerSoloHint : t.recurringExpense.sheet.paidByFormerHint)
+  // #1483 — confirm the save with the date the server settled on. It comes
+  // back from the action (UTC "today", the same clock the cron uses) rather
+  // than being recomputed here, so the toast cannot disagree with the list
+  // row. Paused rules and a first date past `endsOn` produce no upcoming run,
+  // which `ruleNextDateText` reports as null → plain「已儲存」.
+  const toastSaved = (saved: { nextOccurrenceAt: string }) => {
+    const dateText = ruleNextDateText(
+      { nextOccurrenceAt: saved.nextOccurrenceAt, endsOn: endsOn || null, pausedAt: props.initial?.pausedAt ?? null },
+      '{date}',
+      locale,
+    )
+    showToast(dateText ? tNs.sheet.savedToastNext.replace('{date}', dateText) : tNs.sheet.savedToast)
+  }
+
+  // #1483 — how many pending cards deleting would take with it, fetched when
+  // the confirm opens. null = loading or failed: the modal falls back to the
+  // generic sentence and deleting is never blocked on this read.
+  const ruleId = props.initial?.id
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+  useEffect(() => {
+    setPendingCount(null)
+    if (!confirmingDelete || !ruleId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const n = unwrapAction(await actions.countPendingForRule(ruleId))
+        if (!cancelled) setPendingCount(n)
+      } catch {
+        // keep the generic description
+      }
+    })()
+    return () => { cancelled = true }
+  }, [confirmingDelete, ruleId, actions])
+
+  const deleteDescription =
+    pendingCount === null
+      ? tNs.sheet.deleteConfirmDescription
+      : pendingCount === 0
+        ? tNs.sheet.deleteConfirmDescriptionNone
+        : tNs.sheet.deleteConfirmDescriptionCount.replace('{count}', String(pendingCount))
+
+  // #1588 — resume of a rule whose person left the ledger: don't call the
+  // action blind (it would answer rule_payer_not_member or rule_recipient_not_member). Say what to do
+  // first; the edit form above already has the person picker (duo) or the
+  // "goes under you" line (solo), and saving it is the re-pick.
+  const handleResumeNeedsPerson = () => {
+    setError(isIncome ? t.errors.actions.rule_recipient_not_member : t.errors.actions.rule_payer_not_member)
+  }
+
   const handleSave = () => {
     if (!amount || amount <= 0) { setError(tNs.errors.amountRequired); return }
+    if (!isSolo && personUnresolved) { setError(personFormerHint); return }
 
     if (isIncome) {
       setError(null)
@@ -194,6 +272,7 @@ export function RecurringRuleSheet(props: Props) {
           ? incomeActions.updateRule({ id: props.initial.id, ...payload })
           : incomeActions.createRule(payload),
         t.recurringIncome.errors.saveFailed,
+        toastSaved,
       )
       return
     }
@@ -225,6 +304,7 @@ export function RecurringRuleSheet(props: Props) {
         ? expenseActions.updateRule({ id: props.initial.id, ...payload })
         : expenseActions.createRule(payload),
       t.recurringExpense.errors.saveFailed,
+      toastSaved,
     )
   }
 
@@ -237,12 +317,23 @@ export function RecurringRuleSheet(props: Props) {
   const isDirty = useDirtyCheck(open, {
     amount, intervalMonths, dayOfMonth, startsOn, endsOn,
     ...(isIncome
-      ? { incomeCategory, recipientWho, source, incomeAssetId }
-      : { expenseCategory, payerWho, splitType, splitRatioA, description, expenseAssetId }),
+      ? { incomeCategory, recipientWho, recipientUnresolved, source, incomeAssetId }
+      : { expenseCategory, payerWho, payerUnresolved, splitType, splitRatioA, description, expenseAssetId }),
   })
 
+  // #1483 — read-only "接下來" line under the day picker: the concrete dates
+  // the settings above produce (also what makes the end-of-month clamp visible).
+  const nextDates = open
+    ? previewNextDates({
+        startsOn, endsOn: endsOn || null, intervalMonths, dayOfMonth, today, isEdit,
+      })
+    : []
+  const nextDatesText = nextDates
+    .map((d) => formatDateShort(d, locale, { withYear: d.slice(0, 4) !== today.slice(0, 4) }))
+    .join(tNs.sheet.nextDatesSeparator)
+
   const saveColor = isIncome ? P.ink : 'var(--accent)'
-  const saveDisabled = !amount || pending
+  const saveDisabled = !amount || pending || (!isSolo && personUnresolved)
 
   return (
     <>
@@ -281,7 +372,7 @@ export function RecurringRuleSheet(props: Props) {
             onClick={handleSave}
             disabled={saveDisabled}
             style={{
-              color: amount && !pending ? saveColor : 'var(--ink-3)',
+              color: !saveDisabled ? saveColor : 'var(--ink-3)',
               fontWeight: 500,
             }}
           >
@@ -325,7 +416,7 @@ export function RecurringRuleSheet(props: Props) {
             <AmountInput
               value={amount ? String(amount) : ''}
               onChange={(next) => setAmount(next ? parseInt(next, 10) : 0)}
-              symbol="NT$"
+              symbol={currencySymbol(baseCurrency)}
               ariaLabel={tNs.sheet.amountLabel}
               caretColor={isIncome ? P.ink : undefined}
             />
@@ -345,24 +436,30 @@ export function RecurringRuleSheet(props: Props) {
                   <div
                     role="radiogroup"
                     aria-labelledby={recipientLabelId}
+                    aria-describedby={recipientUnresolved ? personHintId : undefined}
                     onKeyDown={onRadioGroupKeyDown}
                     className="inline-flex rounded-full p-[3px] gap-0.5"
                     style={{ background: 'var(--toggle-segment-track)' }}
                   >
-                    {(['M', 'T'] as const).map((w) => (
+                    {(['M', 'T'] as const).map((w) => {
+                      const sel = !recipientUnresolved && recipientWho === w
+                      return (
                       <button
                         key={w}
                         type="button"
                         role="radio"
-                        aria-checked={recipientWho === w}
-                        tabIndex={rovingTabIndex(recipientWho === w, w === 'M', true)}
-                        onClick={() => setRecipientWho(w)}
+                        aria-checked={sel}
+                        tabIndex={rovingTabIndex(sel, w === 'M', !recipientUnresolved)}
+                        onClick={() => {
+                          setRecipientWho(w)
+                          setRecipientUnresolved(false)
+                        }}
                         className="oik-segment relative h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
                         style={{
-                          background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
-                          color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
+                          background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                          color: sel ? 'var(--ink)' : 'var(--ink-2)',
                           fontFamily: 'inherit',
-                          boxShadow: recipientWho === w
+                          boxShadow: sel
                             ? `var(--toggle-segment-thumb-shadow), 0 0 0 1px ${P.tint}`
                             : 'none',
                           transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
@@ -378,12 +475,26 @@ export function RecurringRuleSheet(props: Props) {
                         </span>
                         {w === 'M' ? t.common.me : t.common.partner}
                       </button>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               ) : (
-                <PayerToggle value={payerWho} onChange={setPayerWho} />
+                <PayerToggle
+                  value={payerWho}
+                  onChange={(w) => {
+                    setPayerWho(w)
+                    setPayerUnresolved(false)
+                  }}
+                  unresolved={payerUnresolved}
+                  describedBy={payerUnresolved ? personHintId : undefined}
+                />
               )
+            )}
+            {personUnresolved && (
+              <p id={personHintId} className="mt-2 text-xs text-ink-3">
+                {personFormerHint}
+              </p>
             )}
           </div>
 
@@ -512,12 +623,14 @@ export function RecurringRuleSheet(props: Props) {
               {tNs.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
+            {nextDates.length > 0 && (
+              <div className="mt-2 text-xs text-ink-3">
+                {tNs.sheet.nextDatesPreview.replace('{dates}', nextDatesText)}
+              </div>
+            )}
             {dayOfMonth > 28 && (
-              <div
-                className="mt-2 text-xs"
-                style={{ color: 'var(--ink-3)' }}
-              >
-                {tNs.sheet.dayOfMonthFallbackHint}
+              <div className="mt-1 text-xs text-ink-3">
+                {tNs.sheet.dayOfMonthFallbackHint.replace('{day}', String(dayOfMonth))}
               </div>
             )}
           </div>
@@ -609,7 +722,7 @@ export function RecurringRuleSheet(props: Props) {
               <div className="flex gap-2.5 px-5 pt-4 pb-2">
                 <Button
                   variant="secondary"
-                  onClick={handlePauseResume}
+                  onClick={isPaused && personUnresolved ? handleResumeNeedsPerson : handlePauseResume}
                   disabled={pending}
                   fullWidth
                 >
@@ -634,7 +747,7 @@ export function RecurringRuleSheet(props: Props) {
       <ConfirmModal
         open={confirmingDelete && open}
         title={tNs.sheet.deleteConfirmTitle}
-        description={tNs.sheet.deleteConfirmDescription}
+        description={deleteDescription}
         confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}

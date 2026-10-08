@@ -27,9 +27,16 @@ interface Props {
 export function AvatarMenuSheet({ open, onClose, data }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const { group, viewer, partner, viewerIsA, isSolo } = useMember()
+  const { group, viewer, partner, viewerIsA, isSolo, isPast } = useMember()
   const viewerRole = viewerIsA ? 'a' : 'b'
   const partnerRole = viewerIsA ? 'b' : 'a'
+  // #1604 — pinned to a past chapter (the sheet opens from BrandHeader there
+  // too), today's partner appears nowhere in it: not in the avatar cluster,
+  // not as a member row, not in the split-ratio row. Those are today's ledger
+  // settings; showing them inside an old chapter put the new partner's name
+  // and photo next to the ex's records. The chapter's own partner is already
+  // on BrandHeader (useViewedPartner).
+  const shownPartner = isPast ? null : partner
 
   return (
     <SheetFrame open={open} onClose={onClose} ariaLabel={t.settings.title}>
@@ -40,9 +47,9 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
           </div>
           <div className="flex shrink-0">
             <Avatar memberRole={viewerRole} initial={viewer.initial} src={viewer.avatarUrl} size={22} />
-            {partner && (
+            {shownPartner && (
               <div className="-ml-[6px]">
-                <Avatar memberRole={partnerRole} initial={partner.initial} src={partner.avatarUrl} size={22} ring />
+                <Avatar memberRole={partnerRole} initial={shownPartner.initial} src={shownPartner.avatarUrl} size={22} ring />
               </div>
             )}
           </div>
@@ -67,6 +74,8 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
                 displayName: partner.displayName,
                 email: '',
               } : null}
+              hasOpenInvite={data.hasOpenInvite}
+              hidePartnerRow={isPast}
             />
           </Section>
 
@@ -95,11 +104,11 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
               value={group.name}
               onSave={updateGroupName}
             />
-            {!isSolo && partner && (
+            {!isSolo && shownPartner && (
               <div className="mt-3">
                 <SplitRatioSection
                   viewerName={viewer.displayName}
-                  partnerName={partner.displayName}
+                  partnerName={shownPartner.displayName}
                   initialRatioA={data.groupDefaultRatioA}
                 />
               </div>

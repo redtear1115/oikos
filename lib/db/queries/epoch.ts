@@ -9,7 +9,7 @@ import {
   profiles,
   settlements,
 } from '@/lib/db/schema'
-import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { actionError } from '@/lib/action-errors'
 
@@ -182,6 +182,8 @@ export async function currentEpochHasRecords(
  * Latest closed epoch on a group, or null. Used by the post-leave card on the
  * stayer's dashboard: when the current epoch is solo and the latest closed
  * epoch had a memberB, that memberB just left and we surface a one-shot card.
+ * Server-only: the row carries the frozen names; take a name for the card
+ * through {@link getEpochMembers}, and never pass this row to a client prop.
  */
 export async function getLatestPriorClosedEpoch(groupId: string) {
   const [row] = await db
@@ -191,6 +193,55 @@ export async function getLatestPriorClosedEpoch(groupId: string) {
     .orderBy(desc(groupEpochs.endedAt))
     .limit(1)
   return row ?? null
+}
+
+/** What {@link withChapterNames} needs from a GroupEpochs row. */
+interface ChapterNameSource {
+  endedAt: Date | null
+  memberAId: string
+  memberBId: string | null
+  memberAName: string | null
+  memberBName: string | null
+}
+
+/**
+ * #1604 part 2 — the names a chapter shows for its two people.
+ *
+ * A closed chapter shows the name each person had when it closed: the
+ * snapshot 0088's trigger froze on the row (a deleted account's slot reads
+ * 「已離開的夥伴」). Only while a slot's snapshot is NULL (an open chapter, or a
+ * row 0088's backfill could not fill) does the live `Profiles` name stand in.
+ * Live names are fetched only for those slots, so a list of closed chapters
+ * costs no `Profiles` read at all.
+ *
+ * Failure this prevents: nothing errors; a chapter that is over keeps picking
+ * up whatever name the other person chose later.
+ */
+async function withChapterNames<R extends ChapterNameSource>(
+  rows: R[],
+): Promise<(R & { memberAName: string | null; memberBName: string | null })[]> {
+  const frozen = (r: R, name: string | null | undefined) =>
+    (r.endedAt != null && name != null ? name : null)
+  const needLive = new Set<string>()
+  for (const r of rows) {
+    if (frozen(r, r.memberAName) === null) needLive.add(r.memberAId)
+    if (r.memberBId && frozen(r, r.memberBName) === null) needLive.add(r.memberBId)
+  }
+  const liveRows = needLive.size === 0
+    ? []
+    : await db
+        .select({ id: profiles.id, displayName: profiles.displayName })
+        .from(profiles)
+        .where(inArray(profiles.id, Array.from(needLive)))
+  const liveById = new Map(liveRows.map((p) => [p.id, p.displayName]))
+
+  return rows.map((r) => ({
+    ...r,
+    memberAName: frozen(r, r.memberAName) ?? liveById.get(r.memberAId) ?? null,
+    memberBName: r.memberBId
+      ? (frozen(r, r.memberBName) ?? liveById.get(r.memberBId) ?? null)
+      : null,
+  }))
 }
 
 /**
@@ -218,27 +269,15 @@ export async function listEpochs(
 
   if (rows.length === 0) return []
 
-  const profileIds = Array.from(new Set(
-    rows.flatMap((r) => [r.memberAId, r.memberBId].filter((x): x is string => x !== null)),
-  ))
-
-  const profileRows = profileIds.length === 0
-    ? []
-    : await db
-        .select({ id: profiles.id, displayName: profiles.displayName })
-        .from(profiles)
-        .where(inArray(profiles.id, profileIds))
-
-  const nameById = new Map(profileRows.map((p) => [p.id, p.displayName]))
-
-  return rows.map((r) => ({
+  // #1604 part 2: a closed chapter's names are the ones frozen at its close.
+  return (await withChapterNames(rows)).map((r) => ({
     id: r.id,
     startedAt: r.startedAt,
     endedAt: r.endedAt,
     memberAId: r.memberAId,
     memberBId: r.memberBId,
-    memberAName: nameById.get(r.memberAId) ?? null,
-    memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
+    memberAName: r.memberAName,
+    memberBName: r.memberBName,
   }))
 }
 
@@ -259,40 +298,40 @@ export interface CrossGroupEpochListItem extends EpochListItem {
  *
  * Each row carries its own `groupId` so the click-to-enter flow can scope
  * downstream queries to the correct group (see `resolveViewerEpochContext`).
+ *
+ * Only chapters on groups the viewer is still `member_a` / `member_b` of
+ * (#1603). That is the rule `resolveViewerEpochContext` applies to a pin, so
+ * every row listed here opens when tapped. A former member's chapters on the
+ * ledger they left — including a solo chapter 0 they started there — are
+ * left out; they come back with #1612 (read-only look-back). Without this
+ * filter the failure is quiet: tapping such a row sets the pin, the resolver
+ * ignores it, and the viewer lands on today's ledger instead of the chapter.
  */
 export async function listEpochsForViewer(
   viewerId: string,
 ): Promise<CrossGroupEpochListItem[]> {
   const rows = await db
-    .select()
+    .select(getTableColumns(groupEpochs))
     .from(groupEpochs)
+    .innerJoin(oikosGroups, and(
+      eq(oikosGroups.id, groupEpochs.groupId),
+      or(eq(oikosGroups.memberA, viewerId), eq(oikosGroups.memberB, viewerId)),
+    ))
     .where(or(eq(groupEpochs.memberAId, viewerId), eq(groupEpochs.memberBId, viewerId)))
     .orderBy(desc(groupEpochs.startedAt))
 
   if (rows.length === 0) return []
 
-  const profileIds = Array.from(new Set(
-    rows.flatMap((r) => [r.memberAId, r.memberBId].filter((x): x is string => x !== null)),
-  ))
-
-  const profileRows = profileIds.length === 0
-    ? []
-    : await db
-        .select({ id: profiles.id, displayName: profiles.displayName })
-        .from(profiles)
-        .where(inArray(profiles.id, profileIds))
-
-  const nameById = new Map(profileRows.map((p) => [p.id, p.displayName]))
-
-  return rows.map((r) => ({
+  // #1604 part 2: a closed chapter's names are the ones frozen at its close.
+  return (await withChapterNames(rows)).map((r) => ({
     id: r.id,
     groupId: r.groupId,
     startedAt: r.startedAt,
     endedAt: r.endedAt,
     memberAId: r.memberAId,
     memberBId: r.memberBId,
-    memberAName: nameById.get(r.memberAId) ?? null,
-    memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
+    memberAName: r.memberAName,
+    memberBName: r.memberBName,
   }))
 }
 
@@ -306,15 +345,26 @@ export interface ViewerEpochContext {
  * dashboard / records / assets read paths.
  *
  * When the past-epoch cookie is set AND points at an epoch the viewer was a
- * member of, the resolved group follows the pin — even if it lives on a
+ * member of AND the viewer is still `member_a` / `member_b` of that epoch's
+ * group, the resolved group follows the pin — even if it lives on a
  * different `OikosGroups` row than the viewer's most-recent active group.
- * This is what makes cross-group time-travel (#141) actually work: a leaver
- * pinning into their old solo Y gets Y's group context and Y's window, not
- * X's. Without this, the dashboard would silently query X.id with Y's
- * (rejected) pin falling back to X's current epoch.
+ * This is what makes cross-group time-travel (#141) actually work: someone
+ * who accepted an invite into X is still `member_a` of their old solo Y, and
+ * pinning into Y gets Y's group context and Y's window, not X's.
+ *
+ * Pin acceptance rule (#1603): named on the chapter AND a current member of
+ * its group — the same rule the dashboard layout enforces on the group's
+ * profiles. A former member (left or removed) pinned into the ledger they
+ * left falls through to the active-group path, exactly like a hostile or
+ * stale cookie, until #1612 gives former members a read-only look-back.
+ * Failure this prevents: the resolver handed the layout a group whose current
+ * members don't include the viewer, the layout sent them to /sign-in, sign-in
+ * sent a signed-in user back to /dashboard, and they looped with no way out
+ * (PastChapterBar and /settings/past-times both live behind that layout).
  *
  * Returns `null` only when the viewer has no group at all AND no valid pin —
- * pages should treat that as「未進入家計簿」(redirect to /onboarding).
+ * pages should treat that as「未進入家計簿」(redirect to /onboarding). A
+ * removed partner with no ledger of their own lands here.
  */
 export const resolveViewerEpochContext = cache(async (
   userId: string,
@@ -337,7 +387,10 @@ export const resolveViewerEpochContext = cache(async (
         .from(oikosGroups)
         .where(eq(oikosGroups.id, pinned.groupId))
         .limit(1)
-      if (group) {
+      // #1603 — and the viewer must still be in that group today. A leaver
+      // or a removed partner is named on the old chapter but not on the
+      // group row; their pin falls through (see the docstring).
+      if (group && (group.memberA === userId || group.memberB === userId)) {
         return {
           group,
           window: {
@@ -379,16 +432,83 @@ export const resolveViewerEpochContext = cache(async (
  * leave, the group row names the stayer and whoever joined next, while the
  * epoch row still names the pair who lived that chapter. Anything rendering a
  * chapter — names, avatars, "whose message" — must read these.
+ *
+ * #1604 — this is also the ONE source of a chapter member's display name.
+ * Every surface that labels a chapter's people (the dashboard layout's chapter
+ * identity, and through it CompactRow / TripDetail / BrandHeader; the monthly
+ * review page; PartnerLeftCard) reads names from here and never from
+ * `Profiles` directly. For a CLOSED chapter the name is the one frozen when it
+ * closed (#1604 part 2, migration 0088: `GroupEpochs.member_*_name`, a deleted
+ * account's slot reads 「已離開的夥伴」); the live profile name stands in only
+ * while that snapshot is NULL (an open chapter). A name read from `Profiles`
+ * anywhere else would quietly show the person's later name inside a chapter
+ * that is over. No avatar is returned on purpose: a past chapter shows no
+ * avatar (after-leaving spec,「人：停在當時」).
+ *
+ * Caller contract: this has NO viewer check and returns personal data (names).
+ * Callers must already have established that the viewer may see this chapter
+ * — e.g. the epoch id came from `resolveViewerEpochContext`, which only
+ * accepts a pin for a chapter the viewer is named on, in a group they are
+ * still a member of. Never pass an id taken straight from user input.
+ * `memberAName` / `memberBName` are null when there is neither a snapshot nor
+ * a profile row.
  */
 export async function getEpochMembers(
   epochId: string,
-): Promise<{ memberAId: string; memberBId: string | null } | null> {
+): Promise<{
+  memberAId: string
+  memberBId: string | null
+  memberAName: string | null
+  memberBName: string | null
+} | null> {
   const [row] = await db
-    .select({ memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
+    .select({
+      endedAt: groupEpochs.endedAt,
+      memberAId: groupEpochs.memberAId,
+      memberBId: groupEpochs.memberBId,
+      memberAName: groupEpochs.memberAName,
+      memberBName: groupEpochs.memberBName,
+    })
     .from(groupEpochs)
     .where(eq(groupEpochs.id, epochId))
     .limit(1)
-  return row ?? null
+  if (!row) return null
+
+  const [named] = await withChapterNames([row])
+  return {
+    memberAId: named.memberAId,
+    memberBId: named.memberBId,
+    memberAName: named.memberAName,
+    memberBName: named.memberBName,
+  }
+}
+
+/**
+ * #1604 — the pair whose rows the viewed chapter holds, for resolving
+ * 「誰付 = 對方」/ 誰負擔 into a user id (`lib/resolveTxnFilter.ts`).
+ *
+ * The current chapter: the group row, as before. A past chapter: that
+ * chapter's GroupEpochs members, never today's group row — after a leave the
+ * group row names the stayer and the NEXT partner (or nobody), and "the other
+ * person paid" would match the new partner's id (zero rows) or the solo
+ * sentinel. If the chapter row can't be read, the pair is the viewer alone, so
+ * 「對方」 matches nothing (fails closed).
+ *
+ * Every caller of the resolver uses this — the records page's first render and
+ * the pagination actions — so the first page and later pages agree.
+ * Caller contract: as {@link getEpochMembers}; `context` must come from
+ * `resolveViewerEpochContext(viewerId)`.
+ */
+export async function resolveViewedPair(
+  context: ViewerEpochContext,
+  viewerId: string,
+): Promise<{ memberA: string; memberB: string | null }> {
+  if (!context.window.isPast) {
+    return { memberA: context.group.memberA, memberB: context.group.memberB }
+  }
+  const chapter = context.window.epochId ? await getEpochMembers(context.window.epochId) : null
+  if (!chapter) return { memberA: viewerId, memberB: null }
+  return { memberA: chapter.memberAId, memberB: chapter.memberBId }
 }
 
 export interface EpochCloseLock {

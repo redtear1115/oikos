@@ -3,17 +3,19 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory } from '@/lib/categories'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
-import { CardEmpty, CardShell, formatNT } from './CardShell'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CardEmpty, CardShell, formatRecapAmount } from './CardShell'
 
 export function CardCategory({
   snapshot,
   isSolo,
 }: {
-  snapshot: MonthlyReviewSnapshotRow
+  snapshot: ClientReviewSnapshot
   isSolo: boolean
 }) {
   const router = useRouter()
+  const baseCurrency = useBaseCurrency()
   const t = useTranslations()
   const tr = t.monthlyReview
 
@@ -30,7 +32,7 @@ export function CardCategory({
   const bodyTemplate = isSolo ? tr.card1BodySolo : tr.card1Body
   const body = bodyTemplate
     .replace('{category}', localizedCategory)
-    .replace('{amount}', formatNT(total))
+    .replace('{amount}', formatRecapAmount(total, baseCurrency))
 
   return (
     <CardShell title={tr.card1Title} tint={tint}>
@@ -50,7 +52,7 @@ export function CardCategory({
                 {localizedCategory}
               </div>
               <div className="text-2xl font-medium" style={{ color: 'var(--ink)' }}>
-                NT$ {formatNT(total)}
+                {formatRecapAmount(total, baseCurrency)}
               </div>
             </div>
           </div>

@@ -12,7 +12,7 @@ import type { SplitType } from '@/lib/balance'
  * balance delta on recalc.
  *
  * The summary's splitRatioA is rounded to an integer (0–100), which can
- * introduce ≤ 1-unit cent drift per pair of odd-amount half-split expenses
+ * introduce ≤ 1-unit rounding drift per pair of odd-amount half-split expenses
  * vs running each TripExpense through balance.ts individually. Acceptable
  * at v0.17.2's scale — documented in the PR body.
  *
@@ -67,7 +67,7 @@ function aShareOf(e: TripExpenseForSummary, memberA: string): number {
  * Returns 0 rows if no expenses; 1 row if only one member paid; 2 rows
  * otherwise. Each summary's `splitRatioA` is rounded so that, when fed
  * into lib/balance.ts, its delta approximates the sum of that member's
- * trip expenses' deltas (small cent drift tolerated).
+ * trip expenses' deltas (small rounding drift tolerated).
  */
 export function buildTripSummaries(input: {
   expenses: TripExpenseForSummary[]

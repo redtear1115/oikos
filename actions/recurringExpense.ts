@@ -37,7 +37,7 @@ import {
   revalidateAfterRecurringExpenseRuleMutation,
   revalidateAfterTransactionMutation,
 } from '@/lib/revalidate'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
@@ -49,7 +49,7 @@ function assertPaidByInGroup(
   assertMemberInGroup(paidById, group, 'payer_not_in_group')
 }
 
-export const createRule = action(async (input: RecurringExpenseRuleInput): Promise<{ id: string }> => {
+export const createRule = action(async (input: RecurringExpenseRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
@@ -118,14 +118,14 @@ export const createRule = action(async (input: RecurringExpenseRuleInput): Promi
     frequency: v.intervalMonths,
   })
 
-  return { id: created.id }
+  return { id: created.id, nextOccurrenceAt }
 })
 
 export interface UpdateRuleInput extends RecurringExpenseRuleInput {
   id: string
 }
 
-export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string; nextOccurrenceAt: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
@@ -180,7 +180,7 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
-  return { id: updated.id }
+  return { id: updated.id, nextOccurrenceAt }
 })
 
 export const pauseRule = action(async (id: string): Promise<void> => {
@@ -203,6 +203,7 @@ export const resumeRule = action(async (id: string): Promise<void> => {
   const [rule] = await db
     .select({
       id: recurringExpenseRules.id,
+      paidBy: recurringExpenseRules.paidBy,
       nextOccurrenceAt: recurringExpenseRules.nextOccurrenceAt,
       intervalMonths: recurringExpenseRules.intervalMonths,
       dayOfMonth: recurringExpenseRules.dayOfMonth,
@@ -217,6 +218,13 @@ export const resumeRule = action(async (id: string): Promise<void> => {
     ))
     .limit(1)
   if (!rule) throw actionError('recurring_rule_not_found')
+  // #1588 — a rule whose person left the ledger stays paused (removePartner /
+  // account deletion paused it). Resuming it would only make cron generate
+  // cards that can never be confirmed. The way out is editing the rule to
+  // pick a current member (`updateRule`), then resuming. paused_at is unchanged.
+  if (rule.paidBy !== group.memberA && rule.paidBy !== group.memberB) {
+    throw actionError('rule_payer_not_member')
+  }
   // #1442 — a rule linked to a frozen copy (leaveGroup paused it) stays
   // paused: resuming would generate records on a read-only 愛物. The way out
   // is editing the rule to clear or change the 愛物, then resuming.
@@ -234,6 +242,38 @@ export const resumeRule = action(async (id: string): Promise<void> => {
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
+})
+
+/**
+ * #1483 — how many pending cards `softDeleteRule` would remove along with the
+ * rule, for the delete confirmation. Same filter as the delete below
+ * (unskipped and unresolved), scoped to the viewer's group; a rule outside it
+ * is `recurring_rule_not_found`, like every other action here.
+ */
+export const countPendingForRule = action(async (id: string): Promise<number> => {
+  const { group } = await requireViewerGroup()
+
+  const [rule] = await db
+    .select({ id: recurringExpenseRules.id })
+    .from(recurringExpenseRules)
+    .where(and(
+      eq(recurringExpenseRules.id, id),
+      eq(recurringExpenseRules.groupId, group.id),
+      isNull(recurringExpenseRules.deletedAt),
+    ))
+    .limit(1)
+  if (!rule) throw actionError('recurring_rule_not_found')
+
+  const [row] = await db
+    .select({ n: count() })
+    .from(pendingExpenseOccurrences)
+    .where(and(
+      eq(pendingExpenseOccurrences.ruleId, id),
+      eq(pendingExpenseOccurrences.groupId, group.id),
+      isNull(pendingExpenseOccurrences.skippedAt),
+      isNull(pendingExpenseOccurrences.resolvedTxId),
+    ))
+  return row?.n ?? 0
 })
 
 export const softDeleteRule = action(async (id: string): Promise<void> => {
@@ -293,11 +333,14 @@ export const confirmPending = action(async (pendingId: string): Promise<{ txId: 
     .limit(1)
   if (!row) throw actionError('pending_expense_not_found')
 
-  // Race guard: snapshot's paidBy may have left the group between cron generation
-  // and confirmation. Surfacing this as a race message lets the UI prompt the user
-  // to re-pick a payer via 「改一下」 instead of inserting an orphan.
+  // The snapshot payer may have left the group (removePartner / account
+  // deletion) after cron generated this card. Don't insert a record paid by a
+  // non-member; ask the user to re-pick the payer via 「改一下」
+  // (editAndConfirmPending). #1588: this used to answer
+  // `pending_expense_partner_handled` (「這筆 partner 剛剛已處理」), which read
+  // as a race and left the card stuck with no hint of what was wrong.
   if (row.proposedPaidBy !== group.memberA && row.proposedPaidBy !== group.memberB) {
-    throw actionError('pending_expense_partner_handled')
+    throw actionError('pending_former_member')
   }
   // The rule's asset is copied onto the new record, so it must still belong to
   // this group (an asset can move to another group after the rule was made).

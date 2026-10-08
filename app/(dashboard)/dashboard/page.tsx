@@ -5,17 +5,14 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { UI_PREF_COOKIE, parseBoolCookie } from '@/lib/uiPrefsCookie'
-import { db } from '@/lib/db/client'
-import { profiles } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
 import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
 import { listTransactionsPaged, monthlyStatsByCategory } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochContext, getLatestPriorClosedEpoch, getEpochMembers } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
-import { listActivePendings } from '@/lib/db/queries/recurringIncome'
-import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
+import { listExpensePendingsForViewer, listIncomePendingsForViewer } from '@/lib/db/queries/recurringView'
+import { loadMemberLinkScope } from '@/lib/db/queries/insuranceView'
 import { listActiveTrips } from '@/lib/db/queries/trips'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
@@ -38,6 +35,7 @@ import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
+import { AndroidBetaInviteCard } from './_components/AndroidBetaInviteCard'
 import { deriveReviewCell } from '@/lib/reviewCell'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { recentIncomeLabel } from '@/lib/recentIncomeLabel'
@@ -61,6 +59,12 @@ export default async function DashboardPage() {
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
+
+  // #1588 — pending cards name a recipient / payer by profile id; one who left
+  // the ledger is dropped here, before anything reaches the client (see
+  // lib/recurringMemberLink.ts). Pinned to a chapter of a group the viewer
+  // left: that chapter's members, no 「前伴侶」 label.
+  const memberScope = await loadMemberLinkScope(context, user.id)
 
   // Post-leave cards (PR 4/4): only when not pinned to a past epoch (we want
   // these on the live current view, not on a historical snapshot).
@@ -116,11 +120,14 @@ export default async function DashboardPage() {
     rawActiveTrips,
     rawRates,
   ] = await Promise.all([
-    getGroupBalance(group.id),
-    getGroupPendingBalanceDelta(group.id),
+    // #1604 — the live balance, pending delta and pending cards are today's,
+    // not a past chapter's; a pinned dashboard renders none of them
+    // (Dashboard.tsx), so it doesn't fetch them either.
+    epochWindow.isPast ? Promise.resolve(0) : getGroupBalance(group.id),
+    epochWindow.isPast ? Promise.resolve(0) : getGroupPendingBalanceDelta(group.id),
     listIncomeMonthSummary(group.id, yyyymm, epochWindow),
-    listActivePendings(group.id),
-    listActiveExpensePendings(group.id),
+    epochWindow.isPast ? Promise.resolve([]) : listIncomePendingsForViewer(group.id, memberScope),
+    epochWindow.isPast ? Promise.resolve([]) : listExpensePendingsForViewer(group.id, memberScope),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
     // Solo expense hero (#1118): the month total + record count that replace
     // the balance a solo ledger cannot have. Reuses the stats donut's query and
@@ -169,13 +176,13 @@ export default async function DashboardPage() {
     priorClosedEpoch.memberAId === user.id &&
     epochWindow.epochId
   ) {
-    const [leaverProfile] = await db
-      .select({ displayName: profiles.displayName })
-      .from(profiles)
-      .where(eq(profiles.id, priorClosedEpoch.memberBId))
-      .limit(1)
+    // #1604 part 2 — the name the partner had when that chapter closed (its
+    // snapshot), through the one chapter-name source; never today's profile
+    // name. The chapter is this group's and the viewer is its member_a
+    // (getEpochMembers' caller contract).
+    const closedChapter = await getEpochMembers(priorClosedEpoch.id)
     partnerLeftProps = {
-      partnerName: leaverProfile?.displayName ?? '',
+      partnerName: closedChapter?.memberBName ?? '',
       currentEpochId: epochWindow.epochId,
     }
   }
@@ -307,6 +314,7 @@ export default async function DashboardPage() {
           isSolo={bannerProps.isSolo}
         />
       )}
+      {!epochWindow.isPast && <AndroidBetaInviteCard />}
       <Dashboard
         balance={balance}
         pendingBalanceDelta={pendingBalanceDelta}

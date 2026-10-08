@@ -1,4 +1,4 @@
-import { convertAmount } from './currency'
+import { convertWholeUnits } from './currency'
 
 // Trip-scoped currency snapshot. Stored on Trips.rate_snapshot (jsonb).
 //
@@ -111,8 +111,11 @@ export function findRate(snapshot: TripCurrencySnapshot, code: string): number |
  * Both currencies must be in the snapshot (or equal `default`); returns null
  * otherwise. Chains through `snapshot.default` when neither code is default.
  *
- * Uses `convertAmount` from lib/currency.ts so cent-vs-integer precision is
- * handled consistently with the save path (TripExpense.normalizeAmount).
+ * Amounts are whole units in every currency. Chained conversions compose the
+ * rate and round once via `convertWholeUnits` (same contract as the save path,
+ * TripExpense.normalizeAmount), including its minimum-1 rule. Retraction
+ * (#1582): this used to say cent-vs-integer precision was handled here; ledger
+ * and trip amounts are never cents.
  */
 export function convertViaSnapshot(
   amount: number,
@@ -133,12 +136,11 @@ export function convertViaSnapshot(
     if (r == null) return null
     fromRate = r
   }
-  const inDefault = convertAmount({ amount, from, to: def, rate: fromRate })
-  if (to === def) return inDefault
+  if (to === def) return convertWholeUnits(amount, fromRate)
   const toRate = findRate(snapshot, to)
   if (toRate == null) return null
   // default → to: invert (1 to = toRate default, so 1 default = 1/toRate to)
-  return convertAmount({ amount: inDefault, from: def, to, rate: 1 / toRate })
+  return convertWholeUnits(amount, fromRate / toRate)
 }
 
 /**

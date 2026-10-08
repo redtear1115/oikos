@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { signOut } from '@/actions/auth'
+import { clearStoredPushToken, readStoredPushToken } from '@/lib/pushTokenStorage'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { clearDynamicCache } from '@/lib/offline/swControl'
 import { useTranslations } from '@/lib/i18n/client'
@@ -24,7 +25,15 @@ export function LogoutButton() {
     // previous user's pages. Toggle preference / app shell precache are
     // kept (they're not user-scoped).
     await clearDynamicCache().catch(() => {})
-    await signOut().catch(() => {})
+    // #1605 / #1617 — ONE server action: signOut drops this device's push
+    // registration (bounded at 2 s server-side, failures swallowed) and then
+    // signs out. Do not split the delete back into a second action awaited
+    // first: Next.js runs server actions one at a time, so signOut would
+    // queue behind it and a slow delete would hold 登出 up. A failed sign-out
+    // falls through to the hard navigation below. The stored token is
+    // forgotten once the action has returned or failed, never before it.
+    await signOut(readStoredPushToken() ?? undefined).catch(() => {})
+    clearStoredPushToken()
     // Safety net: if signOut()'s soft nav somehow didn't take, force a hard
     // navigation so the user is never visually stranded on /settings.
     window.location.replace('/')

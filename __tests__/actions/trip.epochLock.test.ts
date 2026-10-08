@@ -201,7 +201,7 @@ async function seedTrip(
     tripId: t.id,
     paidBy,
     amount: 1200,
-    category: 'food',
+    category: 'dining',
     splitType: 'all_mine',
   }).returning({ id: tripExpenses.id })
   return { tripId: t.id, expenseId: x.id }
@@ -351,7 +351,7 @@ describe.skipIf(!isLocalDb)('trip edits vs a chapter close (#1290)', () => {
   it('createTripExpense is refused and adds no row', async () => {
     const s = await setup()
     const res = await raceAfterAccept(s, () => createTripExpense({
-      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'food', splitType: 'all_mine',
+      tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'dining', splitType: 'all_mine',
     }))
     expect(res).toEqual({ ok: false, code: 'trip_not_found' })
     const rows = await db.select().from(tripExpenses).where(eq(tripExpenses.tripId, s.tripId))
@@ -361,7 +361,7 @@ describe.skipIf(!isLocalDb)('trip edits vs a chapter close (#1290)', () => {
   it('editTripExpense is refused and the expense is unchanged', async () => {
     const s = await setup()
     const res = await raceAfterAccept(s, () => editTripExpense({
-      id: s.expenseId, tripId: s.tripId, paidBy: s.inviter, amount: 999, category: 'food', splitType: 'all_mine',
+      id: s.expenseId, tripId: s.tripId, paidBy: s.inviter, amount: 999, category: 'dining', splitType: 'all_mine',
     }))
     expect(res).toEqual({ ok: false, code: 'trip_not_found' })
     const rows = await db.select().from(tripExpenses)
@@ -381,10 +381,10 @@ describe.skipIf(!isLocalDb)('trip edits vs a chapter close (#1290)', () => {
     const s = await setup()
     await as(s.inviter, async () => {
       expect(await createTripExpense({
-        tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'food', splitType: 'all_mine',
+        tripId: s.tripId, paidBy: s.inviter, amount: 300, category: 'dining', splitType: 'all_mine',
       })).toMatchObject({ ok: true })
       expect(await editTripExpense({
-        id: s.expenseId, tripId: s.tripId, paidBy: s.inviter, amount: 999, category: 'food', splitType: 'all_mine',
+        id: s.expenseId, tripId: s.tripId, paidBy: s.inviter, amount: 999, category: 'dining', splitType: 'all_mine',
       })).toMatchObject({ ok: true })
       expect(await updateTrip({ tripId: s.tripId, name: 'renamed' })).toMatchObject({ ok: true })
       expect(await endTrip({ tripId: s.tripId, endDate: today() })).toMatchObject({ ok: true })

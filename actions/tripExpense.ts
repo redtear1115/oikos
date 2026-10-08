@@ -8,9 +8,10 @@ import { openEpochClause } from '@/lib/db/queries/_predicates'
 import { lockOpenEpochForWrite } from '@/lib/db/queries/epoch'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
-import { convertAmount } from '@/lib/currency'
+import { convertWholeUnits } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
 import { action, actionError } from '@/lib/action-errors'
+import { isWritableExpenseCategory } from '@/lib/categories'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -28,7 +29,7 @@ export type TripSplitType = 'all_mine' | 'all_theirs' | 'half' | 'weighted'
 export interface CreateTripExpenseInput {
   tripId: string
   paidBy: string
-  amount: number               // in `currency` units (post-cent for USD)
+  amount: number               // whole units of `currency` (never cents; #1582)
   currency?: string | null     // free-text trip currency code; null = trip default
   category: string
   splitType: TripSplitType
@@ -104,17 +105,10 @@ function normalizeAmount(
   // input → snapshot.default
   const inputRate = findRate(snapshot, inputCode)
   if (inputRate == null) throw actionError('trip_rate_missing', { currency: inputCode })
-  const inDefaultUnits = convertAmount({
-    amount: input.amount,
-    from: inputCode,
-    to: snapshot.default,
-    rate: inputRate,
-  })
-
-  // snapshot.default → base. If snapshot.default === base, we're done.
+  // snapshot.default === base: input → base in one hop.
   if (snapshot.default === baseUpper) {
     return {
-      amount: inDefaultUnits,
+      amount: convertWholeUnits(input.amount, inputRate),
       originalCurrency: inputCode,
       originalAmount: input.amount,
     }
@@ -122,15 +116,10 @@ function normalizeAmount(
   const baseRate = findRate(snapshot, baseUpper)
   if (baseRate == null) throw actionError('trip_rate_missing', { currency: baseUpper })
   // entries store `1 unit of code = rate units of default`, so to go from
-  // default → base we invert base's rate.
-  const baseFromDefault = convertAmount({
-    amount: inDefaultUnits,
-    from: snapshot.default,
-    to: baseUpper,
-    rate: 1 / baseRate,
-  })
+  // default → base we invert base's rate. Compose both hops and round once.
+  const baseFromInput = convertWholeUnits(input.amount, inputRate / baseRate)
   return {
-    amount: baseFromDefault,
+    amount: baseFromInput,
     originalCurrency: inputCode,
     originalAmount: input.amount,
   }
@@ -141,8 +130,13 @@ function validateCommon(input: CreateTripExpenseInput, group: { memberA: string;
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     throw actionError('amount_not_positive')
   }
-  if (!input.category.trim()) {
+  const category = input.category.trim()
+  if (!category) {
     throw actionError('category_empty')
+  }
+  // Server backstop for the DB CHECK (0084): reject ids the CHECK would refuse (#1541).
+  if (!isWritableExpenseCategory(category)) {
+    throw actionError('category_invalid')
   }
   if (input.splitType === 'weighted') {
     if (input.splitRatio == null) throw actionError('split_ratio_required')
@@ -174,7 +168,7 @@ export const createTripExpense = action(async (input: CreateTripExpenseInput) =>
         amount: normalized.amount,
         originalCurrency: normalized.originalCurrency,
         originalAmount: normalized.originalAmount,
-        category: input.category,
+        category: input.category.trim(),
         splitType: input.splitType,
         splitRatio: input.splitRatio ?? null,
         description: input.description?.trim() ? input.description.trim() : null,
@@ -223,7 +217,7 @@ export const editTripExpense = action(async (input: EditTripExpenseInput) => {
         amount: normalized.amount,
         originalCurrency: normalized.originalCurrency,
         originalAmount: normalized.originalAmount,
-        category: input.category,
+        category: input.category.trim(),
         splitType: input.splitType,
         splitRatio: input.splitRatio ?? null,
         description: input.description?.trim() ? input.description.trim() : null,

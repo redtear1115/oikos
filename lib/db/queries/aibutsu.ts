@@ -3,6 +3,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets, profiles } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { frozenCopyVisibleClause } from './_predicates'
+import type { CurrencyCode } from '@/lib/currency'
 
 export interface PetListDetail {
   species: string | null
@@ -205,8 +206,16 @@ export interface InsuranceDetailsRow {
   vehicleId: string | null
   expectedMaturityAmount: number | null
   accountValue: number | null
+  /** #1600 — NULL on a row older than the column; resolve with `policyCurrency`. */
+  currency: CurrencyCode | null
 }
 
+/**
+ * Raw policy details, including the stored 要保人 / 被保人 profile ids and the
+ * member insured's CURRENT name. Not for pages: a page reads
+ * `getInsuranceDetailsForViewer` (lib/db/queries/insuranceView.ts), which
+ * drops anyone who left the ledger before the row reaches a client (#1579).
+ */
 export async function getInsuranceDetails(
   assetId: string,
   groupId: string,
@@ -240,6 +249,7 @@ export async function getInsuranceDetails(
       vehicleId: insuranceDetails.vehicleId,
       expectedMaturityAmount: insuranceDetails.expectedMaturityAmount,
       accountValue: insuranceDetails.accountValue,
+      currency: insuranceDetails.currency,
     })
     .from(insuranceDetails)
     // #1485 — group-scoped: the policy row must be in `groupId`, and the
@@ -282,8 +292,15 @@ export async function getLinkedInsurancesForVehicle(
     ))
 }
 
+/**
+ * #1589 — what the house detail page hands to HouseDetailClient. There is no
+ * `owner` here: `HouseDetails.owner` is the creator's profile id, nothing on
+ * the client reads it, and after removePartner it is the ex-partner's id. It
+ * is not selected, so it cannot reach the RSC payload. `owner?: never` makes
+ * any object that still carries an owner id unassignable to this type.
+ */
 export interface HouseDetailsRow {
-  owner: string
+  owner?: never
   /** #826/#837/#1466 — true when an encrypted address is stored. The
    *  ciphertext itself is read here and never leaves this function: this row
    *  is passed whole to the client (HouseDetailClient), so a ciphertext field
@@ -298,7 +315,6 @@ export interface HouseDetailsRow {
 export async function getHouseDetails(assetId: string): Promise<HouseDetailsRow | null> {
   const rows = await db
     .select({
-      owner: houseDetails.owner,
       addressEncrypted: houseDetails.addressEncrypted,
       purchasedAt: houseDetails.purchasedAt,
       purchasePrice: houseDetails.purchasePrice,
@@ -309,7 +325,6 @@ export async function getHouseDetails(assetId: string): Promise<HouseDetailsRow 
   const row = rows[0]
   if (!row) return null
   return {
-    owner: row.owner,
     hasAddress: row.addressEncrypted !== null,
     purchasedAt: row.purchasedAt,
     purchasePrice: row.purchasePrice,

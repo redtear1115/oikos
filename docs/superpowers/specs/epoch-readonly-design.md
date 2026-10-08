@@ -2,7 +2,7 @@
 last_updated: 2026-09-14
 status: shipped
 first_shipped_in: v0.15.3
-related_specs: [transactions, income, monthly-review, realtime]
+related_specs: [transactions, income, monthly-review, realtime, after-leaving]
 related_issues: ["#207", "#1190"]
 ---
 
@@ -33,7 +33,7 @@ related_issues: ["#207", "#1190"]
 
 > 「故事已經翻頁了 別糾結了 記錯就記錯 記錯也是一種回憶」
 
-過去章節 read-only 是**產品哲學**決策，不是技術限制：
+過去章節 read-only 是**產品哲學**決策，不是技術限制（有人離開之後章節怎麼封存、誰能回看，見 [after-leaving](after-leaving-design.md)）：
 
 - 「修改過去」的語意本身模糊（修正當時記錯 vs 改變歷史），與 Futari「陪伴而非工具」核心定位衝突
 - 容許跨章節編輯會讓「章節」這個情感容器失去意義

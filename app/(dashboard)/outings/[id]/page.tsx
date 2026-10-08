@@ -3,6 +3,7 @@ import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { getOutingDetail } from '@/lib/db/queries/outing'
 import { buildOutingView } from '@/lib/outing/view'
 import { isUuid } from '@/lib/outing/validate'
+import { participantClaim } from '../_components/participantClaim'
 import { OutingDetailClient } from './_components/OutingDetailClient'
 
 export default async function OutingDetailPage(props: { params: Promise<{ id: string }> }) {
@@ -32,10 +33,24 @@ export default async function OutingDetailPage(props: { params: Promise<{ id: st
         currency: detail.outing.currency,
         status: detail.outing.status,
       }}
-      view={view}
+      // Profile ids stay on the server: a friend's bound account is not the
+      // viewer's to see, and nothing on the page needs it.
+      view={{ ...view, participants: view.participants.map((p) => ({ id: p.id, displayName: p.displayName, net: p.net })) }}
       coupleNet={view.coupleNet}
       expenses={detail.expenses}
-      participants={detail.participants.map((p) => ({ id: p.id, displayName: p.displayName }))}
+      participants={detail.participants.map((p) => ({
+        id: p.id,
+        displayName: p.displayName,
+        active: p.deactivatedAt === null,
+        ...participantClaim(p),
+        isMember: p.profileId !== null && (p.profileId === group.memberA || p.profileId === group.memberB),
+      }))}
+      settlements={[...detail.settlements].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map((s) => ({
+        id: s.id,
+        fromParticipantId: s.fromParticipantId,
+        toParticipantId: s.toParticipantId,
+        amount: s.amount,
+      }))}
     />
   )
 }

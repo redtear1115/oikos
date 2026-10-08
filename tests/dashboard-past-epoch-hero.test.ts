@@ -36,24 +36,27 @@ const source = readFileSync(
 // Comments name `isPast` while explaining the gate; assertions are about code.
 const code = source.replace(/\{?\/\*[\s\S]*?\*\/\}?/g, '').replace(/^\s*\/\/.*$/gm, '')
 
-const BRANCH_START = "{isSolo && mode === 'expense' ? ("
+// #1604 hoisted the gate: the whole hero slot is `isPast ? null : …`, so a
+// pinned chapter gets neither the solo month hero nor BalanceHero (which shows
+// the live getGroupBalance). The solo-expense branch now sits behind it.
+const BRANCH_START = "{isPast ? null : isSolo && mode === 'expense' ? ("
 const HERO = '<SoloMonthHero'
+const BALANCE = '<BalanceHero'
 
-describe('solo month hero slot (#1131)', () => {
-  it('still has the solo-expense branch this guard is about', () => {
+describe('hero slot while pinned (#1131, #1604)', () => {
+  it('still has the gated solo-expense branch this guard is about', () => {
     // If this fails the slot was restructured and the guard below is measuring
     // nothing — fix the guard rather than deleting it.
     expect(code).toContain(BRANCH_START)
     expect(code).toContain(HERO)
+    expect(code).toContain(BALANCE)
   })
 
-  it('gates the hero on isPast before it reaches SoloMonthHero', () => {
+  it('gates both heroes on isPast before either is reached', () => {
     const from = code.indexOf(BRANCH_START)
-    const to = code.indexOf(HERO, from)
-    expect(to).toBeGreaterThan(from)
-
-    const betweenBranchAndHero = code.slice(from + BRANCH_START.length, to)
-    expect(betweenBranchAndHero).toMatch(/isPast/)
+    expect(from).toBeGreaterThan(-1)
+    expect(code.indexOf(HERO)).toBeGreaterThan(from)
+    expect(code.indexOf(BALANCE)).toBeGreaterThan(from)
   })
 
   it('reads isPast from the member context', () => {

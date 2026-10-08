@@ -1,10 +1,10 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-10-08
 status: shipped
 first_shipped_in: v0.14.0
 related_specs: [stats, transactions, income, recurring]
 depends_on: [stats]
-related_issues: ["#44"]
+related_issues: ["#44", "#1618"]
 ---
 
 # 雙人月度回顧儀式
@@ -103,7 +103,7 @@ related_issues: ["#44"]
 | 雙環境 | dev 與 prod Supabase 各自建 cron job | 與既有 cron 一致；migration `db:migrate` 兩邊都跑 |
 | Idempotency | snapshot insert with `ON CONFLICT (group_id, year, month) DO NOTHING` | 重跑 cron 不會炸 |
 | Realtime | **不訂閱 realtime**；async 共看靠 `router.refresh()` 重抓 | 對方寫了什麼下次刷新會看到；不做 cursor / presence |
-| Query reuse | snapshot 計算 reuse [stats](stats-design.md) 的 `monthlyStatsByCategory` / `monthlyStatsByAsset`；額外加 `MonthlyReviewSnapshots.largestExpense*`（amount / description / category / paidByName）與 `recurringEvents` | stats spec 已預告會被 reuse |
+| Query reuse | snapshot 計算 reuse [stats](stats-design.md) 的 `monthlyStatsByCategory` / `monthlyStatsByAsset`；額外加 `MonthlyReviewSnapshots.largestExpense*`（amount / description / category / paidBy，#1618 前是 paidByName）與 `recurringEvents` | stats spec 已預告會被 reuse |
 | 閱讀路徑 | review page 直接 SELECT snapshot（無計算）| Snapshot 即真相 |
 
 ### 不採用
@@ -127,7 +127,12 @@ related_issues: ["#44"]
 
 - `group_id` / `year` / `month` + UNIQUE — 一個帳本 / 一個月恰一筆
 - `top_category` + `top_category_total` — 卡片 1 凍結結果
-- `largest_expense_*`（amount / description / category / paid_by_name）— 卡片 2 凍結，**denormalized snapshot**，paid_by_name 直接存字串避免日後 rename
+- `largest_expense_*`（amount / description / category / paid_by）— 卡片 2 凍結。付款人存 **id**，不存名字（#1618，migration 0089）：
+  - 原本的 `paid_by_name` 把付款人當時的名字凍成字串，刪除帳號後真名仍留著，而且前伴侶記在未來日期的紀錄若是下一段章節某月的最大一筆，新伴侶會看到前伴侶的名字。0089 起這欄一律 NULL（欄位留到 v2.0.0 清理）。
+  - 名字在伺服器端解析，且只對「正在看的那段章節」的兩個人：已關閉章節用關閉當時的名字（`getEpochMembers`，刪除帳號後是「已離開的夥伴」），進行中章節用現在的名字，看的人自己也一樣。付款人不是這兩人之一 → 不顯示名字，卡片用 `card2BodyNoName`（不帶名字 chip，也不出現「 付的」）。
+  - id 不送到前端：`ReviewClient` 收到的 snapshot 沒有 `largestExpensePaidBy`，只有解析好的 `payerName`。
+  - 失效的樣子：沒有任何錯誤；新伴侶在自己章節的月回顧看到前伴侶的名字，或對方在刪除帳號者付的那個月看到真名。
+  - 同一筆金額與日期並列時以 `created_at`、`id` 決定，結果固定。
 - `recurring_events` jsonb — 卡片 3，多筆事件用 jsonb 收（每筆獨立欄位太散）
 - `asset_breakdown` jsonb — 卡片 4，top 3 愛物（asset_name 凍結字串）
 - `banner_dismissed_by_member_a_at` / `banner_dismissed_by_member_b_at` — per-user dismiss state
@@ -185,7 +190,7 @@ dev / prod Supabase 各 deploy 一條。
 ### 卡片內容範例
 
 - **最常一起花的類別**：「五月你們最常一起花在 **餐飲** — NT$ 12,400」（Solo: 移除「一起」二字）
-- **本月最大筆**：「最大一筆 — Ray 付的 **生日禮物**，NT$ 5,800」（snapshot 凍結）
+- **本月最大筆**：「最大一筆 — Ray 付的 **生日禮物**，NT$ 5,800」（snapshot 凍結；付款人不在這段章節時：「最大一筆：「生日禮物」，NT$ 5,800」）
 - **定期入帳事件**：列表「房租 −18,000 / 5 日 · 公司 A 月薪 +85,000 / 10 日 · …」+ 月度收支總和
 - **愛物進度**：top 3 愛物，每個一個 row + 該月開銷
 
