@@ -210,7 +210,7 @@ describe('#1605 sign-out removes this device\'s registration', () => {
     await token(u, gu, 'TEST_1605_T1')
 
     storePushToken('TEST_1605_T1')
-    mockUserId = '' // the action sees no session → throws Unauthorized
+    mockUserId = '' // not a uuid → the delete fails in Postgres (the session check itself passes: { id: '' } is a user object)
     const signOut = vi.fn(async () => {})
     await signOutThisDevice({
       unregister: async (t) => unwrapAction(await unregisterThisDevice(t)),
