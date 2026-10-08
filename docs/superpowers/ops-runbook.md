@@ -462,6 +462,8 @@ where n.nspname in ('public', 'drizzle') and c.relkind in ('r', 'p')
    - 漏掉：已經刪除的帳號和資料，在還原後又回來了。
    - 備份早於 `0089`（#1618）時，月回顧快照裡還有付款人的名字（`largest_expense_paid_by_name`）。開放 app 之前跑 `npm run db:migrate`（指向目標 project）會重新套用 0089，回填 id 並清掉名字；之後這個必須是 0：`SELECT count(*) FROM "MonthlyReviewSnapshots" WHERE largest_expense_paid_by_name IS NOT NULL;`。
      - 漏掉：已刪除帳號的真名回到對方的月回顧「最大一筆」，沒有任何錯誤。
+   - 備份早於 `0090`（#1622）時，離開帳本時自動建立的帳本可能還叫「某某 的家計簿」。`npm run db:migrate` 會重新套用 0090；若目標的 journal 已有 0090 那一列，就手動跑一次 `psql -f drizzle/0090_ledger_autoname.sql`（idempotent）。之後 `psql -f scripts/ops/ledger-autoname-audit-0090.sql` 的 `matched` 必須是 0（只印數字，不印名字）。
+     - 漏掉：帳本名又帶回某個人的真名（包括已刪除帳號者），沒有任何錯誤。
 8. **比對**：`psql -f scripts/ops/futari-backup-manifest.sql` 的輸出逐段對 manifest（演練腳本只接受本機目標，這裡手動比）。再跑一次上方的覆蓋檢查，以及〈Runtime DB role〉的覆蓋檢查。
 9. **角色登入**：`futari_app`、`futari_backup` 照各自的步驟重設密碼、`LOGIN`，更新 env。
 10. **加密金鑰**：manifest 的 `## encrypted_kids` 列出這份備份需要哪些 kid；目標環境的 `ENCRYPTION_KEYS` 必須都有。

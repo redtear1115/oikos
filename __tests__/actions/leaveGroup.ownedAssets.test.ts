@@ -68,6 +68,9 @@ vi.mock('next/cache', () => ({
   revalidatePath: () => {},
   revalidateTag: () => {},
 }))
+// leaveGroup reads the locale cookie to name the new solo ledger (#1622); no
+// request scope here, so cookies() would throw. No cookie -> zh-TW default.
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => undefined }) }))
 
 vi.mock('@/lib/analytics/server', () => ({
   captureServer: async () => {},

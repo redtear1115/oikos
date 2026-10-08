@@ -1528,6 +1528,14 @@ export type Translations = {
     removedPartnerHeading: string
     removedPartnerBody: string
     dismissAria: string
+    /**
+     * Name of the solo ledger a leaver gets (#1622). Neutral on purpose: it
+     * used to be "{displayName} 的家計簿", which put a person's name into a
+     * ledger name that outlived their account deletion. Never interpolate a
+     * name here. The zh-TW value must equal the literal drizzle/0090 renames
+     * legacy names to (tests/ledger-autoname.test.ts asserts it).
+     */
+    newLedgerName: string
   }
 
   pastTimes: {
@@ -4344,6 +4352,7 @@ export const zhTW: Translations = {
     removedPartnerHeading: '回到一個人',
     removedPartnerBody: '帳本完整地留著。從今天起，可以慢慢來。',
     dismissAria: '關閉',
+    newLedgerName: '家計簿',
   },
 
   pastTimes: {

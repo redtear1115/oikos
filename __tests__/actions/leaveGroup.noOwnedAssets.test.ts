@@ -51,6 +51,9 @@ vi.mock('next/cache', () => ({
   revalidatePath: () => {},
   revalidateTag: () => {},
 }))
+// leaveGroup reads the locale cookie to name the new solo ledger (#1622); no
+// request scope here, so cookies() would throw. No cookie -> zh-TW default.
+vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => undefined }) }))
 
 const { db } = await import('@/lib/db/client')
 const {
@@ -242,6 +245,9 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
       .where(eq(oikosGroups.id, result.groupId)).limit(1)
     expect(newGroup.memberA).toBe(refs.userBId)
     expect(newGroup.memberB).toBeNull()
+    // #1622: neutral default (no locale cookie -> zh-TW), never the leaver's name.
+    expect(newGroup.name).toBe('家計簿')
+    expect(newGroup.name).not.toContain('TEST_139_userB')
 
     // ── Assert: old group is now solo, member A intact ──
     const [oldGroup] = await db.select().from(oikosGroups)

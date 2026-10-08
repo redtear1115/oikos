@@ -1163,6 +1163,8 @@ export const ja: Translations = {
     removedPartnerHeading: 'ひとりの時間に戻りました',
     removedPartnerBody: '家計簿はぜんぶ、そのまま残っています。これから、ゆっくりで大丈夫。',
     dismissAria: '閉じる',
+    // TODO(i18n): 待確認 (#1593)
+    newLedgerName: '家計簿',
   },
 
   pastTimes: {

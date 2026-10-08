@@ -1151,6 +1151,7 @@ export const zhCN: Translations = {
     removedPartnerHeading: '回到一个人',
     removedPartnerBody: '账本完整地留着。从今天起，可以慢慢来。',
     dismissAria: '关闭',
+    newLedgerName: '家计簿',
   },
 
   pastTimes: {

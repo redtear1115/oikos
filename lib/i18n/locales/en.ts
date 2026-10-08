@@ -1162,6 +1162,8 @@ export const en: Translations = {
     removedPartnerHeading: 'Back to one person',
     removedPartnerBody: 'Your ledger stays, all of it. Take your time from here.',
     dismissAria: 'Dismiss',
+    // TODO(i18n): 待確認 (#1593)
+    newLedgerName: 'Ledger',
   },
 
   pastTimes: {
