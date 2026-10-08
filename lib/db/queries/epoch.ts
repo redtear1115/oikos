@@ -9,7 +9,7 @@ import {
   profiles,
   settlements,
 } from '@/lib/db/schema'
-import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { actionError } from '@/lib/action-errors'
 
@@ -259,13 +259,25 @@ export interface CrossGroupEpochListItem extends EpochListItem {
  *
  * Each row carries its own `groupId` so the click-to-enter flow can scope
  * downstream queries to the correct group (see `resolveViewerEpochContext`).
+ *
+ * Only chapters on groups the viewer is still `member_a` / `member_b` of
+ * (#1603). That is the rule `resolveViewerEpochContext` applies to a pin, so
+ * every row listed here opens when tapped. A former member's chapters on the
+ * ledger they left — including a solo chapter 0 they started there — are
+ * left out; they come back with #1612 (read-only look-back). Without this
+ * filter the failure is quiet: tapping such a row sets the pin, the resolver
+ * ignores it, and the viewer lands on today's ledger instead of the chapter.
  */
 export async function listEpochsForViewer(
   viewerId: string,
 ): Promise<CrossGroupEpochListItem[]> {
   const rows = await db
-    .select()
+    .select(getTableColumns(groupEpochs))
     .from(groupEpochs)
+    .innerJoin(oikosGroups, and(
+      eq(oikosGroups.id, groupEpochs.groupId),
+      or(eq(oikosGroups.memberA, viewerId), eq(oikosGroups.memberB, viewerId)),
+    ))
     .where(or(eq(groupEpochs.memberAId, viewerId), eq(groupEpochs.memberBId, viewerId)))
     .orderBy(desc(groupEpochs.startedAt))
 
@@ -306,15 +318,26 @@ export interface ViewerEpochContext {
  * dashboard / records / assets read paths.
  *
  * When the past-epoch cookie is set AND points at an epoch the viewer was a
- * member of, the resolved group follows the pin — even if it lives on a
+ * member of AND the viewer is still `member_a` / `member_b` of that epoch's
+ * group, the resolved group follows the pin — even if it lives on a
  * different `OikosGroups` row than the viewer's most-recent active group.
- * This is what makes cross-group time-travel (#141) actually work: a leaver
- * pinning into their old solo Y gets Y's group context and Y's window, not
- * X's. Without this, the dashboard would silently query X.id with Y's
- * (rejected) pin falling back to X's current epoch.
+ * This is what makes cross-group time-travel (#141) actually work: someone
+ * who accepted an invite into X is still `member_a` of their old solo Y, and
+ * pinning into Y gets Y's group context and Y's window, not X's.
+ *
+ * Pin acceptance rule (#1603): named on the chapter AND a current member of
+ * its group — the same rule the dashboard layout enforces on the group's
+ * profiles. A former member (left or removed) pinned into the ledger they
+ * left falls through to the active-group path, exactly like a hostile or
+ * stale cookie, until #1612 gives former members a read-only look-back.
+ * Failure this prevents: the resolver handed the layout a group whose current
+ * members don't include the viewer, the layout sent them to /sign-in, sign-in
+ * sent a signed-in user back to /dashboard, and they looped with no way out
+ * (PastChapterBar and /settings/past-times both live behind that layout).
  *
  * Returns `null` only when the viewer has no group at all AND no valid pin —
- * pages should treat that as「未進入家計簿」(redirect to /onboarding).
+ * pages should treat that as「未進入家計簿」(redirect to /onboarding). A
+ * removed partner with no ledger of their own lands here.
  */
 export const resolveViewerEpochContext = cache(async (
   userId: string,
@@ -337,7 +360,10 @@ export const resolveViewerEpochContext = cache(async (
         .from(oikosGroups)
         .where(eq(oikosGroups.id, pinned.groupId))
         .limit(1)
-      if (group) {
+      // #1603 — and the viewer must still be in that group today. A leaver
+      // or a removed partner is named on the old chapter but not on the
+      // group row; their pin falls through (see the docstring).
+      if (group && (group.memberA === userId || group.memberB === userId)) {
         return {
           group,
           window: {
