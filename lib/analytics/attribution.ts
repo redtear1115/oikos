@@ -65,6 +65,13 @@ export type EntrySource =
  */
 export type ImportResumeSource = KnownCsvSource
 
+/**
+ * The `from` value /features/outing's CTAs tag sign-in with (#1633). Shared by
+ * the emitter and `entrySourceFromParam`, so they cannot drift (a mismatch
+ * reads back as `direct`, with no error).
+ */
+export const FEATURE_OUTING_FROM_PARAM = 'feature-outing'
+
 /** Prefix marking a `from` value as a use-case page, kept off migrate slugs. */
 const USE_CASE_FROM_PREFIX = 'use-case-'
 

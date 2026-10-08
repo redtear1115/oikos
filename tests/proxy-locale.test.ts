@@ -36,11 +36,14 @@ describe('proxy locale routing — input cases', () => {
       '/en/sign-in', '/ja/', '/zh-CN/terms',
       '/migrate/honeydue', '/en/migrate/spendee',
       '/use-case/pet-owners', '/ja/use-case/newlyweds',
+      '/features/outing', '/en/features/outing', '/ja/features/outing',
     ]
     const PROTECTED = [
       '/dashboard', '/onboarding', '/setup',
       '/records', '/stats', '/past-times',
       '/en/dashboard', '/ja/records',
+      // prefix boundary: '/features' must not match '/featuresx' (#1633)
+      '/featuresx', '/en/featuresfoo',
     ]
 
     it.each(PUBLIC)('public localized path stays public: %s', (p) => {

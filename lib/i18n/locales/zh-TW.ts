@@ -3028,6 +3028,12 @@ export type Translations = {
       description: string
       ogDescription: string
     }>
+    /** SEO copy for /features/outing (#1633). */
+    featureOuting: {
+      title: string
+      description: string
+      ogDescription: string
+    }
   }
 
   /** Shared shell + per-slug copy for /use-case/* situational SEO pages (#851).
@@ -3086,6 +3092,71 @@ export type Translations = {
         { question: string; answer: string },
       ]
     }>
+  }
+
+  /** #1633 — public outing feature page /features/outing. Copy facts are limited to
+   *  docs/superpowers/specs/group-outing-design.md; never claim pricing, encryption,
+   *  realtime, custom splits or multiple currencies, and never show a fold amount (#1634). */
+  featureOuting: {
+    heroKicker: string
+    heroTitle: string
+    heroSubtitle: string
+    ctaLabel: string
+    howLink: string
+    /** Last crumb + BreadcrumbList name. */
+    breadcrumbLabel: string
+    howHeading: string
+    /** HowToStep name template, contains `{n}`. */
+    howToStepName: string
+    steps: readonly [
+      { title: string; body: string },
+      { title: string; body: string },
+      { title: string; body: string },
+      { title: string; body: string },
+    ]
+    walkthrough: {
+      stepsLabel: string
+      pause: string
+      play: string
+    }
+    /** Texts inside the aria-hidden phone illustration. `{name}` = payer. */
+    mock: {
+      nameFieldLabel: string
+      chatMessage: string
+      linkChip: string
+      claimed: string
+      expensesTitle: string
+      settleTitle: string
+      paidBy: string
+      splitEvenly: string
+    }
+    scenariosHeading: string
+    scenarios: readonly [
+      { title: string; body: string },
+      { title: string; body: string },
+      { title: string; body: string },
+      { title: string; body: string },
+    ]
+    foldHeading: string
+    foldBody: string
+    /** Number-free diagram labels (#1634: no fold amount anywhere). */
+    fold: { ledger: string; chip: string }
+    friendsHeading: string
+    friends: readonly [string, string, string, string]
+    faqHeading: string
+    faq: readonly [
+      { question: string; answer: string },
+      { question: string; answer: string },
+      { question: string; answer: string },
+      { question: string; answer: string },
+      { question: string; answer: string },
+      { question: string; answer: string },
+    ]
+    closingHeading: string
+    /** Row on /use-case/travel and /use-case/aa-split. `cta` is the screen-reader text. */
+    crossLink: { name: string; description: string; cta: string }
+    /** Quiet text links: outing share page (shareLink) and in-app empty state (emptyLink). */
+    entries: { shareLink: string; emptyLink: string }
   }
 
   /** #1156 — localized server-action errors, resolved by `describeError`.
@@ -6454,6 +6525,11 @@ export const zhTW: Translations = {
         ogDescription: 'AA 制記帳最清楚的工具——Futari，選好分法，帳就自動算好。',
       },
     },
+    featureOuting: {
+      title: '出遊分帳：丟一個連結，朋友不用下載就能一起記｜Futari',
+      description: '跟朋友出遊，誰付了什麼、誰該轉給誰，記在同一個地方。開一個出遊、把連結丟到群組，朋友點開選自己的名字就能記，不用下載、不用註冊，最多 20 人。',
+      ogDescription: '開一個出遊、把連結丟到群組，朋友點開選自己的名字就能一起記帳，不用下載、不用註冊。',
+    },
   },
   useCase: {
     backToHome: '← 回 Futari 首頁',
@@ -6870,6 +6946,70 @@ export const zhTW: Translations = {
           },
         ],
       },
+    },
+  },
+
+  featureOuting: {
+    heroKicker: '出遊',
+    heroTitle: '這次出去玩的帳，大家一起記',
+    heroSubtitle: '開一個出遊，把連結丟到群組。朋友點開、選自己的名字就能記，不用下載 App，也不用註冊。',
+    ctaLabel: '用 Futari 開一個出遊',
+    howLink: '看怎麼運作',
+    breadcrumbLabel: '出遊分帳',
+    howHeading: '從一個連結開始',
+    howToStepName: '步驟 {n}',
+    steps: [
+      { title: '開一個出遊', body: '在 Futari 的旅行頁開一個出遊，取個名字就好。你和伴侶會自動在裡面。' },
+      { title: '把連結丟到群組', body: '複製出遊的連結，貼到 LINE 或任何聊天群組。' },
+      { title: '朋友選自己的名字', body: '朋友在手機瀏覽器點開連結，選自己的名字，或加上自己。不用下載、不用註冊。' },
+      { title: '誰付的都記下來，最後一次算清', body: '每筆選誰付、分給哪些人，系統平分。要結清時，列出誰該轉給誰，最多只要「人數減一」筆。' },
+    ],
+    walkthrough: { stepsLabel: '四個步驟', pause: '暫停', play: '播放' },
+    mock: {
+      nameFieldLabel: '出遊名稱',
+      chatMessage: '這次的帳記這裡',
+      linkChip: '出遊連結',
+      claimed: '已選',
+      expensesTitle: '支出',
+      settleTitle: '誰該轉給誰',
+      paidBy: '{name} 付',
+      splitEvenly: '四人平分',
+    },
+    scenariosHeading: '這些時候用得上',
+    scenarios: [
+      { title: '週末露營，大家輪流付', body: '營地費你先刷、烤肉料阿哲買、油錢小安出。各自記下，回程車上就知道誰該轉給誰。' },
+      { title: '慶生聚餐，壽星不用出', body: '這一筆只分給壽星以外的人，系統照人數平分，不用再按計算機。' },
+      { title: '兩對情侶一起出去', body: '四個人一起記，朋友的帳在出遊裡結清；你們倆之間的，回到你們自己的帳本。' },
+      { title: '半路才加入的朋友', body: '晚到的人點同一個連結加上自己，之後的支出再分給他就好。' },
+    ],
+    foldHeading: '出遊結束之後',
+    foldBody: '朋友的帳在出遊裡結清。出遊結束時，你們倆之間的帳會變成一筆結算回到你們的帳本，只影響誰欠誰，不算進你們的支出統計。結束的出遊還打得開，只是不能再改。',
+    fold: { ledger: '你們的帳本', chip: '一筆結算' },
+    friendsHeading: '如果你是被邀請的朋友',
+    friends: [
+      '點開連結，選自己的名字就能記，不用下載、不用註冊。',
+      '拿到連結的人都能加入、一起記，所以只丟給一起出遊的人。',
+      '這支手機的瀏覽器會記得你是誰。換了手機或清掉瀏覽器資料，請開出遊的人幫你把名字釋放，再選一次。',
+      '想之後也找得到這次出遊，可以登入 Futari；不登入也能繼續記。',
+    ],
+    faqHeading: '常見問題',
+    faq: [
+      { question: '朋友一定要下載 App 嗎？', answer: '不用。朋友在手機瀏覽器點開連結、選自己的名字就能記，也不用註冊。' },
+      { question: '一次出遊最多幾個人？', answer: '最多 20 人。' },
+      { question: '可以用不同幣別記嗎？', answer: '一次出遊只用一種幣別，跟著你們帳本的基準幣別。' },
+      { question: '可以照比例或自訂金額分嗎？', answer: '目前每筆都是平分，可以選要分給哪些人。' },
+      { question: '連結傳錯群組怎麼辦？', answer: '你們可以重設連結，舊連結會立刻失效。' },
+      { question: '出遊結束後還看得到嗎？', answer: '看得到，大家都還能打開，只是不能再修改。' },
+    ],
+    closingHeading: '下次出去玩，先開一個出遊',
+    crossLink: {
+      name: '跟朋友一起出遊',
+      description: '丟一個連結，朋友不用下載就能一起記這次的帳。',
+      cta: '看出遊怎麼用',
+    },
+    entries: {
+      shareLink: '第一次用 Futari？看看出遊怎麼運作',
+      emptyLink: '看看出遊怎麼用',
     },
   },
 
