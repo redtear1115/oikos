@@ -1,7 +1,8 @@
 /**
  * This device's APNs token, remembered so sign-out can remove this device's
  * PushTokens row (#1605 F11). Written by the `registration` listener in
- * lib/pushNotifications.ts, read and cleared by signOutThisDevice.
+ * lib/pushNotifications.ts, read and cleared by LogoutButton
+ * (which hands it to the signOut action, #1617).
  *
  * Native contract surface: runs in every installed shell as soon as it
  * deploys. Every access is wrapped — storage can be unavailable or throw

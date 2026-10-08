@@ -15,9 +15,10 @@ import { loadEnvLocal } from '../outing/_setup'
 //   leaveGroup     → the leaver's tokens move to their new solo ledger
 //   acceptInvite   → the joiner's tokens move from their solo ledger to the
 //                    ledger they joined
-//   sign-out       → U's row for this device's token (T1) is deleted; U's
-//                    other device (T2) and another person's row for the same
-//                    device token stay; a failing delete still signs out
+//   sign-out       → signOut('T1') (#1617: one action, delete folded in)
+//                    deletes U's row for this device's token (T1); U's other
+//                    device (T2) and another person's row for the same device
+//                    token stay; a failing delete still signs out
 //
 // Failure looks like: no error anywhere; an ex (or the next person holding a
 // shared phone) keeps getting 「有待確認的定期收支」 for a ledger that is not
@@ -27,11 +28,26 @@ import { loadEnvLocal } from '../outing/_setup'
 loadEnvLocal()
 
 let mockUserId = ''
+const authSignOut = vi.fn(async () => ({ error: null }))
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
-    auth: { getUser: async () => ({ data: { user: { id: mockUserId } }, error: null }) },
+    auth: {
+      getUser: async () => ({ data: { user: { id: mockUserId } }, error: null }),
+      signOut: authSignOut,
+    },
   }),
 }))
+vi.mock('next/navigation', () => ({
+  redirect: (to: string) => {
+    throw Object.assign(new Error('NEXT_REDIRECT'), { digest: `NEXT_REDIRECT;replace;${to};307;` })
+  },
+  notFound: () => { throw new Error('notFound') },
+}))
+vi.mock('@/lib/i18n/server-redirect', () => ({
+  localizedHomePath: async () => '/',
+  localizedSignInPath: async () => '/sign-in',
+}))
+vi.mock('@sentry/nextjs', () => ({ captureException: () => {} }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {} }))
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }),
@@ -45,10 +61,18 @@ const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites, pushTokens } = await import('@/lib/db/schema')
 const { removePartner, leaveGroup } = await import('@/actions/membership')
 const { acceptInvite } = await import('@/actions/invite')
-const { unregisterThisDevice } = await import('@/actions/push')
-const { signOutThisDevice } = await import('@/lib/signOutThisDevice')
-const { storePushToken, readStoredPushToken } = await import('@/lib/pushTokenStorage')
+const { signOut } = await import('@/actions/auth')
 const { unwrapAction } = await import('@/lib/action-errors')
+
+/** signOut always ends in a redirect; resolve to its digest instead. */
+async function signOutDigest(token?: string): Promise<string | undefined> {
+  try {
+    await signOut(token)
+  } catch (e) {
+    return (e as { digest?: string }).digest
+  }
+  return undefined
+}
 const { eq, inArray, or, and } = await import('drizzle-orm')
 
 if (!process.env.DATABASE_URL?.includes('ufhcprrauwsxdmscbkrf')) {
@@ -115,7 +139,7 @@ afterEach(async () => {
     console.error('cleanup failed', e)
   } finally {
     created.profiles = []; created.auth = []; created.groups = []
-    try { localStorage.clear() } catch { /* jsdom only */ }
+    authSignOut.mockClear()
   }
 })
 
@@ -179,8 +203,8 @@ describe('#1605 push tokens follow membership', () => {
   })
 })
 
-describe('#1605 sign-out removes this device\'s registration', () => {
-  it('T1 (this device, stored) is deleted; T2 and another person\'s T1 stay', async () => {
+describe('#1605 / #1617 signOut(token) removes this device\'s registration', () => {
+  it('T1 (this device) is deleted; T2 and another person\'s T1 stay; sign-out completes', async () => {
     const u = await person('u'); const v = await person('v')
     const gu = await ledger('u-solo', u, null)
     const gv = await ledger('v-solo', v, null)
@@ -188,16 +212,10 @@ describe('#1605 sign-out removes this device\'s registration', () => {
     await token(u, gu, 'TEST_1605_T2')
     await token(v, gv, 'TEST_1605_T1') // same device, someone else signed in on it earlier
 
-    storePushToken('TEST_1605_T1')
     mockUserId = u
-    const signOut = vi.fn(async () => {})
-    await signOutThisDevice({
-      unregister: async (t) => unwrapAction(await unregisterThisDevice(t)),
-      signOut,
-    })
+    expect(await signOutDigest('TEST_1605_T1')).toBe('NEXT_REDIRECT;replace;/;307;')
 
-    expect(signOut).toHaveBeenCalledOnce()
-    expect(readStoredPushToken()).toBeNull()
+    expect(authSignOut).toHaveBeenCalledOnce()
     expect(await tokensOf([u, v])).toEqual([
       { userId: v, groupId: gv, token: 'TEST_1605_T1' },
       { userId: u, groupId: gu, token: 'TEST_1605_T2' },
@@ -209,25 +227,22 @@ describe('#1605 sign-out removes this device\'s registration', () => {
     const gu = await ledger('u-solo', u, null)
     await token(u, gu, 'TEST_1605_T1')
 
-    storePushToken('TEST_1605_T1')
     mockUserId = '' // not a uuid → the delete fails in Postgres (the session check itself passes: { id: '' } is a user object)
-    const signOut = vi.fn(async () => {})
-    await signOutThisDevice({
-      unregister: async (t) => unwrapAction(await unregisterThisDevice(t)),
-      signOut,
-    })
+    expect(await signOutDigest('TEST_1605_T1')).toBe('NEXT_REDIRECT;replace;/;307;')
 
-    expect(signOut).toHaveBeenCalledOnce()
+    expect(authSignOut).toHaveBeenCalledOnce()
     expect(await tokensOf([u])).toEqual([{ userId: u, groupId: gu, token: 'TEST_1605_T1' }])
   })
 
-  it('unregisterThisDevice ignores an empty or oversized token', async () => {
+  it('an empty, oversized or missing token deletes nothing and still signs out', async () => {
     const u = await person('u')
     const gu = await ledger('u-solo', u, null)
     await token(u, gu, 'TEST_1605_T1')
     mockUserId = u
-    unwrapAction(await unregisterThisDevice(''))
-    unwrapAction(await unregisterThisDevice('x'.repeat(513)))
+    for (const t of ['', 'x'.repeat(513), undefined]) {
+      expect(await signOutDigest(t)).toBe('NEXT_REDIRECT;replace;/;307;')
+    }
+    expect(authSignOut).toHaveBeenCalledTimes(3)
     expect((await db.select().from(pushTokens).where(and(eq(pushTokens.userId, u)))).length).toBe(1)
   })
 })

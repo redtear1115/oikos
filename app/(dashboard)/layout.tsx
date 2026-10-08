@@ -171,8 +171,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         )}
         <ViewerProvider value={value}>
           <RealtimeProvider groupId={group.id}>
-            {/* #1605 — the ACTIVE ledger, never the pinned one. */}
-            {await getActiveGroupForUser(user.id).then((g) => g && <PushTokenRegistrar userId={user.id} groupId={g.id} />)}
+            {/* #1605 — the ACTIVE ledger, never a pinned past chapter's. #1617 —
+                not pinned to a past chapter, `group` already IS the active
+                ledger (the resolver fell through to getActiveGroupForUser), so
+                only a past pin pays for the extra lookup. */}
+            {await (epochWindow.isPast ? getActiveGroupForUser(user.id) : Promise.resolve(group)).then((g) => g && <PushTokenRegistrar userId={user.id} groupId={g.id} />)}
             <OfflineLifecycle />
             <ReconnectRefresh />
             <PartnerActivityToast />
