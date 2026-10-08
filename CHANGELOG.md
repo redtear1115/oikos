@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **出遊介紹頁的英文、日文文案審稿結果套用（#1637）**
+  使用者：英文修掉兩處會被讀錯或文法不通的句子，日文的「帳本」統一叫「家計簿」，示意圖上的標籤改成跟 App 一樣；繁中、簡中示意圖的結算標題改成 App 的「誰付給誰」，簡中 FAQ 改用 App 按鈕的「重设链接」。
+  技術：只動 `featureOuting`／`seo.featureOuting` 的 23 個字串（en 9、ja 11、zh-CN 2、zh-TW 1）。
+
 - **出遊結束時，折回主帳本的金額與建議轉帳一致（#1634）**
   使用者：結束出遊只會把「你們兩人之間」那一條建議轉帳折回主帳本，朋友照建議還清後不會再多出一筆；結束前的確認畫面會先顯示這個金額，已結束或過去章節的出遊不再顯示。
   技術：`coupleNetFromOuting` 改取 `minimalTransfers` 的 A↔B 線，詳情頁與 `endOuting` 共用 `memberPidsOf`。
