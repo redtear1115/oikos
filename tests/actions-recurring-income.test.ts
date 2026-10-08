@@ -252,7 +252,7 @@ describe('resumeRule', () => {
       id: 'rule-1', groupId: GROUP.id, recipientId: 'former-user',
       nextOccurrenceAt: '2026-02-01', intervalMonths: 1, dayOfMonth: 1,
     }])
-    expect(await resumeRule('rule-1')).toMatchObject({ ok: false, code: 'rule_person_not_member' })
+    expect(await resumeRule('rule-1')).toMatchObject({ ok: false, code: 'rule_recipient_not_member' })
     expect(mockBuilder.set).not.toHaveBeenCalled()
   })
 

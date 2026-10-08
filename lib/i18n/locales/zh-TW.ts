@@ -3147,7 +3147,8 @@ export type Translations = {
       pending_expense_handled_elsewhere: string
       /** #1588 — confirming a pending expense card whose snapshot payer left the ledger. */
       pending_former_member: string
-      rule_person_not_member: string
+      rule_payer_not_member: string
+      rule_recipient_not_member: string
       pending_income_not_found: string
       pending_income_handled_elsewhere: string
       review_month_locked: string
@@ -4726,7 +4727,7 @@ export const zhTW: Translations = {
       fuelType: '油種',
       fuelTypeDiesel: '柴油',
       primaryUser: '主要使用人',
-      primaryUserFormerHint: '原本的主要使用人已離開這本帳本，請重新選擇。',
+      primaryUserFormerHint: '原本的主要使用人已離開這本帳本，可以重新選擇。',
     },
     child: {
       nickname: '小名',
@@ -5251,7 +5252,7 @@ export const zhTW: Translations = {
     sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記約 1 年，之後由系統自動清除。在設定頁提出刪除帳號後，有 14 天的緩衝期（日曆天，不是工作天），期間隨時可以取消；期滿由系統自動執行。執行時會發生什麼，取決於這本帳本是您一個人的，還是和伴侶共用的：',
     sectionRetentionItems: [
       '一個人的帳本：整本一起刪除——交易、結算、定期收支規則、愛物與旅行紀錄都會移除，您的個人資料（姓名、頭像、Email）也一併刪除。',
-      '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算與愛物紀錄會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
+      '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算、愛物紀錄與月回顧留言會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
       '如果您希望共用帳本裡的內容也一併移除，請在刪除帳號前與伴侶談過，或先寫信告訴我們。',
       '已刪除的資料（包括刪除帳號時移除的內容），在刪除前就做好的加密備份裡最多還會留存約 60 天，之後隨舊備份清除而消失。這段期間我們不會用備份把它們找回來；只有在整個服務需要從備份還原時才會用到備份，而那時我們會重新套用這些刪除。',
     ],
@@ -6919,7 +6920,8 @@ export const zhTW: Translations = {
       pending_expense_not_found: '待確認支出已被處理或找不到',
       pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
       pending_former_member: '這張卡片的付款人已離開這本帳本，請先改一下再確認。',
-      rule_person_not_member: '這條規則的付款人／收入歸屬已離開這本帳本，請先改一下再恢復。',
+      rule_payer_not_member: '這條規則的付款人已離開這本帳本，請先修改再恢復。',
+      rule_recipient_not_member: '這條規則的收入歸屬已離開這本帳本，請先修改再恢復。',
       pending_income_not_found: '待確認收入已被處理或找不到',
       pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
       review_month_locked: '這個月的留言已鎖定，無法再修改',
