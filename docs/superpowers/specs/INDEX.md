@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-21
+last_updated: 2026-10-08
 ---
 
 # Specs — Index & Writing Guide
@@ -134,6 +134,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [solo-trip](solo-trip-design.md) — Solo × 多人出行：共旅者兩階段（v1.6 名字 / v1.7 使用者，entity 落在出遊的 `OutingParticipant`，不在 Trips——2026-09-21 修正，#870）、共旅者的債不進 GroupBalance、`member_b IS NULL` 雙重語意拆分、epoch 範圍先於拿掉 solo 短路
 - [invite-existing-group](invite-existing-group-design.md) — 接受邀請時依接受者既有 group 狀態分流：單人＝接受前溫和告知（舊帳本變過去章節）、雙人＝擋下（固定兩人不可同時兩本）、無＝照舊；preview + accept 兩層（#912）
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆
+- [after-leaving](after-leaving-design.md) — 離開之後的產品立場：章節屬於那段關係、事留下完整、人停在當時、會動的東西停下；自願離開／被移除的人都能唯讀回看待過的章節（#1611 #1612）
 - [monthly-review](monthly-review-design.md) — 雙人月度回顧儀式
 - [avatar-quick-settings](avatar-quick-settings-design.md) — Dashboard avatar 可點開 bottom sheet（個人 + 帳本身份設定）；Settings 主頁瘦身成 app + data + 危險區
 - [account-deletion](account-deletion-design.md) — app 內發起刪除 + 14 天 grace + pg_cron 後台處理；配對情境匿名化刪除者、另一半保留完整歷史（上架 blocker）
