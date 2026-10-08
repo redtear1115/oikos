@@ -9,7 +9,7 @@
  * the sign).
  */
 
-import { isValidCategoryId } from '@/lib/categories'
+import { isWritableExpenseCategory } from '@/lib/categories'
 import type {
   HeaderMap,
   ImportRowType,
@@ -159,7 +159,7 @@ const CATEGORY_SYNONYMS: Record<string, string> = {
 export function mapCategory(raw: string | undefined | null): string {
   const trimmed = (raw ?? '').trim()
   if (!trimmed) return 'other'
-  if (isValidCategoryId(trimmed)) return trimmed
+  if (isWritableExpenseCategory(trimmed)) return trimmed
   const lower = trimmed.toLowerCase()
   // Own keys only: CATEGORY_SYNONYMS is a plain object, so 'constructor'
   // would otherwise return the Object function (#1534).

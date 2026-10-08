@@ -15,6 +15,7 @@ const MIGRATE_SLUGS = Object.keys(MIGRATE_SOURCES) as MigrateSlug[]
 
 describe('entrySourceFromParam', () => {
   it('maps landing', () => expect(entrySourceFromParam('landing')).toBe('landing'))
+  it('maps outing (#1558)', () => expect(entrySourceFromParam('outing')).toBe('outing'))
   it('maps migrate sources', () => {
     expect(entrySourceFromParam('honeydue')).toBe('migrate_honeydue')
     expect(entrySourceFromParam('spendee')).toBe('migrate_spendee')

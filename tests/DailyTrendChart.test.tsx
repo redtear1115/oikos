@@ -54,3 +54,20 @@ describe('DailyTrendChart', () => {
     expect(svg?.getAttribute('aria-label')).toBe('每日收支趨勢')
   })
 })
+
+describe('DailyTrendChart ticks (#1514)', () => {
+  it('anchors the first tick at the start and the last at the end', () => {
+    const { container } = wrap(<DailyTrendChart data={month(31, { 3: { totalIncome: 100 } })} />)
+    const ticks = Array.from(container.querySelectorAll('[data-tick-anchor]'))
+    expect(ticks.map((t) => t.textContent)).toEqual(['1', '8', '16', '23', '31'])
+    expect(ticks.map((t) => t.getAttribute('data-tick-anchor'))).toEqual(['start', 'middle', 'middle', 'middle', 'end'])
+    // The last tick's right edge sits on the plot edge (shifted back by its own width), not its centre.
+    expect(ticks[4].className).toContain('-translate-x-full')
+    expect(ticks[0].className).not.toContain('translate')
+  })
+
+  it('keeps day numbers out of the SVG so they grow with text size', () => {
+    const { container } = wrap(<DailyTrendChart data={month(30)} />)
+    expect(container.querySelector('svg text')).toBeNull()
+  })
+})

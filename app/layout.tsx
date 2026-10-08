@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { GoogleAnalytics } from '@next/third-parties/google'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { IS_PROD_DEPLOY } from '@/lib/deployEnv'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
 import { PostHogPageView } from './posthog-pageview'
 import { VercelInsights } from './vercel-insights'
+import { GoogleAnalyticsGate } from './google-analytics'
 import './globals.css'
 // Fraunces is the landing hero typeface. Two weights (400 mobile tagline, 500
 // everything else). Self-hosted from public/fonts/ rather than next/font/google:
@@ -130,7 +130,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
         </PostHogProvider>
         <VercelInsights />
-        {IS_PROD_DEPLOY && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {/* Gated off URLs that carry a bearer token: outing share links (#1558),
+            invites and the sign-in bounce whose `next` is one (#1583). */}
+        {IS_PROD_DEPLOY && <GoogleAnalyticsGate gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   )

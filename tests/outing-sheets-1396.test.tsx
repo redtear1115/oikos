@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
-import { AddExpenseSheet } from '@/app/(dashboard)/outings/[id]/_components/AddExpenseSheet'
+import { ExpenseSheet } from '@/app/(dashboard)/outings/_components/ExpenseSheet'
 import { EndOutingSheet } from '@/app/(dashboard)/outings/[id]/_components/EndOutingSheet'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-vi.mock('@/actions/outing', () => ({ addOutingExpense: vi.fn(), endOuting: vi.fn() }))
+vi.mock('@/actions/outing', () => ({ addOutingExpense: vi.fn(), editOutingExpense: vi.fn(), deleteOutingExpense: vi.fn(), endOuting: vi.fn() }))
 
 /** The split row is the second chip row; the first is the payer. */
 function splitChips() {
@@ -19,13 +19,13 @@ function pressed(name: string) {
   return chip.getAttribute('aria-pressed')
 }
 
-describe('#1396 AddExpenseSheet preselection', () => {
-  const two = [{ id: 'p1', displayName: '小明' }, { id: 'p2', displayName: '小美' }]
-  const three = [...two, { id: 'p3', displayName: '阿華' }]
+describe('#1396 ExpenseSheet (add) preselection', () => {
+  const two = [{ id: 'p1', displayName: '小明', active: true }, { id: 'p2', displayName: '小美', active: true }]
+  const three = [...two, { id: 'p3', displayName: '阿華', active: true }]
 
   const sheet = (open: boolean, participants: typeof two) => (
     <I18nWrapper>
-      <AddExpenseSheet open={open} outingId="o1" currency="TWD" participants={participants} onClose={() => {}} />
+      <ExpenseSheet open={open} outingId="o1" currency="TWD" participants={participants} onClose={() => {}} />
     </I18nWrapper>
   )
 

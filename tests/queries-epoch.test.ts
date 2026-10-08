@@ -21,6 +21,7 @@ function setCookie(key: string, value: string | null) {
 }
 
 import {
+  getEpochMembers,
   listEpochsForViewer,
   resolveViewerEpochContext,
   PAST_EPOCH_COOKIE,
@@ -178,8 +179,11 @@ describe('resolveViewerEpochContext', () => {
   })
 
   it('with a pin pointing to the viewer’s past chapter on a different group: swaps to that group + window', async () => {
-    // This is the crux of #141: leaver pins to Y's solo (group Y, not active
-    // group X). resolveViewerEpochContext must return group Y, not group X.
+    // This is the crux of #141: the viewer pins to Y's solo (group Y, not
+    // active group X). resolveViewerEpochContext must return group Y, not X.
+    // Y is the solo ledger they had before accepting an invite into X:
+    // acceptInvite leaves them as Y's member_a and only closes Y's epoch, so
+    // they are still a current member of Y and the pin is accepted (#1603).
     setCookie(PAST_EPOCH_COOKIE, 'ep-y-1')
 
     const yEpoch = epochRow({
@@ -188,7 +192,7 @@ describe('resolveViewerEpochContext', () => {
       startedAt: new Date('2025-06-01T00:00:00Z'),
       endedAt: new Date('2025-12-01T00:00:00Z'),
     })
-    const yGroup = groupRow({ id: 'grp-y', name: '我的家計簿' })
+    const yGroup = groupRow({ id: 'grp-y', name: '我的家計簿', memberA: VIEWER, memberB: null })
 
     // 1) pin SELECT (epochs by id)
     queueDbResult([yEpoch])
@@ -242,11 +246,134 @@ describe('resolveViewerEpochContext', () => {
     expect(context!.group.id).toBe('grp-1')
   })
 
+  // #1603 — a pin counts only if the viewer is named on the chapter AND is a
+  // current member of its group. Before this, a former member's pin was
+  // accepted, the layout found them missing from the group's members and
+  // redirected to /sign-in, which sent them back to /dashboard: a loop.
+  describe('former members (#1603)', () => {
+    const leftChapter = () => epochRow({
+      id: 'ep-x-1', groupId: 'grp-x',
+      memberAId: STAYER, memberBId: VIEWER,
+      startedAt: new Date('2025-01-01T00:00:00Z'),
+      endedAt: new Date('2025-06-01T00:00:00Z'),
+    })
+
+    it('a leaver pinned to the ledger they left resolves to their own active group', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      // 1) pin SELECT → the leaver is named on the chapter…
+      queueDbResult([leftChapter()])
+      // 2) group SELECT → …but X's row today names only the stayer
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: null })])
+      // 3) getActiveGroupForUser → the leaver's new solo ledger
+      queueDbResult([groupRow({ id: 'grp-solo', memberA: VIEWER, memberB: null })])
+      // 4) its open epoch
+      queueDbResult([epochRow({ id: 'ep-solo', groupId: 'grp-solo', endedAt: null })])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context).not.toBeNull()
+      expect(context!.group.id).toBe('grp-solo')
+      expect(context!.window).toMatchObject({ epochId: 'ep-solo', isPast: false })
+    })
+
+    it('a leaver is refused even when the left ledger has a new partner in it', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: OTHER })])
+      queueDbResult([groupRow({ id: 'grp-solo', memberA: VIEWER, memberB: null })])
+      queueDbResult([epochRow({ id: 'ep-solo', groupId: 'grp-solo', endedAt: null })])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context!.group.id).toBe('grp-solo')
+      expect(context!.group.memberB).not.toBe(OTHER)
+    })
+
+    it('a removed person with no group resolves to null (→ /onboarding), not to the left ledger', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: null })])
+      // getActiveGroupForUser → removePartner leaves them with no ledger
+      queueDbResult([])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context).toBeNull()
+    })
+
+    it('a stayer pinned to an old chapter of their current group resolves to the pin', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      // X today: the stayer and a new partner
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: OTHER })])
+
+      const context = await resolveViewerEpochContext(STAYER)
+      expect(context!.group.id).toBe('grp-x')
+      expect(context!.window).toMatchObject({ epochId: 'ep-x-1', isPast: true })
+    })
+  })
+
   it('returns null when the viewer has neither a pin nor any group', async () => {
     // 1) getActiveGroupForUser SELECT → no rows
     queueDbResult([])
 
     const context = await resolveViewerEpochContext(VIEWER)
     expect(context).toBeNull()
+  })
+})
+
+// ─── #1604 part 2: a closed chapter shows the names frozen at its close ─────
+// Failure this guards: nothing errors; a chapter that is over keeps picking up
+// whatever name the other person chose later.
+describe('chapter names (#1604 part 2)', () => {
+  const closedWith = (a: string | null, b: string | null) => epochRow({
+    id: 'ep-closed', groupId: 'grp-1',
+    memberAId: STAYER, memberBId: VIEWER,
+    startedAt: new Date('2025-01-01T00:00:00Z'),
+    endedAt: new Date('2025-06-01T00:00:00Z'),
+    memberAName: a, memberBName: b,
+  })
+
+  it('getEpochMembers: a closed chapter returns its snapshot and reads no live profile', async () => {
+    queueDbResult([closedWith('Stayer at close', 'Leaver at close')])
+    const m = await getEpochMembers('ep-closed')
+    expect(m).toEqual({
+      memberAId: STAYER, memberBId: VIEWER,
+      memberAName: 'Stayer at close', memberBName: 'Leaver at close',
+    })
+    // Only the GroupEpochs read: the live (later) names are never consulted.
+    expect(mockDb.select).toHaveBeenCalledTimes(1)
+  })
+
+  it('getEpochMembers: a NULL snapshot slot falls back to the live name for that slot only', async () => {
+    queueDbResult([closedWith('Stayer at close', null)])
+    queueDbResult([profileRow(VIEWER, 'Leaver live')])
+    const m = await getEpochMembers('ep-closed')
+    expect(m).toMatchObject({ memberAName: 'Stayer at close', memberBName: 'Leaver live' })
+  })
+
+  it('getEpochMembers: an open chapter uses live names even if a column holds a value', async () => {
+    queueDbResult([epochRow({ id: 'ep-open', memberAId: STAYER, memberBId: VIEWER, endedAt: null, memberAName: 'stale', memberBName: null })])
+    queueDbResult([profileRow(STAYER, 'Stayer live'), profileRow(VIEWER, 'Leaver live')])
+    const m = await getEpochMembers('ep-open')
+    expect(m).toMatchObject({ memberAName: 'Stayer live', memberBName: 'Leaver live' })
+  })
+
+  it('listEpochsForViewer: closed rows carry their snapshot, the open row the live name', async () => {
+    const open = epochRow({
+      id: 'ep-open', groupId: 'grp-1', memberAId: STAYER, memberBId: null,
+      startedAt: new Date('2025-06-01T00:00:00Z'), endedAt: null, memberAName: null, memberBName: null,
+    })
+    queueDbResult([open, closedWith('Stayer at close', '已離開的夥伴')])
+    queueDbResult([profileRow(STAYER, 'Stayer renamed')])
+    const rows = await listEpochsForViewer(STAYER)
+    expect(rows.find((r) => r.id === 'ep-closed')).toMatchObject({
+      memberAName: 'Stayer at close', memberBName: '已離開的夥伴',
+    })
+    expect(rows.find((r) => r.id === 'ep-open')).toMatchObject({ memberAName: 'Stayer renamed', memberBName: null })
+  })
+
+  it('listEpochsForViewer: only closed chapters with snapshots → no Profiles read', async () => {
+    queueDbResult([closedWith('Stayer at close', 'Leaver at close')])
+    const rows = await listEpochsForViewer(STAYER)
+    expect(rows[0]).toMatchObject({ memberAName: 'Stayer at close', memberBName: 'Leaver at close' })
+    expect(mockDb.select).toHaveBeenCalledTimes(1)
   })
 })

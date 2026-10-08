@@ -2,7 +2,8 @@
 
 import { monthLabel } from '@/lib/groupByMonth'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
-import { formatAmount } from '@/lib/currency'
+import { formatLedgerAmount, type CurrencyCode } from '@/lib/currency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 
 interface Props {
   monthKey: string
@@ -46,9 +47,10 @@ interface Props {
 export function MonthSection({ monthKey, count, totalAmount, summary }: Props) {
   const t = useTranslations()
   const locale = useLocale()
+  const baseCurrency = useBaseCurrency()
   const amountLabel = summary
-    ? summaryLabel(summary, t)
-    : formatAmount(totalAmount ?? 0, 'twd')
+    ? summaryLabel(summary, t, baseCurrency)
+    : formatLedgerAmount(totalAmount ?? 0, baseCurrency)
 
   return (
     <div className="px-6 pt-4 pb-2 flex items-baseline justify-between gap-2">
@@ -68,10 +70,11 @@ export function MonthSection({ monthKey, count, totalAmount, summary }: Props) {
 function summaryLabel(
   summary: { mode: 'all' | 'expense' | 'income'; expenseTotal: number; incomeTotal: number },
   t: ReturnType<typeof useTranslations>,
+  baseCurrency: CurrencyCode,
 ): string {
   const { mode, expenseTotal, incomeTotal } = summary
-  const expenseStr = t.records.stats.summaryExpense.replace('{amount}', formatAmount(expenseTotal, 'twd'))
-  const incomeStr = t.records.stats.summaryIncome.replace('{amount}', formatAmount(incomeTotal, 'twd'))
+  const expenseStr = t.records.stats.summaryExpense.replace('{amount}', formatLedgerAmount(expenseTotal, baseCurrency))
+  const incomeStr = t.records.stats.summaryIncome.replace('{amount}', formatLedgerAmount(incomeTotal, baseCurrency))
   if (mode === 'expense') return expenseStr
   if (mode === 'income') return incomeStr
   // mode === 'all' — omit whichever segment is zero; if both are zero, 支出

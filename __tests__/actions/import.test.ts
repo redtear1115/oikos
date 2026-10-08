@@ -309,6 +309,27 @@ describe('actions/import.ts — round-trip (#607)', () => {
     expect(ours!.status).toBe('completed')
   })
 
+  it("stores an expense row with category 'settle' as other (#1541)", async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const result = unwrapAction(await importCsvBatch({
+      source: 'generic',
+      fileName: 'settle.csv',
+      totalRows: 1,
+      rows: [{
+        type: 'expense', amount: 100, date: '2026-02-01', category: 'settle',
+        description: 'x', paidBy: 'a', splitType: 'all_mine',
+      }],
+      errors: [],
+    }))
+    refs.batchIds.push(result.batchId)
+
+    const rows = await db.select().from(cashTransactions).where(eq(cashTransactions.importBatchId, result.batchId))
+    expect(rows.map((r) => r.category)).toEqual(['other'])
+  })
+
   it('rejects rows with non-positive amount', async () => {
     const refs = await seedSoloGroup()
     activeRefs = refs

@@ -26,7 +26,18 @@ const PROPERTY_COLUMN: Record<string, string> = {
   idNumberEncrypted: 'ChildDetails.id_number_encrypted',
   insuranceIdEncrypted: 'ChildDetails.insurance_id_encrypted',
   verificationCodeEncrypted: 'InvoiceCredentials.verification_code_encrypted',
+  shareTokenEncrypted: 'Outings.share_token_encrypted',
 }
+
+/**
+ * #1558 — properties written through a helper that binds the AAD itself, so
+ * the write site has no inline aadFor. The helper's binding is covered by
+ * __tests__/lib/outing-tokens.test.ts (decrypt under another outing id throws).
+ */
+const HELPER_WRITE: Record<string, RegExp> = {
+  shareTokenEncrypted: /^encryptShareToken\(/,
+}
+
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
@@ -99,6 +110,11 @@ describe('encrypted-column writes in actions/', () => {
       const where = `${w.file}:${w.line} ${w.prop}`
       const expected = PROPERTY_COLUMN[w.prop]
       if (!expected) { bad.push(`${where}: unknown encrypted property`); continue }
+      const helper = HELPER_WRITE[w.prop]
+      if (helper) {
+        if (!helper.test(w.rhs)) bad.push(`${where}: not from its binding helper`)
+        continue
+      }
       if (!/\b(?:encrypt|encryptForInsert)\(/.test(w.rhs)) { bad.push(`${where}: not from encrypt()`); continue }
       const aad = w.rhs.match(/aadFor\('(\w+)',\s*'(\w+)',/)
       if (!aad) { bad.push(`${where}: no inline aadFor(...)`); continue }
@@ -135,13 +151,18 @@ describe('encrypted-column writes in actions/', () => {
   // covered by __tests__/reencrypt-pii.test.ts. It imports `./crypto.ts` with
   // the extension (Node type stripping), which the old pattern did not see —
   // failure looked like a new importer passing this guard silently.
-  it('only actions/asset.ts, actions/invoice.ts and lib/reencryptCore.ts import lib/crypto (outside tests)', () => {
+  it('only actions/asset.ts, actions/invoice.ts, lib/reencryptCore.ts and lib/outing/tokens.ts import lib/crypto (outside tests)', () => {
     const importers = ['actions', 'app', 'lib', 'components']
       .flatMap((d) => sourceFiles(d))
       .filter((f) => f !== join('lib', 'crypto.ts'))
       .filter((f) =>
         /from '@\/lib\/crypto(?:\.ts)?'|from '\.\.?\/(?:[^']*\/)?crypto(?:\.ts)?'/.test(readFileSync(join(ROOT, f), 'utf8')),
       )
-    expect(importers.sort()).toEqual([join('actions', 'asset.ts'), join('actions', 'invoice.ts'), join('lib', 'reencryptCore.ts')])
+    expect(importers.sort()).toEqual([
+      join('actions', 'asset.ts'),
+      join('actions', 'invoice.ts'),
+      join('lib', 'outing', 'tokens.ts'),
+      join('lib', 'reencryptCore.ts'),
+    ])
   })
 })

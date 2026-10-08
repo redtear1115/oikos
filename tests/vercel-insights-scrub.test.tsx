@@ -161,3 +161,28 @@ describe('VercelInsights wrapper', () => {
     vi.resetModules()
   })
 })
+
+describe('outing share token (#1558)', () => {
+  it.each<[string, string]>([
+    [`/en/outing/${TOKEN}`, '/en/outing/:token'],
+    [`/outing/${TOKEN}`, '/outing/:token'],
+    [`https://futari.example/zh-CN/outing/${TOKEN}`, 'https://futari.example/zh-CN/outing/:token'],
+    [`/sign-in?next=%2Fen%2Fouting%2F${TOKEN}`, `/sign-in?next=${MASKED_VALUE}`],
+    [`/sign-in?next=/en/outing/${TOKEN}`, `/sign-in?next=${MASKED_VALUE}`],
+  ])('masks %s in both SDKs', async (url, expected) => {
+    const { analyticsBeforeSend, speedInsightsBeforeSend } = await import('@/app/vercel-insights')
+    const page = analyticsBeforeSend({ type: 'pageview', url })
+    const vital = speedInsightsBeforeSend({ type: 'vital', url, route: '/[locale]/outing/[shareToken]' })
+    expectClean(page)
+    expectClean(vital)
+    expect(page!.url).toBe(expected)
+    expect(vital!.url).toBe(expected)
+    expect(vital!.route).toBe('/[locale]/outing/[shareToken]')
+  })
+
+  it('leaves the signed-in /outings/<uuid> path alone', async () => {
+    const { analyticsBeforeSend } = await import('@/app/vercel-insights')
+    const url = '/outings/2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10'
+    expect(analyticsBeforeSend({ type: 'pageview', url })!.url).toBe(url)
+  })
+})

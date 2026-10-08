@@ -111,7 +111,8 @@ describe('#1466 — asset pages hand no ciphertext to client components', () => 
     queueDbResult([{ owner: 'user-a', addressEncrypted: CT.address, purchasedAt: '2020-01-01', purchasePrice: 100 }])
     const props = await detailProps('house-1')
     expectNoCiphertext(props)
-    expect(props.details).toEqual({ owner: 'user-a', hasAddress: true, purchasedAt: '2020-01-01', purchasePrice: 100 })
+    // #1589 — the owner column never reaches the client, even when the row has one.
+    expect(props.details).toEqual({ hasAddress: true, purchasedAt: '2020-01-01', purchasePrice: 100 })
     expect((props.assetSheetInitial as { houseHasAddress: boolean }).houseHasAddress).toBe(true)
   })
 

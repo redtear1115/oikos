@@ -31,7 +31,14 @@ export interface ResolveVisitorPlatformInput {
 // #1413 — region-neutral: Apple redirects `/app/id...` to the visitor's own
 // storefront, so don't hard-code a locale segment into it (carried over from
 // the #1333 note this replaces).
-export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784'
+// #1555 — App Store Connect campaign parameters (pt = our provider token,
+// public by design; ct = campaign name; mt=8 = App Store). Without them every
+// download that starts from the landing CTA is counted under 「網頁推薦」 with
+// no campaign, so ASC's 宣傳活動 report can't tell whether the landing drives
+// installs. Failure looks like: the landing → App Store share stays an
+// unexplained 0 in ASC while PostHog shows CTA clicks. ASC only shows a
+// campaign once ≥5 distinct Apple accounts installed through it.
+export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784?pt=128976951&ct=landing&mt=8'
 
 // #1413 — Android closed-testing signup (Google Form). Ray copies replies into
 // the Play Console closed-testing list on a schedule and deletes them from the

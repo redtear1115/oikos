@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
-import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import type { PendingIncomeView as PendingRow } from '@/lib/recurringMemberLink'
 
 // Stub the inner card so this test stays focused on stack-level behaviour
 // (visible count, expand label, expand toggle). PendingIncomeCard pulls in
@@ -25,6 +25,8 @@ function row(id: string): PendingRow {
     category: 'salary',
     source: null,
     recipientId: 'u-a',
+    recipientIsFormer: false,
+    formerLabel: true,
     assetId: null,
   }
 }

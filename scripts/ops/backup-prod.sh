@@ -1,9 +1,9 @@
 #!/bin/bash
-# #1549 — nightly prod backup: pg_dump → age → rclone (Google Drive).
+# #1549 — daily prod backup: pg_dump → age → rclone (Google Drive).
 #
 # Runs on the owner's Mac from the installed, SHA-checked copy in
 # ~/.local/libexec/futari-backup/ (scripts/ops/install-backup.sh), started by
-# launchd at 03:30 through futari-backup-run.sh. Operator steps, what the
+# launchd at 08:00 through futari-backup-run.sh. Operator steps, what the
 # backup role can and cannot reach, restore order and failure looks:
 # docs/superpowers/ops-runbook.md §「Prod backup (futari_backup)」.
 #
@@ -400,7 +400,7 @@ touch "$LOG_FILE"; chmod 600 "$LOG_FILE"
 
 log "start (pid $$)"
 STAGE_NAME='lock'
-# One run at a time: a manual run overlapping the 03:30 one would exceed the
+# One run at a time: a manual run overlapping the scheduled one would exceed the
 # role's CONNECTION LIMIT 2 and fail both.
 if ! mkdir "${STATE_DIR}/run.lock" 2>/dev/null; then
   OTHER=$(cat "${STATE_DIR}/run.lock/pid" 2>/dev/null || true)

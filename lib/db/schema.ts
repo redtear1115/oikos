@@ -91,6 +91,17 @@ export const groupEpochs = pgTable('GroupEpochs', {
   memberAId: uuid('member_a_id').notNull().references(() => profiles.id),
   memberBId: uuid('member_b_id').references(() => profiles.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // #1604 part 2 (0088) — each member's display name, frozen when the chapter
+  // closed (trigger GroupEpochs_snapshot_member_names; account deletion sets
+  // the deleted user's slots to 「已離開的夥伴」). NULL while the chapter is
+  // open or the slot is empty. Read them only through `getEpochMembers` /
+  // `listEpochs*` (lib/db/queries/epoch.ts), which fall back to the live name
+  // while NULL. Never hand a raw GroupEpochs row to a client prop.
+  // ORDER: 0088 must be applied before code that knows these columns runs —
+  // `db.select().from(groupEpochs)` names every column, and against a database
+  // without them every dashboard request fails with "column does not exist".
+  memberAName: text('member_a_name'),
+  memberBName: text('member_b_name'),
 })
 
 export const groupInvites = pgTable('GroupInvites', {
@@ -314,6 +325,9 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   // v0.15.2 #166 — current account value for investment-linked savings policies.
   // User-set, statement-based; not derived. null = unset or not applicable.
   accountValue: integer('account_value'),
+  // #1600 — the currency the four amounts above are in. NULL = pre-#1600 row /
+  // old-code insert: read as the ledger's base currency (lib/insuranceCurrency.ts).
+  currency: currencyEnum('currency'),
   // v0.15.0 #127 — red-badge threshold for single-year policies (warning stays at 60d).
   // Multi-year / savings policies ignore this at render time.
   reminderDaysBefore: integer('reminder_days_before').notNull().default(30),
@@ -499,8 +513,10 @@ export const pendingExpenseOccurrences = pgTable('PendingExpenseOccurrences', {
 
 // v0.14.0 #44 — Monthly review snapshot. Cron predicts on the 1st 00:05
 // Asia/Taipei for the previous month; values are frozen and not recomputed.
-// All denormalised text columns (paid_by name / asset names) are snapshotted
-// to survive future renames or soft-deletes of the source rows.
+// Asset names are snapshotted to survive renames or soft-deletes of the source
+// rows. The largest expense's payer is stored as an id, never a name (#1618,
+// 0089): the review page resolves it to a name within the viewed chapter, so a
+// deleted account's or a former partner's real name is never kept here.
 export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -516,6 +532,11 @@ export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
   largestExpenseAmount: integer('largest_expense_amount'),
   largestExpenseDescription: text('largest_expense_description'),
   largestExpenseCategory: text('largest_expense_category'),
+  // Payer id, no FK. Resolved to a name only against the viewed chapter's two
+  // members (review/[month]/page.tsx); never sent to the client.
+  largestExpensePaidBy: uuid('largest_expense_paid_by'),
+  // Always NULL since 0089 (#1618): it held the payer's display name, which
+  // outlived account deletion. Never write it; dropped in a later cleanup.
   largestExpensePaidByName: text('largest_expense_paid_by_name'),
 
   // card 3 — recurring events (income + expense), as a frozen list
@@ -610,8 +631,10 @@ export const tripExpenses = pgTable('TripExpenses', {
 // Profile 解耦（profile_id nullable：v1.6.0 的朋友只有名字，成員由 server
 // 依 group.member_a/b 連結）。所有存取走 Server Action；5 表 RLS enable 且無
 // policy，並 REVOKE anon/authenticated = client 直連 deny。CHECK 與索引只寫在
-// drizzle/0066_outing_tables.sql。沒有 share_token／claim_token：匿名加入是
-// v1.7.0，到時再加。spec: docs/superpowers/specs/group-outing-design.md
+// drizzle/0066_outing_tables.sql。分享連結與認領（#1558）的欄位與 partial
+// unique index 在 drizzle/0083_outing_link_join.sql：token 一律不存明文，查詢用
+// sha256 hash（lib/outing/tokens.ts）；share_token_encrypted 綁 outing id 的 AAD，
+// 只給成員重新顯示連結。spec: docs/superpowers/specs/group-outing-design.md
 export const outings = pgTable('Outings', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -623,18 +646,25 @@ export const outings = pgTable('Outings', {
   startDate: date('start_date'),
   foldedAt: timestamp('folded_at', { withTimezone: true }),
   endedAt: timestamp('ended_at', { withTimezone: true }),
+  shareTokenHash: text('share_token_hash'),
+  shareTokenEncrypted: text('share_token_encrypted'),
+  shareTokenRotatedAt: timestamp('share_token_rotated_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 // 出遊裡的「一個人」。朋友只有 display_name（profile_id 為 NULL）；帳本成員由
 // server 填 profile_id，同一出遊同一 profile 只能一列（partial unique index）。
-// deactivated_at 標記中途退出（不刪歷史 share）。
+// deactivated_at 標記中途退出（不刪歷史 share）。朋友從連結認領時寫入
+// claim_token_hash（cookie 裡 token 的 hash）與 claimed_at；四者
+// profile_id／claim_token_hash／claimed_at／deactivated_at 皆 NULL 才可認領。
 export const outingParticipants = pgTable('OutingParticipants', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   outingId: uuid('outing_id').notNull().references(() => outings.id),
   displayName: text('display_name').notNull(),
   profileId: uuid('profile_id').references(() => profiles.id),
+  claimTokenHash: text('claim_token_hash'),
+  claimedAt: timestamp('claimed_at', { withTimezone: true }),
   deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })

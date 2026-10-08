@@ -362,7 +362,7 @@ describe('crypto — AAD binds a v1 value to its row, column and table', () => {
     expect(() => decrypt(ct, forged)).toThrow(CryptoError)
   })
 
-  it('ENCRYPTED_COLUMNS lists exactly the six encrypted columns', () => {
+  it('ENCRYPTED_COLUMNS lists exactly the seven encrypted columns', () => {
     const flat = Object.entries(ENCRYPTED_COLUMNS).flatMap(([t, cols]) => cols.map((c) => `${t}.${c}`))
     expect(flat.sort()).toEqual([
       'Assets.name_encrypted',
@@ -371,6 +371,7 @@ describe('crypto — AAD binds a v1 value to its row, column and table', () => {
       'ChildDetails.insurance_id_encrypted',
       'HouseDetails.address_encrypted',
       'InvoiceCredentials.verification_code_encrypted',
+      'Outings.share_token_encrypted',
     ])
   })
 })

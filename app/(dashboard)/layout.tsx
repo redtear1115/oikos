@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
@@ -11,17 +11,22 @@ import { PartnerActivityToast } from './_components/PartnerActivityToast'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { getEpochMembers, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { buildChapterIdentity } from '@/lib/chapterIdentity'
+import { hasOpenInvite } from '@/lib/db/queries/invite'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 import { ShellTopStack } from './_components/ShellTopStack'
 import { TodayProvider } from './_components/TodayProvider'
 import { getTodayYMD } from '@/lib/today-server'
 import { PastChapterBar } from './_components/PastChapterBar'
+import { ToastProvider } from '@/components/Toast'
 import { QuickAddProvider } from './_components/QuickAddProvider'
+import { parseCurrencyCode } from '@/lib/currency'
 import { maskAvatarUrl } from '@/lib/avatar'
 import { TextScale } from '@/components/TextScale'
 import { TEXT_SCALE_INIT_SCRIPT } from '@/lib/textScale'
@@ -74,17 +79,33 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { group, window: epochWindow } = context
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t, locale, todayYMD] = await Promise.all([
+  // #1546 — only the viewer's own live solo ledger can hold a link they may
+  // revoke (revokeOpenInvites acts on the active group). A pinned past
+  // chapter or a duo skips the query.
+  const canHoldOpenInvite = !epochWindow.isPast && group.memberB === null && group.memberA === user.id
+  const [profilesRows, t, locale, todayYMD, openInvite, chapterMembers] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
     // Today in the device's zone, so client components hydrate against the
     // same calendar day the browser will compute (#1360, lib/today.ts).
     getTodayYMD(),
+    canHoldOpenInvite ? hasOpenInvite(group.id) : Promise.resolve(false),
+    // #1604 — who the pinned chapter was between, names included. The epoch
+    // id came from resolveViewerEpochContext, which only accepts a pin for a
+    // chapter the viewer is named on (getEpochMembers' caller contract).
+    epochWindow.isPast && epochWindow.epochId
+      ? getEpochMembers(epochWindow.epochId)
+      : Promise.resolve(null),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
-  if (!viewerProfile) redirect('/sign-in')
+  // Not among the group's current members → 404, never /sign-in (#1603). The
+  // viewer IS signed in, so /sign-in sends them straight back to /dashboard
+  // and they loop with no way out. resolveViewerEpochContext only returns
+  // groups the viewer is in today, so this should be unreachable; it stays
+  // as the layout's own guard, and must not be able to loop if it fires.
+  if (!viewerProfile) notFound()
 
   const deletionRequestedAt = viewerProfile.deletionRequestedAt ?? null
 
@@ -94,7 +115,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const viewerIsA = group.memberA === user.id
 
   const value: MemberContextValue = {
-    group: { id: group.id, name: group.name },
+    group: { id: group.id, name: group.name, baseCurrency: parseCurrencyCode(group.baseCurrency) ?? 'twd' },
     viewer: {
       id: viewerProfile.id,
       displayName: viewerProfile.displayName,
@@ -114,6 +135,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     viewerIsA,
     isSolo: !partnerProfile,
     isPast: epochWindow.isPast,
+    // #1604 — a past chapter is labelled with ITS partner (name + initial, no
+    // avatar), never today's. `partner` / `isSolo` above keep their live
+    // meaning; `viewerIsA` stays on the current group row (see MemberContext).
+    chapter: epochWindow.isPast
+      ? buildChapterIdentity(chapterMembers, user.id, t.common.partner)
+      : null,
     canAccessGuardian: canAccessGuardian(group),
     epochStartedAt: epochWindow.startedAt.toISOString(),
     epochEndedAt: epochWindow.endedAt ? epochWindow.endedAt.toISOString() : null,
@@ -125,6 +152,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     guardianBetaEnabled: group.guardianBetaEnabled,
     currentLocale: locale,
     avatarHidden: viewerProfile.avatarHidden,
+    hasOpenInvite: openInvite,
   }
 
   return (
@@ -143,7 +171,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         )}
         <ViewerProvider value={value}>
           <RealtimeProvider groupId={group.id}>
-            <PushTokenRegistrar userId={user.id} groupId={group.id} />
+            {/* #1605 — the ACTIVE ledger, never a pinned past chapter's. #1617 —
+                not pinned to a past chapter, `group` already IS the active
+                ledger (the resolver fell through to getActiveGroupForUser), so
+                only a past pin pays for the extra lookup. */}
+            {await (epochWindow.isPast ? getActiveGroupForUser(user.id) : Promise.resolve(group)).then((g) => g && <PushTokenRegistrar userId={user.id} groupId={g.id} />)}
             <OfflineLifecycle />
             <ReconnectRefresh />
             <PartnerActivityToast />
@@ -164,7 +196,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 {/* Shortcut / `#add=` quick add (#1488): owns the shell URL
                     listener and hands Dashboard a prefill in memory. Inside the
                     dashboard group so it unmounts on sign-out. */}
-                <QuickAddProvider>{children}</QuickAddProvider>
+                <ToastProvider>
+                  <QuickAddProvider>{children}</QuickAddProvider>
+                </ToastProvider>
               </div>
             </AvatarMenuProvider>
           </RealtimeProvider>

@@ -13,6 +13,10 @@ import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
+import { insuredDisplayName } from '@/lib/insuranceMemberLink'
+import { formatLedgerAmountSpaced, type CurrencyCode } from '@/lib/currency'
+import { policyCurrency } from '@/lib/insuranceCurrency'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -32,6 +36,14 @@ interface InsuranceData {
   policyHolderUserId: string | null
   policyHolderDisplayName: string | null
   policyHolderAvatarUrl: string | null
+  /** #1486 — holder left the ledger: no name/avatar, show the neutral label. */
+  policyHolderIsFormer?: boolean
+  /** #1579 — member insured left the ledger: no id/name. */
+  insuredIsFormer?: boolean
+  /** #1579 — a dropped person may be shown as 「前伴侶」. False for a viewer
+   *  pinned to a chapter of a group they left: the field stays empty
+   *  (unreachable since #1603 until #1612 reopens those chapters). */
+  formerLabel?: boolean
   insurer: string | null
   annualPremium: number | null
   sumInsured: number | null
@@ -39,6 +51,8 @@ interface InsuranceData {
   expiryDate: string | null
   termYears: number | null
   payCycle: string | null
+  /** #1600 — NULL reads as the ledger's base currency. */
+  currency?: CurrencyCode | null
   reminderDaysBefore: number
   notes: string | null
 }
@@ -49,12 +63,11 @@ interface Props {
   data: InsuranceData
 }
 
-function fmtNT(n: number) {
-  return n.toLocaleString('en-US')
-}
-
 export function InsuranceListItem({ id, name, data }: Props) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
+  const currency = policyCurrency(data.currency, baseCurrency)
+  const fmt = (n: number) => formatLedgerAmountSpaced(n, currency)
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [renewOpen, setRenewOpen] = useState(false)
@@ -196,7 +209,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   // Target amount for savings = termYears * annualPremium
   const targetAmount = termYears > 0 && annualPremium > 0 ? termYears * annualPremium : 0
 
-  const insuredName = data.insuredChildName ?? data.insuredUserDisplayName ?? data.insured
+  const insuredName = insuredDisplayName(data, i.policyHolderFormer)
 
   const showActionRow = isSingleYear && expired
 
@@ -255,6 +268,17 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 {data.insurer && (
                   <span className="text-ink-2">{data.insurer}</span>
                 )}
+                {data.policyHolderIsFormer && data.formerLabel && (
+                  <>
+                    {data.insurer && (
+                      <span
+                        aria-hidden="true"
+                        className="rounded-xs bg-ink-3 shrink-0 w-0.75 h-0.75"
+                      />
+                    )}
+                    <span>{i.policyHolderFormer}</span>
+                  </>
+                )}
                 {insuredName && (
                   <>
                     <span
@@ -280,7 +304,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 <div
                   className="tnum mt-px text-sm font-medium text-ink"
                 >
-                  {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
+                  {annualPremium > 0 ? fmt(annualPremium) : '—'}
                 </div>
               </div>
             </div>
@@ -305,7 +329,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 leftLabel={i.timelinePaid}
                 leftValue={i.timelinePaidYears.replace('{paid}', String(yearsPassed)).replace('{term}', String(termYears))}
                 rightLabel={i.timelineSumInsured}
-                rightValue={data.sumInsured ? `NT$ ${fmtNT(data.sumInsured)}` : '—'}
+                rightValue={data.sumInsured ? fmt(data.sumInsured) : '—'}
               />
             )}
             {isSavings && targetAmount > 0 && (
@@ -313,9 +337,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 pct={Math.min(100, Math.round((cumulativePaid / targetAmount) * 100))}
                 fillColor="var(--saving)"
                 leftLabel={i.timelineInvested}
-                leftValue={`NT$ ${fmtNT(cumulativePaid)}`}
+                leftValue={fmt(cumulativePaid)}
                 rightLabel={i.timelineTarget}
-                rightValue={`NT$ ${fmtNT(targetAmount)}`}
+                rightValue={fmt(targetAmount)}
               />
             )}
           </div>

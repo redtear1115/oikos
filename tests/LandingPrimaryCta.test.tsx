@@ -136,7 +136,7 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
     renderCta()
     const link = await screen.findByText('在 App Store 下載')
     const anchor = link.closest('a')!
-    expect(anchor).toHaveAttribute('href', 'https://apps.apple.com/app/id6779264784')
+    expect(anchor).toHaveAttribute('href', 'https://apps.apple.com/app/id6779264784?pt=128976951&ct=landing&mt=8')
     expect(anchor).toHaveAttribute('target', '_blank')
     expect(anchor).toHaveAttribute('rel', 'noopener noreferrer')
   })

@@ -118,12 +118,14 @@ export function useRecurringRuleForm({
    * createRule vs updateRule inside `submitFn`.
    */
   const runSubmit = (
-    submitFn: () => Promise<ActionResult<unknown>>,
+    submitFn: () => Promise<ActionResult<{ nextOccurrenceAt: string }>>,
     fallbackErrorMessage: string,
+    onSaved?: (saved: { nextOccurrenceAt: string }) => void,
   ) => {
     startTransition(async () => {
       try {
-        unwrapAction(await submitFn())
+        const saved = unwrapAction(await submitFn())
+        onSaved?.(saved)
         onMutated()
         onClose()
       } catch (e) {

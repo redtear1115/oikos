@@ -9,8 +9,10 @@ const PUBLIC_PATHS = ['/', '/terms', '/privacy', '/migrate']
 // Public subtrees we want explicit allow signals for (so crawlers don't fall
 // back to default heuristics on /migrate/* growth).
 const PUBLIC_PREFIXES = ['/migrate']
-// Localized but should NOT be indexed: auth funnel page.
-const DISALLOWED_LOCALIZED = ['/sign-in']
+// Localized but should NOT be indexed: auth funnel page, and the per-token
+// outing share pages (#1558; the trailing slash keeps `/outings` — the
+// signed-in list — out of this rule's prefix match).
+const DISALLOWED_LOCALIZED = ['/sign-in', '/outing/']
 
 export default function robots(): MetadataRoute.Robots {
   const allow = Array.from(

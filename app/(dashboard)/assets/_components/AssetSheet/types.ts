@@ -1,6 +1,7 @@
 import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
+import type { CurrencyCode } from '@/lib/currency'
 
 export interface AssetSheetInitial {
   id: string
@@ -20,6 +21,11 @@ export interface AssetSheetInitial {
   purchasePrice?: number | null
   fuelType?: GasFuelType
   primaryUserId?: string | null
+  /** #1589 — the stored 主要使用人 left the ledger. The id is not sent
+   *  (primaryUserId is null, which here does NOT mean 共用); the sheet starts
+   *  with nothing selected and, unless a person is picked, saves with
+   *  primaryUserId undefined so editCar keeps the stored value. */
+  primaryUserFormer?: boolean
   // extended car fields
   color?: string | null
   year?: number | null
@@ -64,6 +70,11 @@ export interface AssetSheetInitial {
   insInsuredChildId?: string | null
   insInsuredUserId?: string | null
   insPolicyHolderUserId?: string | null
+  /** #1579 — the stored 要保人 / member 被保人 left the ledger. The id is not
+   *  sent (insPolicyHolderUserId / insInsuredUserId are null); the sheet starts
+   *  with nothing selected and cannot save until a current person is picked. */
+  insPolicyHolderFormer?: boolean
+  insInsuredFormer?: boolean
   insInsurer?: string | null
   insPolicyNo?: string | null
   insAnnualPremium?: number | null
@@ -77,6 +88,8 @@ export interface AssetSheetInitial {
   // #166 — current account value for investment-linked savings policies.
   // Only persisted when kind === 'savings'.
   insAccountValue?: number | null
+  // #1600 — the policy's own currency; null/absent = the ledger's base currency.
+  insCurrency?: CurrencyCode | null
   // House-specific
   /** #837 — address is encrypted at rest; the form never receives plaintext.
    *  Bool drives the 「先前已加密」 placeholder + 「清除」 button. */

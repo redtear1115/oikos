@@ -261,3 +261,26 @@ describe('sanitizeAnalyticsUrl — parser-stripped characters', () => {
     expect(sanitizeAnalyticsUrl(`/inv\tite/${TOKEN}`)).not.toContain(TOKEN)
   })
 })
+
+describe('sanitizeAnalyticsUrl — outing share token (#1558)', () => {
+  // `/<locale>/outing/<shareToken>` is a public route whose path segment is
+  // the only key to an outing. Same placeholder as invite.
+  it.each<[string, string, string]>([
+    ['bare outing path', `/outing/${TOKEN}`, '/outing/:token'],
+    ['localized outing path', `/en/outing/${TOKEN}`, '/en/outing/:token'],
+    ['zh-CN outing path', `/zh-CN/outing/${TOKEN}`, '/zh-CN/outing/:token'],
+    ['absolute outing path', `https://futari.example/ja/outing/${TOKEN}`, 'https://futari.example/ja/outing/:token'],
+    ['outing with trailing path', `/en/outing/${TOKEN}/join`, '/en/outing/:token/join'],
+    ['uppercase outing segment', `/en/OUTING/${TOKEN}`, '/en/OUTING/:token'],
+    ['encoded outing segment', `/en/%6Futing/${TOKEN}`, '/en/%6Futing/:token'],
+    ['encoded next', `/sign-in?next=%2Fen%2Fouting%2F${TOKEN}`, `/sign-in?next=${MASKED_VALUE}`],
+    ['raw next', `/sign-in?next=/en/outing/${TOKEN}`, `/sign-in?next=${MASKED_VALUE}`],
+    ['absolute raw next', `https://futari.example/sign-in?next=/en/outing/${TOKEN}&from=x`, `https://futari.example/sign-in?next=${MASKED_VALUE}&from=x`],
+    ['bare /outing stays', '/en/outing', '/en/outing'],
+    ['/outing/ with empty segment stays', '/en/outing/', '/en/outing/'],
+    ['plural /outings/<uuid> stays', '/outings/2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10', '/outings/2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10'],
+    ['plural /outings/<uuid>/edit stays', '/outings/2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10/edit', '/outings/2b1f6a1e-6c1d-4f8e-9a3c-0d5e7f8a9b10/edit'],
+  ])('%s', (_name, input, expected) => {
+    expect(sanitizeAnalyticsUrl(input)).toBe(expected)
+  })
+})

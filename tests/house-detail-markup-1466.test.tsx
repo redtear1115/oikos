@@ -21,7 +21,7 @@ vi.mock('@/app/(dashboard)/dashboard/_components/AddSheet', () => ({ AddSheet: (
 vi.mock('@/app/(dashboard)/assets/_components/AssetSheet', () => ({ AssetSheet: () => null }))
 vi.mock('@/actions/transaction', () => ({ loadMoreTransactionsForAsset: vi.fn() }))
 vi.mock('@/actions/asset', () => ({ revealHouseAddress: vi.fn() }))
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useMember: () => ({ isPast: false }) }))
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({ useBaseCurrency: () => 'twd', useMember: () => ({ isPast: false }) }))
 
 import type { ReactNode } from 'react'
 import { render } from '@testing-library/react'
@@ -43,7 +43,7 @@ function renderHouse(hasAddress: boolean) {
       assetId="house-1"
       name="我們的家"
       notes="備註"
-      details={{ owner: 'both', hasAddress, purchasedAt: '2020-01-01', purchasePrice: 12000000 }}
+      details={{ hasAddress, purchasedAt: '2020-01-01', purchasePrice: 12000000 }}
       summary={{ monthAmount: 1580, totalAmount: 5000 }}
       assetSheetInitial={{ id: 'house-1', type: 'house', name: '我們的家', houseHasAddress: hasAddress }}
       initialTxns={[]}

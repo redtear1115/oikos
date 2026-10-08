@@ -22,6 +22,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealCarPlate } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import type { FuelType } from '@/lib/fuel'
+import type { CarPrimaryUserView } from '@/lib/carMemberLink'
 import { unwrapAction } from '@/lib/action-errors'
 
 interface SerializedFuelLog {
@@ -39,7 +40,8 @@ interface Props {
   notes: string | null
   assetSheetInitial: AssetSheetInitial
   fuelType: FuelType | null
-  primaryUserId: string | null
+  /** #1589 — resolved on the server; a former primary user has no id here. */
+  primaryUser: CarPrimaryUserView
   brand: string | null
   model: string | null
   year: number | null
@@ -62,7 +64,7 @@ interface Props {
 }
 
 export function AssetDetailClient({
-  assetId, notes, assetSheetInitial, fuelType, primaryUserId,
+  assetId, notes, assetSheetInitial, fuelType, primaryUser,
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
   initialTxns, initialFuelLogs, pageSize, groups,
@@ -157,7 +159,8 @@ export function AssetDetailClient({
     id: assetId,
     name: assetSheetInitial.name,
     fuelType: fuelType ?? '95' as const,
-    primaryUserId,
+    primaryUserId: primaryUser.primaryUserId,
+    primaryUserIsFormer: primaryUser.primaryUserIsFormer,
   }
 
   // #826 — plate is PII; it never appears in the header subtitle. The masked

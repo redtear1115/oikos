@@ -43,6 +43,144 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.7.0] - 2026-10-08
+
+主題：**出遊．朋友從連結加入**——分享一條連結，朋友就能加入出遊、認領自己的名字、一起記帳與還款；同時把「有人離開帳本之後」的舊章節、名字、推播與資料保留整理成一致的規則（spec: after-leaving）。
+完整 diff：[v1.6.8...v1.7.0](https://github.com/redtear1115/oikos/compare/v1.6.8...v1.7.0)
+
+### 使用者可見變化
+
+- **v1.7.0 文案審稿結果套用（#1591 #1593）**
+  使用者：定期收支、邀請連結、保險／車輛／定期規則的「已離開」提示，en／ja 改用審稿後的說法；車輛提示改為「可以重新選擇」；規則恢復失敗依支出／收入分成兩句提示；隱私政策的共享帳本段落補上「月回顧留言」會留在對方帳本裡。
+  技術：`rule_person_not_member` 拆成 `rule_payer_not_member`／`rule_recipient_not_member`；zh-CN「愛物」「币别」更正；en 預設帳本名改 `Household ledger`；`monthlyReview.card2BodyNoName` 經核對與 `card2Body` 一致，未改。
+
+- **Android 網頁使用者會看到一次測試版邀請（#1553）**
+  使用者：用 Android 瀏覽器或已安裝的 PWA 開儀表板，會看到一張可關閉的卡片，邀請以 Play 商店的 Google 帳號報名 Android 測試版；點報名或關閉後不再出現（App 殼、iOS、桌面不顯示；en／ja 待確認 #1593）。
+  技術：`AndroidBetaInviteCard` 以 localStorage `futari_android_beta_invite_dismissed` 記一次性關閉，新增 `android_beta_invite_{shown,clicked,dismissed}`；Play 正式版上線後移除這張卡、`androidBetaInvite` 文案與三個事件。
+
+- **系統文字放到最大時，底部導覽、列表與趨勢圖不再擠壞（#1514）**
+  使用者：iOS 文字大小或 Android 字型比例拉到約 1.6–2 倍時，底部分頁名稱不再被截成「設…」（iOS 最多放大到 1.3 倍，Android 自動縮小）；帳目列的金額改排到說明下方，說明不再被擠成幾個字一行；每日趨勢圖最後的日期不再被切掉。
+  技術：新增 `--text-nav-label`（`--text-scale` 上限 1.3）；分頁與 `CompactRow` 以 em 單位的 container query 切換；趨勢圖日期改 HTML 並首尾貼齊；載入骨架的底部導覽改 `min-height`；DESIGN.md §3 補 `--text-scale` 小節。
+
+- **離開或被移除的成員不再卡在登入頁（#1603）**
+  使用者：曾停留在舊帳本某段過去時光的人離開或被移除後，會回到自己目前的帳本（沒有帳本則進入建立流程），不再在登入頁與首頁之間來回；「過去的時光」暫不列出已離開帳本的章節（#1612 會加回唯讀回顧）；登出會清掉停留的章節。
+  技術：`resolveViewerEpochContext` 只接受「名列該章節且仍是該群組 member_a／member_b」的 pin，`listEpochsForViewer` 套同一規則；layout 與月回顧的非成員分支改 `notFound()`、測驗頁在過去章節回 404；`signOut` 刪 `futari_past_epoch`。
+
+- **前伴侶（或已刪除帳號者）的定期規則會自動暫停（#1588）**
+  使用者：移除伴侶或對方刪除帳號後，歸屬他的定期收入／支出規則會暫停、他尚未處理的待確認卡片會移除，不會再每期冒出無法確認的卡；已記下的帳不動。要恢復得先把規則改成現有成員再恢復，否則會提示先修改。
+  技術：`removePartner` 同一筆交易與 `0086`（`process_account_deletions` 重定義＋既有資料一次性修復，會改 prod 資料、不可逆；依序跑在 0084、0085 之後，與本版程式碼一起上線即可，不需新欄位）依「人」暫停規則並刪除未處理卡；`resumeRule` 新增 `rule_person_not_member`（4 語；en／ja 待確認）。
+
+- **美金金額的換算與出遊結算不再差 100 倍（#1582）**
+  使用者：台幣帳本在旅行中記美金（$45 不再只記成 NT$14）、美金帳本用外幣記帳、出遊結束結算時，金額都是正確的整數；換算後不足 1 的小額記為 1，出遊結算不足 1 美元則不產生結算。
+  技術：`convertWholeUnits`（一次四捨五入、正數最小 1）取代 `convertAmount`；`endOuting` 以 `minorToWhole` 把 outing 最小單位換成整數單位；規格中「USD 以分儲存」的說法撤回。
+
+- **帳本幣別顯示跟著基準幣別（#1482）**
+  使用者：基準幣別不是台幣的帳本，儀表板、紀錄列、統計摘要、愛物頁與新增時的換算預覽會用對應的符號，$45 不會再顯示成 $0.45（輸入框、提示與月回顧見 #1584）。
+  技術：`formatLedgerAmount*`（整數單位、不除 100）與 `formatAmount*`（僅 outing 最小單位）分開；`useBaseCurrency()` 取代 `CompactRow`、統計錨點等處寫死的 `'twd'`／`NT$`，台幣帳本輸出不變。
+
+- **記一筆、結算、月回顧的金額符號跟著帳本幣別（#1584）**
+  使用者：美金等非台幣帳本記完一筆後的提示、收入／結算／定期規則的輸入框、待確認卡、離開群組前的未結清提示、月回顧卡片與保單滿期提示不再寫死 NT$；台幣帳本顯示不變。保單的金額欄位（年繳、保額、保單帳戶價值、滿期金額等）沒有幣別欄位，仍標 NT$（見 #1600）；愛物金額見 #1599。
+  技術：i18n 的 `NT$ {amount}` 改成只留 `{amount}`，由呼叫端帶入 `formatLedgerAmount`／`currencySymbol(baseCurrency)`（4 語同步，加上測試比對各語系佔位符）；月回顧快照沒有幣別欄位，以渲染時的群組 base currency 為準。
+
+- **愛物金額跟著帳本幣別（#1599）**
+  使用者：房屋購入價格、寵物購入費用、植物花費的詳情，以及汽車、加油、寵物、植物表單的金額單位，美金等非台幣帳本會顯示對應符號而不是 NT$；台幣帳本顯示不變，保單金額不在此列（見 #1600）。
+  技術：以 `useBaseCurrency()` 帶入 `currencySymbol`；詳情列新增 `formatLedgerAmountSpaced`（保留「符號＋空格＋數字」、整數單位不除 100）；金額仍是整數，不動 schema。
+
+- **每張保單有自己的幣別（#1600）**
+  使用者：保單可選 TWD／CNY／USD／JPY，列表、詳情與編輯表單的保費、保額、預估滿期金、帳戶價值都用保單自己的符號；保單幣別和帳本不同時，兩邊分開列出，不換算、不畫進度條、不預填滿期金，年繳總額也依幣別分開加總。
+  技術：`0085` 為 `InsuranceDetails` 加可為空的 `currency`（以所屬帳本基準幣別回填，空值讀作帳本幣別）；必須先於讀它的程式碼上 prod（0084 之後）；`editInsurance` 未帶幣別時保留既有值。
+
+- **簡單記帳搬家頁的搜尋標題改說「兩人同步、不用 VIP」（#1554）**
+  使用者：在 Google 搜尋「簡單記帳 同步」「永久 VIP」的人，標題與摘要直接看到兩支手機同步同一本帳、搬家不用先買 VIP；頁面內容與視覺不變。
+  技術：只改 `migrate.simple-daily-money` 的 `title`／`description`（4 語；en／ja 待確認）；四週後以 GSC 比較該頁 CTR（基準 2026-09-06～10-04：曝光 159、CTR 5.0%）。
+
+- **分類欄位寫入前先擋掉不合法的值（#1541）**
+  使用者：旅行支出與匯入不會再存進沒有圖示的分類；匯入檔裡的「還款」分類會改記為其他。
+  技術：`0084` 為五張表的 `category` 加 CHECK（先把不合法列改為 `other`）；`tripExpense` 新增 `category_invalid`，匯入的 `settle` 退回 `other`；`__tests__/categoryCheckDrift.test.ts` 比對程式與 SQL。
+
+- **定期規則存檔、預覽與刪除都有回饋（#1483）**
+  使用者：存好規則會跳「已儲存，下次在 …」；每月幾號下方預覽接下來三個日期，31 號等月底規則改用白話說明；刪除前會說明一起移除幾張待確認卡片。
+  技術：`createRule`／`updateRule` 多回 `nextOccurrenceAt`，新增 `countPendingForRule`、`previewNextDates`；dashboard 的 toast 抽成共用 `ToastProvider`；en／ja 譯文待確認。
+
+- **朋友打開出遊連結就能加入（#1558）**
+  使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
+  技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
+
+- **出遊詳情頁可以分享連結、看認領狀態、改支出（#1558）**
+  使用者：帳本成員可以複製與重設分享連結、看每個人未認領／已認領／已綁帳號並釋放或移除、改出遊名稱、編輯刪除支出與還款；出遊清單多了「我參與的出遊」。
+  技術：共用 `ExpenseSheet`／`SettlementList` 取代 `AddExpenseSheet`，供公開頁沿用；`getOutingDetail` 只多回 `claimedAt` 與 `hasClaimToken` 布林，profile id 不再傳到 client；en／ja 譯文待確認。
+
+- **登出不再被「移除這台裝置的推播」拖住（#1617）**
+  使用者：點「登出」時，移除這台裝置推播的步驟最多只多等約 2 秒；這一步沒完成也照樣登出並回到首頁。
+  技術：`signOut(token?)` 在同一個 server action 內先刪本機 push token（取 session 使用者、與查詢一起限時 2 秒、逾時或失敗略過），再登出；移除 `unregisterThisDevice`／`signOutThisDevice`；dashboard layout 只在釘選過去章節時多查一次目前帳本。
+
+### 技術變更
+
+- **正式站每日備份改在早上 08:00 跑（#1549）**
+  使用者：無直接變化；備份失敗時的通知不再被凌晨的睡眠模式收起來。
+  技術：launchd 範本 03:30→08:00；runbook 補上 prod 設定時踩到的雷（pooler 主機、dev 狀態檔、rclone scope 與 OAuth client、通知與專注模式）。
+
+- **首頁的 App Store 連結帶宣傳活動參數（#1555）**
+  使用者：無變化（同一個 App Store 頁面）。
+  技術：`APP_STORE_URL` 加上 `pt=128976951&ct=landing&mt=8`，App Store Connect「宣傳活動」報表才分得出 landing 導來的下載（至少 5 個 Apple 帳號安裝後才會顯示）。
+- **出遊的加入、認領與權限規則（#1558）**
+  使用者：畫面沒有變化；之後朋友從連結加入、認領名字、自己記帳與還款都走這些規則，出遊層級的操作只限開局帳本的成員。
+  技術：`lib/outing/access.ts` 判定成員／登入參與者／cookie 參與者；新增 join、bind、改名、停用參與者、取得與重設連結、釋放 slot、編輯刪除支出與還款等 action，被拒一律回傳 code；`outingPublic.ts` 分層讀取。
+
+- **出遊分享連結與認領的資料欄位（#1558）**
+  使用者：畫面沒有變化；之後「朋友從連結加入」用這些欄位。
+  技術：`0083` 加 `Outings.share_token_hash／_encrypted／_rotated_at` 與 `OutingParticipants.claim_token_hash／claimed_at`（token 只存 sha256 與綁 outing id 的密文，`lib/outing/tokens.ts`）；刪帳號時清 claim token 並保留 `claimed_at`。
+
+- **出遊分享連結的金鑰不會送到分析與錯誤追蹤工具（#1558）**
+  使用者：畫面沒有變化；朋友打開出遊分享連結時，連結裡的金鑰不會出現在 PostHog、Sentry、Vercel Insights，Google Analytics 在分享連結頁不載入。
+  技術：`urlSanitizer` 把 `outing/<token>` 跟 invite 一樣換成 `:token`（`/outings/<uuid>` 不動），Sentry 保留 `[shareToken]` 路由名；新增 `GoogleAnalyticsGate` 在 outing 路徑不渲染 GA，載入後導過去則設 `ga-disable-<id>`。
+
+### Security
+
+- **離開帳本的人不再收到這本帳的推播；登出會移除這台裝置的推播（#1605）**
+  使用者：被移除或離開的前伴侶不再收到原帳本「有待確認的定期收支」推播，離開、被移除、加入新帳本時推播跟著人走到現在的帳本；登出後這台手機不再收到你的推播，其他裝置不受影響，下次登入開啟首頁會重新註冊。
+  技術：`send-recurring-push` 只送給仍是該帳本 `member_a`／`member_b` 的 token（`memberTokens.ts`，需重新部署 Edge Function）；`0087` 讓 `PushTokens` 的 RLS 只接受綁到自己所在帳本的 token、並一次刪除非成員的 token（跑在 0086 之後，與 Edge Function 部署順序無關、互不依賴，無新 GRANT）；`removePartner`／`leaveGroup`／`acceptInvite` 同交易刪除或搬移 token；註冊改用目前帳本而非釘選章節；登出時刪除本機 token（逾時 2 秒、失敗不擋登出；#1617 併進 `signOut` 單一 action）。
+
+- **回看過去的時光時，對方是那段時間的伴侶（#1604）**
+  使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與首頁的「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
+  技術：layout 以 `getEpochMembers`（現在也回傳名字，唯一的章節成員名字來源）在 MemberContext 加章節身分，`useViewedPartner()` 供 CompactRow／TripDetail／BrandHeader／首頁篩選列／TransactionFeed 使用；`resolveViewedPair` 讓 `/records` 首屏與分頁 action 的「對方」都用章節成員；`viewerIsA` 仍取自目前群組列；釘選時不查餘額與待確認卡。
+
+- **舊章節裡的名字停在章節結束的那一刻（#1604）**
+  使用者：回看舊章節時，對方顯示的是那段章節結束時的名字，之後改名不會跟著變；月回顧、「過去的時光」與對方離開後的提示卡也一樣，舊章節不顯示對方頭像；回看舊章節時，篩選照那段章節是否兩人決定，設定選單不出現現在伴侶的名字與頭像；刪除帳號後，那個人在所有章節都顯示「已離開的夥伴」。
+  技術：`0088`（跑在 0087 之後，**必須在程式部署前先上 prod**，避開 UTC 16:00–17:30）為 `GroupEpochs` 加 `member_a_name`／`member_b_name` 與關閉時填入的 trigger，重定義 `process_account_deletions` 把刪除者的名字換掉，回填既有已關閉章節（0088 之前結束的章節用套用當天的名字）；`getEpochMembers`／`listEpochs*` 改讀快照；月回顧快照裡的付款人名字見 #1618。
+
+- **月回顧的「最大一筆」不再保存付款人的名字（#1618）**
+  使用者：月回顧的「最大一筆」只會用這段章節兩個人的名字標示付款人（舊章節是當時的名字，刪除帳號後是「已離開的夥伴」）；付款人不是這段章節的人或無法確認時不顯示名字，文案也不再出現「 付的」的空缺。
+  技術：`0089`（跑在 0088 之後，**在 prod 上緊接在程式部署前套用**，避開 UTC 16:00–17:30）為 `MonthlyReviewSnapshots` 加 `largest_expense_paid_by`、快照函式改存付款人 id，依計算當時的資料回填 id，再把既有快照裡的名字全部清成 NULL（移除個資，無法還原）；頁面只在伺服器端以章節成員解析名字，id 不送到前端；新增 `card2BodyNoName`（4 語；en／ja 待確認）。
+
+- **離開帳本後的新帳本不再以人名命名（#1622）**
+  使用者：離開帳本時自動建立的新帳本改叫「家計簿」（依介面語言），不再是「某某 的家計簿」；既有這類帳本一次改名為「家計簿」，自己取的名字不受影響，可在設定再改。
+  技術：`leaveGroup` 改用 `postLeave.newLedgerName`（4 語；en／ja 待確認），不再讀 Profiles；`0090`（跑在 0089 之後，**在 prod 上於程式部署之後套用**）只改資料、idempotent，把名字等於該帳本成員現名或章節快照名 +「 的家計簿」的帳本改為「家計簿」。
+
+- **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
+  使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
+  技術：`lib/insurancePolicyHolder.ts`（#1579 改名為 `lib/insuranceMemberLink.ts`）在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
+
+- **被保人、要保人已離開帳本時，保單資料不再帶出對方（#1579）**
+  使用者：保單頁與保單卡把離開的被保人顯示為「前伴侶」；編輯這張保單時要保人／被保人不預選、提示重新選擇，選好才能儲存，不再出現「必須是 group 成員」的錯誤，也不會默默改成自己。
+  技術：限保險：`lib/insuranceMemberLink.ts` 在伺服端剔除非成員（釘選舊章節的離開者以該章節成員為準、不標「前伴侶」）的 id 與名字，詳情頁（只經 `getInsuranceDetailsForViewer`）、編輯表單初值、`/assets` 清單都只收剔除後的資料；`editInsurance` 拒絕以空值覆蓋已存的要保人（`policyholder_required`）；不改資料；en／ja 譯文待確認。
+
+- **車子的主要使用人、房子的建立者已離開帳本時，頁面不再帶出對方（#1589）**
+  使用者：兩人帳本裡編輯這台車時，主要使用人不預選、提示重新選擇（單人帳本不顯示這個欄位）；不選直接儲存會保留原本的設定，不會默默變成「共用」；幫這台車記油錢時預設由自己付、不分攤。
+  技術：`lib/carMemberLink.ts` 沿用 #1579 的成員範圍，車子頁與 `getFuelLogById` 剔除非成員的 `primaryUserId`（改帶 `primaryUserIsFormer`）；`editCar` 收到 `primaryUserId: undefined` 時不動已存值；`getHouseDetails` 不再讀 `owner`；不改資料；en／ja 譯文待確認。
+
+- **定期收支的收入歸屬、付款人已離開帳本時，頁面不再帶出對方（#1588）**
+  使用者：定期規則與待確認卡片把離開的人顯示為「前伴侶」，不再掛上現在伴侶的名字；編輯這類規則或卡片時不預選、提示重新選擇，選好才能儲存（單人帳本會說明改記在你名下）；確認付款人已離開的卡片時，提示先「改一下」。
+  技術：`lib/recurringMemberLink.ts` 沿用 #1579 的成員範圍，儲蓄險頁、`/settings/recurring`、首頁待確認卡片只經 `lib/db/queries/recurringView.ts` 讀取，剔除非成員的 `recipientId`／`paidBy`／`proposedPaidBy`；`confirmPending`（支出）改回 `pending_former_member`；`updateRule` 維持只收現任成員；前伴侶的規則在列表上不顯示分攤標籤（`全部對方的` 會被讀成現在的伴侶）；`recipient_not_in_group` 文案改為「收入歸屬已離開這本帳本，請重新選擇。」（一般收入新增／編輯也共用）；不改資料；en／ja 譯文待確認。
+
+- **可以在設定讓已傳出的邀請連結失效（#1546）**
+  使用者：單人帳本有有效的邀請連結時，成員區塊多一個「讓邀請連結失效」，確認後舊連結打開會顯示「邀請連結已失效」；對方剛好先加入時會說明，不會顯示已失效。
+  技術：無參數的 `revokeOpenInvites()` 先鎖帳本列、鎖內重驗成員，只寫 `revoked_at`（沿用 createInvite 的取代條件），由 acceptInvite 的原子認領擋下；新增 `invite_revoked`（只帶 `group_id`、`count`）與 `group_full`／`inviter_not_member`／`invite_conflict` 錯誤文案；en／ja 譯文待確認。
+
+- **邀請連結的金鑰不會送到 Google Analytics（#1583）**
+  使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
+  技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
+
 ## [1.6.8] - 2026-10-06
 
 主題：**找得到，也留得住**——紀錄頁可以用文字搜尋；Apple 登入沒完成時說清楚下一步；正式站每日加密備份的腳本與唯讀角色就位，還原演練已在 dev 跑通。
@@ -1614,7 +1752,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.8...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/redtear1115/oikos/compare/v1.6.8...v1.7.0
 [1.6.8]: https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6

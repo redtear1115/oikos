@@ -8,7 +8,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
 import { addOutingParticipant } from '@/actions/outing'
-import { Field } from './sheetBits'
+import { Field } from '@/app/(dashboard)/outings/_components/sheetBits'
 
 interface Props {
   open: boolean

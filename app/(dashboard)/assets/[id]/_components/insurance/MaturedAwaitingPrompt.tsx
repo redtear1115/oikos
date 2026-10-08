@@ -1,6 +1,8 @@
 'use client'
 
 import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { currencySymbol } from '@/lib/currency'
 import { formatDateAbsolute } from '@/lib/format-date'
 
 interface Props {
@@ -21,6 +23,7 @@ export function MaturedAwaitingPrompt({
   const t = useTranslations()
   const locale = useLocale()
   const ts = t.assetDetail.savings
+  const baseCurrency = useBaseCurrency()
   return (
     <div
       className="px-5 pt-6 pb-7 text-center"
@@ -30,11 +33,10 @@ export function MaturedAwaitingPrompt({
         {ts.maturedAwaitingTitle.replace('{date}', formatDateAbsolute(maturityDate, locale))}
       </div>
 
-      {/* TODO(v0.17 currency): typographic split (small NT$ + large digits) +
-           premium template (maturedAwaitingPremiumNote) has "NT$" baked in —
-           defer migration until formatAmount supports digits-only mode. */}
+      {/* Typographic split (small symbol + large digits), so the symbol is set
+           apart from the digits; it follows the ledger base currency. */}
       <div className="mt-3 inline-flex items-baseline gap-1.5">
-        <span className="text-base font-medium text-ink-2">NT$</span>
+        <span className="text-base font-medium text-ink-2">{currencySymbol(baseCurrency)}</span>
         <span
           className="tabular-nums leading-none text-amount-lg font-numeric font-medium text-ink"
           style={{
@@ -59,7 +61,7 @@ export function MaturedAwaitingPrompt({
       {premiumCount > 0 && (
         <div className="mt-4 text-xs text-ink-3">
           {ts.maturedAwaitingPremiumNote
-            .replace('{total}', premiumTotal.toLocaleString())
+            .replace('{total}', `${currencySymbol(baseCurrency)} ${premiumTotal.toLocaleString()}`)
             .replace('{count}', String(premiumCount))}
         </div>
       )}

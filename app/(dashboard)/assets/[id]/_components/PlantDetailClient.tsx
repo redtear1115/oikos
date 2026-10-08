@@ -16,7 +16,8 @@ import { useTranslations } from '@/lib/i18n/client'
 import { daysSince } from '@/lib/age'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { formatLedgerAmountSpaced } from '@/lib/currency'
 import { unwrapAction } from '@/lib/action-errors'
 
 interface AssetSummary {
@@ -56,6 +57,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   const t = useTranslations()
   const td = t.assetDetail.plant
   const { isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -112,8 +114,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
       <SectionHeader>{td.sectionRecord}</SectionHeader>
       <InfoCard>
         <InfoRow label={td.sproutedAt} value={details?.sproutedAt ?? ''} mono />
-        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
-        <InfoRow label={td.cost} value={details?.cost ? `NT$ ${details.cost.toLocaleString()}` : ''} mono />
+        <InfoRow label={td.cost} value={details?.cost ? formatLedgerAmountSpaced(details.cost, baseCurrency) : ''} mono />
         <InfoRow label={td.location} value={details?.location ?? ''} />
         <InfoRow label={td.waterEvery} value={details?.waterEvery ? td.waterEveryValue.replace('{n}', String(details.waterEvery)) : ''} mono last />
       </InfoCard>

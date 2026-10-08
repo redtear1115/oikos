@@ -303,6 +303,19 @@ The exception is the **Amount tier**: `--font-numeric` is a system stack (`-appl
 1. **No inline `style` for token-covered values.** Static `fontSize`, `padding`, `margin`, `gap`, `borderRadius`, `z-index`, and color belong in utility classes, never in `style={{ … }}`. Inline `style` is reserved for genuinely dynamic values: computed transforms, data-driven dimensions, palette values resolved at runtime.
 2. **Never invent a token or a one-off value on your own.** If the existing scale genuinely cannot express what the design needs, stop and ask the user before adding a new font size, spacing step, radius, z-layer, or token. Prefer even-px when a new size is approved.
 
+### System text size (`--text-scale`, #1490 / #1514)
+
+The system text size reaches the app two ways, and only one of them is a variable. On **iOS** the shell sets `--text-scale` on `<html>` (dashboard only; ratio of `-apple-system-body` to 17px, capped at 2). On **Android** there is no variable — Chrome/WebView `textZoom` scales computed font sizes itself, root included, and CSS cannot bound it.
+
+- **Scales:** `text-xs / sm / base / lg / xl / mini` (`calc(rem * var(--text-scale, 1))`).
+- **Fixed:** `text-title / page / amount-md / amount-lg` and the fluid tiers. Spacing is rem-based Tailwind and does not follow either; anything that holds text grows by content (`min-h`, wrap), never a fixed height.
+- **Onboarding is deliberately outside the scope** (#1490): the variable is only set inside the dashboard layout.
+- **Bottom-nav label is the one capped tier:** `text-nav-label` = `text-sm` × `min(--text-scale, 1.3)`, like native iOS tab bars. Icons and nav height stay put; the `aria-label` carries the full name. On Android the label would grow to the full zoom, so the tab is an `@container` and, in **em** conditions, drops tracking below 4.5em and shrinks the label to 0.65em below 4em (about the same 1.3x look at font scale 2.0).
+- **List rows stack by container query, in em:** `CompactRow`'s grid sits in an `@container text-base` wrapper; below `16em` the amount (with its "≈" and my-share lines) moves under the description, right-aligned, instead of squeezing the description to a few characters per line. `text-base` on the container is what makes em track `--text-scale` on iOS; on Android the em is already zoomed. Use a `div` as the container, not a `<button>` (Chromium resolves em wrongly there).
+- **Charts:** axis labels are HTML, not SVG `<text>`, so they grow with text and can't clip; first tick start-anchored, last end-anchored.
+
+*Failure looks like: no error anywhere — tab labels ellipsised, a row description three characters wide, the last chart tick cut off, only on a phone set to a large text size.*
+
 ## 4. Elevation
 
 This system is **flat by default**. Depth comes from tonal layering (frame sand → cream ground → warm/white surface → hairline divider), not from drop shadows. There are no ambient card shadows; a card lifts by being Surface White on Lamplit Cream with a hairline, not by casting.

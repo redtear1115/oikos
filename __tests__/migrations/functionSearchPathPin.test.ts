@@ -193,16 +193,18 @@ describe('public function search_path pin (#1505)', () => {
   })
 
   // Negative controls on the real migrations, mutated in memory.
-  it('fails when 0077 loses its SET line (0061 regression shape)', () => {
+  // #1618: 0089 is now the latest CREATE OR REPLACE of this function, so the
+  // negative control mutates 0089 (a mutated 0077 is superseded by 0089).
+  it('fails when 0089 loses its SET line (0061 regression shape)', () => {
     const mutated = migrations.map((f) =>
-      f.file.startsWith('0077_')
+      f.file.startsWith('0089_')
         ? { ...f, sql: f.sql.replace(/^SET search_path = public, pg_temp\n/m, '') }
         : f,
     )
     expect(mutated).not.toEqual(migrations)
     const bad = findUnpinnedFunctions(mutated)
     expect(bad.map((b) => b.fn)).toEqual(['compute_monthly_review_snapshot'])
-    expect(bad[0].file).toMatch(/^0077_/)
+    expect(bad[0].file).toMatch(/^0089_/)
     expect(formatViolations(bad)).toContain('0061 undid 0042')
   })
 

@@ -9,9 +9,11 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { AssetSwitcher, type SwitcherGroup } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
-import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
+import { insuredDisplayName, type InsuranceDetailsView } from '@/lib/insuranceMemberLink'
 import { useTranslations } from '@/lib/i18n/client'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { currencySymbol, formatLedgerAmountSpaced } from '@/lib/currency'
+import { policyCurrency } from '@/lib/insuranceCurrency'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
@@ -30,7 +32,7 @@ interface Props {
   assetId: string
   name: string
   notes: string | null
-  details: InsuranceDetailsRow | null
+  details: InsuranceDetailsView | null
   linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
   allInsuranceGroups?: SwitcherGroup[]
@@ -41,6 +43,8 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
   const t = useTranslations()
   const td = t.assetDetail.insurance
   const { isPast } = useMember()
+  const baseCurrency = useBaseCurrency()
+  const currency = policyCurrency(details?.currency, baseCurrency)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const tint = useTint('insurance')
@@ -102,7 +106,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
               )}
             </div>
             <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: tint.accent }}>
-              {details?.annualPremium ? td.annualPremiumPrefix.replace('{amount}', details.annualPremium.toLocaleString()) : ''}
+              {details?.annualPremium ? td.annualPremiumPrefix.replace('{amount}', formatLedgerAmountSpaced(details.annualPremium, currency)) : ''}
               {details?.annualPremium && details?.termYears ? ` · ` : ''}
               {details?.termYears ? td.termYearsLine.replace('{n}', String(details.termYears)) : ''}
             </div>
@@ -110,18 +114,15 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
         ) : (
           <>
             <div className="text-xs tracking-[1.5px] uppercase mt-1 font-numeric" style={{ color: tint.accent }}>{td.annualPremiumLabel}</div>
-            {/* TODO(v0.17 currency): typographic split (small NT$ + large digits)
-                 + termAndSumLine i18n template has "NT$" baked in — defer
-                 migration until formatAmount supports digits-only mode. */}
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-              <span className="text-lg font-medium text-ink-2">NT$</span>
+              <span className="text-lg font-medium text-ink-2">{currencySymbol(currency)}</span>
               <span className="tabular-nums leading-none text-amount-lg font-numeric font-medium text-ink" style={{ letterSpacing: -1.5 }}>
                 {details?.annualPremium?.toLocaleString() ?? '—'}
               </span>
             </div>
             {details?.termYears && details?.sumInsured && (
               <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: tint.accent }}>
-                {td.termAndSumLine.replace('{n}', String(details.termYears)).replace('{sum}', details.sumInsured.toLocaleString())}
+                {td.termAndSumLine.replace('{n}', String(details.termYears)).replace('{sum}', formatLedgerAmountSpaced(details.sumInsured, currency))}
               </div>
             )}
           </>
@@ -154,7 +155,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <InfoCard>
         <InfoRow label={td.kind} value={details?.kind ? `${lookupKindLabel(details.kind, td)}${details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : ''}` : ''} />
         {/* #167 + #237 — display precedence: Child 愛物 > group member > freeform. */}
-        <InfoRow label={td.insured} value={details?.insuredChildName ?? details?.insuredUserDisplayName ?? details?.insured ?? ''} />
+        <InfoRow label={td.insured} value={details ? (insuredDisplayName(details, t.assets.insuranceList.policyHolderFormer) ?? '') : ''} />
         <InfoRow label={td.insurer} value={details?.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details?.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details?.payCycle, td)} last />

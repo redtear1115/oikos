@@ -7,7 +7,7 @@ import { groupByMonth } from '@/lib/groupByMonth'
 import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
 import { toWire, type TxnFilter, matchesFilter, type FilterableRow } from '@/lib/filter'
 import { useRealtimeEvents } from './RealtimeProvider'
-import { useMember } from './MemberContext'
+import { useMember, useViewedPartner } from './MemberContext'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -120,7 +120,9 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     })
   }
 
-  const { viewer, partner, isPast } = useMember()
+  const { viewer, isPast } = useMember()
+  // #1604 — 「對方」 in a filter means the viewed chapter's partner.
+  const { partner } = useViewedPartner()
 
   useRealtimeEvents((event) => {
     if (event.kind === 'reconnect') {

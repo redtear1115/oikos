@@ -1,9 +1,9 @@
 ---
-last_updated: 2026-08-12
+last_updated: 2026-10-08
 status: shipped
 first_shipped_in: v1.5.1
 related_specs: [native-auth, product]
-related_issues: ["#923", "#848"]
+related_issues: ["#923", "#848", "#1604", "#1618"]
 ---
 
 # Account Deletion（帳號刪除）
@@ -62,6 +62,15 @@ Google 另要求一個免登入、可達的 web 頁描述刪除途徑。現有 `
    - group 轉 solo 給另一半：刪除者是 member_a → 另一半從 B 升 A，並比照 `confirmSwap` 翻轉 `split_ratio_a` / `default_split_ratio_a` 並 recalc balance；刪除者是 member_b → 直接 `member_b = NULL`。
    - 關閉雙人 epoch、開另一半的 solo epoch、bump `current_epoch_started_at`（比照 `leaveGroup`）。
    - 刪 `auth.users`（移除登入 / email / provider 這些真正 PII），但**保留一個洗白的 `Profiles` 墓碑列**（displayName→「已離開的夥伴」、avatar→NULL），讓 `paid_by` / `recipient_id` 等 FK 仍解析得到。
+   - 已關閉的章節各自保存了兩人在關閉當時的名字（#1604，migration 0088）。刪除時，刪除者在**所有**帳本、所有章節裡的這個名字一律換成「已離開的夥伴」，包括很久以前離開的帳本，以及寬限期內被對方關掉的章節。墓碑列本身不夠：章節不再讀 `Profiles` 的名字。
+     - 失效的樣子：沒有任何錯誤；對方打開舊章節，看到的仍是刪除者的真名。
+   - 月回顧快照的「最大筆支出」不存名字，只存付款人 id（#1618，migration 0089）；頁面以該章節兩人的章節名字解析，所以刪除後同樣顯示「已離開的夥伴」，刪除流程不需要額外步驟。0089 把既有快照裡的名字全部清成 NULL；從 0089 之前的備份還原時要重跑這一步（[ops-runbook](../ops-runbook.md)「真正還原」第 7 步）。
+     - 失效的樣子：沒有任何錯誤；對方打開刪除者付過最大一筆的那個月，看到的仍是真名。
+   - 帳本名不取自任何人的名字（#1622，migration 0090）：`leaveGroup` 為離開者新建的帳本改用中性預設名（`postLeave.newLedgerName`，zh-TW「家計簿」），不再是「{displayName} 的家計簿」；0090 把既有這類帳本一次改名為「家計簿」。刪除流程不需要額外步驟，`process_account_deletions` 不動帳本名。
+     - 失效的樣子：沒有任何錯誤；對方（或之後的伴侶）在設定看到的帳本名仍帶著刪除者的真名。
+   - 不涵蓋（殘留，不改寫）：
+     - 使用者自己打的文字：帳本名、交易描述與備註、出遊／旅行／愛物名稱等，裡面可能寫了某個人的名字。這是使用者內容，刪除帳號時不會改寫。
+     - 加密的每日備份（#1549）在保存期限到之前仍留著舊的帳本名。從 0090 之前的備份還原時要重跑 0090（[ops-runbook](../ops-runbook.md)「真正還原」第 7 步）。
    - 未結 balance 在刪除時視為勾消（因不檔 settlement）；recalc 後 solo = 0。
 9. **Web 刪除 URL**：沿用 `/[locale]/privacy`，Play Console deletion URL 指向它；確保其刪除段落與實際 flow 一致（可選加 anchor 利於審核員尋找）。
 

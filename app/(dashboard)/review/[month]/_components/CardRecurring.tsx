@@ -1,11 +1,13 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
-import { CardShell, formatNT } from './CardShell'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
+import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
+import { CardShell, formatNT, formatRecapAmount } from './CardShell'
 
-export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }) {
+export function CardRecurring({ snapshot }: { snapshot: ClientReviewSnapshot }) {
   const t = useTranslations()
+  const baseCurrency = useBaseCurrency()
   const tr = t.monthlyReview
   const events = snapshot.recurringEvents
 
@@ -62,12 +64,12 @@ export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow
           >
             {snapshot.recurringTotalIncome > 0 && (
               <div>
-                {tr.card3IncomeTotal.replace('{amount}', formatNT(snapshot.recurringTotalIncome))}
+                {tr.card3IncomeTotal.replace('{amount}', formatRecapAmount(snapshot.recurringTotalIncome, baseCurrency))}
               </div>
             )}
             {snapshot.recurringTotalExpense > 0 && (
               <div>
-                {tr.card3ExpenseTotal.replace('{amount}', formatNT(snapshot.recurringTotalExpense))}
+                {tr.card3ExpenseTotal.replace('{amount}', formatRecapAmount(snapshot.recurringTotalExpense, baseCurrency))}
               </div>
             )}
           </div>

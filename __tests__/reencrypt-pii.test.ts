@@ -104,7 +104,7 @@ function legacyUnderK1(plaintext: string): string {
 }
 
 describe('reencrypt-pii — targets', () => {
-  it('covers all six encrypted columns with the pk the app binds into the AAD', () => {
+  it('covers all seven encrypted columns with the pk the app binds into the AAD', () => {
     expect(COLUMN_TARGETS.map((t) => `${t.table}.${t.column}:${t.pk}`)).toEqual([
       'Assets.name_encrypted:id',
       'CarDetails.plate_encrypted:asset_id',
@@ -112,6 +112,7 @@ describe('reencrypt-pii — targets', () => {
       'ChildDetails.id_number_encrypted:asset_id',
       'ChildDetails.insurance_id_encrypted:asset_id',
       'InvoiceCredentials.verification_code_encrypted:id',
+      'Outings.share_token_encrypted:id',
     ])
   })
 
@@ -176,7 +177,7 @@ describe('reencrypt-pii — apply', () => {
 
     const r = await reencrypt(db, { apply: true, writeKid: 'k2' })
     expect(r.aborted).toBeNull()
-    expect(r.columns.map((c) => c.rewritten)).toEqual([1, 1, 1, 1, 1, 1])
+    expect(r.columns.map((c) => c.rewritten)).toEqual([1, 1, 1, 1, 1, 1, 1])
     expect(exitCodeFor(r)).toBe(0)
 
     for (const t of COLUMN_TARGETS) {
@@ -204,7 +205,7 @@ describe('reencrypt-pii — apply', () => {
 
     const second = await reencrypt(db, { apply: true, writeKid: 'k2' })
     expect(second.columns.every((c) => c.toRewrite === 0 && c.rewritten === 0)).toBe(true)
-    expect(second.columns.map((c) => c.current)).toEqual([1, 1, 1, 1, 1, 1])
+    expect(second.columns.map((c) => c.current)).toEqual([1, 1, 1, 1, 1, 1, 1])
     expect(db.casCalls).toBe(writesBefore)
     expect(JSON.stringify([...db.data].map(([k, m]) => [k, [...m]]))).toBe(snapshot)
   })
@@ -217,7 +218,7 @@ describe('reencrypt-pii — apply', () => {
 
     setKeyEnv({ key: K1, keys: `k2:${K2},k3:${K3}`, writeKid: 'k3' })
     const r = await reencrypt(db, { apply: true, writeKid: 'k3' })
-    expect(r.columns.map((c) => c.rewritten)).toEqual([1, 1, 1, 1, 1, 1])
+    expect(r.columns.map((c) => c.rewritten)).toEqual([1, 1, 1, 1, 1, 1, 1])
     for (const t of COLUMN_TARGETS) {
       for (const [pk, ct] of db.data.get(keyOf(t))!) {
         expect(ct.startsWith('v1:k3:')).toBe(true)
@@ -274,7 +275,7 @@ describe('reencrypt-pii — guards that must write nothing', () => {
     const before = JSON.stringify([...db.data].map(([k, m]) => [k, [...m]]))
     const r = await reencrypt(db, { apply: false, writeKid: 'k2' })
     expect(r.mode).toBe('dry-run')
-    expect(r.columns.map((c) => c.toRewrite)).toEqual([1, 1, 1, 1, 1, 1])
+    expect(r.columns.map((c) => c.toRewrite)).toEqual([1, 1, 1, 1, 1, 1, 1])
     expect(db.casCalls).toBe(0)
     expect(JSON.stringify([...db.data].map(([k, m]) => [k, [...m]]))).toBe(before)
   })
@@ -340,8 +341,8 @@ describe('reencrypt-pii — guards that must write nothing', () => {
     setKeyEnv({ key: K1, writeKid: 'k1' })
     const r = await reencrypt(db, { apply: false, writeKid: 'k1' })
     expect(r.aborted).toBe('preflight')
-    expect(r.columns.map((c) => c.preflightFailed)).toEqual([1, 1, 1, 1, 1, 1])
-    expect(r.columns.map((c) => c.toRewrite)).toEqual([0, 0, 0, 0, 0, 0])
+    expect(r.columns.map((c) => c.preflightFailed)).toEqual([1, 1, 1, 1, 1, 1, 1])
+    expect(r.columns.map((c) => c.toRewrite)).toEqual([0, 0, 0, 0, 0, 0, 0])
     expect(db.casCalls).toBe(0)
   })
 })
@@ -475,12 +476,12 @@ describe('reencrypt-pii — main() end to end with a mocked DB', () => {
       connect,
     )
     expect(applied).toBe(0)
-    expect(db.casCalls).toBe(6)
+    expect(db.casCalls).toBe(7)
     const after = [...db.data.values()].flatMap((m) => [...m.values()])
     expect(after.every((ct) => ct.startsWith('v1:k2:'))).toBe(true)
 
     const printed = out.join('\n')
-    expect(printed).toContain('done: rewritten=6 raced=0 failed=0')
+    expect(printed).toContain('done: rewritten=7 raced=0 failed=0')
     for (const s of [...secrets, ...after, ...plain.values(), K1, K2, 'pw', 'v1|']) {
       expect(printed).not.toContain(s)
     }

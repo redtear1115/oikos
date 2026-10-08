@@ -9,9 +9,14 @@ import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_componen
 interface PayerToggleProps {
   value: 'M' | 'T'
   onChange: (who: 'M' | 'T') => void
+  /** #1588 — no segment selected: the stored payer left the ledger and the
+   *  user has to pick again. `value` is ignored while this is set. */
+  unresolved?: boolean
+  /** id of the hint shown under the toggle while unresolved. */
+  describedBy?: string
 }
 
-export function PayerToggle({ value, onChange }: PayerToggleProps) {
+export function PayerToggle({ value, onChange, unresolved = false, describedBy }: PayerToggleProps) {
   const { viewer, partner, viewerIsA } = useMember()
   const t = useTranslations()
   const labelId = useId()
@@ -29,11 +34,14 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
       <div
         role="radiogroup"
         aria-labelledby={labelId}
+        aria-describedby={describedBy}
         onKeyDown={onRadioGroupKeyDown}
         className="inline-flex rounded-full p-[3px] gap-0.5"
         style={{ background: 'var(--toggle-segment-track)' }}
       >
-        {(['M', 'T'] as const).map((w) => (
+        {(['M', 'T'] as const).map((w) => {
+          const sel = !unresolved && value === w
+          return (
           // Visible segment stays h-7; the ::before extends the tap area to
           // 44px vertically (h-7 + 2×8px) without moving layout — same trick
           // as MonthSwitcher / BalanceHero (#147).
@@ -41,14 +49,14 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
             key={w}
             type="button"
             role="radio"
-            aria-checked={value === w}
-            tabIndex={rovingTabIndex(value === w, w === 'M', true)}
+            aria-checked={sel}
+            tabIndex={rovingTabIndex(sel, w === 'M', !unresolved)}
             onClick={() => onChange(w)}
             className="oik-segment relative min-h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
             style={{
-              background: value === w ? 'var(--toggle-segment-thumb)' : 'transparent',
-              color: value === w ? 'var(--ink)' : 'var(--ink-2)',
-              boxShadow: value === w ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+              background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+              color: sel ? 'var(--ink)' : 'var(--ink-2)',
+              boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
               transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
             }}
           >
@@ -64,7 +72,8 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
             </span>
             {w === 'M' ? t.common.me : t.common.partner}
           </button>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

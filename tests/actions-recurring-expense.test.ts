@@ -60,7 +60,7 @@ describe('createRule', () => {
       assetId: null,
     })
 
-    expect(out).toEqual({ ok: true, data: { id: 'rule-1' } })
+    expect(out).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-06-01' } })
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
     expect(values.amount).toBe(25000)
@@ -274,7 +274,7 @@ describe('updateRule', () => {
       startsOn: '2026-05-01',
       endsOn: null,
       assetId: null,
-    })).toEqual({ ok: true, data: { id: 'rule-1' } })
+    })).toEqual({ ok: true, data: { id: 'rule-1', nextOccurrenceAt: '2026-06-05' } })
 
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setCall.dayOfMonth).toBe(5)
@@ -306,10 +306,20 @@ describe('pauseRule', () => {
 })
 
 describe('resumeRule', () => {
+  it('refuses a rule whose person left the ledger (#1588) and writes nothing', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'rule-1', groupId: GROUP.id, paidBy: 'former-user',
+      nextOccurrenceAt: '2026-02-01', intervalMonths: 1, dayOfMonth: 1,
+    }])
+    expect(await resumeRule('rule-1')).toMatchObject({ ok: false, code: 'rule_payer_not_member' })
+    expect(mockBuilder.set).not.toHaveBeenCalled()
+  })
+
   it('clears paused_at AND snaps next_occurrence to future when in past', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
-      id: 'rule-1', groupId: GROUP.id,
+      id: 'rule-1', groupId: GROUP.id, paidBy: 'user-a',
       nextOccurrenceAt: '2026-02-01',
       intervalMonths: 1, dayOfMonth: 1,
     }])
@@ -332,7 +342,7 @@ describe('resumeRule', () => {
     const futureFirst = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
     queueDbResult([GROUP])
     queueDbResult([{
-      id: 'rule-1', groupId: GROUP.id,
+      id: 'rule-1', groupId: GROUP.id, paidBy: 'user-a',
       nextOccurrenceAt: futureFirst, intervalMonths: 1, dayOfMonth: 1,
     }])
     queueDbResult([{ id: 'rule-1' }])
@@ -401,7 +411,8 @@ describe('confirmPending', () => {
     expect(await confirmPending('pend-x')).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 
-  it('returns race error code when proposedPaidBy left the group', async () => {
+  // #1588 — a former payer is not a race; the card asks for 「改一下」.
+  it('returns pending_former_member when proposedPaidBy left the group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{
@@ -412,8 +423,8 @@ describe('confirmPending', () => {
       category: 'housing', assetId: null,
     }])
 
-    expect(await confirmPending('pend-1')).toEqual({ ok: false, code: 'pending_expense_partner_handled' })
-    // No insert / update should have run when race-guard fired
+    expect(await confirmPending('pend-1')).toEqual({ ok: false, code: 'pending_former_member' })
+    // No insert / update should have run when the guard fired
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 })

@@ -15,6 +15,8 @@ import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { FuelType } from '@/lib/fuel'
 import { action, actionError } from '@/lib/action-errors'
+import { memberLinkScope } from '@/lib/insuranceMemberLink'
+import { resolveCarPrimaryUser } from '@/lib/carMemberLink'
 
 /**
  * Atomic dual-write for a new fuel-up event:
@@ -340,7 +342,10 @@ export interface FuelLogDetail {
   loggedAt: string    // ISO
   carName: string
   carFuelType: FuelType | null
+  /** #1589 — null when 共用 OR when the stored primary user left the ledger
+   *  (then `carPrimaryUserIsFormer` is true and their id is not sent). */
   carPrimaryUserId: string | null
+  carPrimaryUserIsFormer: boolean
 }
 
 /**
@@ -380,6 +385,12 @@ export const getFuelLogById = action(async (id: string): Promise<FuelLogDetail |
 
   if (!row || row.assetGroupId !== group.id) return null
 
+  // #1589 — the viewer's active group is one they are a current member of
+  // (getActiveGroupForUser), and the row is in that group: the allowed set is
+  // its current members. An ex-partner's id is dropped, not returned.
+  const scope = memberLinkScope([group.memberA, group.memberB], user.id, true)
+  const primaryUser = resolveCarPrimaryUser(row.carPrimaryUserId, scope)
+
   return {
     id: row.id,
     assetId: row.assetId,
@@ -390,6 +401,7 @@ export const getFuelLogById = action(async (id: string): Promise<FuelLogDetail |
     loggedAt: row.loggedAt instanceof Date ? row.loggedAt.toISOString() : String(row.loggedAt),
     carName: row.assetName,
     carFuelType: row.carFuelType,
-    carPrimaryUserId: row.carPrimaryUserId,
+    carPrimaryUserId: primaryUser.primaryUserId,
+    carPrimaryUserIsFormer: primaryUser.primaryUserIsFormer,
   }
 })

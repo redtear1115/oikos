@@ -9,7 +9,21 @@ export const PUBLIC_LOCALIZED_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as
  * (e.g. /migrate/<source>) — listed here so proxy + LanguageSwitcher treat
  * the whole subtree as anonymous-public without re-listing every page.
  */
-export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate', '/use-case'] as const
+export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate', '/use-case', '/outing'] as const
+
+/**
+ * 出遊分享連結（#1558）：`/outing/<shareToken>` 與 `/outing/r/<outingId>`，
+ * 有無 locale prefix 皆是。這是 app/[locale] 底下唯一「讀 session」的公開頁：
+ * 匿名可看，已登入者認得出自己。proxy 對它略過未登入導轉，但仍呼叫
+ * getUser() refresh session（不導轉）。
+ *
+ * 失效的樣子：這裡判斷錯了不會報錯——已登入的朋友在出遊頁上 session 過期後
+ * 靜默地變回「匿名」，看不到自己綁定的名字，也不會被導去登入。
+ */
+export function isOutingPublicPath(pathname: string): boolean {
+  const stripped = stripLocaleFromPath(pathname)
+  return stripped === '/outing' || stripped.startsWith('/outing/')
+}
 
 /** URL 第一段若是 supported locale 則回傳之，否則 null。 */
 export function parseLocaleFromPath(pathname: string): Locale | null {
