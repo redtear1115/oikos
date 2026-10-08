@@ -603,6 +603,13 @@
       "when": 1784300000000,
       "tag": "0087_push_token_membership",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1784400000000,
+      "tag": "0088_epoch_name_snapshot",
+      "breakpoints": true
     }
   ]
 }

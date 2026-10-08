@@ -91,6 +91,17 @@ export const groupEpochs = pgTable('GroupEpochs', {
   memberAId: uuid('member_a_id').notNull().references(() => profiles.id),
   memberBId: uuid('member_b_id').references(() => profiles.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // #1604 part 2 (0088) — each member's display name, frozen when the chapter
+  // closed (trigger GroupEpochs_snapshot_member_names; account deletion sets
+  // the deleted user's slots to 「已離開的夥伴」). NULL while the chapter is
+  // open or the slot is empty. Read them only through `getEpochMembers` /
+  // `listEpochs*` (lib/db/queries/epoch.ts), which fall back to the live name
+  // while NULL. Never hand a raw GroupEpochs row to a client prop.
+  // ORDER: 0088 must be applied before code that knows these columns runs —
+  // `db.select().from(groupEpochs)` names every column, and against a database
+  // without them every dashboard request fails with "column does not exist".
+  memberAName: text('member_a_name'),
+  memberBName: text('member_b_name'),
 })
 
 export const groupInvites = pgTable('GroupInvites', {

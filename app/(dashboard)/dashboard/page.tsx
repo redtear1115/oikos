@@ -5,13 +5,10 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { UI_PREF_COOKIE, parseBoolCookie } from '@/lib/uiPrefsCookie'
-import { db } from '@/lib/db/client'
-import { profiles } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
 import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
 import { listTransactionsPaged, monthlyStatsByCategory } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochContext, getLatestPriorClosedEpoch, getEpochMembers } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
 import { listExpensePendingsForViewer, listIncomePendingsForViewer } from '@/lib/db/queries/recurringView'
@@ -178,13 +175,13 @@ export default async function DashboardPage() {
     priorClosedEpoch.memberAId === user.id &&
     epochWindow.epochId
   ) {
-    const [leaverProfile] = await db
-      .select({ displayName: profiles.displayName })
-      .from(profiles)
-      .where(eq(profiles.id, priorClosedEpoch.memberBId))
-      .limit(1)
+    // #1604 part 2 — the name the partner had when that chapter closed (its
+    // snapshot), through the one chapter-name source; never today's profile
+    // name. The chapter is this group's and the viewer is its member_a
+    // (getEpochMembers' caller contract).
+    const closedChapter = await getEpochMembers(priorClosedEpoch.id)
     partnerLeftProps = {
-      partnerName: leaverProfile?.displayName ?? '',
+      partnerName: closedChapter?.memberBName ?? '',
       currentEpochId: epochWindow.epochId,
     }
   }

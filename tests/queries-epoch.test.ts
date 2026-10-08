@@ -21,6 +21,7 @@ function setCookie(key: string, value: string | null) {
 }
 
 import {
+  getEpochMembers,
   listEpochsForViewer,
   resolveViewerEpochContext,
   PAST_EPOCH_COOKIE,
@@ -315,5 +316,64 @@ describe('resolveViewerEpochContext', () => {
 
     const context = await resolveViewerEpochContext(VIEWER)
     expect(context).toBeNull()
+  })
+})
+
+// ─── #1604 part 2: a closed chapter shows the names frozen at its close ─────
+// Failure this guards: nothing errors; a chapter that is over keeps picking up
+// whatever name the other person chose later.
+describe('chapter names (#1604 part 2)', () => {
+  const closedWith = (a: string | null, b: string | null) => epochRow({
+    id: 'ep-closed', groupId: 'grp-1',
+    memberAId: STAYER, memberBId: VIEWER,
+    startedAt: new Date('2025-01-01T00:00:00Z'),
+    endedAt: new Date('2025-06-01T00:00:00Z'),
+    memberAName: a, memberBName: b,
+  })
+
+  it('getEpochMembers: a closed chapter returns its snapshot and reads no live profile', async () => {
+    queueDbResult([closedWith('Stayer at close', 'Leaver at close')])
+    const m = await getEpochMembers('ep-closed')
+    expect(m).toEqual({
+      memberAId: STAYER, memberBId: VIEWER,
+      memberAName: 'Stayer at close', memberBName: 'Leaver at close',
+    })
+    // Only the GroupEpochs read: the live (later) names are never consulted.
+    expect(mockDb.select).toHaveBeenCalledTimes(1)
+  })
+
+  it('getEpochMembers: a NULL snapshot slot falls back to the live name for that slot only', async () => {
+    queueDbResult([closedWith('Stayer at close', null)])
+    queueDbResult([profileRow(VIEWER, 'Leaver live')])
+    const m = await getEpochMembers('ep-closed')
+    expect(m).toMatchObject({ memberAName: 'Stayer at close', memberBName: 'Leaver live' })
+  })
+
+  it('getEpochMembers: an open chapter uses live names even if a column holds a value', async () => {
+    queueDbResult([epochRow({ id: 'ep-open', memberAId: STAYER, memberBId: VIEWER, endedAt: null, memberAName: 'stale', memberBName: null })])
+    queueDbResult([profileRow(STAYER, 'Stayer live'), profileRow(VIEWER, 'Leaver live')])
+    const m = await getEpochMembers('ep-open')
+    expect(m).toMatchObject({ memberAName: 'Stayer live', memberBName: 'Leaver live' })
+  })
+
+  it('listEpochsForViewer: closed rows carry their snapshot, the open row the live name', async () => {
+    const open = epochRow({
+      id: 'ep-open', groupId: 'grp-1', memberAId: STAYER, memberBId: null,
+      startedAt: new Date('2025-06-01T00:00:00Z'), endedAt: null, memberAName: null, memberBName: null,
+    })
+    queueDbResult([open, closedWith('Stayer at close', '已離開的夥伴')])
+    queueDbResult([profileRow(STAYER, 'Stayer renamed')])
+    const rows = await listEpochsForViewer(STAYER)
+    expect(rows.find((r) => r.id === 'ep-closed')).toMatchObject({
+      memberAName: 'Stayer at close', memberBName: '已離開的夥伴',
+    })
+    expect(rows.find((r) => r.id === 'ep-open')).toMatchObject({ memberAName: 'Stayer renamed', memberBName: null })
+  })
+
+  it('listEpochsForViewer: only closed chapters with snapshots → no Profiles read', async () => {
+    queueDbResult([closedWith('Stayer at close', 'Leaver at close')])
+    const rows = await listEpochsForViewer(STAYER)
+    expect(rows[0]).toMatchObject({ memberAName: 'Stayer at close', memberBName: 'Leaver at close' })
+    expect(mockDb.select).toHaveBeenCalledTimes(1)
   })
 })
