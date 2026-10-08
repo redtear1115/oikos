@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
+import { zhTW } from '@/lib/i18n/locales/zh-TW'
 import { ExpenseSheet } from '@/app/(dashboard)/outings/_components/ExpenseSheet'
 import { EndOutingSheet } from '@/app/(dashboard)/outings/[id]/_components/EndOutingSheet'
 
@@ -50,10 +51,27 @@ describe('#1396 EndOutingSheet has one commit', () => {
   it('shows only the red end button, no header save', () => {
     render(
       <I18nWrapper>
-        <EndOutingSheet open outingId="o1" onClose={() => {}} />
+        <EndOutingSheet open outingId="o1" currency="twd" foldPreview={0} onClose={() => {}} />
       </I18nWrapper>,
     )
     expect(screen.getByRole('button', { name: '結束出遊' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: '儲存' })).toBeNull()
+  })
+
+  it('previews the fold line next to the confirm body only when something folds', () => {
+    const { unmount } = render(
+      <I18nWrapper>
+        <EndOutingSheet open outingId="o1" currency="twd" foldPreview={2750} onClose={() => {}} />
+      </I18nWrapper>,
+    )
+    expect(document.body.textContent).toContain(zhTW.outing.coupleFoldNote.replace('{amount}', 'NT$2,750'))
+    unmount()
+
+    render(
+      <I18nWrapper>
+        <EndOutingSheet open outingId="o1" currency="twd" foldPreview={0} onClose={() => {}} />
+      </I18nWrapper>,
+    )
+    expect(document.body.textContent).not.toContain(zhTW.outing.coupleFoldNote.split('{amount}')[0])
   })
 })
