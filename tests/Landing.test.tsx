@@ -110,7 +110,7 @@ describe('Landing — device-dependent primary CTA (#1413)', () => {
     const links = await screen.findAllByText(zhTW.landing.appStoreCta)
     expect(links.length).toBeGreaterThan(0)
     for (const link of links) {
-      expect(link.closest('a')).toHaveAttribute('href', 'https://apps.apple.com/app/id6779264784')
+      expect(link.closest('a')).toHaveAttribute('href', 'https://apps.apple.com/app/id6779264784?pt=128976951&ct=landing&mt=8')
     }
     expect(screen.getByText(zhTW.landing.appStoreCtaHint)).toBeInTheDocument()
   })
