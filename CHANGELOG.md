@@ -41,16 +41,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### 技術變更
+_Nothing unreleased yet._
 
-- **正式站每日備份改在早上 08:00 跑（#1549）**
-  使用者：無直接變化；備份失敗時的通知不再被凌晨的睡眠模式收起來。
-  技術：launchd 範本 03:30→08:00；runbook 補上 prod 設定時踩到的雷（pooler 主機、dev 狀態檔、rclone scope 與 OAuth client、通知與專注模式）。
+## [1.7.0] - 2026-10-08
 
-## [1.6.8] - 2026-10-06
-
-主題：**找得到，也留得住**——紀錄頁可以用文字搜尋；Apple 登入沒完成時說清楚下一步；正式站每日加密備份的腳本與唯讀角色就位，還原演練已在 dev 跑通。
-完整 diff：[v1.6.7...v1.6.8](https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8)
+主題：**出遊．朋友從連結加入**——分享一條連結，朋友就能加入出遊、認領自己的名字、一起記帳與還款；同時把「有人離開帳本之後」的舊章節、名字、推播與資料保留整理成一致的規則（spec: after-leaving）。
+完整 diff：[v1.6.8...v1.7.0](https://github.com/redtear1115/oikos/compare/v1.6.8...v1.7.0)
 
 ### 使用者可見變化
 
@@ -110,18 +106,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：朋友從分享連結選自己的名字（或加上自己）就能加入，不用登入；之後看得到淨額、誰付給誰，可以新增、編輯、刪除支出，記還款與刪除還款，結束的出遊只能查看；登入的朋友確認「這是你嗎」後連到帳號。
   技術：`app/[locale]/outing/[shareToken]` 與續看路由 `outing/r/[outingId]`，支出與還款沿用 dashboard 的 `ExpenseSheet`／`SettlementList`，新增 `outing_expense_added`（只帶 `actor`）；兩種路徑形式都送 `Referrer-Policy: no-referrer`、noindex、`private, no-store`、`frame-ancestors 'none'`；proxy 在該路徑 refresh session 不導轉；robots 擋 `/outing/`；登入歸因新增 `from=outing`。
 
-- **紀錄頁可以搜尋描述與備註（#23）**
-  使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
-  技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。
-
-- **隱私權政策寫明加密備份存放在 Google Drive（#1549）**
-  使用者：隱私權政策 4 語更新：每日加密備份存放在 Google Drive，最多保留約 60 天，第三方服務加列 Google Drive。
-  技術：`privacyPage` 的儲存、保留、第三方段落與 `lastUpdated`（2026-10-04）；en／ja 譯文待確認。
-
-- **iOS 的 Apple 登入改走瀏覽器後沒完成，會提示可以再試（#1552）**
-  使用者：登入頁說明 Apple 登入沒有完成、可以再試或改用 Google，並提醒用 Apple 建立的帳本不會出現在 Google 帳號裡。
-  技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤；en／ja 譯文已確認（#1556）。
-
 - **出遊詳情頁可以分享連結、看認領狀態、改支出（#1558）**
   使用者：帳本成員可以複製與重設分享連結、看每個人未認領／已認領／已綁帳號並釋放或移除、改出遊名稱、編輯刪除支出與還款；出遊清單多了「我參與的出遊」。
   技術：共用 `ExpenseSheet`／`SettlementList` 取代 `AddExpenseSheet`，供公開頁沿用；`getOutingDetail` 只多回 `claimedAt` 與 `hasClaimToken` 布林，profile id 不再傳到 client；en／ja 譯文待確認。
@@ -131,6 +115,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：`signOut(token?)` 在同一個 server action 內先刪本機 push token（取 session 使用者、與查詢一起限時 2 秒、逾時或失敗略過），再登出；移除 `unregisterThisDevice`／`signOutThisDevice`；dashboard layout 只在釘選過去章節時多查一次目前帳本。
 
 ### 技術變更
+
+- **正式站每日備份改在早上 08:00 跑（#1549）**
+  使用者：無直接變化；備份失敗時的通知不再被凌晨的睡眠模式收起來。
+  技術：launchd 範本 03:30→08:00；runbook 補上 prod 設定時踩到的雷（pooler 主機、dev 狀態檔、rclone scope 與 OAuth client、通知與專注模式）。
 
 - **首頁的 App Store 連結帶宣傳活動參數（#1555）**
   使用者：無變化（同一個 App Store 頁面）。
@@ -142,14 +130,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **出遊分享連結與認領的資料欄位（#1558）**
   使用者：畫面沒有變化；之後「朋友從連結加入」用這些欄位。
   技術：`0083` 加 `Outings.share_token_hash／_encrypted／_rotated_at` 與 `OutingParticipants.claim_token_hash／claimed_at`（token 只存 sha256 與綁 outing id 的密文，`lib/outing/tokens.ts`）；刪帳號時清 claim token 並保留 `claimed_at`。
-
-- **正式站資料庫每天自動備份（#1549）**
-  使用者：畫面沒有變化；資料庫出事時有最近 30 天內的備份可以還原。
-  技術：`0081` 建唯讀角色 `futari_backup`；`scripts/ops/backup-prod.sh` 以同一快照 `pg_dump` 串流 age 加密後 rclone 上傳 Drive，附還原演練腳本；ops-runbook 新增一節。
-
-- **正式站每日加密備份的腳本與唯讀角色就位（#1549）**
-  使用者：畫面沒有變化；prod 排程上線後，資料庫出事時有最近 30 天內的備份可以還原。
-  技術：`0081` 唯讀角色 `futari_backup`、`0082` 以 `backup_auth` 整列 jsonb view 讀登入身分；`backup-prod.sh` 同一快照 dump＋age 加密＋rclone 上傳，附還原演練腳本（dev 演練已通過）。
 
 - **出遊分享連結的金鑰不會送到分析與錯誤追蹤工具（#1558）**
   使用者：畫面沒有變化；朋友打開出遊分享連結時，連結裡的金鑰不會出現在 PostHog、Sentry、Vercel Insights，Google Analytics 在分享連結頁不載入。
@@ -200,6 +180,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **邀請連結的金鑰不會送到 Google Analytics（#1583）**
   使用者：畫面沒有變化；打開邀請連結、或未登入時被帶到登入頁，連結裡的金鑰不再出現在 Google Analytics 的網址與來源報表。
   技術：`GoogleAnalyticsGate` 以 `useSearchParams()`（自帶 Suspense）判斷，`/invite/<token>` 與 `next` 指向 invite／outing 的頁面不載 GA，載入後碰過就維持 `ga-disable-<id>` 到下次整頁載入；`/invite/*` 與帶 token `next` 的登入頁送 `Referrer-Policy: no-referrer`，metadata 另加 meta。
+
+## [1.6.8] - 2026-10-06
+
+主題：**找得到，也留得住**——紀錄頁可以用文字搜尋；Apple 登入沒完成時說清楚下一步；正式站每日加密備份的腳本與唯讀角色就位，還原演練已在 dev 跑通。
+完整 diff：[v1.6.7...v1.6.8](https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8)
+
+### 使用者可見變化
+
+- **紀錄頁可以搜尋描述與備註（#23）**
+  使用者：紀錄頁右上角的搜尋按鈕可依描述、備註、收入來源、還款備註找紀錄，範圍沿用目前的月份與篩選，取消後回到原本的畫面。
+  技術：`?search=1`＋`?q=` 進 `TxnFilter.text`，各查詢與統計卡以綁定參數的 `ILIKE … ESCAPE` 比對；實時新增也依文字過濾；`loadMoreIncomes` 改用共用 resolver。
+
+- **隱私權政策寫明加密備份存放在 Google Drive（#1549）**
+  使用者：隱私權政策 4 語更新：每日加密備份存放在 Google Drive，最多保留約 60 天，第三方服務加列 Google Drive。
+  技術：`privacyPage` 的儲存、保留、第三方段落與 `lastUpdated`（2026-10-04）；en／ja 譯文待確認。
+
+- **iOS 的 Apple 登入改走瀏覽器後沒完成，會提示可以再試（#1552）**
+  使用者：登入頁說明 Apple 登入沒有完成、可以再試或改用 Google，並提醒用 Apple 建立的帳本不會出現在 Google 帳號裡。
+  技術：備援流程加 `sign_in_fallback_*` 與 `fallback_dismissed` 事件，`id_token_rejected` 帶裝置端分類的 `error_label`；事件只帶固定標籤；en／ja 譯文已確認（#1556）。
+
+### 技術變更
+
+- **正式站每日加密備份的腳本與唯讀角色就位（#1549）**
+  使用者：畫面沒有變化；prod 排程上線後，資料庫出事時有最近 30 天內的備份可以還原。
+  技術：`0081` 唯讀角色 `futari_backup`、`0082` 以 `backup_auth` 整列 jsonb view 讀登入身分；`backup-prod.sh` 同一快照 dump＋age 加密＋rclone 上傳，附還原演練腳本（dev 演練已通過）。
 
 ## [1.6.7] - 2026-10-04
 
@@ -1747,7 +1752,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.8...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/redtear1115/oikos/compare/v1.6.8...v1.7.0
 [1.6.8]: https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7
 [1.6.6]: https://github.com/redtear1115/oikos/compare/v1.6.5...v1.6.6
