@@ -149,7 +149,7 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
       </div>
 
       {/* Legend — colours decoded once, no per-bar labels. */}
-      <div className="flex items-center justify-center gap-4 mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
         <LegendItem swatch={<span style={swatch(TREND_INCOME_COLOR)} />} label={t.records.stats.trendIncome} />
         <LegendItem swatch={<span style={swatch(TREND_EXPENSE_COLOR)} />} label={t.records.stats.trendExpense} />
         <LegendItem
@@ -163,7 +163,7 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
 
 function LegendItem({ swatch, label }: { swatch: React.ReactNode; label: string }) {
   return (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-center gap-1.5 whitespace-nowrap">
       {swatch}
       <span>{label}</span>
     </span>

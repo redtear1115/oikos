@@ -110,7 +110,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
 
   const inner = (
     <>
-      <div className="flex @max-[16em]:row-span-2 @max-[16em]:self-center"><CategoryChip categoryId={tx.category} size={32} /></div>
+      <div className="flex @max-[16em]:row-span-2 @max-[16em]:self-start"><CategoryChip categoryId={tx.category} size={32} /></div>
       <div className="min-w-0 text-left">
         <div className="text-sm font-medium mb-0.5 flex items-center flex-wrap gap-x-1.5" style={{ color: 'var(--ink)' }}>
           <span className="min-w-0 break-words">{displayLabel}</span>
