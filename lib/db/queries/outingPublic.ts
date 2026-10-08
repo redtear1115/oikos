@@ -159,6 +159,15 @@ export async function getOutingFullView(outing: OutingRow, actor: OutingActor): 
     .from(outingSettlements)
     .where(and(eq(outingSettlements.outingId, outing.id), isNull(outingSettlements.deletedAt)))
 
+  // The line this outing folded into the couple's ledger when it ended (#1635).
+  // Read here, not carried on OutingRow, so it never travels with the row the
+  // page holds; it only filters `transfers` below and is not returned.
+  const [foldRow] = await db
+    .select({ from: outings.foldFromParticipantId, to: outings.foldToParticipantId })
+    .from(outings)
+    .where(eq(outings.id, outing.id))
+    .limit(1)
+
   // No profile ids into the engine: its participants come back out in the view.
   const view = buildOutingView({
     participants: participants.map((p) => ({ id: p.id, displayName: p.displayName, profileId: null })),
@@ -166,6 +175,7 @@ export async function getOutingFullView(outing: OutingRow, actor: OutingActor): 
     settlements,
     memberAParticipantId: null,
     memberBParticipantId: null,
+    foldedLine: foldRow?.from && foldRow?.to ? { from: foldRow.from, to: foldRow.to } : null,
   })
   const netOf = new Map(view.participants.map((p) => [p.id, p.net]))
 

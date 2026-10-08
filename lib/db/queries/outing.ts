@@ -77,7 +77,7 @@ export interface OutingDetailRow {
   // hash and ciphertext, and a participant row its claim-token hash. A
   // whole-row select would carry those into the page's server code, one prop
   // away from the client.
-  outing: Pick<typeof outings.$inferSelect, 'id' | 'groupId' | 'epochId' | 'name' | 'currency' | 'status'>
+  outing: Pick<typeof outings.$inferSelect, 'id' | 'groupId' | 'epochId' | 'name' | 'currency' | 'status' | 'foldFromParticipantId' | 'foldToParticipantId'>
   participants: (Pick<typeof outingParticipants.$inferSelect, 'id' | 'displayName' | 'profileId' | 'deactivatedAt' | 'claimedAt'> & {
     /** Whether a claim token is set — the hash itself never leaves the query. */
     hasClaimToken: boolean
@@ -95,6 +95,8 @@ export async function getOutingDetail(outingId: string): Promise<OutingDetailRow
       name: outings.name,
       currency: outings.currency,
       status: outings.status,
+      foldFromParticipantId: outings.foldFromParticipantId,
+      foldToParticipantId: outings.foldToParticipantId,
     })
     .from(outings)
     .where(and(eq(outings.id, outingId), isNull(outings.deletedAt)))

@@ -48,6 +48,26 @@ export function coupleNetFromTransfers(
   return net
 }
 
+/**
+ * The member<->member line itself (#1635): the one transfer `coupleNetFromTransfers`
+ * sums, with its participant ids and amount. Null when there is none. The end
+ * action stores it on the outing so the ended view can drop exactly this line.
+ */
+export function coupleLineFromTransfers(
+  transfers: Transfer[],
+  memberAParticipantId: string | null,
+  memberBParticipantId: string | null,
+): Transfer | null {
+  if (!memberAParticipantId || !memberBParticipantId) return null
+  return (
+    transfers.find(
+      (t) =>
+        (t.from === memberBParticipantId && t.to === memberAParticipantId) ||
+        (t.from === memberAParticipantId && t.to === memberBParticipantId),
+    ) ?? null
+  )
+}
+
 export function coupleNetFromOuting(
   participantIds: string[],
   memberAParticipantId: string | null,
@@ -60,24 +80,18 @@ export function coupleNetFromOuting(
   return coupleNetFromTransfers(minimalTransfers(nets), memberAParticipantId, memberBParticipantId)
 }
 
-/**
- * The end action's input assembly as a pure function: raw rows in (as the
- * action reads them after the lock), signed fold out. Kept separate so the
- * property tests can pin it against the member page's view.
- */
-export function foldNetFromRows(input: {
+interface FoldRowsInput {
   participants: { id: string; profileId: string | null }[]
   memberA: string | null
   memberB: string | null
   expenseRows: { id: string; paidBy: string; amount: number }[]
   shareRows: { expenseId: string; participantId: string; shareAmount: number }[]
   settlementRows: OutingSettlementInput[]
-}): number {
-  const { a, b } = memberPidsOf(input.participants, input.memberA, input.memberB)
-  return coupleNetFromOuting(
+}
+
+function transfersFromRows(input: FoldRowsInput): Transfer[] {
+  const nets = computeOutingNets(
     input.participants.map((p) => p.id),
-    a,
-    b,
     input.expenseRows.map((e) => ({
       paidByParticipantId: e.paidBy,
       amount: e.amount,
@@ -85,6 +99,23 @@ export function foldNetFromRows(input: {
     })),
     input.settlementRows,
   )
+  return minimalTransfers(nets)
+}
+
+/**
+ * The end action's input assembly as a pure function: raw rows in (as the
+ * action reads them after the lock), signed fold out. Kept separate so the
+ * property tests can pin it against the member page's view.
+ */
+export function foldNetFromRows(input: FoldRowsInput): number {
+  const { a, b } = memberPidsOf(input.participants, input.memberA, input.memberB)
+  return coupleNetFromTransfers(transfersFromRows(input), a, b)
+}
+
+/** The same input as `foldNetFromRows`, returning the folded line itself (#1635). */
+export function foldLineFromRows(input: FoldRowsInput): Transfer | null {
+  const { a, b } = memberPidsOf(input.participants, input.memberA, input.memberB)
+  return coupleLineFromTransfers(transfersFromRows(input), a, b)
 }
 
 /**

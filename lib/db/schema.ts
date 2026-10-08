@@ -646,6 +646,12 @@ export const outings = pgTable('Outings', {
   startDate: date('start_date'),
   foldedAt: timestamp('folded_at', { withTimezone: true }),
   endedAt: timestamp('ended_at', { withTimezone: true }),
+  // The member<->member line endOuting folded into the ledger (#1635); all
+  // NULL or all set (outings_fold_record_check). Plain uuids on purpose: an FK
+  // to OutingParticipants would break both hard-delete paths (migration 0091).
+  foldFromParticipantId: uuid('fold_from_participant_id'),
+  foldToParticipantId: uuid('fold_to_participant_id'),
+  foldAmount: integer('fold_amount'),
   shareTokenHash: text('share_token_hash'),
   shareTokenEncrypted: text('share_token_encrypted'),
   shareTokenRotatedAt: timestamp('share_token_rotated_at', { withTimezone: true }),
