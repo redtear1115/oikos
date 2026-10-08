@@ -47,6 +47,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：定期收支、邀請連結、保險／車輛／定期規則的「已離開」提示，en／ja 改用審稿後的說法；車輛提示改為「可以重新選擇」；規則恢復失敗依支出／收入分成兩句提示；隱私政策的共享帳本段落補上「月回顧留言」會留在對方帳本裡。
   技術：`rule_person_not_member` 拆成 `rule_payer_not_member`／`rule_recipient_not_member`；zh-CN「愛物」「币别」更正；en 預設帳本名改 `Household ledger`；`monthlyReview.card2BodyNoName` 經核對與 `card2Body` 一致，未改。
 
+- **Android 網頁使用者會看到一次測試版邀請（#1553）**
+  使用者：用 Android 瀏覽器或已安裝的 PWA 開儀表板，會看到一張可關閉的卡片，邀請以 Play 商店的 Google 帳號報名 Android 測試版；點報名或關閉後不再出現（App 殼、iOS、桌面不顯示；en／ja 待確認 #1593）。
+  技術：`AndroidBetaInviteCard` 以 localStorage `futari_android_beta_invite_dismissed` 記一次性關閉，新增 `android_beta_invite_{shown,clicked,dismissed}`；Play 正式版上線後移除這張卡、`androidBetaInvite` 文案與三個事件。
+
 - **系統文字放到最大時，底部導覽、列表與趨勢圖不再擠壞（#1514）**
   使用者：iOS 文字大小或 Android 字型比例拉到約 1.6–2 倍時，底部分頁名稱不再被截成「設…」（iOS 最多放大到 1.3 倍，Android 自動縮小）；帳目列的金額改排到說明下方，說明不再被擠成幾個字一行；每日趨勢圖最後的日期不再被切掉。
   技術：新增 `--text-nav-label`（`--text-scale` 上限 1.3）；分頁與 `CompactRow` 以 em 單位的 container query 切換；趨勢圖日期改 HTML 並首尾貼齊；載入骨架的底部導覽改 `min-height`；DESIGN.md §3 補 `--text-scale` 小節。

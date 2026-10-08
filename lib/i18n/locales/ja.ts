@@ -1166,6 +1166,13 @@ export const ja: Translations = {
     newLedgerName: '家計簿',
   },
 
+  androidBetaInvite: {
+    // TODO(i18n): 待確認 (#1593)
+    heading: 'Android アプリのテストに参加しませんか',
+    body: 'Android で Futari を開いていますね。アプリ版を先に試したい方は、Play ストアで使っている Google アカウントで申し込んでください。テスト招待をお送りします。リストに追加したあと、申し込み情報は削除します。',
+    cta: 'Android版テストに申し込む',
+  },
+
   pastTimes: {
     title: '過ぎた時間',
     back: '戻る',

@@ -1165,6 +1165,13 @@ export const en: Translations = {
     newLedgerName: 'Household ledger',
   },
 
+  androidBetaInvite: {
+    // TODO(i18n): 待確認 (#1593)
+    heading: 'The Android app is looking for testers',
+    body: 'You’re opening Futari on Android. If you’d like to try the app first, sign up with the Google account you use on Google Play and we’ll send you a test invite. Your sign-up details are deleted once you’re added to the list.',
+    cta: 'Join the Android beta',
+  },
+
   pastTimes: {
     title: 'Past chapters',
     back: 'Back',

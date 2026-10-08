@@ -1538,6 +1538,19 @@ export type Translations = {
     newLedgerName: string
   }
 
+  /**
+   * Dashboard invite card for Android web users to join the Play closed test
+   * (#1553). Temporary: remove the card, this namespace and the
+   * `android_beta_invite_*` events once Play production access is granted.
+   * `cta` repeats `landing.androidBetaCta` on purpose: different namespace,
+   * same string, so the two buttons read as one offer.
+   */
+  androidBetaInvite: {
+    heading: string
+    body: string
+    cta: string
+  }
+
   pastTimes: {
     title: string
     back: string
@@ -4354,6 +4367,12 @@ export const zhTW: Translations = {
     removedPartnerBody: '帳本完整地留著。從今天起，可以慢慢來。',
     dismissAria: '關閉',
     newLedgerName: '家計簿',
+  },
+
+  androidBetaInvite: {
+    heading: 'Android App 正在找測試夥伴',
+    body: '你用 Android 開 Futari。想先試試 App 版的話，用 Play 商店的 Google 帳號報名，我們會寄測試邀請給你；加入名單後就刪除報名資料。',
+    cta: '報名 Android 測試版',
   },
 
   pastTimes: {

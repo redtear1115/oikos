@@ -35,6 +35,7 @@ import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
+import { AndroidBetaInviteCard } from './_components/AndroidBetaInviteCard'
 import { deriveReviewCell } from '@/lib/reviewCell'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { recentIncomeLabel } from '@/lib/recentIncomeLabel'
@@ -313,6 +314,7 @@ export default async function DashboardPage() {
           isSolo={bannerProps.isSolo}
         />
       )}
+      {!epochWindow.isPast && <AndroidBetaInviteCard />}
       <Dashboard
         balance={balance}
         pendingBalanceDelta={pendingBalanceDelta}
