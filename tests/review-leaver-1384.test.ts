@@ -8,6 +8,13 @@ import type { ReactElement } from 'react'
 //   chapter 1  A + B   2026-03-01 → 2026-06-15 (Taipei), epoch e1 — B left
 //   chapter 2  A + C   2026-06-15 → open,                epoch e2
 //   group row today: member_a A, member_b C
+//
+// #1603 — the resolver no longer hands B this context: a pin into a ledger
+// the viewer is no longer a member of falls through to their own group
+// (tests/queries-epoch.test.ts › former members). The resolver is mocked
+// here, so these cases test the page's own chapter-membership logic, which
+// stays because #1612 (read-only look-back for former members) reuses it.
+// Until #1612 the B cases below are unreachable in production.
 
 const TPE = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d) - 8 * 60 * 60 * 1000)
 const CH1 = { startedAt: TPE(2026, 3, 1), endedAt: TPE(2026, 6, 15), epochId: 'e1', isPast: true }

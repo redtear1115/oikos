@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
@@ -92,7 +92,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
-  if (!viewerProfile) redirect('/sign-in')
+  // Not among the group's current members → 404, never /sign-in (#1603). The
+  // viewer IS signed in, so /sign-in sends them straight back to /dashboard
+  // and they loop with no way out. resolveViewerEpochContext only returns
+  // groups the viewer is in today, so this should be unreachable; it stays
+  // as the layout's own guard, and must not be able to loop if it fires.
+  if (!viewerProfile) notFound()
 
   const deletionRequestedAt = viewerProfile.deletionRequestedAt ?? null
 

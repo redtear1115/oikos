@@ -178,8 +178,11 @@ describe('resolveViewerEpochContext', () => {
   })
 
   it('with a pin pointing to the viewer’s past chapter on a different group: swaps to that group + window', async () => {
-    // This is the crux of #141: leaver pins to Y's solo (group Y, not active
-    // group X). resolveViewerEpochContext must return group Y, not group X.
+    // This is the crux of #141: the viewer pins to Y's solo (group Y, not
+    // active group X). resolveViewerEpochContext must return group Y, not X.
+    // Y is the solo ledger they had before accepting an invite into X:
+    // acceptInvite leaves them as Y's member_a and only closes Y's epoch, so
+    // they are still a current member of Y and the pin is accepted (#1603).
     setCookie(PAST_EPOCH_COOKIE, 'ep-y-1')
 
     const yEpoch = epochRow({
@@ -188,7 +191,7 @@ describe('resolveViewerEpochContext', () => {
       startedAt: new Date('2025-06-01T00:00:00Z'),
       endedAt: new Date('2025-12-01T00:00:00Z'),
     })
-    const yGroup = groupRow({ id: 'grp-y', name: '我的家計簿' })
+    const yGroup = groupRow({ id: 'grp-y', name: '我的家計簿', memberA: VIEWER, memberB: null })
 
     // 1) pin SELECT (epochs by id)
     queueDbResult([yEpoch])
@@ -240,6 +243,70 @@ describe('resolveViewerEpochContext', () => {
     const context = await resolveViewerEpochContext(VIEWER)
     expect(context).not.toBeNull()
     expect(context!.group.id).toBe('grp-1')
+  })
+
+  // #1603 — a pin counts only if the viewer is named on the chapter AND is a
+  // current member of its group. Before this, a former member's pin was
+  // accepted, the layout found them missing from the group's members and
+  // redirected to /sign-in, which sent them back to /dashboard: a loop.
+  describe('former members (#1603)', () => {
+    const leftChapter = () => epochRow({
+      id: 'ep-x-1', groupId: 'grp-x',
+      memberAId: STAYER, memberBId: VIEWER,
+      startedAt: new Date('2025-01-01T00:00:00Z'),
+      endedAt: new Date('2025-06-01T00:00:00Z'),
+    })
+
+    it('a leaver pinned to the ledger they left resolves to their own active group', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      // 1) pin SELECT → the leaver is named on the chapter…
+      queueDbResult([leftChapter()])
+      // 2) group SELECT → …but X's row today names only the stayer
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: null })])
+      // 3) getActiveGroupForUser → the leaver's new solo ledger
+      queueDbResult([groupRow({ id: 'grp-solo', memberA: VIEWER, memberB: null })])
+      // 4) its open epoch
+      queueDbResult([epochRow({ id: 'ep-solo', groupId: 'grp-solo', endedAt: null })])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context).not.toBeNull()
+      expect(context!.group.id).toBe('grp-solo')
+      expect(context!.window).toMatchObject({ epochId: 'ep-solo', isPast: false })
+    })
+
+    it('a leaver is refused even when the left ledger has a new partner in it', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: OTHER })])
+      queueDbResult([groupRow({ id: 'grp-solo', memberA: VIEWER, memberB: null })])
+      queueDbResult([epochRow({ id: 'ep-solo', groupId: 'grp-solo', endedAt: null })])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context!.group.id).toBe('grp-solo')
+      expect(context!.group.memberB).not.toBe(OTHER)
+    })
+
+    it('a removed person with no group resolves to null (→ /onboarding), not to the left ledger', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: null })])
+      // getActiveGroupForUser → removePartner leaves them with no ledger
+      queueDbResult([])
+
+      const context = await resolveViewerEpochContext(VIEWER)
+      expect(context).toBeNull()
+    })
+
+    it('a stayer pinned to an old chapter of their current group resolves to the pin', async () => {
+      setCookie(PAST_EPOCH_COOKIE, 'ep-x-1')
+      queueDbResult([leftChapter()])
+      // X today: the stayer and a new partner
+      queueDbResult([groupRow({ id: 'grp-x', memberA: STAYER, memberB: OTHER })])
+
+      const context = await resolveViewerEpochContext(STAYER)
+      expect(context!.group.id).toBe('grp-x')
+      expect(context!.window).toMatchObject({ epochId: 'ep-x-1', isPast: true })
+    })
   })
 
   it('returns null when the viewer has neither a pin nor any group', async () => {

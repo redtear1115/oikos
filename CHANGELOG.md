@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **離開或被移除的成員不再卡在登入頁（#1603）**
+  使用者：曾停留在舊帳本某段過去時光的人離開或被移除後，會回到自己目前的帳本（沒有帳本則進入建立流程），不再在登入頁與首頁之間來回；「過去的時光」暫不列出已離開帳本的章節（#1612 會加回唯讀回顧）；登出會清掉停留的章節。
+  技術：`resolveViewerEpochContext` 只接受「名列該章節且仍是該群組 member_a／member_b」的 pin，`listEpochsForViewer` 套同一規則；layout 與月回顧的非成員分支改 `notFound()`、測驗頁在過去章節回 404；`signOut` 刪 `futari_past_epoch`。
+
 - **前伴侶（或已刪除帳號者）的定期規則會自動暫停（#1588）**
   使用者：移除伴侶或對方刪除帳號後，歸屬他的定期收入／支出規則會暫停、他尚未處理的待確認卡片會移除，不會再每期冒出無法確認的卡；已記下的帳不動。要恢復得先把規則改成現有成員再恢復，否則會提示先修改。
   技術：`removePartner` 同一筆交易與 `0086`（`process_account_deletions` 重定義＋既有資料一次性修復，會改 prod 資料、不可逆；依序跑在 0084、0085 之後，與本版程式碼一起上線即可，不需新欄位）依「人」暫停規則並刪除未處理卡；`resumeRule` 新增 `rule_person_not_member`（4 語；en／ja 待確認）。

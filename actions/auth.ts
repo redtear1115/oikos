@@ -14,10 +14,18 @@ import {
   type AuthPath,
 } from '@/lib/analytics/attribution'
 import { action } from '@/lib/action-errors'
+import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
 
 export const signOut = action(async () => {
   const supabase = await createClient()
   await supabase.auth.signOut()
+  // #1603 — the past-times pin is per browser session, not per account. Left
+  // behind, the next person to sign in on this browser starts out pinned to
+  // the previous account's chapter (the resolver ignores a pin they weren't
+  // on, but a pin that does apply would drop them into a past chapter they
+  // didn't choose). Cleared here, before the redirect throws.
+  const jar = await cookies()
+  jar.delete(PAST_EPOCH_COOKIE)
   // Land on the warm landing surface, not /sign-in. Preserve the user's
   // locale on the path so the redirected page keeps speaking their language.
   // Client (LogoutButton) also has a window.location.replace('/') safety net
