@@ -14,7 +14,7 @@ export async function registerPushToken(userId: string, groupId: string): Promis
 
   PushNotifications.addListener('registration', async ({ value: token }) => {
     // #1605 — remembered so sign-out can remove this device's row
-    // (lib/signOutThisDevice.ts). Never throws.
+    // (LogoutButton → signOut action, #1617). Never throws.
     storePushToken(token)
     const supabase = createClient()
     // Since 0087 the database refuses a group_id the user is not a member of;

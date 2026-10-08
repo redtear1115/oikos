@@ -3,81 +3,26 @@
  * waits on or fails because of it.
  *
  * The row-level half (T1 gone, T2 kept) runs against dev in
- * __tests__/actions/pushTokens1605.test.ts; this file covers the ordering and
- * the "sign-out still completes" guarantees with fakes. Failure looks like:
+ * __tests__/actions/pushTokens1605.test.ts. Since #1617 the delete lives in
+ * the signOut action itself; its ordering, 2 s bound and "sign-out still
+ * completes" guarantees are in tests/sign-out-single-action-1617.test.ts,
+ * LogoutButton's behaviour in tests/logout-single-action-1617.test.tsx and the
+ * layout's in tests/dashboard-layout-push-registrar-1617.test.tsx.
+ * This file keeps storage and source wiring. Failure looks like:
  * tapping 登出 hangs on a bad network or does nothing when the delete errors;
  * or a shared phone keeps getting the signed-out person's pushes.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { signOutThisDevice, UNREGISTER_TIMEOUT_MS } from '@/lib/signOutThisDevice'
 import {
-  PUSH_TOKEN_STORAGE_KEY,
   readStoredPushToken,
   storePushToken,
   clearStoredPushToken,
 } from '@/lib/pushTokenStorage'
 
-beforeEach(() => localStorage.clear())
 afterEach(() => {
-  vi.useRealTimers()
   vi.restoreAllMocks()
-})
-
-describe('signOutThisDevice', () => {
-  it('deletes this device\'s token first, then signs out, then forgets the token', async () => {
-    storePushToken('T1')
-    const calls: string[] = []
-    await signOutThisDevice({
-      unregister: async (t) => { calls.push(`unregister:${t}`) },
-      signOut: async () => { calls.push(`signOut:${localStorage.getItem(PUSH_TOKEN_STORAGE_KEY)}`) },
-    })
-    expect(calls).toEqual(['unregister:T1', 'signOut:T1'])
-    expect(localStorage.getItem(PUSH_TOKEN_STORAGE_KEY)).toBeNull()
-  })
-
-  it('with nothing stored, skips the delete and signs out', async () => {
-    const unregister = vi.fn(async () => {})
-    const signOut = vi.fn(async () => {})
-    await signOutThisDevice({ unregister, signOut })
-    expect(unregister).not.toHaveBeenCalled()
-    expect(signOut).toHaveBeenCalledOnce()
-  })
-
-  it('a failing delete (rejects, throws synchronously) does not stop sign-out', async () => {
-    for (const unregister of [
-      async () => { throw new Error('network down') },
-      () => { throw new Error('sync throw') },
-    ]) {
-      storePushToken('T1')
-      const signOut = vi.fn(async () => {})
-      await signOutThisDevice({ unregister, signOut })
-      expect(signOut).toHaveBeenCalledOnce()
-      expect(readStoredPushToken()).toBeNull()
-    }
-  })
-
-  it('a delete that never answers is abandoned after the timeout and sign-out goes ahead', async () => {
-    vi.useFakeTimers()
-    storePushToken('T1')
-    const signOut = vi.fn(async () => {})
-    const done = signOutThisDevice({ unregister: () => new Promise(() => {}), signOut })
-    await vi.advanceTimersByTimeAsync(UNREGISTER_TIMEOUT_MS - 1)
-    expect(signOut).not.toHaveBeenCalled()
-    await vi.advanceTimersByTimeAsync(1)
-    await done
-    expect(signOut).toHaveBeenCalledOnce()
-    expect(UNREGISTER_TIMEOUT_MS).toBeLessThanOrEqual(2000)
-  })
-
-  it('a failing sign-out still resolves (the caller\'s hard navigation then runs)', async () => {
-    storePushToken('T1')
-    await expect(signOutThisDevice({
-      unregister: async () => {},
-      signOut: async () => { throw new Error('NEXT_REDIRECT') },
-    })).resolves.toBeUndefined()
-  })
 })
 
 describe('pushTokenStorage never throws', () => {
@@ -98,17 +43,22 @@ describe('wiring (native contract surface)', () => {
     expect(read('lib/pushNotifications.ts')).toMatch(/addListener\('registration'[\s\S]*storePushToken\(token\)/)
   })
 
-  it('LogoutButton signs out through signOutThisDevice with the unregister action', () => {
+  it('LogoutButton calls exactly one server action: signOut, with the stored token (#1617)', () => {
     const src = read('app/(dashboard)/settings/_components/LogoutButton.tsx')
-    expect(src).toContain('signOutThisDevice({')
-    expect(src).toContain('unregisterThisDevice(token)')
+    const actionImports = [...src.matchAll(/from '@\/actions\/([\w-]+)'/g)].map((m) => m[1])
+    expect(actionImports).toEqual(['auth'])
+    expect(src).toMatch(/import \{ signOut \} from '@\/actions\/auth'/)
+    expect(src.match(/await signOut\(/g)).toHaveLength(1)
+    expect(src).toContain('await signOut(readStoredPushToken() ?? undefined)')
+    expect(src).not.toMatch(/signOutThisDevice|unregisterThisDevice/)
     expect(src).toContain("window.location.replace('/')")
   })
 
-  it('the dashboard registers the token against the active ledger, not the pinned one (F3)', () => {
+  it('the dashboard registers the token against the active ledger, not a pinned past one (F3, #1617)', () => {
     const src = read('app/(dashboard)/layout.tsx')
     const line = src.split('\n').find((l) => l.includes('<PushTokenRegistrar'))
-    expect(line).toContain('getActiveGroupForUser(user.id)')
+    // Past pin → look the active ledger up; otherwise `group` already is it.
+    expect(line).toContain('epochWindow.isPast ? getActiveGroupForUser(user.id) : Promise.resolve(group)')
     expect(line).not.toContain('groupId={group.id}')
   })
 })

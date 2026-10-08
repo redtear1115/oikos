@@ -103,6 +103,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：帳本成員可以複製與重設分享連結、看每個人未認領／已認領／已綁帳號並釋放或移除、改出遊名稱、編輯刪除支出與還款；出遊清單多了「我參與的出遊」。
   技術：共用 `ExpenseSheet`／`SettlementList` 取代 `AddExpenseSheet`，供公開頁沿用；`getOutingDetail` 只多回 `claimedAt` 與 `hasClaimToken` 布林，profile id 不再傳到 client；en／ja 譯文待確認。
 
+- **登出不再被「移除這台裝置的推播」拖住（#1617）**
+  使用者：點「登出」時，移除這台裝置推播的步驟最多只多等約 2 秒；這一步沒完成也照樣登出並回到首頁。
+  技術：`signOut(token?)` 在同一個 server action 內先刪本機 push token（取 session 使用者、與查詢一起限時 2 秒、逾時或失敗略過），再登出；移除 `unregisterThisDevice`／`signOutThisDevice`；dashboard layout 只在釘選過去章節時多查一次目前帳本。
+
 ### 技術變更
 
 - **出遊的加入、認領與權限規則（#1558）**
@@ -125,7 +129,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **離開帳本的人不再收到這本帳的推播；登出會移除這台裝置的推播（#1605）**
   使用者：被移除或離開的前伴侶不再收到原帳本「有待確認的定期收支」推播，離開、被移除、加入新帳本時推播跟著人走到現在的帳本；登出後這台手機不再收到你的推播，其他裝置不受影響，下次登入開啟首頁會重新註冊。
-  技術：`send-recurring-push` 只送給仍是該帳本 `member_a`／`member_b` 的 token（`memberTokens.ts`，需重新部署 Edge Function）；`0087` 讓 `PushTokens` 的 RLS 只接受綁到自己所在帳本的 token、並一次刪除非成員的 token（跑在 0086 之後，與 Edge Function 部署順序無關、互不依賴，無新 GRANT）；`removePartner`／`leaveGroup`／`acceptInvite` 同交易刪除或搬移 token；註冊改用目前帳本而非釘選章節；登出前以 `unregisterThisDevice` 刪除本機 token（逾時 2 秒、失敗不擋登出）。
+  技術：`send-recurring-push` 只送給仍是該帳本 `member_a`／`member_b` 的 token（`memberTokens.ts`，需重新部署 Edge Function）；`0087` 讓 `PushTokens` 的 RLS 只接受綁到自己所在帳本的 token、並一次刪除非成員的 token（跑在 0086 之後，與 Edge Function 部署順序無關、互不依賴，無新 GRANT）；`removePartner`／`leaveGroup`／`acceptInvite` 同交易刪除或搬移 token；註冊改用目前帳本而非釘選章節；登出時刪除本機 token（逾時 2 秒、失敗不擋登出；#1617 併進 `signOut` 單一 action）。
 
 - **回看過去的時光時，對方是那段時間的伴侶（#1604）**
   使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與首頁的「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
