@@ -163,7 +163,7 @@ describe('foldSettlementFor — sign mapping (#943 S-D)', () => {
       ] },
     ]
     const settlements = [{ fromParticipantId: 'pF', toParticipantId: 'pA', amount: 100 }]
-    const net = coupleNetFromOuting('pA', 'pB', expenses, settlements)
+    const net = coupleNetFromOuting(['pA', 'pB', 'pF'], 'pA', 'pB', expenses, settlements)
     expect(net).toBe(70)
     expect(settlementDelta(foldSettlementFor(net, 'user-a', 'user-b'), 'user-a')).toBe(70)
   })
@@ -173,8 +173,8 @@ describe('foldSettlementFor — sign mapping (#943 S-D)', () => {
       { participantId: 'pA', shareAmount: 50 },
       { participantId: 'pB', shareAmount: 50 },
     ] }]
-    expect(coupleNetFromOuting('pA', 'pB', expenses, [])).toBe(50)
-    expect(coupleNetFromOuting('pB', 'pA', expenses, [])).toBe(-50)
+    expect(coupleNetFromOuting(['pA', 'pB'], 'pA', 'pB', expenses, [])).toBe(50)
+    expect(coupleNetFromOuting(['pA', 'pB'], 'pB', 'pA', expenses, [])).toBe(-50)
   })
 })
 

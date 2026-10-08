@@ -55,7 +55,10 @@ const { leaveGroup, removePartner } = await import('@/actions/membership')
 const { setBaseCurrency } = await import('@/actions/currency')
 const { recalcGroupBalance } = await import('@/lib/db/queries/balance')
 const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
-const { listOutings } = await import('@/lib/db/queries/outing')
+const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
+const { buildOutingView } = await import('@/lib/outing/view')
+const { memberPidsOf } = await import('@/lib/outing/foldback')
+const { proposeSwap, confirmSwap } = await import('@/actions/membership')
 
 beforeEach(() => cookieJar.clear())
 
@@ -660,5 +663,120 @@ describe('setBaseCurrency and createOuting serialize on the group row (#1378 re-
     const { id } = ok(await creating)
     const [o] = await db.select().from(outings).where(eq(outings.id, id))
     expect(o.currency).toBe('jpy')
+  })
+})
+
+
+// ─── #1634: the fold is exactly the member<->member suggested line ───
+
+/** What the member page computes (page.tsx): the view's signed couple net, from the current group row. */
+async function viewCoupleNet(outingId: string, groupId: string) {
+  const detail = (await getOutingDetail(outingId))!
+  const [g] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, groupId))
+  const { a, b } = memberPidsOf(detail.participants, g.memberA, g.memberB)
+  return buildOutingView({
+    participants: detail.participants.map((p) => ({ id: p.id, displayName: p.displayName, profileId: p.profileId })),
+    expenses: detail.expenses.map((e) => ({ paidByParticipantId: e.paidByParticipantId, amount: e.amount, shares: e.shares })),
+    settlements: detail.settlements.map((x) => ({ fromParticipantId: x.fromParticipantId, toParticipantId: x.toParticipantId, amount: x.amount })),
+    memberAParticipantId: a,
+    memberBParticipantId: b,
+  })
+}
+
+describe('endOuting folds the A<->B suggestion line, not a cross term (#1634)', () => {
+  async function foldRows(groupId: string) {
+    return db.select().from(settlements).where(eq(settlements.groupId, groupId))
+  }
+
+  it('duo with friends: Settlement = the line’s creditor / amount, GroupBalance moves by the signed net, and a second end changes nothing', async () => {
+    const o = await seedOuting()
+    // A 8000, F 3200, F2 1200 paid; split four ways (3,100 each).
+    // Nets: A +4900, B -3100, F +100, F2 -1900 → the suggestions include a B→A line.
+    const { id: pF2 } = ok(await addOutingParticipant({ outingId: o.outingId, displayName: '阿美' }))
+    const all = [o.pA, o.pB, o.pF, pF2]
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 8000, participantIds: all }))
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pF, amount: 3200, participantIds: all }))
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: pF2, amount: 1200, participantIds: all }))
+    const view = await viewCoupleNet(o.outingId, o.groupId)
+    const line = view.transfers.find((t) => [t.from, t.to].every((id) => id === o.pA || id === o.pB))!
+    expect(line).toBeDefined()
+    expect(line.to).toBe(o.pA) // creditor is A
+    expect(view.coupleNet).toBe(line.amount)
+
+    const before = await balanceOf(o.groupId)
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: true })
+    const rows = await foldRows(o.groupId)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidBy).toBe(o.userId) // the line's `to` (creditor) is A → member_a
+    expect(rows[0].amount).toBe(line.amount)
+    expect(await balanceOf(o.groupId)).toBe(before + view.coupleNet)
+
+    expect(await endOuting({ outingId: o.outingId })).toEqual({ ok: false, code: 'outing_not_active' })
+    expect(await foldRows(o.groupId)).toHaveLength(1)
+    expect(await balanceOf(o.groupId)).toBe(before + view.coupleNet)
+  })
+
+  it('friends absorb the debt: no A<->B line, so nothing folds (the old cross term would have written 1,000)', async () => {
+    const o = await seedOuting()
+    // A 8000, B 4000, F 800 paid; split four ways (3,200 each) with a second friend: fold must be 0.
+    const { id: pF2 } = ok(await addOutingParticipant({ outingId: o.outingId, displayName: '阿美' }))
+    const all = [o.pA, o.pB, o.pF, pF2]
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 8000, participantIds: all }))
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pB, amount: 4000, participantIds: all }))
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pF, amount: 800, participantIds: all }))
+    expect((await viewCoupleNet(o.outingId, o.groupId)).coupleNet).toBe(0)
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: false })
+    expect(await foldRows(o.groupId)).toHaveLength(0)
+    expect(await balanceOf(o.groupId)).toBe(0)
+  })
+
+  it('A owes B: Settlement paid_by member_b, balance moves negative', async () => {
+    const o = await seedOuting()
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pB, amount: 300, participantIds: [o.pA, o.pB, o.pF] }))
+    const view = await viewCoupleNet(o.outingId, o.groupId)
+    expect(view.coupleNet).toBe(-100)
+    ok(await endOuting({ outingId: o.outingId }))
+    const rows = await foldRows(o.groupId)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidBy).toBe(o.partnerId)
+    expect(rows[0].amount).toBe(100)
+    expect(await balanceOf(o.groupId)).toBe(-100)
+  })
+
+  it('confirmSwap while the outing is active: the view’s net equals the signed fold written, payer is the creditor’s user under the swapped row', async () => {
+    const o = await seedOuting()
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 300, participantIds: [o.pA, o.pB, o.pF] }))
+    // Before the swap: B owes A 100 → +100.
+    expect((await viewCoupleNet(o.outingId, o.groupId)).coupleNet).toBe(100)
+
+    mockUserId = o.userId
+    ok(await proposeSwap())
+    mockUserId = o.partnerId!
+    ok(await confirmSwap())
+    // Orientation follows the group row: member_a is now the old partner, so the same debt reads negative.
+    const after = await viewCoupleNet(o.outingId, o.groupId)
+    expect(after.coupleNet).toBe(-100)
+
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: true })
+    const rows = await foldRows(o.groupId)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidBy).toBe(o.userId) // the creditor (old A) is now member_b
+    expect(rows[0].amount).toBe(100)
+    expect(await balanceOf(o.groupId)).toBe(after.coupleNet)
+  })
+
+  it('solo group with an unbound friend who owes the owner: view net 0, no Settlement', async () => {
+    const solo = await seedGroup({ solo: true })
+    mockUserId = solo.userId
+    const { id } = ok(await createOuting({ name: 'solo friend' }))
+    const [me] = await members(id)
+    const { id: f } = ok(await addOutingParticipant({ outingId: id, displayName: '阿傑' }))
+    ok(await addOutingExpense({ outingId: id, paidByParticipantId: me.id, amount: 100, participantIds: [me.id, f] }))
+    const detail = (await getOutingDetail(id))!
+    const [g] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, solo.groupId))
+    expect(memberPidsOf(detail.participants, g.memberA, g.memberB).b).toBeNull()
+    expect((await viewCoupleNet(id, solo.groupId)).coupleNet).toBe(0)
+    expect(ok(await endOuting({ outingId: id }))).toEqual({ folded: false })
+    expect(await foldRows(solo.groupId)).toHaveLength(0)
   })
 })
