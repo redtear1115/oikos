@@ -179,7 +179,7 @@ export default async function FeatureOutingPage({ params }: { params: Params }) 
             <div className={f.foldRow} aria-hidden="true">
               <div className={f.fold}>
                 <div className={f.fcard}>
-                  <p className="text-sm font-medium">{def.outingName}</p>
+                  <p className="text-sm font-medium">{dict.outingList.title}</p>
                   <span className={`${f.fTag} text-xs`}>{dict.outingList.endedTag}</span>
                 </div>
                 <div className={f.fcard}>

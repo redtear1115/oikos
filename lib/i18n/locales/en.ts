@@ -3315,7 +3315,7 @@ I will upload the screenshots once you confirm.`,
     },
     featureOuting: {
       title: 'Split trip costs with friends: share a link, no app needed | Futari',
-      description: 'Track who paid and who owes whom on a group trip. Start an outing, share the link, and friends join by name. No download, no sign-up, up to 20 people.',
+      description: 'See who paid and who owes whom on a group trip. Start an outing, share the link, and friends join by name. No download, no sign-up, up to 20 people.',
       ogDescription: 'Start an outing, share the link, and friends pick their name to log expenses with you. No download, no sign-up.',
     },
   },
