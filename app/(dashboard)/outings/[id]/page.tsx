@@ -27,6 +27,10 @@ export default async function OutingDetailPage(props: { params: Promise<{ id: st
     settlements: detail.settlements.map((s) => ({ fromParticipantId: s.fromParticipantId, toParticipantId: s.toParticipantId, amount: s.amount })),
     memberAParticipantId,
     memberBParticipantId,
+    // The line this outing already folded into the ledger stays out of the list (#1635).
+    foldedLine: detail.outing.foldFromParticipantId && detail.outing.foldToParticipantId
+      ? { from: detail.outing.foldFromParticipantId, to: detail.outing.foldToParticipantId }
+      : null,
   })
 
   // Same in-request check the end action makes: only an active outing in the

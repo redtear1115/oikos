@@ -88,4 +88,44 @@ describe('buildOutingView', () => {
     expect(view.participants.find((p) => p.id === 'F')!.profileId).toBeNull()
     expect(view.participants.find((p) => p.id === 'A')!.displayName).toBe('我')
   })
+
+  describe('foldedLine (#1635) — an ended outing stops listing the line it already folded', () => {
+    // A 8000, F2 1800, F1 1200 paid, split four ways (3,000 each) with a second friend:
+    // the suggestions include the member line plus friends' lines.
+    const parts = [...base.participants, { id: 'G', displayName: '阿美', profileId: null }]
+    const all = ['A', 'B', 'F', 'G']
+    const expenses = [
+      { paidByParticipantId: 'A', amount: 8000, shares: all.map((id) => ({ participantId: id, shareAmount: 2750 })) },
+      { paidByParticipantId: 'F', amount: 3200, shares: all.map((id) => ({ participantId: id, shareAmount: 800 })) },
+      { paidByParticipantId: 'G', amount: 1200, shares: all.map((id) => ({ participantId: id, shareAmount: 300 })) },
+    ]
+    const input = { ...base, participants: parts, expenses, settlements: [] }
+    const isMemberLine = (t: { from: string; to: string }) => [t.from, t.to].every((id) => id === 'A' || id === 'B')
+
+    it('drops the matching transfer and leaves the others and coupleNet untouched', () => {
+      const plain = buildOutingView(input)
+      const line = plain.transfers.find(isMemberLine)!
+      expect(line).toBeDefined()
+      const view = buildOutingView({ ...input, foldedLine: { from: line.from, to: line.to } })
+      expect(view.transfers.find(isMemberLine)).toBeUndefined()
+      expect(view.transfers).toEqual(plain.transfers.filter((t) => !isMemberLine(t)))
+      expect(view.transfers.length).toBe(plain.transfers.length - 1)
+      expect(view.coupleNet).toBe(plain.coupleNet)
+      expect(view.participants).toEqual(plain.participants)
+    })
+
+    it('drops the line when the stored direction is the reverse of the recomputed one', () => {
+      const plain = buildOutingView(input)
+      const line = plain.transfers.find(isMemberLine)!
+      const view = buildOutingView({ ...input, foldedLine: { from: line.to, to: line.from } })
+      expect(view.transfers.find(isMemberLine)).toBeUndefined()
+      expect(view.transfers.length).toBe(plain.transfers.length - 1)
+    })
+
+    it('null or absent leaves the list unchanged; a line matching nothing removes nothing', () => {
+      const plain = buildOutingView(input)
+      expect(buildOutingView({ ...input, foldedLine: null }).transfers).toEqual(plain.transfers)
+      expect(buildOutingView({ ...input, foldedLine: { from: 'X', to: 'Y' } }).transfers).toEqual(plain.transfers)
+    })
+  })
 })
