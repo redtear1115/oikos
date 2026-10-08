@@ -1,11 +1,11 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
 import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { CardShell, formatRecapAmount } from './CardShell'
 
-export function CardAssets({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }) {
+export function CardAssets({ snapshot }: { snapshot: ClientReviewSnapshot }) {
   const t = useTranslations()
   const baseCurrency = useBaseCurrency()
   const tr = t.monthlyReview

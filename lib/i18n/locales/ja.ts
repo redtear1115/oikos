@@ -2121,6 +2121,7 @@ export const ja: Translations = {
     card1BodySolo: '今月もっとも使ったのは {category}：{amount}',
     card2Title: '今月のいちばん大きな一筆',
     card2Body: 'いちばん：{name} さんが「{description}」、{amount}',
+    card2BodyNoName: 'いちばん：「{description}」、{amount}',
     card3Title: '定期の出来事',
     card3ExpenseTotal: '今月の定期支出：{amount}',
     card3IncomeTotal: '今月の定期収入：{amount}',
