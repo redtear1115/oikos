@@ -128,7 +128,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   技術：`send-recurring-push` 只送給仍是該帳本 `member_a`／`member_b` 的 token（`memberTokens.ts`，需重新部署 Edge Function）；`0087` 讓 `PushTokens` 的 RLS 只接受綁到自己所在帳本的 token、並一次刪除非成員的 token（跑在 0086 之後，與 Edge Function 部署順序無關、互不依賴，無新 GRANT）；`removePartner`／`leaveGroup`／`acceptInvite` 同交易刪除或搬移 token；註冊改用目前帳本而非釘選章節；登出前以 `unregisterThisDevice` 刪除本機 token（逾時 2 秒、失敗不擋登出）。
 
 - **回看過去的時光時，對方是那段時間的伴侶（#1604）**
-  使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
+  使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與首頁的「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
   技術：layout 以 `getEpochMembers`（現在也回傳名字，唯一的章節成員名字來源）在 MemberContext 加章節身分，`useViewedPartner()` 供 CompactRow／TripDetail／BrandHeader／首頁篩選列／TransactionFeed 使用；`resolveViewedPair` 讓 `/records` 首屏與分頁 action 的「對方」都用章節成員；`viewerIsA` 仍取自目前群組列；釘選時不查餘額與待確認卡。
 
 - **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
