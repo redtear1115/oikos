@@ -113,6 +113,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 技術變更
 
+- **首頁的 App Store 連結帶宣傳活動參數（#1555）**
+  使用者：無變化（同一個 App Store 頁面）。
+  技術：`APP_STORE_URL` 加上 `pt=128976951&ct=landing&mt=8`，App Store Connect「宣傳活動」報表才分得出 landing 導來的下載（至少 5 個 Apple 帳號安裝後才會顯示）。
 - **出遊的加入、認領與權限規則（#1558）**
   使用者：畫面沒有變化；之後朋友從連結加入、認領名字、自己記帳與還款都走這些規則，出遊層級的操作只限開局帳本的成員。
   技術：`lib/outing/access.ts` 判定成員／登入參與者／cookie 參與者；新增 join、bind、改名、停用參與者、取得與重設連結、釋放 slot、編輯刪除支出與還款等 action，被拒一律回傳 code；`outingPublic.ts` 分層讀取。
