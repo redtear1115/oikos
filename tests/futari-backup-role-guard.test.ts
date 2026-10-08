@@ -36,7 +36,13 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), 'utf8')
 
 const MIGRATION_TAG = '0081_futari_backup_role'
 const migration = read(`drizzle/${MIGRATION_TAG}.sql`)
+// 0081's `GRANT USAGE ON SCHEMA auth` is refused on Supabase (postgres has no
+// grant option there), so auth rows are read through postgres-owned views.
+const VIEWS_TAG = '0082_backup_auth_views'
+const VIEWS_WHEN = 1783850000000
+const viewsMigration = read(`drizzle/${VIEWS_TAG}.sql`)
 const dropScript = read('scripts/ops/drop-futari-backup-role.sql')
+const counts = read('scripts/ops/futari-backup-counts.sql')
 const backup = read('scripts/ops/backup-prod.sh')
 const drill = read('scripts/ops/backup-restore-drill.sh')
 const install = read('scripts/ops/install-backup.sh')
@@ -51,6 +57,8 @@ const SHELL_SCRIPTS = [
 ] as const
 const NEW_FILES = [
   `drizzle/${MIGRATION_TAG}.sql`,
+  `drizzle/${VIEWS_TAG}.sql`,
+  `scripts/rollback/${VIEWS_TAG}.down.sql`,
   'scripts/ops/drop-futari-backup-role.sql',
   'scripts/ops/futari-backup-counts.sql',
   'scripts/ops/futari-backup-manifest.sql',
@@ -164,6 +172,113 @@ describe('0081 futari_backup migration (#1549)', () => {
   })
 })
 
+/** Statements outside DO blocks, comments removed, whitespace collapsed. */
+const statements = (sql: string) =>
+  sqlCode(sql)
+    .replace(/DO \$\$[\s\S]*?\$\$;/g, '')
+    .split(';')
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+
+describe('0082 backup_auth views (#1549)', () => {
+  it('is in the journal after 0081, with the `when` that keeps it before later migrations', () => {
+    const { entries } = JSON.parse(read('drizzle/meta/_journal.json')) as {
+      entries: { idx: number; tag: string; when: number; breakpoints: boolean }[]
+    }
+    const i = entries.findIndex((e) => e.tag === VIEWS_TAG)
+    expect(i, 'journal entry missing — db:migrate would silently skip the file (#874)').toBeGreaterThan(-1)
+    expect(entries[i]).toMatchObject({ idx: 82, when: VIEWS_WHEN, breakpoints: true })
+    for (const e of entries.slice(0, i)) expect(entries[i].when).toBeGreaterThan(e.when)
+  })
+
+  it('contains no credential at all — not even the word, comments included', () => {
+    expect(viewsMigration).not.toMatch(/PASSWORD/i)
+  })
+
+  // Two whole-row jsonb views: no per-column dependency (Supabase Auth's own
+  // DROP / ALTER COLUMN keeps working), not auto-updatable (OFFSET 0), and
+  // owner-rights (no view options).
+  it('builds exactly two whole-row jsonb views over auth.users / auth.identities, each with OFFSET 0', () => {
+    const stmts = statements(viewsMigration)
+    expect(stmts).toContain('CREATE SCHEMA IF NOT EXISTS backup_auth AUTHORIZATION postgres')
+    const views = stmts.filter((s) => /\bVIEW\b/i.test(s))
+    expect(views).toEqual([
+      'CREATE OR REPLACE VIEW backup_auth.users AS SELECT to_jsonb(u) AS r FROM auth.users u OFFSET 0',
+      'CREATE OR REPLACE VIEW backup_auth.identities AS SELECT to_jsonb(i) AS r FROM auth.identities i OFFSET 0',
+    ])
+  })
+
+  it('has no function, no SECURITY DEFINER, no security_invoker, no WITH CHECK, no view options', () => {
+    const code = sqlCode(viewsMigration)
+    expect(code).not.toMatch(/SECURITY\s+DEFINER/i)
+    expect(code).not.toMatch(/\bFUNCTION\b|\bPROCEDURE\b|\bROUTINE\b/i)
+    expect(code).not.toMatch(/security_invoker/i)
+    expect(code).not.toMatch(/WITH\s+(LOCAL\s+|CASCADED\s+)?CHECK/i)
+    expect(code).not.toMatch(/\bVIEW\s+[\w.]+\s+WITH\s*\(/i)
+    expect(code).not.toMatch(/pg_read_all_data|pg_write_all_data|ALTER DEFAULT PRIVILEGES|\bGRANT\s+ALL\b/i)
+    expect(code).not.toMatch(/\bCREATE\s+ROLE\b|\bALTER\s+ROLE\b/i)
+  })
+
+  it('grants exactly USAGE on backup_auth and SELECT on its two views, to futari_backup only', () => {
+    const grants = statements(viewsMigration).filter((s) => /\bGRANT\b/i.test(s) && !/^REVOKE\b/i.test(s))
+    expect(grants).toEqual([
+      'GRANT USAGE ON SCHEMA backup_auth TO futari_backup',
+      'GRANT SELECT ON TABLE backup_auth.users, backup_auth.identities TO futari_backup',
+    ])
+    const outsideDo = statements(viewsMigration).join(';\n')
+    expect(outsideDo).not.toMatch(/\b(INSERT|UPDATE|DELETE|TRUNCATE|EXECUTE|REFERENCES|TRIGGER)\b/i)
+  })
+
+  it('revokes everything from PUBLIC, anon, authenticated, service_role and drops 0081\'s auth grants', () => {
+    const stmts = statements(viewsMigration)
+    expect(stmts).toContain('REVOKE ALL ON SCHEMA backup_auth FROM PUBLIC, anon, authenticated, service_role')
+    expect(stmts).toContain(
+      'REVOKE ALL ON TABLE backup_auth.users, backup_auth.identities FROM PUBLIC, anon, authenticated, service_role',
+    )
+    expect(stmts).toContain('REVOKE ALL ON TABLE auth.users, auth.identities FROM futari_backup')
+    expect(stmts).toContain('REVOKE ALL ON SCHEMA auth FROM futari_backup')
+    // The revokes run before the grants (a later REVOKE FROM PUBLIC never
+    // touches futari_backup, but keep the order obvious).
+    expect(stmts.findIndex((s) => s.startsWith('REVOKE ALL ON SCHEMA backup_auth'))).toBeLessThan(
+      stmts.findIndex((s) => s.startsWith('GRANT USAGE ON SCHEMA backup_auth')),
+    )
+  })
+
+  it('ends with a DO block that asserts the exact ACLs, owner and options, and RAISEs otherwise', () => {
+    const code = sqlCode(viewsMigration)
+    const blocks = code.match(/DO \$\$[\s\S]*?\$\$;/g) ?? []
+    expect(blocks).toHaveLength(1)
+    const check = blocks[0] ?? ''
+    expect(code.trimEnd().endsWith(check)).toBe(true)
+    expect(check).toContain("'postgres:futari_backup:USAGE:false'")
+    expect(check).toContain("'postgres:futari_backup:SELECT:false'")
+    // format('%s', bool) renders 'f', not 'false': without the ::text cast the
+    // assertion RAISEs on every environment (caught applying to dev 2026-10-05).
+    expect(check.match(/a\.is_grantable::text/g) ?? []).toHaveLength(2)
+    expect(check).toMatch(/aclexplode\(n\.nspacl\)/)
+    expect(check).toMatch(/aclexplode\(c\.relacl\)/)
+    expect(check).toMatch(/c\.reloptions IS NULL/)
+    expect(check).toMatch(/c\.relkind = 'v'/)
+    expect(check).toMatch(/IS DISTINCT FROM 'postgres'/)
+    expect((check.match(/RAISE EXCEPTION/g) ?? []).length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('counts read the views, with the auth.* labels the sanity check and the drill compare expect', () => {
+    const code = sqlCode(counts)
+    expect(code).toMatch(/SELECT 'auth\.users', count\(\*\) FROM backup_auth\.users;/)
+    expect(code).toMatch(/SELECT 'auth\.identities', count\(\*\) FROM backup_auth\.identities;/)
+    expect(code).not.toMatch(/FROM auth\./)
+  })
+
+  it('rollback drops the schema and nothing else', () => {
+    const stmts = statements(read(`scripts/rollback/${VIEWS_TAG}.down.sql`))
+    expect(stmts).toEqual([
+      'DROP SCHEMA IF EXISTS backup_auth CASCADE',
+      `DELETE FROM drizzle.__drizzle_migrations WHERE created_at = ${VIEWS_WHEN}`,
+    ])
+  })
+})
+
 describe('drop script (#1549)', () => {
   const sql = sqlCode(dropScript)
   it('turns login off, terminates sessions, revokes default privileges and every grant, then drops — in that order', () => {
@@ -174,6 +289,8 @@ describe('drop script (#1549)', () => {
       'REVOKE ALL ON SEQUENCES FROM futari_backup',
       'REVOKE ALL ON ALL TABLES IN SCHEMA public FROM futari_backup',
       'REVOKE ALL ON ALL TABLES IN SCHEMA drizzle FROM futari_backup',
+      'REVOKE ALL ON TABLE backup_auth.users, backup_auth.identities FROM futari_backup',
+      'REVOKE ALL ON SCHEMA backup_auth FROM futari_backup',
       'REVOKE ALL ON TABLE auth.users, auth.identities FROM futari_backup',
       'REVOKE ALL ON TABLE cron.job FROM futari_backup',
       'REVOKE ALL ON SCHEMA cron FROM futari_backup',
@@ -248,17 +365,62 @@ describe('shell scripts (#1549)', () => {
     expect(install).toMatch(/sed "s\/\$\{PLACEHOLDER\}\/\$\{RECIPIENT\}\/"/)
   })
 
-  it('backup: one exported snapshot shared by both dumps, each streamed into age with every pipe stage checked', () => {
+  it('backup: one exported snapshot shared by the public dump and both auth exports, each streamed into age with every pipe stage checked', () => {
     const code = shCode(backup)
     expect(code).toMatch(/BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY/)
     expect(code).toMatch(/pg_export_snapshot\(\)/)
     expect(code).toMatch(/--snapshot="\$SNAPSHOT"/)
-    expect(code).toMatch(/\| "\$AGE" -r "\$AGE_RECIPIENT" -o "\$\{STAGING\}\/bundle\/\$\{name\}\.partial"/)
+    expect(code.match(/\| "\$AGE" -r "\$AGE_RECIPIENT" -o "\$\{STAGING\}\/bundle\/\$\{name\}\.partial"/g)).toHaveLength(2)
     expect(code).toMatch(/PIPESTATUS/)
     expect(code).toMatch(/--schema=public --schema=drizzle/)
-    expect(code).toMatch(/--data-only --table=auth\.users --table=auth\.identities/)
     // pg_dump never writes to a file: its only output is the pipe into age.
     expect(code).not.toMatch(/PG_DUMP[^\n]*(-f|--file)\b/)
+  })
+
+  // Auth rows come from the backup_auth views (0082) as data only, under the
+  // holder's snapshot, in a second session — never from schema auth itself,
+  // never as a pg_dump archive.
+  it('backup: auth parts are COPY of the backup_auth views in a session that imports the snapshot, UTF8 pinned', () => {
+    const code = shCode(backup)
+    expect(code).not.toMatch(/--table=auth\./)
+    expect(code).not.toMatch(/\bauth\.dump\.age\b/)
+    expect(code).not.toMatch(/FROM auth\./)
+    const order = [
+      '"SET client_encoding = \'UTF8\';"',
+      '"BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;"',
+      '"SET TRANSACTION SNAPSHOT \'${SNAPSHOT}\';"',
+      '"COPY (SELECT r FROM backup_auth.${view}) TO STDOUT;"',
+      '"COMMIT;"',
+    ]
+    let at = -1
+    for (const step of order) {
+      const i = code.indexOf(step, at + 1)
+      expect(i, `${step} missing or out of order`).toBeGreaterThan(at)
+      at = i
+    }
+    expect(code).toMatch(/^copy_part auth-users\.copy\.age users "\$MIN_BYTES_AUTH"$/m)
+    expect(code).toMatch(/^copy_part auth-identities\.copy\.age identities "\$MIN_BYTES_AUTH"$/m)
+    // Sequential, after the public dump: holder + one exporter = 2 connections.
+    expect(code.indexOf('dump_part public.dump.age')).toBeLessThan(code.indexOf('copy_part auth-users.copy.age'))
+    expect(code).not.toMatch(/copy_part[^\n]*&\s*$/m)
+    expect(code).toMatch(/send "\\\\qecho 'bundle_format\\\\t2'"/)
+  })
+
+  it('backup: refuses to run if the role can write to backup_auth, before any part is written', () => {
+    const code = shCode(backup)
+    const chk = code.indexOf(
+      "has_table_privilege(current_user, 'backup_auth.users', 'INSERT,UPDATE,DELETE,TRUNCATE') OR has_table_privilege(current_user, 'backup_auth.identities', 'INSERT,UPDATE,DELETE,TRUNCATE') OR has_schema_privilege(current_user, 'backup_auth', 'CREATE')",
+    )
+    expect(chk).toBeGreaterThan(-1)
+    expect(code).toMatch(/if \[ "\$WRITE_CHK" != 'f' \]; then/)
+    expect(chk).toBeLessThan(code.indexOf("send \"\\\\i '${COUNTS_SQL}'\""))
+    expect(chk).toBeLessThan(code.indexOf('dump_part public.dump.age'))
+  })
+
+  it('backup: the upload check expects exactly the four bundle_format 2 files', () => {
+    const code = shCode(backup)
+    expect(code).toMatch(/grep -c \.\)" = '4' \] \|\| die "remote bundle does not hold exactly 4 files"/)
+    expect(code).toMatch(/^for part in public\.dump\.age auth-users\.copy\.age auth-identities\.copy\.age manifest\.txt\.age; do$/m)
   })
 
   // The password's only exit is the 600 pgpass file in the staging dir:
@@ -288,7 +450,11 @@ describe('shell scripts (#1549)', () => {
     const code = shCode(drill)
     expect(code).toMatch(/^export PGHOST='127\.0\.0\.1'$/m)
     expect(code.match(/PGHOST=/g)).toHaveLength(1)
-    expect(code).not.toMatch(/service_role|SERVICE_ROLE|supabase\s+status|\.env\b|vault\.|cron\.schedule|cron\.alter_job/i)
+    // The role name may appear only in step 2's default-privileges REVOKEs
+    // (closing it, never connecting as it); anything else naming it fails.
+    const closeDefaults = /^q "ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON (TABLES|SEQUENCES|FUNCTIONS) FROM anon, authenticated, service_role" >\/dev\/null \|\| fail "default privileges \((tables|sequences|functions)\)"$/gm
+    expect(code.match(closeDefaults)).toHaveLength(3)
+    expect(code.replace(closeDefaults, '')).not.toMatch(/service_role|SERVICE_ROLE|supabase\s+status|\.env\b|vault\.|cron\.schedule|cron\.alter_job/i)
     expect(code).toMatch(/SELECT count\(\*\) FROM cron\.job WHERE active/)
   })
 
@@ -296,10 +462,14 @@ describe('shell scripts (#1549)', () => {
     const code = shCode(drill)
     const order = [
       'CREATE ROLE %I WITH NOLOGIN NOSUPERUSER NOCREATEROLE NOCREATEDB NOREPLICATION NOINHERIT BYPASSRLS',
-      'REVOKE ALL ON TABLES FROM anon, authenticated',
+      'REVOKE ALL ON TABLES FROM anon, authenticated, service_role',
       '--section=pre-data',
+      '-f "$BACKUP_AUTH_SQL"',
       '--section=data',
-      'auth.dump.age" --data-only',
+      'CREATE SCHEMA ${STAGE_SCHEMA}',
+      'restore_auth users',
+      'restore_auth identities',
+      'DROP SCHEMA ${STAGE_SCHEMA} CASCADE',
       '--section=post-data',
       '"$TRIGGER_SQL"',
       'ALTER PUBLICATION supabase_realtime ADD TABLE',
@@ -311,6 +481,59 @@ describe('shell scripts (#1549)', () => {
       expect(i, `${step} missing or out of order`).toBeGreaterThan(at)
       at = i
     }
+  })
+
+  // Regression (first dev drill, 2026-10-06): pg_restore stops reading after
+  // its section, age died of SIGPIPE and the drill reported a good bundle as
+  // undecryptable. The pg_restore side must drain stdin before exiting.
+  it('drill: the pg_restore pass drains the rest of the stream, so age\'s status means "decrypted"', () => {
+    const code = shCode(drill)
+    const feeds = code.split('\n').filter((l) => /\bdecrypt "\$file"[^\n]*\|/.test(l))
+    expect(feeds).toHaveLength(1)
+    expect(feeds[0]).toMatch(/\| \{ LC_MESSAGES=C "\$PG_RESTORE" [^}]*; rc=\$\?; cat >\/dev\/null; exit "\$rc"; \}$/)
+  })
+
+  it('drill: the informational diffs cannot end the run before the verdict', () => {
+    const code = shCode(drill)
+    // Under set -e + pipefail a bare `diff` (exit 1 on any difference) in a
+    // pipeline stops the drill with no DRILL line.
+    const diffs = code.split('\n').filter((l) => /\bdiff </.test(l))
+    expect(diffs.length).toBeGreaterThan(0)
+    for (const l of diffs) expect(l).toMatch(/\{ diff <.*\|\| true; \}|\|\| true\)$/)
+  })
+
+  it('drill: re-applies the repo\'s 0082 and accepts bundle_format 2 only, with all four parts present', () => {
+    const code = shCode(drill)
+    expect(code).toMatch(/^BACKUP_AUTH_SQL="\$\{REPO\}\/drizzle\/0082_backup_auth_views\.sql"$/m)
+    expect(code).toMatch(/^for part in public\.dump\.age auth-users\.copy\.age auth-identities\.copy\.age manifest\.txt\.age; do$/m)
+    expect(code).toMatch(/\[ "\$BUNDLE_FORMAT" = '2' \] \|\| fail/)
+    // Checked before anything is restored.
+    expect(code.indexOf('"$BUNDLE_FORMAT" = \'2\'')).toBeLessThan(code.indexOf('restore_pass pre-data'))
+    expect(code).not.toMatch(/auth\.dump\.age/)
+  })
+
+  // Regression for a crafted part (a line like `\! touch /tmp/x`): decrypted
+  // auth data reaches psql only as \copy's data — psql takes its commands from
+  // -c and exits after the copy, never reading the part as a script.
+  it('drill: decrypted auth parts are only ever fed to `psql -c "\\copy … FROM STDIN"`, never run as a script', () => {
+    const code = shCode(drill).replace(/\s*\\\n\s*/g, ' ')
+    const authFeeds = code.split('\n').filter((l) => /\bdecrypt "[^\n]*copy\.age/.test(l))
+    expect(authFeeds).toHaveLength(1)
+    const feed = authFeeds[0]
+    expect(feed).toMatch(
+      /decrypt "\$\{BUNDLE\}\/auth-\$\{t\}\.copy\.age" 2>>"\$ERR" \| "\$PSQL" -X -w -q -v ON_ERROR_STOP=1 -c "SET client_encoding = 'UTF8'" -c "\\\\copy \$\{STAGE_SCHEMA\}\.\$\{t\} \(r\) FROM STDIN" >\/dev\/null 2>>"\$ERR"$/,
+    )
+    // Every psql that reads a pipe from decrypt has -c and no -f.
+    for (const l of code.split('\n').filter((x) => /\bdecrypt ".*\|\s*"\$PSQL"/.test(x))) {
+      expect(l, l).toMatch(/"\$PSQL"[^|]* -c /)
+      expect(l, l).not.toMatch(/"\$PSQL"[^|]* (-f|--file)\b/)
+    }
+    // The INSERT takes validated, %I-quoted, non-generated column names only.
+    expect(code).toMatch(/a\.attgenerated = ''/)
+    expect(code).toMatch(/c !~ '\^\[a-z_\]\[a-z0-9_\]\*\\\$'/)
+    expect(code).toMatch(/jsonb_populate_record\(NULL::auth\.%I, s\.r\)/)
+    expect(code).toMatch(/format\('%I', c\)/)
+    expect(code).toMatch(/\[\[ "\$t" =~ \^\(users\|identities\)\$ \]\]/)
   })
 
   it('wrapper: checks the installed SHA-256 sums before running anything', () => {
@@ -342,12 +565,12 @@ describe('shell scripts (#1549)', () => {
     expect(code.slice(0, swap)).not.toMatch(/> "\$\{DEST\}\/|"\$DEST\/"|chmod [0-7]+ "\$\{DEST\}/)
   })
 
-  it('plist template: placeholders only, daily 03:30, private umask', () => {
+  it('plist template: placeholders only, daily 08:00, private umask', () => {
     expect(plist).not.toMatch(/\/Users\/|\/home\//)
     // Exactly the two tokens the installer fills — any other `__X__` (even in
     // a comment) makes the installer refuse the rendered plist.
     expect([...new Set(plist.match(/__[A-Z_]*__/g))].sort()).toEqual(['__LAUNCHD_LOG__', '__RUN_SCRIPT__'])
-    expect(plist).toMatch(/<key>Hour<\/key>\s*<integer>3<\/integer>\s*<key>Minute<\/key>\s*<integer>30<\/integer>/)
+    expect(plist).toMatch(/<key>Hour<\/key>\s*<integer>8<\/integer>\s*<key>Minute<\/key>\s*<integer>0<\/integer>/)
     expect(plist).toMatch(/<key>Umask<\/key>\s*<integer>63<\/integer>/)
   })
 })

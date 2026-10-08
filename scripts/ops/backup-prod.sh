@@ -1,9 +1,9 @@
 #!/bin/bash
-# #1549 — nightly prod backup: pg_dump → age → rclone (Google Drive).
+# #1549 — daily prod backup: pg_dump → age → rclone (Google Drive).
 #
 # Runs on the owner's Mac from the installed, SHA-checked copy in
 # ~/.local/libexec/futari-backup/ (scripts/ops/install-backup.sh), started by
-# launchd at 03:30 through futari-backup-run.sh. Operator steps, what the
+# launchd at 08:00 through futari-backup-run.sh. Operator steps, what the
 # backup role can and cannot reach, restore order and failure looks:
 # docs/superpowers/ops-runbook.md §「Prod backup (futari_backup)」.
 #
@@ -20,10 +20,14 @@
 # What it does, in order:
 #   1. password from the Keychain into a transient 600 PGPASSFILE inside a 700
 #      staging dir (deleted on exit, swept at the next start);
-#   2. one REPEATABLE READ transaction exports a snapshot and stays open; the
+#   2. one REPEATABLE READ transaction exports a snapshot and stays open; it
+#      first checks that this role cannot write to backup_auth, then the
 #      manifest (encrypted) and the row counts come from that transaction;
-#   3. pg_dump public+drizzle and auth.users+auth.identities with --snapshot,
-#      each streamed straight into age — no plaintext dump ever touches disk;
+#   3. pg_dump public+drizzle with --snapshot; then auth.users and
+#      auth.identities as data only — `COPY (SELECT r FROM backup_auth.<t>)`
+#      (one jsonb object per line, views from migration 0082) in a second
+#      session that imports the same snapshot. Every part is streamed straight
+#      into age — no plaintext ever touches disk;
 #   4. size + age-header check, then .partial → final name;
 #   5. sanity check of the counts against the previous run;
 #   6. rclone upload, size + md5 compare, LAST_OK, then prune.
@@ -66,7 +70,10 @@ readonly KEEP_DAYS=30
 # open invites) would otherwise fail the run on ordinary days.
 readonly SANITY_MIN_PREV=10
 
-# Smallest plausible ciphertext per part (age header alone is ~200 bytes).
+# Smallest plausible ciphertext per part (age header alone is ~200 bytes; an
+# empty payload comes out at ~230). Each auth part carries at least one row
+# (auth.users > 0 is a core check; every user has an identity), and one row
+# is ~0.5-2 KB of jsonb, so 512 rejects an empty export.
 readonly MIN_BYTES_PUBLIC=4096
 readonly MIN_BYTES_AUTH=512
 readonly MIN_BYTES_MANIFEST=512
@@ -318,16 +325,16 @@ print_plan() {
   printf 'pg tools        : %s (major %s required)\n' "$CFG_PG_BIN_DIR" "$CFG_PG_MAJOR"
   printf 'age recipient   : %s\n' "$([[ "$AGE_RECIPIENT" =~ ^age1 ]] && echo pinned || echo NOT PINNED)"
   printf 'upload to       : %s\n' "$([ -n "$CFG_RCLONE_DEST" ] && echo 'configured (RCLONE_DEST)' || echo MISSING)"
-  printf 'bundle name     : %s-<UTC timestamp>/{public.dump.age,auth.dump.age,manifest.txt.age}\n' "$CFG_BUNDLE_PREFIX"
+  printf 'bundle name     : %s-<UTC timestamp>/{public.dump.age,auth-users.copy.age,auth-identities.copy.age,manifest.txt.age} (bundle_format 2)\n' "$CFG_BUNDLE_PREFIX"
   printf 'state dir       : %s\n' "$STATE_DIR"
   printf 'staging parent  : %s\n' "$STAGING_PARENT"
   printf 'auth block today: %s\n\n' "$today_block"
   printf 'A real run would:\n'
   printf '  1. sweep stale staging dirs; make a 700 staging dir; write a 600 PGPASSFILE from the Keychain\n'
   printf '  2. open 1 snapshot-holder session: BEGIN REPEATABLE READ READ ONLY; pg_export_snapshot()\n'
-  printf '  3. in that transaction: row counts (local state, counts only) + manifest -> age\n'
+  printf '  3. in that transaction: check no write privilege on backup_auth; row counts (local state, counts only) + manifest -> age\n'
   printf '  4. pg_dump --snapshot -Fc -n public -n drizzle | age -r <pinned> -> public.dump.age.partial\n'
-  printf '  5. pg_dump --snapshot -Fc --data-only -t auth.users -t auth.identities | age -> auth.dump.age.partial\n'
+  printf '  5. second session, same snapshot: COPY (SELECT r FROM backup_auth.users|identities) TO STDOUT | age -> auth-users.copy.age / auth-identities.copy.age (.partial)\n'
   printf '  6. end the transaction; size + age header checks; rename .partial\n'
   printf '  7. sanity: core tables > 0; vs last run (prev >= %s rows): no table gone, none to 0, none down > 50%%\n' "$SANITY_MIN_PREV"
   printf '  8. rclone copy --immutable; compare sizes + md5; write LAST_OK\n'
@@ -393,7 +400,7 @@ touch "$LOG_FILE"; chmod 600 "$LOG_FILE"
 
 log "start (pid $$)"
 STAGE_NAME='lock'
-# One run at a time: a manual run overlapping the 03:30 one would exceed the
+# One run at a time: a manual run overlapping the scheduled one would exceed the
 # role's CONNECTION LIMIT 2 and fail both.
 if ! mkdir "${STATE_DIR}/run.lock" 2>/dev/null; then
   OTHER=$(cat "${STATE_DIR}/run.lock/pid" 2>/dev/null || true)
@@ -491,6 +498,28 @@ SERVER_NUM=$(head -n 1 "${STAGING}/server.ver")
   || die "server major $(( SERVER_NUM / 10000 )) is not the pinned ${CFG_PG_MAJOR}; install the matching pg_dump and update PG_MAJOR"
 log "ok snapshot exported (server major $(( SERVER_NUM / 10000 )), pg_dump ${DUMP_VERSION})"
 
+STAGE_NAME='privileges'
+# The backup reads auth rows through views that run with postgres's rights
+# (migration 0082). Any write privilege on them, or CREATE in their schema,
+# would let this credential change sign-in data with those rights — refuse to
+# run rather than carry on. The views are not updatable either (OFFSET 0);
+# this check is the second fence.
+#   Failure look when backup_auth is missing (a restored database where 0082
+#   was not re-applied): the session ends here with
+#   `relation "backup_auth.users" does not exist` in last-run.err (kind other).
+send "\\o '${STAGING}/write.chk'"
+send "SELECT has_table_privilege(current_user, 'backup_auth.users', 'INSERT,UPDATE,DELETE,TRUNCATE') OR has_table_privilege(current_user, 'backup_auth.identities', 'INSERT,UPDATE,DELETE,TRUNCATE') OR has_schema_privilege(current_user, 'backup_auth', 'CREATE');"
+send "\\o '${STAGING}/ready.p'"
+send "SELECT 'ready';"
+send "\\o"
+wait_for_file "${STAGING}/ready.p" 120 "the privilege preflight"
+WRITE_CHK=$(head -n 1 "${STAGING}/write.chk")
+if [ "$WRITE_CHK" != 'f' ]; then
+  FAIL_KIND='write-privilege'
+  die "this role can write to backup_auth (or the check returned '${WRITE_CHK}'); revoke it before backing up — ops-runbook 〈Prod backup〉"
+fi
+log "ok no write privilege on backup_auth"
+
 STAGE_NAME='manifest'
 send "\\o '${STAGING}/counts.tsv'"
 send "\\i '${COUNTS_SQL}'"
@@ -498,7 +527,7 @@ send "\\o"
 send "\\i '${MANIFEST_SQL}'"
 send "\\qecho '## dump'"
 send "\\qecho 'pg_dump_version\\t${DUMP_VERSION}'"
-send "\\qecho 'bundle_format\\t1'"
+send "\\qecho 'bundle_format\\t2'"
 send "\\o '${STAGING}/ready.b'"
 send "SELECT 'ready';"
 send "\\o"
@@ -522,7 +551,37 @@ dump_part() { # name min_bytes pg_dump-args...
 }
 
 dump_part public.dump.age "$MIN_BYTES_PUBLIC" --schema=public --schema=drizzle
-dump_part auth.dump.age "$MIN_BYTES_AUTH" --data-only --table=auth.users --table=auth.identities
+
+# Auth rows, data only: one jsonb object per line (COPY text format) from the
+# backup_auth views. A second session imports the holder's snapshot, so the
+# rows match the public dump and the counts; it runs after pg_dump has ended,
+# so the role never holds more than 2 connections. client_encoding is pinned
+# because every PG* variable was dropped above.
+#   Failure look if someone sets security_invoker on a view: this stage fails
+#   every night with error kind `permission` (permission denied for table
+#   users) — the view then checks this role's own rights on schema auth.
+copy_part() { # name view min_bytes
+  local name=$1 view=$2 min=$3
+  STAGE_NAME="copy-${name%%.*}"
+  [[ "$view" =~ ^(users|identities)$ ]] || die "unexpected auth view ${view}"
+  set +e
+  printf '%s\n' \
+      "SET client_encoding = 'UTF8';" \
+      "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;" \
+      "SET TRANSACTION SNAPSHOT '${SNAPSHOT}';" \
+      "COPY (SELECT r FROM backup_auth.${view}) TO STDOUT;" \
+      "COMMIT;" \
+    | "$PSQL" -X -w -q -v ON_ERROR_STOP=1 --dbname="service=${CFG_PG_SERVICE}" 2>>"$ERR_FILE" \
+    | "$AGE" -r "$AGE_RECIPIENT" -o "${STAGING}/bundle/${name}.partial" 2>>"$ERR_FILE"
+  local st=("${PIPESTATUS[@]}")
+  set -e
+  [ "${st[1]}" -eq 0 ] || die_tool "psql (auth ${view} export) exited ${st[1]}"
+  [ "${st[2]}" -eq 0 ] || die "age exited ${st[2]}"
+  finish_part "$name" "$min"
+}
+
+copy_part auth-users.copy.age users "$MIN_BYTES_AUTH"
+copy_part auth-identities.copy.age identities "$MIN_BYTES_AUTH"
 
 STAGE_NAME='snapshot-close'
 send "ROLLBACK;"
@@ -574,8 +633,8 @@ DEST="${CFG_RCLONE_DEST%/}/${BUNDLE}"
 STAGE_NAME='verify'
 REMOTE_MD5=$("$RCLONE" md5sum "$DEST" 2>>"$ERR_FILE") || die_tool "rclone md5sum failed"
 REMOTE_SIZES=$("$RCLONE" lsf --format sp --separator $'\t' "$DEST" 2>>"$ERR_FILE") || die_tool "rclone lsf failed"
-[ "$(printf '%s\n' "$REMOTE_SIZES" | grep -c .)" = '3' ] || die "remote bundle does not hold exactly 3 files"
-for part in public.dump.age auth.dump.age manifest.txt.age; do
+[ "$(printf '%s\n' "$REMOTE_SIZES" | grep -c .)" = '4' ] || die "remote bundle does not hold exactly 4 files"
+for part in public.dump.age auth-users.copy.age auth-identities.copy.age manifest.txt.age; do
   lsize=$(stat -f '%z' "${STAGING}/bundle/${part}")
   lmd5=$(md5 -q "${STAGING}/bundle/${part}")
   rsize=$(printf '%s\n' "$REMOTE_SIZES" | awk -F'\t' -v f="$part" '$2 == f { print $1 }')

@@ -1,6 +1,6 @@
 # Oikos — Agent Guide
 
-> 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。
+> 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。絕不對使用者顯示 Oikos，也不把 codebase 改名成 Futari。
 > 固定兩人（夫妻／伴侶）使用。Mobile-first PWA。
 
 這份是 agent 工作指南——架構、domain model、慣例、邊界。要把專案跑起來或部署，看 [README.md](README.md)。動文案、判讀指標、做產品取捨之前，看 [PRODUCT.md](PRODUCT.md)：各 surface 的意圖與「哪些低數字是預期的」寫在那裡。視覺 token 與元件規則在 [DESIGN.md](DESIGN.md)。後兩份由 Impeccable 維護，改動前先讀「設計脈絡（Impeccable）」那段。
@@ -15,7 +15,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.6.7** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
+**Latest released: v1.6.8** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
 
 ## Backlog / 未釋出版本
 
@@ -138,8 +138,8 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 要 release 時：
 
 1. 在 `chore/release-vX.Y.Z` 上跑 [`release`](.claude/skills/release/SKILL.md) skill（bump version + CHANGELOG + CLAUDE.md + README + tag）
-2. 開 PR `chore/release-vX.Y.Z → main`，merge 後 push tag
-3. 開 PR `main → release`，merge 後 Vercel 自動部 prod
+2. skill 開 PR `chore/release-vX.Y.Z → main`，交給獨立 verifier 驗證；全數 CONFIRMED 後 skill 自己 merge、push tag
+3. skill 開 PR `main → release` 後停下；**這條由使用者 merge**，merge 後 Vercel 自動部 prod
 
 本版動過「三平台架構」列的原生 trigger 路徑時，release 後要另外確認原生殼是否需要重送商店（skill 會在收尾 checklist 標示；流程見 [runbook](docs/app-store-submission-runbook.md)）。
 
@@ -161,6 +161,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - **每條 PR 在 merge 前補 CHANGELOG**：在該 PR 裡把條目寫進 `CHANGELOG.md` 的 `[Unreleased]`（三行短條目，見 CHANGELOG.md 開頭），verifier 驗證時一併核對條目與 diff；沒有使用者或營運看得到的變化（純測試、revert、release PR）就加 `no-changelog` label。`.claude/hooks/require-changelog.sh` 會在 `gh pr merge` 前檢查並擋下。原因：v1.6.3 累積 25 條 merge 都沒寫條目，切版時只能回頭從 diff 重建。
   - **失效的樣子**：hook 遇到自己無法判斷的情況（`gh` 沒登入、指令形式認不出來、設定沒載入）會放行，不會擋 merge——所以它壞掉時沒有任何錯誤，只會在切版時看到 `[Unreleased]` 又是空的。release skill 對空 `[Unreleased]` 的警告是最後一道防線。
 - **issue / PR 必須指定 milestone**：開 issue 或開 PR 時一律加上 `--milestone` 參數，不得省略。milestone 選當前正在開發的版本；若不確定歸屬，選最近的未關閉 milestone。
+  - **Tracker issue（列出一串 child issue 的那種）放在最後一個完成的 child 所在的 milestone**，也就是 open child 裡最晚的那個，讓 tracker 跟最後一件一起關。child 被移到更晚的 milestone 時，tracker 跟著移。失效的樣子：tracker 停在當前 milestone，切版時它擋著 milestone 關不掉，或每一版都被手動往後搬一次。
 
 ---
 
@@ -251,6 +252,6 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
 - [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
-- [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描與收尾 checklist；不 push、不碰 protected branch。
+- [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描；push release branch、開 PR，獨立驗證通過後 merge 進 `main` 並推 tag，開好 `main → release` PR 就停（prod 部署由使用者 merge）。
 - [`ship-native`](.claude/skills/ship-native/SKILL.md) — 原生殼重送（版本計數 +1 → iOS archive/export/upload、Android AAB + 驗簽 → 實機驗證 checklist）；build 可自動跑，上傳前必停下來確認。
 - [`ship-issue`](.claude/skills/ship-issue/SKILL.md) — 協調者模式：issue → 查證 → 關卡 ① intent → 關卡 ② 方案 → executor 實作 + verifier 驗收 → 開 PR → 關卡 ③ 驗收；使用者只做選擇，做到開好 PR 就停、不 merge。§8 批次驗證多條 PR（依 milestone 分組 → 整合試合 → 依風險派 agent → 依裝置分組的人工清單 → merge 後比對 head sha）。

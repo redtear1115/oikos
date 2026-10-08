@@ -230,7 +230,7 @@ Per愛物-type identity colors, each muted and emotive, with a tint derived via 
 
 **The One Ember Rule.** Ember (#E08856) is the only accent, and it stays rare: the FAB, a primary CTA, an on-state. If two embers compete on one screen, one of them is wrong. Its scarcity is what makes it feel warm.
 
-**The Pure-Black-and-White Ban.** Never `#000` or `#fff` as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White (#FFFFFF) is permitted only for cards and sheets that need to lift off the cream, never as the page ground. The one sanctioned white is `--on-fill`, the shared foreground for text on ink / ember / destructive fills.
+**The Pure-Black-and-White Ban.** Never `#000` or `#fff` as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White (#FFFFFF) is permitted only for cards and sheets that need to lift off the cream, never as the page ground. The one sanctioned white is `--on-fill`, the shared foreground for text on ink / ember / destructive fills. **One exception: the Sign in with Apple button** (`app/[locale]/sign-in/SignInButton.tsx`) is pure `#000` / `#fff` because Apple's HIG allows only black, white, or white-with-outline for that button, never a brand color. It is not a violation; do not "fix" it to Cocoa Ink. That file is a native-contract surface, so a change ships straight to every installed shell and only surfaces at the next App Store review.
 
 **The Quiet-Money Rule.** Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged.
 
@@ -443,7 +443,7 @@ Each Don't carries a one-sentence audit test. Run the test on the screen; if it 
 - **Do** keep every font size even-px, mapped to a `text-*` class (The Even-Px Rule).
 
 ### Don't:
-- **Don't** use `#000` or `#fff` as a brand surface; text is Cocoa Ink, grounds are warm cream. *Test: search the diff for `#fff`, `#ffffff`, `white`, and `black`; every hit that is not `--on-fill` on a filled control is wrong.*
+- **Don't** use `#000` or `#fff` as a brand surface; text is Cocoa Ink, grounds are warm cream. *Test: search the diff for `#fff`, `#ffffff`, `white`, and `black`; every hit that is not `--on-fill` on a filled control, or the Sign in with Apple button, is wrong.*
 - **Don't** ship cold fintech (navy-and-gold, dense data grids, "wealth management" gravitas). *Test: if the screen would look at home with a stock-ticker strip added to it, it is too institutional.*
 - **Don't** ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric dashboard template. *Test: if there is more than one big number on the screen, none of them is the moment.*
 - **Don't** let the screen drift back to the generic budgeting app. *Test: screenshot it and desaturate to greyscale; if you can still count discrete rectangular blocks, there are too many containers, and the hairline should be doing that work.*

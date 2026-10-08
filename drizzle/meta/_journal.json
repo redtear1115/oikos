@@ -570,6 +570,13 @@
       "breakpoints": true
     },
     {
+      "idx": 82,
+      "version": "7",
+      "when": 1783850000000,
+      "tag": "0082_backup_auth_views",
+      "breakpoints": true
+    },
+    {
       "idx": 83,
       "version": "7",
       "when": 1783900000000,
