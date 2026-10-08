@@ -596,6 +596,13 @@
       "when": 1784200000000,
       "tag": "0086_former_member_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0087_push_token_membership",
+      "breakpoints": true
     }
   ]
 }

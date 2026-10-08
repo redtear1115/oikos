@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { signOut } from '@/actions/auth'
+import { unregisterThisDevice } from '@/actions/push'
+import { signOutThisDevice } from '@/lib/signOutThisDevice'
+import { unwrapAction } from '@/lib/action-errors'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { clearDynamicCache } from '@/lib/offline/swControl'
 import { useTranslations } from '@/lib/i18n/client'
@@ -24,7 +27,12 @@ export function LogoutButton() {
     // previous user's pages. Toggle preference / app shell precache are
     // kept (they're not user-scoped).
     await clearDynamicCache().catch(() => {})
-    await signOut().catch(() => {})
+    // #1605 — drop this device's push registration first (≤2 s, failures
+    // swallowed), then sign out exactly as before. See lib/signOutThisDevice.
+    await signOutThisDevice({
+      unregister: async (token) => unwrapAction(await unregisterThisDevice(token)),
+      signOut,
+    })
     // Safety net: if signOut()'s soft nav somehow didn't take, force a hard
     // navigation so the user is never visually stranded on /settings.
     window.location.replace('/')

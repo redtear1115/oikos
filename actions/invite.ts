@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { groupEpochs, groupInvites, oikosGroups, profiles, trips } from '@/lib/db/schema'
+import { groupEpochs, groupInvites, oikosGroups, profiles, pushTokens, trips } from '@/lib/db/schema'
 import {
   classifyGroupClaimMiss,
   classifyUnclaimableInvite,
@@ -606,6 +606,14 @@ export const acceptInvite = action(async (token: string): Promise<string> => {
           isNull(groupInvites.acceptedAt),
           isNull(groupInvites.revokedAt),
         ))
+
+      // #1605 — the joiner's push tokens move with them to the ledger they
+      // just joined: pushes for the solo ledger whose chapter this join ends
+      // would otherwise keep arriving, and the joined ledger's would not.
+      await tx
+        .update(pushTokens)
+        .set({ groupId: invite.groupId })
+        .where(and(inArray(pushTokens.groupId, lockedOtherIds), eq(pushTokens.userId, user.id)))
     }
 
     // Open the new duo epoch — member_a stays as is, member_b is the joiner.

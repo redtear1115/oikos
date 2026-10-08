@@ -260,8 +260,9 @@ describe('actions/ shape', () => {
   it('awaits no action without unwrapping or an explicit exemption', () => {
     const exempt = new Set([
       // Signs out and redirects; a failed sign-out falls through to the hard
-      // `window.location.replace` safety net in the same handler.
-      'app/(dashboard)/settings/_components/LogoutButton.tsx:signOut',
+      // `window.location.replace` safety net in LogoutButton's handler. Since
+      // #1605 the call lives in this helper (LogoutButton passes it in).
+      'lib/signOutThisDevice.ts:signOut',
       // Best-effort: the banner reappears on the next load if this fails.
       'app/(dashboard)/settings/_components/DeleteAccountButton.tsx:requestAccountDeletion',
       'app/(dashboard)/_components/AccountDeletionBanner.tsx:cancelAccountDeletion',
