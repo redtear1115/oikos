@@ -182,6 +182,8 @@ export async function currentEpochHasRecords(
  * Latest closed epoch on a group, or null. Used by the post-leave card on the
  * stayer's dashboard: when the current epoch is solo and the latest closed
  * epoch had a memberB, that memberB just left and we surface a one-shot card.
+ * Server-only: the row carries the frozen names; take a name for the card
+ * through {@link getEpochMembers}, and never pass this row to a client prop.
  */
 export async function getLatestPriorClosedEpoch(groupId: string) {
   const [row] = await db
@@ -191,6 +193,55 @@ export async function getLatestPriorClosedEpoch(groupId: string) {
     .orderBy(desc(groupEpochs.endedAt))
     .limit(1)
   return row ?? null
+}
+
+/** What {@link withChapterNames} needs from a GroupEpochs row. */
+interface ChapterNameSource {
+  endedAt: Date | null
+  memberAId: string
+  memberBId: string | null
+  memberAName: string | null
+  memberBName: string | null
+}
+
+/**
+ * #1604 part 2 — the names a chapter shows for its two people.
+ *
+ * A closed chapter shows the name each person had when it closed: the
+ * snapshot 0088's trigger froze on the row (a deleted account's slot reads
+ * 「已離開的夥伴」). Only while a slot's snapshot is NULL (an open chapter, or a
+ * row 0088's backfill could not fill) does the live `Profiles` name stand in.
+ * Live names are fetched only for those slots, so a list of closed chapters
+ * costs no `Profiles` read at all.
+ *
+ * Failure this prevents: nothing errors; a chapter that is over keeps picking
+ * up whatever name the other person chose later.
+ */
+async function withChapterNames<R extends ChapterNameSource>(
+  rows: R[],
+): Promise<(R & { memberAName: string | null; memberBName: string | null })[]> {
+  const frozen = (r: R, name: string | null | undefined) =>
+    (r.endedAt != null && name != null ? name : null)
+  const needLive = new Set<string>()
+  for (const r of rows) {
+    if (frozen(r, r.memberAName) === null) needLive.add(r.memberAId)
+    if (r.memberBId && frozen(r, r.memberBName) === null) needLive.add(r.memberBId)
+  }
+  const liveRows = needLive.size === 0
+    ? []
+    : await db
+        .select({ id: profiles.id, displayName: profiles.displayName })
+        .from(profiles)
+        .where(inArray(profiles.id, Array.from(needLive)))
+  const liveById = new Map(liveRows.map((p) => [p.id, p.displayName]))
+
+  return rows.map((r) => ({
+    ...r,
+    memberAName: frozen(r, r.memberAName) ?? liveById.get(r.memberAId) ?? null,
+    memberBName: r.memberBId
+      ? (frozen(r, r.memberBName) ?? liveById.get(r.memberBId) ?? null)
+      : null,
+  }))
 }
 
 /**
@@ -218,27 +269,15 @@ export async function listEpochs(
 
   if (rows.length === 0) return []
 
-  const profileIds = Array.from(new Set(
-    rows.flatMap((r) => [r.memberAId, r.memberBId].filter((x): x is string => x !== null)),
-  ))
-
-  const profileRows = profileIds.length === 0
-    ? []
-    : await db
-        .select({ id: profiles.id, displayName: profiles.displayName })
-        .from(profiles)
-        .where(inArray(profiles.id, profileIds))
-
-  const nameById = new Map(profileRows.map((p) => [p.id, p.displayName]))
-
-  return rows.map((r) => ({
+  // #1604 part 2: a closed chapter's names are the ones frozen at its close.
+  return (await withChapterNames(rows)).map((r) => ({
     id: r.id,
     startedAt: r.startedAt,
     endedAt: r.endedAt,
     memberAId: r.memberAId,
     memberBId: r.memberBId,
-    memberAName: nameById.get(r.memberAId) ?? null,
-    memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
+    memberAName: r.memberAName,
+    memberBName: r.memberBName,
   }))
 }
 
@@ -283,28 +322,16 @@ export async function listEpochsForViewer(
 
   if (rows.length === 0) return []
 
-  const profileIds = Array.from(new Set(
-    rows.flatMap((r) => [r.memberAId, r.memberBId].filter((x): x is string => x !== null)),
-  ))
-
-  const profileRows = profileIds.length === 0
-    ? []
-    : await db
-        .select({ id: profiles.id, displayName: profiles.displayName })
-        .from(profiles)
-        .where(inArray(profiles.id, profileIds))
-
-  const nameById = new Map(profileRows.map((p) => [p.id, p.displayName]))
-
-  return rows.map((r) => ({
+  // #1604 part 2: a closed chapter's names are the ones frozen at its close.
+  return (await withChapterNames(rows)).map((r) => ({
     id: r.id,
     groupId: r.groupId,
     startedAt: r.startedAt,
     endedAt: r.endedAt,
     memberAId: r.memberAId,
     memberBId: r.memberBId,
-    memberAName: nameById.get(r.memberAId) ?? null,
-    memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
+    memberAName: r.memberAName,
+    memberBName: r.memberBName,
   }))
 }
 
@@ -408,21 +435,23 @@ export const resolveViewerEpochContext = cache(async (
  *
  * #1604 — this is also the ONE source of a chapter member's display name.
  * Every surface that labels a chapter's people (the dashboard layout's chapter
- * identity, and through it CompactRow / TripDetail / BrandHeader) reads names
- * from here and never from `Profiles` directly. Today the name is the
- * person's live profile name (a deleted account's tombstone reads
- * 「已離開的夥伴」); #1604 part 2 swaps this helper to the name frozen when
- * the chapter closed, and only this function changes. A name read from
- * `Profiles` anywhere else would silently keep showing the live name after
- * that swap. No avatar is returned on purpose: a past chapter shows no avatar
- * (after-leaving spec,「人：停在當時」).
+ * identity, and through it CompactRow / TripDetail / BrandHeader; the monthly
+ * review page; PartnerLeftCard) reads names from here and never from
+ * `Profiles` directly. For a CLOSED chapter the name is the one frozen when it
+ * closed (#1604 part 2, migration 0088: `GroupEpochs.member_*_name`, a deleted
+ * account's slot reads 「已離開的夥伴」); the live profile name stands in only
+ * while that snapshot is NULL (an open chapter). A name read from `Profiles`
+ * anywhere else would quietly show the person's later name inside a chapter
+ * that is over. No avatar is returned on purpose: a past chapter shows no
+ * avatar (after-leaving spec,「人：停在當時」).
  *
  * Caller contract: this has NO viewer check and returns personal data (names).
  * Callers must already have established that the viewer may see this chapter
  * — e.g. the epoch id came from `resolveViewerEpochContext`, which only
  * accepts a pin for a chapter the viewer is named on, in a group they are
  * still a member of. Never pass an id taken straight from user input.
- * `memberAName` / `memberBName` are null when the profile row is missing.
+ * `memberAName` / `memberBName` are null when there is neither a snapshot nor
+ * a profile row.
  */
 export async function getEpochMembers(
   epochId: string,
@@ -433,24 +462,24 @@ export async function getEpochMembers(
   memberBName: string | null
 } | null> {
   const [row] = await db
-    .select({ memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
+    .select({
+      endedAt: groupEpochs.endedAt,
+      memberAId: groupEpochs.memberAId,
+      memberBId: groupEpochs.memberBId,
+      memberAName: groupEpochs.memberAName,
+      memberBName: groupEpochs.memberBName,
+    })
     .from(groupEpochs)
     .where(eq(groupEpochs.id, epochId))
     .limit(1)
   if (!row) return null
 
-  const ids = [row.memberAId, row.memberBId].filter((x): x is string => x !== null)
-  const nameRows = await db
-    .select({ id: profiles.id, displayName: profiles.displayName })
-    .from(profiles)
-    .where(inArray(profiles.id, ids))
-  const nameById = new Map(nameRows.map((p) => [p.id, p.displayName]))
-
+  const [named] = await withChapterNames([row])
   return {
-    memberAId: row.memberAId,
-    memberBId: row.memberBId,
-    memberAName: nameById.get(row.memberAId) ?? null,
-    memberBName: row.memberBId ? (nameById.get(row.memberBId) ?? null) : null,
+    memberAId: named.memberAId,
+    memberBId: named.memberBId,
+    memberAName: named.memberAName,
+    memberBName: named.memberBName,
   }
 }
 

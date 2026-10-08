@@ -20,14 +20,19 @@ const TPE = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d) 
 const CH1 = { startedAt: TPE(2026, 3, 1), endedAt: TPE(2026, 6, 15), epochId: 'e1', isPast: true }
 const CH2 = { startedAt: TPE(2026, 6, 15), endedAt: null, epochId: 'e2', isPast: false }
 const GROUP = { id: 'g1', memberA: 'user-a', memberB: 'user-c' }
-const EPOCH_MEMBERS: Record<string, { memberAId: string; memberBId: string | null }> = {
-  e1: { memberAId: 'user-a', memberBId: 'user-b' },
-  e2: { memberAId: 'user-a', memberBId: 'user-c' },
+// #1604 part 2 — what getEpochMembers returns: for the closed chapter e1, the
+// names frozen when it closed ('A at close' / 'B at close'); for the open e2,
+// the live names. The live profiles below carry later names and photos.
+const EPOCH_MEMBERS: Record<string, {
+  memberAId: string; memberBId: string | null; memberAName: string | null; memberBName: string | null
+}> = {
+  e1: { memberAId: 'user-a', memberBId: 'user-b', memberAName: 'A at close', memberBName: 'B at close' },
+  e2: { memberAId: 'user-a', memberBId: 'user-c', memberAName: 'A', memberBName: 'C' },
 }
 const PROFILES = [
-  { id: 'user-a', displayName: 'A', avatarUrl: null },
-  { id: 'user-b', displayName: 'B', avatarUrl: null },
-  { id: 'user-c', displayName: 'C', avatarUrl: null },
+  { id: 'user-a', displayName: 'A', avatarUrl: 'https://img.example/a-now.jpg' },
+  { id: 'user-b', displayName: 'B renamed later', avatarUrl: 'https://img.example/b-now.jpg' },
+  { id: 'user-c', displayName: 'C', avatarUrl: 'https://img.example/c-now.jpg' },
   { id: 'user-x', displayName: 'X', avatarUrl: null },
 ]
 
@@ -75,7 +80,7 @@ const { default: MonthlyReviewPage } = await import('@/app/(dashboard)/review/[m
 
 type Props = {
   viewer: { id: string }
-  partner: { id: string } | null
+  partner: { id: string; displayName: string; avatarUrl: string | null } | null
   isSolo: boolean
   readOnly: boolean
   quiz: unknown
@@ -122,6 +127,22 @@ describe('A (stayed) viewing chapter 1', () => {
     viewer = 'user-a'; window = CH1
     const p = await open('2026-04')
     expect(p.partner?.id).toBe('user-b')
+  })
+
+  // #1604 part 2 — the closed chapter shows B as B was when it closed: the
+  // snapshot name from getEpochMembers, never B's later name, and no photo.
+  it("shows B under the name frozen at the chapter's close, with no avatar", async () => {
+    viewer = 'user-a'; window = CH1
+    const p = await open('2026-04')
+    expect(p.partner).toEqual({ id: 'user-b', displayName: 'B at close', avatarUrl: null })
+  })
+})
+
+describe('the open chapter keeps the live profile (#1604 part 2)', () => {
+  it("C on a chapter-2 month sees A's live name and photo", async () => {
+    viewer = 'user-c'; window = CH2
+    const p = await open('2026-07')
+    expect(p.partner).toEqual({ id: 'user-a', displayName: 'A', avatarUrl: 'https://img.example/a-now.jpg' })
   })
 })
 

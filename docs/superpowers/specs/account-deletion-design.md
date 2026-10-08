@@ -1,9 +1,9 @@
 ---
-last_updated: 2026-08-12
+last_updated: 2026-10-08
 status: shipped
 first_shipped_in: v1.5.1
 related_specs: [native-auth, product]
-related_issues: ["#923", "#848"]
+related_issues: ["#923", "#848", "#1604", "#1618"]
 ---
 
 # Account Deletion（帳號刪除）
@@ -62,6 +62,9 @@ Google 另要求一個免登入、可達的 web 頁描述刪除途徑。現有 `
    - group 轉 solo 給另一半：刪除者是 member_a → 另一半從 B 升 A，並比照 `confirmSwap` 翻轉 `split_ratio_a` / `default_split_ratio_a` 並 recalc balance；刪除者是 member_b → 直接 `member_b = NULL`。
    - 關閉雙人 epoch、開另一半的 solo epoch、bump `current_epoch_started_at`（比照 `leaveGroup`）。
    - 刪 `auth.users`（移除登入 / email / provider 這些真正 PII），但**保留一個洗白的 `Profiles` 墓碑列**（displayName→「已離開的夥伴」、avatar→NULL），讓 `paid_by` / `recipient_id` 等 FK 仍解析得到。
+   - 已關閉的章節各自保存了兩人在關閉當時的名字（#1604，migration 0088）。刪除時，刪除者在**所有**帳本、所有章節裡的這個名字一律換成「已離開的夥伴」，包括很久以前離開的帳本，以及寬限期內被對方關掉的章節。墓碑列本身不夠：章節不再讀 `Profiles` 的名字。
+     - 失效的樣子：沒有任何錯誤；對方打開舊章節，看到的仍是刪除者的真名。
+   - 尚未涵蓋：月回顧快照裡「最大筆支出」的付款人名字仍是計算當時的名字，刪除後不會被換掉（#1618）。在它修好之前，「刪除後所有地方都只顯示『已離開的夥伴』」這個承諾還不完整。
    - 未結 balance 在刪除時視為勾消（因不檔 settlement）；recalc 後 solo = 0。
 9. **Web 刪除 URL**：沿用 `/[locale]/privacy`，Play Console deletion URL 指向它；確保其刪除段落與實際 flow 一致（可選加 anchor 利於審核員尋找）。
 

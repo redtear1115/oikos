@@ -28,9 +28,16 @@ interface Props {
    * link unusable" button; a link minted here turns it on too.
    */
   hasOpenInvite?: boolean
+  /**
+   * #1604 — pinned to a past chapter: leave today's partner row out. That
+   * chapter's people are not today's, and this section lists today's ledger.
+   * Only the row: `partner` keeps its live meaning for the invite CTA (a live
+   * duo shows none; a live solo keeps it).
+   */
+  hidePartnerRow?: boolean
 }
 
-export function MemberListSection({ viewer, partner, hasOpenInvite = false }: Props) {
+export function MemberListSection({ viewer, partner, hasOpenInvite = false, hidePartnerRow = false }: Props) {
   const t = useTranslations()
   const router = useRouter()
   const isSolo = partner === null
@@ -103,7 +110,7 @@ export function MemberListSection({ viewer, partner, hasOpenInvite = false }: Pr
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <MemberRow {...viewer} youSuffix />
-        {partner && (
+        {partner && !hidePartnerRow && (
           <>
             <div style={{ borderTop: '1px solid var(--hairline)' }} />
             <MemberRow {...partner} />

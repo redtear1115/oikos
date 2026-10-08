@@ -155,3 +155,51 @@ describe('AvatarMenuSheet — solo mode', () => {
     expect(screen.getByText(/單人狀態下，每筆記錄都算你的/)).toBeTruthy()
   })
 })
+
+// #1604 (S3 verifier advisory A2) — the sheet opens from BrandHeader while
+// pinned to a past chapter too. Its member list, avatar cluster and split
+// ratio are TODAY's ledger settings; inside an old chapter they put the new
+// partner's name and photo next to the ex's records. Pinned → none of today's
+// partner appears in the sheet. Failure looks like nothing: the sheet renders,
+// with 小華 (today's partner) in it while the viewer looks at chapter 1.
+describe('AvatarMenuSheet — pinned to a past chapter (#1604)', () => {
+  function pinnedCtx(opts: { liveSolo: boolean }): MemberContextValue {
+    const base = makeCtx({ solo: opts.liveSolo })
+    return {
+      ...base,
+      partner: base.partner ? { ...base.partner, avatarUrl: 'https://img.example/partner-now.jpg' } : null,
+      isPast: true,
+      epochEndedAt: '2024-06-01T00:00:00.000Z',
+      chapter: {
+        partner: { id: 'u-ex', displayName: '阿前', initial: '阿', avatarUrl: null },
+        isSolo: false,
+      },
+    }
+  }
+
+  it("shows no trace of today's partner: no member row, no photo, no split ratio", () => {
+    const { container } = wrap(pinnedCtx({ liveSolo: false }))
+    expect(screen.queryByText(/小華/)).toBeNull()
+    expect(container.innerHTML).not.toContain('partner-now.jpg')
+    expect(screen.queryByText(/（對方）.*%/)).toBeNull()
+    // The viewer is still listed.
+    expect(screen.getAllByText(/小明/).length).toBeGreaterThan(0)
+  })
+
+  it('a live duo pinned to a past chapter gets no invite CTA (hiding the row is not "solo")', () => {
+    wrap(pinnedCtx({ liveSolo: false }))
+    expect(screen.queryByRole('button', { name: /邀請/ })).toBeNull()
+  })
+
+  it('a live solo pinned to a past chapter keeps the invite CTA, as before', () => {
+    wrap(pinnedCtx({ liveSolo: true }))
+    expect(screen.getByRole('button', { name: /邀請/ })).toBeTruthy()
+  })
+
+  it('unpinned control: the live partner row and photo are shown', () => {
+    const ctx = makeCtx({ solo: false })
+    const { container } = wrap({ ...ctx, partner: { ...ctx.partner!, avatarUrl: 'https://img.example/partner-now.jpg' } })
+    expect(screen.getAllByText(/小華/).length).toBeGreaterThan(0)
+    expect(container.innerHTML).toContain('partner-now.jpg')
+  })
+})

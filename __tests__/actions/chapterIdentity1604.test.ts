@@ -101,9 +101,9 @@ async function seedStayer(now: 'paired' | 'solo') {
   ]).returning({ id: groupEpochs.id })
   const inClosed = D('2025-03-01')
   const cash = await db.insert(cashTransactions).values([
-    { groupId: g.id, paidBy: ex, amount: 100, splitType: 'half', description: 'TEST_1604 ex paid', category: 'food', transactedAt: inClosed, createdAt: inClosed },
-    { groupId: g.id, paidBy: stayer, amount: 200, splitType: 'half', description: 'TEST_1604 stayer paid', category: 'food', transactedAt: inClosed, createdAt: inClosed },
-    ...(nowB ? [{ groupId: g.id, paidBy: nowB, amount: 300, splitType: 'half' as const, description: 'TEST_1604 next paid', category: 'food', transactedAt: D('2025-07-01') }] : []),
+    { groupId: g.id, paidBy: ex, amount: 100, splitType: 'half', description: 'TEST_1604 ex paid', category: 'dining', transactedAt: inClosed, createdAt: inClosed },
+    { groupId: g.id, paidBy: stayer, amount: 200, splitType: 'half', description: 'TEST_1604 stayer paid', category: 'dining', transactedAt: inClosed, createdAt: inClosed },
+    ...(nowB ? [{ groupId: g.id, paidBy: nowB, amount: 300, splitType: 'half' as const, description: 'TEST_1604 next paid', category: 'dining', transactedAt: D('2025-07-01') }] : []),
   ]).returning({ id: cashTransactions.id, paidBy: cashTransactions.paidBy })
   const income = await db.insert(incomeTransactions).values([
     { groupId: g.id, recipientId: ex, amount: 1000, category: 'salary', occurredAt: '2025-03-01', createdAt: inClosed },

@@ -89,14 +89,29 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   // 404, never /sign-in: the viewer is signed in, and /sign-in would bounce
   // them back to /dashboard in a loop (#1603).
   if (!viewerProfile) notFound()
-  const partnerProfile = memberB
-    ? profileRows.find((p) => p.id !== user.id)
-    : null
-  const isSolo = !memberB
   // A closed chapter is read-only (epoch-readonly): no next-month editor, and
   // no partner quiz — the quiz session is the group's live one, which after a
   // leave belongs to a different pair.
   const readOnly = context.window.isPast
+  const liveMember = memberB
+    ? profileRows.find((p) => p.id !== user.id)
+    : null
+  // #1604 part 2 — in a closed chapter the other person is shown as they were
+  // when it closed: the name getEpochMembers returns (the snapshot) and no
+  // avatar (after-leaving spec,「人：停在當時」). Never the live profile, whose
+  // name and photo may be from long after the chapter ended. The open chapter
+  // keeps the live profile.
+  const chapterPartnerName = readOnly && chapter
+    ? ((chapter.memberAId === user.id ? chapter.memberBName : chapter.memberAName) ?? null)
+    : null
+  const partnerProfile = !liveMember
+    ? null
+    : readOnly
+      ? (chapterPartnerName === null
+          ? null
+          : { id: liveMember.id, displayName: chapterPartnerName, avatarUrl: null })
+      : liveMember
+  const isSolo = !memberB
 
   const editorMonth = nextMonth(reviewedMonth)
 

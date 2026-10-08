@@ -131,6 +131,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與首頁的「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
   技術：layout 以 `getEpochMembers`（現在也回傳名字，唯一的章節成員名字來源）在 MemberContext 加章節身分，`useViewedPartner()` 供 CompactRow／TripDetail／BrandHeader／首頁篩選列／TransactionFeed 使用；`resolveViewedPair` 讓 `/records` 首屏與分頁 action 的「對方」都用章節成員；`viewerIsA` 仍取自目前群組列；釘選時不查餘額與待確認卡。
 
+- **舊章節裡的名字停在章節結束的那一刻（#1604）**
+  使用者：回看舊章節時，對方顯示的是那段章節結束時的名字，之後改名不會跟著變；月回顧、「過去的時光」與對方離開後的提示卡也一樣，舊章節不顯示對方頭像；回看舊章節時，篩選照那段章節是否兩人決定，設定選單不出現現在伴侶的名字與頭像；刪除帳號後，那個人在所有章節都顯示「已離開的夥伴」。
+  技術：`0088`（跑在 0087 之後，**必須在程式部署前先上 prod**，避開 UTC 16:00–17:30）為 `GroupEpochs` 加 `member_a_name`／`member_b_name` 與關閉時填入的 trigger，重定義 `process_account_deletions` 把刪除者的名字換掉，回填既有已關閉章節（0088 之前結束的章節用套用當天的名字）；`getEpochMembers`／`listEpochs*` 改讀快照；月回顧快照裡的付款人名字見 #1618。
+
 - **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
   使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
   技術：`lib/insurancePolicyHolder.ts`（#1579 改名為 `lib/insuranceMemberLink.ts`）在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。
