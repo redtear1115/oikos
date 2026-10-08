@@ -8,6 +8,8 @@ import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { track } from '@/lib/analytics/track'
+import { isLocale } from '@/lib/i18n/locales-meta'
+import { localizedHref } from '@/lib/i18n/path'
 import type { OutingListRow } from '@/lib/db/queries/outing'
 import { OutingSheet } from './OutingSheet'
 
@@ -171,7 +173,9 @@ function ParticipatingRow({ outing, isLast }: { outing: ParticipatingOuting; isL
 function OutingsEmptyState() {
   const t = useTranslations()
   const tl = t.outingList
-  const locale = useLocale()
+  const raw = useLocale()
+  // Canonical form: zh-TW is unprefixed, so `/zh-TW/...` would be a duplicate URL.
+  const featureHref = localizedHref('/features/outing', isLocale(raw) ? raw : 'zh-TW')
   return (
     <div className="flex flex-col items-center justify-center pt-16 pb-12 px-6 text-center">
       <div
@@ -189,7 +193,7 @@ function OutingsEmptyState() {
       <div className="text-base font-medium mb-2 text-ink">{tl.empty.heading}</div>
       <div className="text-sm leading-relaxed text-ink-3 max-w-65">{tl.empty.body}</div>
       <Link
-        href={`/${locale}/features/outing`}
+        href={featureHref}
         className="mt-3 inline-flex items-center min-h-11 text-sm underline text-ink-3"
         onClick={() => track('feature_outing_link_clicked', { source: 'outings_empty' })}
       >
