@@ -22,11 +22,10 @@ import type { DailyTrendRow } from '@/lib/db/queries/transactions'
 import { TREND_EXPENSE_COLOR, TREND_INCOME_COLOR } from '@/lib/chartPalette'
 
 const VB_W = 320
-const VB_H = 168
+const VB_H = 152 // plot only; day numbers are HTML below so they scale with text size
 const PAD_X = 6
-const LABEL_H = 16 // bottom strip for day numbers
 const PLOT_TOP = 6
-const PLOT_BOTTOM = VB_H - LABEL_H
+const PLOT_BOTTOM = VB_H
 const CENTER_Y = PLOT_TOP + (PLOT_BOTTOM - PLOT_TOP) / 2
 const HALF_H = (PLOT_BOTTOM - PLOT_TOP) / 2 - 2 // tiny margin so bars don't kiss the edge
 const INNER_W = VB_W - PAD_X * 2
@@ -125,19 +124,29 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
         />
         <circle cx={xOf(n - 1)} cy={yOfCum(n - 1)} r={2.5} fill={endDotColor} />
 
-        {tickDays.map((day) => (
-          <text
-            key={day}
-            x={xOf(day - 1)}
-            y={VB_H - 4}
-            textAnchor="middle"
-            className="text-xs tnum"
-            style={{ fill: 'var(--ink-3)' }}
-          >
-            {day}
-          </text>
-        ))}
       </svg>
+
+      {/* Day ticks (#1514). HTML, not SVG <text>: SVG text is sized in viewBox
+          units, so at 2x system text the labels outgrew a fixed strip and the
+          last one ("31") clipped at the right edge. Here the row grows with the
+          text; first tick is start-anchored and last end-anchored so neither can
+          cross the plot edge at any scale. The invisible nbsp holds the height. */}
+      <div className="relative mt-1 text-xs tnum text-ink-3" aria-hidden="true">
+        <span className="invisible">&nbsp;</span>
+        {tickDays.map((day) => {
+          const anchor = day === tickDays[0] ? 'start' : day === tickDays[tickDays.length - 1] ? 'end' : 'middle'
+          return (
+            <span
+              key={day}
+              data-tick-anchor={anchor}
+              className={`absolute top-0 ${anchor === 'start' ? '' : anchor === 'end' ? '-translate-x-full' : '-translate-x-1/2'}`}
+              style={{ left: `${((anchor === 'start' ? PAD_X : anchor === 'end' ? VB_W - PAD_X : xOf(day - 1)) / VB_W) * 100}%` }}
+            >
+              {day}
+            </span>
+          )
+        })}
+      </div>
 
       {/* Legend — colours decoded once, no per-bar labels. */}
       <div className="flex items-center justify-center gap-4 mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>

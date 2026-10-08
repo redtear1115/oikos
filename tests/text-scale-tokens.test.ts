@@ -29,4 +29,15 @@ describe('text tokens compile', () => {
       expect(rule(cls), cls).not.toContain('text-scale')
     }
   }, 60_000)
+
+  // #1514 - the one scoped exception: bottom-nav label follows --text-scale but
+  // is capped at 1.3x; the nav tab and the list row are em-based containers.
+  it('caps the nav label scale and emits em container conditions', async () => {
+    const css = fs.readFileSync(path.join(ROOT, 'app/globals.css'), 'utf8')
+    const out = (await postcss([tailwind({ base: ROOT })]).process(css, { from: 'app/globals.css' })).css
+    const flat = out.replace(/\s+/g, ' ')
+    expect(flat).toMatch(/\.text-nav-label \{[^}]*font-size: calc\(0\.875rem \* min\(var\(--text-scale, 1\), 1\.3\)\)/)
+    expect(flat).toMatch(/@container \(width < 16em\)/)
+    expect(flat).toMatch(/@container \(width < 4em\)/)
+  }, 60_000)
 })

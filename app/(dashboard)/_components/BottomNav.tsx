@@ -137,6 +137,15 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
   )
 }
 
+// The tab is the container and carries the (capped) label size, so em in the
+// conditions below = label font-size on both platforms: iOS via --text-nav-label,
+// Android via textZoom scaling the computed px. Tab ≈ 78px at 390: 4.5em → the
+// tab is under ~4.5 label-widths (≈1.2x on iOS, ~1.3x+ on Android), drop the
+// tracking; 4em → 78/(14*z) puts Android z≥1.4 here, shrink the label to 0.65em
+// so z=2 lands at ≈ the 1.3x iOS cap. Never truncate meaning: aria-label has it.
+export const NAV_LABEL_CLASS =
+  'max-w-full truncate text-[1em] tracking-[0.4px] @max-[4.5em]:tracking-normal @max-[4em]:text-[0.65em]'
+
 function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number]; label: string; active: boolean; allowPrefetch: boolean }) {
   const Icon = tab.icon
   const color = active ? 'var(--ink)' : 'var(--ink-3)'
@@ -146,10 +155,10 @@ function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number
       prefetch={allowPrefetch ? true : false}
       aria-current={active ? 'page' : undefined}
       aria-label={label}
-      className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
+      className="@container text-nav-label flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
       style={{ color }}>
       <Icon active={active} color={color} />
-      <span className="max-w-full truncate text-sm tracking-[0.4px]" style={{ fontWeight: active ? 500 : 400 }}>
+      <span className={NAV_LABEL_CLASS} style={{ fontWeight: active ? 500 : 400 }}>
         {label}
       </span>
     </Link>
