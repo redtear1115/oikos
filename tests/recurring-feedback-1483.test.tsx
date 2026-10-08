@@ -136,10 +136,10 @@ describe.each(KINDS)('#1483 next-dates preview ($kind)', ({ kind, rule }) => {
 
   it('day 31: three clamped dates and the new plain-language hint', () => {
     renderSheet(kind)
-    expect(screen.queryByText(/Months without a day/)).toBeNull() // day 7 → no hint
+    expect(screen.queryByText(/last day of the month/)).toBeNull() // day 7 → no hint
     act(() => { screen.getByRole('button', { name: 'Day 31' }).click() })
     expect(screen.getByText('Next: Oct 31, Nov 30, Dec 31')).toBeInTheDocument()
-    expect(screen.getByText('Months without a day 31 use the last day of the month.')).toBeInTheDocument()
+    expect(screen.getByText('In months with no day 31, the last day of the month is used.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/fallback/i)
   })
 
@@ -169,7 +169,7 @@ describe.each(KINDS)('#1483 delete count ($kind)', ({ kind, actions, rule }) => 
     actions.countPendingForRule.mockResolvedValue({ ok: true, data: 3 })
     await openConfirm()
     expect(actions.countPendingForRule).toHaveBeenCalledWith(rule.id)
-    expect(screen.getByText(/Pending cards waiting for you \(3\) will be removed too\./)).toBeInTheDocument()
+    expect(screen.getByText(/Pending cards from this rule \(3\) will be removed too\./)).toBeInTheDocument()
   })
 
   it('count 0 only says what stays', async () => {

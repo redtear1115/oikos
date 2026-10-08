@@ -346,7 +346,7 @@ describe('leaveGroup', () => {
     expect(await leaveGroup()).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
     expect(insertedGroup.name).toBe(dictionaries[locale].postLeave.newLedgerName)
-    expect(insertedGroup.name).toBe(({ 'zh-TW': '家計簿', 'zh-CN': '家计簿', en: 'Ledger', ja: '家計簿' } as const)[locale])
+    expect(insertedGroup.name).toBe(({ 'zh-TW': '家計簿', 'zh-CN': '家计簿', en: 'Household ledger', ja: '家計簿' } as const)[locale])
   })
 
   it('never reads Profiles to name the ledger (no pre-transaction display-name lookup, #1622)', async () => {

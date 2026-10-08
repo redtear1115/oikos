@@ -238,11 +238,11 @@ export function RecurringRuleSheet(props: Props) {
         : tNs.sheet.deleteConfirmDescriptionCount.replace('{count}', String(pendingCount))
 
   // #1588 — resume of a rule whose person left the ledger: don't call the
-  // action blind (it would answer rule_person_not_member). Say what to do
+  // action blind (it would answer rule_payer_not_member or rule_recipient_not_member). Say what to do
   // first; the edit form above already has the person picker (duo) or the
   // "goes under you" line (solo), and saving it is the re-pick.
   const handleResumeNeedsPerson = () => {
-    setError(t.errors.actions.rule_person_not_member)
+    setError(isIncome ? t.errors.actions.rule_recipient_not_member : t.errors.actions.rule_payer_not_member)
   }
 
   const handleSave = () => {

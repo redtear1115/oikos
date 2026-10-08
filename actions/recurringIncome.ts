@@ -197,7 +197,7 @@ export const resumeRule = action(async (id: string): Promise<void> => {
   // cards that can never be confirmed. The way out is editing the rule to
   // pick a current member (`updateRule`), then resuming. paused_at is unchanged.
   if (rule.recipientId !== group.memberA && rule.recipientId !== group.memberB) {
-    throw actionError('rule_person_not_member')
+    throw actionError('rule_recipient_not_member')
   }
   // #1442 — a rule linked to a frozen copy (leaveGroup paused it) stays
   // paused: resuming would generate records on a read-only 愛物. The way out

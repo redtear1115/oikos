@@ -11,7 +11,7 @@ import { resolve } from 'node:path'
 // state, keeps skipped / resolved cards and written transactions, resets a
 // stale proposed_paid_by on the stayer's rules, and leaves the stayer's own
 // rules alone. resumeRule then refuses a rule whose person is not a current
-// member (`rule_person_not_member`, paused_at unchanged) until updateRule
+// member (`rule_payer_not_member` / `rule_recipient_not_member`, paused_at unchanged) until updateRule
 // re-assigns it.
 //
 // Failure looks like: cards of the ex keep arriving every period and can
@@ -173,9 +173,9 @@ describe('removePartner #1588 S3 — recurring rules of the removed member', () 
 
     const before = await pausedAt(recurringIncomeRules, s.exIncome)
     const r1 = await income.resumeRule(s.exIncome)
-    expect(r1).toMatchObject({ ok: false, code: 'rule_person_not_member' })
+    expect(r1).toMatchObject({ ok: false, code: 'rule_recipient_not_member' })
     const r2 = await expense.resumeRule(s.exExpensePaused)
-    expect(r2).toMatchObject({ ok: false, code: 'rule_person_not_member' })
+    expect(r2).toMatchObject({ ok: false, code: 'rule_payer_not_member' })
     expect((await pausedAt(recurringIncomeRules, s.exIncome))?.getTime()).toBe(before?.getTime())
     expect(await pausedAt(recurringExpenseRules, s.exExpensePaused)).not.toBeNull()
 
