@@ -12,7 +12,6 @@ import {
   invoiceCredentials,
   monthlyReviewMessages,
   oikosGroups,
-  profiles,
   pushTokens,
   settlements,
 } from '@/lib/db/schema'
@@ -30,6 +29,7 @@ import {
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
 import { action, actionError } from '@/lib/action-errors'
+import { dictionaries, getLocale } from '@/lib/i18n/t'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -227,16 +227,12 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
   const leaver = user.id
   const oldGroupId = group.id
 
-  // Fetch leaver's display name BEFORE the transaction so we can name the new
-  // solo group sensibly. Falls back to "我的家計簿" if profile is somehow gone.
-  const [leaverProfile] = await db
-    .select({ displayName: profiles.displayName })
-    .from(profiles)
-    .where(eq(profiles.id, leaver))
-    .limit(1)
-  const newGroupName = leaverProfile?.displayName
-    ? `${leaverProfile.displayName} 的家計簿`
-    : '我的家計簿'
+  // The new solo ledger gets a neutral name in the leaver's locale (#1622).
+  // Never derive it from a display name: a ledger name outlives the person's
+  // account deletion (process_account_deletions does not rewrite it), and the
+  // ledger may later be shared with a new partner. drizzle/0090 renamed the
+  // legacy "<name> 的家計簿" ledgers to the zh-TW value of this key.
+  const newGroupName = dictionaries[await getLocale()].postLeave.newLedgerName
 
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
     // 0. Lock the group row and its open chapter row, take the chapter

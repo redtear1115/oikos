@@ -1,7 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SQL } from 'drizzle-orm'
 import { PgDialect } from 'drizzle-orm/pg-core'
 import { setMockUser } from './_mocks/supabase'
+
+// next/headers cookies(): leaveGroup reads the leaver's locale cookie (#1622).
+const cookieStore = new Map<string, string>()
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({
+    get: (key: string) => {
+      const value = cookieStore.get(key)
+      return value === undefined ? undefined : { value }
+    },
+    set: vi.fn(),
+    delete: vi.fn(),
+  })),
+}))
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
   proposeSwap,
@@ -10,6 +23,7 @@ import {
   leaveGroup,
   removePartner,
 } from '@/actions/membership'
+import { LOCALE_COOKIE, SUPPORTED_LOCALES, dictionaries } from '@/lib/i18n/t'
 
 const VIEWER_A = { id: 'user-a', email: 'a@example.com' }
 const VIEWER_B = { id: 'user-b', email: 'b@example.com' }
@@ -31,6 +45,7 @@ function duoGroup(overrides: Partial<Record<string, unknown>> = {}) {
 
 beforeEach(() => {
   resetDbMocks()
+  cookieStore.clear()
 })
 
 // ─── proposeSwap ─────────────────────────────────────────────────────────────
@@ -163,7 +178,6 @@ describe('leaveGroup', () => {
   it('happy path: member_b leaves with balance = 0', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])                          // group lookup
-    queueDbResult([{ displayName: 'Mei' }])              // leaver profile
     // Inside the transaction — locks and the boundary first, then the guards (#943 S-E, #1290):
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // OikosGroups … FOR NO KEY UPDATE
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // open GroupEpochs … FOR NO KEY UPDATE
@@ -189,9 +203,10 @@ describe('leaveGroup', () => {
     // Every chapter stamp is the one DB-clock boundary, never a JS Date.
     expect(mockBuilder.values.mock.calls[0][0].currentEpochStartedAt).toBeInstanceOf(SQL)
 
-    // New solo group is named after the leaver's display name
+    // New solo group gets the neutral default, never a display name (#1622).
+    // No cookie -> DEFAULT_LOCALE (zh-TW).
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
-    expect(insertedGroup.name).toBe('Mei 的家計簿')
+    expect(insertedGroup.name).toBe('家計簿')
     expect(insertedGroup.memberA).toBe('user-b')
     expect(insertedGroup.memberB).toBeNull()
   })
@@ -206,7 +221,6 @@ describe('leaveGroup', () => {
   it('moves rows without NULLing asset links; cross-ledger links go to the frozen-copy step (#1442)', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ displayName: 'Mei' }])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }])
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
@@ -240,7 +254,6 @@ describe('leaveGroup', () => {
   it('rejects when balance is not 0 — read inside the transaction, after the group-row lock', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ displayName: 'Mei' }])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -258,7 +271,6 @@ describe('leaveGroup', () => {
   it('rejects when an outing is active in the current epoch (#943)', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ displayName: 'Mei' }])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -272,7 +284,6 @@ describe('leaveGroup', () => {
   it('rejects when an active trip exists (checked before the outing fence)', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ displayName: 'Mei' }])
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -284,7 +295,6 @@ describe('leaveGroup', () => {
   it('re-checks membership under the lock: a concurrent change makes the leave stale', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ displayName: 'Mei' }])
     queueDbResult([{ memberA: 'user-a', memberB: null }]) // partner row changed before we got the lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: null }])
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])
@@ -309,10 +319,11 @@ describe('leaveGroup', () => {
     await expect(leaveGroup()).rejects.toThrow('Unauthorized')
   })
 
-  it('falls back to a generic group name when profile is missing', async () => {
-    setMockUser(VIEWER_B)
+  // #1622: a ledger name outlives the person's account deletion and can be
+  // shown to a later partner, so it must never carry a display name. The old
+  // code named it "<displayName> 的家計簿" from a pre-transaction Profiles read.
+  function queueHappyLeave() {
     queueDbResult([duoGroup()])
-    queueDbResult([])                                    // no profile row
     queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }]) // group-row lock
     queueDbResult([{ id: 'epoch-1', memberAId: 'user-a', memberBId: 'user-b' }]) // chapter-row lock
     queueDbResult([{ boundary: '2026-09-27 00:00:00.123456+00' }])   // boundary
@@ -320,10 +331,34 @@ describe('leaveGroup', () => {
     queueDbResult([{ n: 0 }])                            // no active trip
     queueDbResult([{ n: 0 }])                            // no active outing
     queueDbResult([{ id: 'grp-new' }])
+    queueDbResult([])
+    queueDbResult([{ id: 'epoch-new' }])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([])
+  }
 
-    await leaveGroup()
+  it.each(SUPPORTED_LOCALES)('names the new solo ledger with the neutral %s default, never a display name (#1622)', async (locale) => {
+    setMockUser(VIEWER_B)
+    cookieStore.set(LOCALE_COOKIE, locale)
+    queueHappyLeave()
+
+    expect(await leaveGroup()).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
-    expect(insertedGroup.name).toBe('我的家計簿')
+    expect(insertedGroup.name).toBe(dictionaries[locale].postLeave.newLedgerName)
+    expect(insertedGroup.name).toBe(({ 'zh-TW': '家計簿', 'zh-CN': '家计簿', en: 'Ledger', ja: '家計簿' } as const)[locale])
+  })
+
+  it('never reads Profiles to name the ledger (no pre-transaction display-name lookup, #1622)', async () => {
+    setMockUser(VIEWER_B)
+    queueHappyLeave()
+    expect(await leaveGroup()).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
+    // The first queued result after the group lookup is the group-row lock:
+    // had a Profiles read been reinstated it would consume it and the leave
+    // would fail the membership re-check instead of succeeding.
+    const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
+    expect(insertedGroup.name).toBe('家計簿')
+    expect(String(insertedGroup.name)).not.toContain(' 的家計簿')
   })
 })
 
