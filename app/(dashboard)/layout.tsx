@@ -16,6 +16,7 @@ import { hasOpenInvite } from '@/lib/db/queries/invite'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 import { ShellTopStack } from './_components/ShellTopStack'
@@ -157,7 +158,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         )}
         <ViewerProvider value={value}>
           <RealtimeProvider groupId={group.id}>
-            <PushTokenRegistrar userId={user.id} groupId={group.id} />
+            {/* #1605 — the ACTIVE ledger, never the pinned one. */}
+            {await getActiveGroupForUser(user.id).then((g) => g && <PushTokenRegistrar userId={user.id} groupId={g.id} />)}
             <OfflineLifecycle />
             <ReconnectRefresh />
             <PartnerActivityToast />

@@ -13,6 +13,7 @@ import {
   monthlyReviewMessages,
   oikosGroups,
   profiles,
+  pushTokens,
   settlements,
 } from '@/lib/db/schema'
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
@@ -427,6 +428,16 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
         isNull(invoiceCredentials.deletedAt),
       ))
 
+    // 10a. #1605 — the leaver's push tokens follow them to the new solo
+    // ledger. Left on the old group they would be sent the stayer's "pending
+    // card due" push (the sender now filters by membership too, and 0087
+    // refuses re-binding to a group the owner is not in; this keeps the rows
+    // pointed where the device's next push should come from).
+    await tx
+      .update(pushTokens)
+      .set({ groupId: newGroup.id })
+      .where(and(eq(pushTokens.groupId, oldGroupId), eq(pushTokens.userId, leaver)))
+
     // 11. Move MonthlyReviewMessages where member_id = leaver
     await tx
       .update(monthlyReviewMessages)
@@ -637,6 +648,14 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
         eq(invoiceCredentials.userId, removedUserId),
         isNull(invoiceCredentials.deletedAt),
       ))
+
+    // #1605 — the removed member's devices stop receiving this ledger's
+    // pushes. Deleted rather than moved: no group is created for them (see
+    // above), and their own ledger's registrar re-registers the device the
+    // next time they open the app. Their tokens on other ledgers stay.
+    await tx
+      .delete(pushTokens)
+      .where(and(eq(pushTokens.groupId, groupId), eq(pushTokens.userId, removedUserId)))
 
     // #1588 — the removed member's recurring rules stop here. Same predicates
     // as process_account_deletions (drizzle/0086) and the 0086 data repair:
