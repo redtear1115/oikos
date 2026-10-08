@@ -134,7 +134,8 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 | event | 觸發時機 | 關鍵屬性 |
 |---|---|---|
 | `$pageview` *(已存在)* | 每個路由 | `$current_url` |
-| `landing_cta_clicked` | 點 landing / migrate / use-case 的 CTA | `cta_location`（含 `use_case_primary`）、`target`（`sign_in` \| `migrate_*` \| `use_case_*`） |
+| `landing_cta_clicked` | 點 landing / migrate / use-case 的 CTA | `cta_location`（含 `use_case_primary`、`feature_primary`、`feature_closing`）、`target`（`sign_in` \| `migrate_*` \| `use_case_*`） |
+| `feature_outing_link_clicked` | 點到 `/features/outing` 的入口連結（use-case 旅行／AA 制連結列、出遊分享頁底部、App 內出遊空狀態；#1633） | `source`（`use_case_travel` \| `use_case_aa_split` \| `outing_share` \| `outings_empty`）。固定標籤，**不帶網址或 token** |
 | `migrate_file_selected` | 在 `/migrate/*` 選了 CSV | `migrate_source` |
 | `migrate_preview_shown` | 解析成功、預覽渲染 | `migrate_source`、`detected_source`、`row_count` |
 | `migrate_preview_failed` | 解析失敗 | `migrate_source`、`reason` |

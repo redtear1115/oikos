@@ -54,6 +54,8 @@ export type EntrySource =
   | 'invite'
   /** #1558: a friend who joined an outing by link, then signed in from it. */
   | 'outing'
+  /** #1633: signed in from the /features/outing page's CTA. */
+  | 'feature_outing'
   | 'direct'
 
 /**
@@ -64,6 +66,13 @@ export type EntrySource =
  * a test in `tests/analytics-attribution.test.ts` for exactly that reason.
  */
 export type ImportResumeSource = KnownCsvSource
+
+/**
+ * The `from` value /features/outing's CTAs tag sign-in with (#1633). Shared by
+ * the emitter and `entrySourceFromParam`, so they cannot drift (a mismatch
+ * reads back as `direct`, with no error).
+ */
+export const FEATURE_OUTING_FROM_PARAM = 'feature-outing'
 
 /** Prefix marking a `from` value as a use-case page, kept off migrate slugs. */
 const USE_CASE_FROM_PREFIX = 'use-case-'
@@ -121,6 +130,7 @@ export function entrySourceFromParam(from: string | null | undefined): EntrySour
   if (from === 'landing') return 'landing'
   if (from === 'invite') return 'invite'
   if (from === 'outing') return 'outing'
+  if (from === FEATURE_OUTING_FROM_PARAM) return 'feature_outing'
   const value = from ?? ''
   return entrySourceForMigrate(value) ?? entrySourceForUseCase(value) ?? 'direct'
 }

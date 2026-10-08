@@ -47,6 +47,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：結束出遊只會把「你們兩人之間」那一條建議轉帳折回主帳本，朋友照建議還清後不會再多出一筆；結束前的確認畫面會先顯示這個金額，已結束或過去章節的出遊不再顯示。
   技術：`coupleNetFromOuting` 改取 `minimalTransfers` 的 A↔B 線，詳情頁與 `endOuting` 共用 `memberPidsOf`；結束後該線仍列在建議轉帳（#1635），不改 schema、不回填。
 
+- **出遊介紹頁 /features/outing（#1633）**
+  使用者：新增公開頁，用動畫示範「丟一個連結、朋友選名字就能記」；旅行、AA 制情境頁、出遊分享頁底部、App 內出遊空狀態各有一個連結進去（4 語，en／ja 待確認）。
+  技術：`/features` 登記為公開前綴；歸因 `from=feature-outing` → `entry_source=feature_outing`，新增 `feature_outing_link_clicked`；範例金額由產品的拆帳函式算出並有單元測試。
+
 ## [1.7.0] - 2026-10-08
 
 主題：**出遊．朋友從連結加入**——分享一條連結，朋友就能加入出遊、認領自己的名字、一起記帳與還款；同時把「有人離開帳本之後」的舊章節、名字、推播與資料保留整理成一致的規則（spec: after-leaving）。

@@ -6,10 +6,10 @@ export const PUBLIC_LOCALIZED_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as
 
 /**
  * Public localized path prefixes. Sub-paths added dynamically over time
- * (e.g. /migrate/<source>) — listed here so proxy + LanguageSwitcher treat
+ * (e.g. /migrate/<source>, /features/outing) — listed here so proxy + LanguageSwitcher treat
  * the whole subtree as anonymous-public without re-listing every page.
  */
-export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate', '/use-case', '/outing'] as const
+export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate', '/use-case', '/outing', '/features'] as const
 
 /**
  * 出遊分享連結（#1558）：`/outing/<shareToken>` 與 `/outing/r/<outingId>`，

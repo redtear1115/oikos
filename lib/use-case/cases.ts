@@ -23,6 +23,8 @@ export type UseCaseDef = {
   contentUpdatedAt: string
   /** Which Futari features are highlighted for this use case (icon keys). */
   features: readonly ('split' | 'trip' | 'asset' | 'realtime' | 'encrypt' | 'history')[]
+  /** Feature pages (/features/<key>) this case cross-links to after its feature list (#1633). */
+  featureLinks?: readonly 'outing'[]
 }
 
 export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
@@ -43,8 +45,9 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   travel: {
     slug: 'travel',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-08',
     features: ['trip', 'split', 'realtime', 'history'],
+    featureLinks: ['outing'],
   },
   roommates: {
     slug: 'roommates',
@@ -73,8 +76,9 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   'aa-split': {
     slug: 'aa-split',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-08',
     features: ['split', 'realtime', 'encrypt', 'history'],
+    featureLinks: ['outing'],
   },
 } as const
 

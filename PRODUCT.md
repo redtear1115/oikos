@@ -15,6 +15,7 @@ The register field above is the project default and governs everything inside th
 - `app/[locale]/page.tsx` and `app/[locale]/_landing/*` (landing)
 - `app/[locale]/migrate/page.tsx` and `app/[locale]/migrate/[source]/page.tsx` (competitor-migration SEO pages)
 - `app/[locale]/use-case/page.tsx` and `app/[locale]/use-case/[slug]/page.tsx` (vertical narratives)
+- `app/[locale]/features/*` (feature explainer pages; today `/features/outing`)
 - `app/[locale]/sign-in/page.tsx` (the threshold: brand voice, product restraint)
 - `app/[locale]/privacy`, `app/[locale]/terms` (legal, brand typography, no app chrome)
 
@@ -101,6 +102,8 @@ Every public surface has a job, and each job has a number that says whether the 
 **`/migrate/*` (competitor migration pages).** Someone searches "how do I move off X" and lands here. The job ends at sign-up, so the metric is `landing_cta_clicked`. The CSV import widget on the page is a logged-out bonus for the rare visitor who arrives already holding an export file; the real importer lives behind sign-in, in settings. `import_completed` from these pages was never a success metric. In ninety days exactly one person completed an import straight off organic search, and that's the expected shape — the count would sit near zero even if the pages were doing their job perfectly. What discriminates is the CTA click: sources without the screenshot workflow convert at 26%, sources with it at 6.5%. That gap is where the friction is.
 
 **`/use-case/*` (scenario landing pages).** Ten pages across four locales, written for people searching a situation rather than a product. Organic arrivals are the metric, and ninety days in there are none. The ceiling is search volume, not page count or page quality: the pages do rank — cohabitation 18.5, newlyweds 7.5, aa-split 7.7 — which is Google's own evidence that they aren't being treated as thin content. A page that ranks for a term nobody searches is a cheap bet that hasn't paid off. Its share of the sitemap is not a cost to optimize away.
+
+**`/features/*` (feature explainer pages).** Today one page, `/features/outing`, for the friend-joins-by-link outing. It is reached from the travel and aa-split use-case pages, the outing share page and the in-app outing empty state, not from the landing. Its job is to answer "what is this and do my friends have to install anything"; the metric is `feature_outing_link_clicked` by `source`, then sign-ups tagged `entry_source=feature_outing`. It shows no fold-back amount (#1634).
 
 **Invitation flow.** Getting the second partner into the ledger, measured by what happens after an invite is sent. Over 120 days, 25 people created a group, 6 tried to send an invite, and 5 succeeded. Among those five, the gap between creating the group and the partner joining was 2, 4, 6, 19, and 299 minutes. Three of five inside six minutes means the dominant scene is two people in the same room with one phone between them. Design for hand-over, not for delivery across distance — and read the small number of send attempts as a description of that scene rather than as a failing invite.
 

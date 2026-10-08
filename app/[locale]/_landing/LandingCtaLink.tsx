@@ -29,6 +29,8 @@ interface Props {
     | 'footer_use_case'
     | 'use_case_primary'
     | 'migrate_primary'
+    | 'feature_primary'
+    | 'feature_closing'
   target: Target
   /** Overrides the `from=landing` attribution tag. /migrate/<source> reuses this
    *  CTA off the landing page and tags its own slug, matching `MigrateCta`. */
