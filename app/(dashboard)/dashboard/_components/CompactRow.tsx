@@ -1,6 +1,6 @@
 'use client'
 
-import { useBaseCurrency, useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { useBaseCurrency, useMember, useViewedPartner, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
@@ -54,7 +54,10 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const t = useTranslations()
   const locale = useLocale()
   const today = useToday()
-  const { viewer, partner, viewerIsA } = useMember()
+  const { viewer, viewerIsA } = useMember()
+  // #1604 — the viewed chapter's partner: in a past chapter that is the ex
+  // (name + initial, no avatar), never whoever the viewer is paired with today.
+  const { partner } = useViewedPartner()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')

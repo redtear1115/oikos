@@ -122,11 +122,14 @@ export default async function DashboardPage() {
     rawActiveTrips,
     rawRates,
   ] = await Promise.all([
-    getGroupBalance(group.id),
-    getGroupPendingBalanceDelta(group.id),
+    // #1604 — the live balance, pending delta and pending cards are today's,
+    // not a past chapter's; a pinned dashboard renders none of them
+    // (Dashboard.tsx), so it doesn't fetch them either.
+    epochWindow.isPast ? Promise.resolve(0) : getGroupBalance(group.id),
+    epochWindow.isPast ? Promise.resolve(0) : getGroupPendingBalanceDelta(group.id),
     listIncomeMonthSummary(group.id, yyyymm, epochWindow),
-    listIncomePendingsForViewer(group.id, memberScope),
-    listExpensePendingsForViewer(group.id, memberScope),
+    epochWindow.isPast ? Promise.resolve([]) : listIncomePendingsForViewer(group.id, memberScope),
+    epochWindow.isPast ? Promise.resolve([]) : listExpensePendingsForViewer(group.id, memberScope),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
     // Solo expense hero (#1118): the month total + record count that replace
     // the balance a solo ledger cannot have. Reuses the stats donut's query and

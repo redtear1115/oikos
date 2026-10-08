@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { getDrillAssetName, listFilterAssetsForGroup } from '@/lib/db/queries/asset'
 import { listFeedAllPaged, listFeedAllMonthSummaries, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { resolveViewedPair, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
 import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
@@ -81,8 +81,11 @@ export default async function RecordsPage({
   // 誰付→uuid collapse + cross-kind cut rules live in one shared resolver so the
   // SSR feed/stats here and the client pagination loaders (actions/transaction)
   // can't drift. Only resolve when a dim is active (else the queries skip the filter).
-  const resolved = filterIsActive ? resolveTxnFilter(filter, user.id, group) : undefined
-  const resolvedIncome = filterIsActive ? resolveIncomeFilter(filter, user.id, group) : undefined
+  // #1604 — 「對方」 is the viewed chapter's partner (resolveViewedPair), the
+  // same pair the pagination actions resolve, so page 1 and page 2 agree.
+  const viewedPair = filterIsActive ? await resolveViewedPair(context, user.id) : null
+  const resolved = viewedPair ? resolveTxnFilter(filter, user.id, viewedPair) : undefined
+  const resolvedIncome = viewedPair ? resolveIncomeFilter(filter, user.id, viewedPair) : undefined
 
   const creationMonthFromDb = await getGroupCreationMonthKey(group.id)
   const creationMonthKey = creationMonthFromDb ?? monthKeyOf(group.createdAt)

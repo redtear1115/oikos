@@ -127,6 +127,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：被移除或離開的前伴侶不再收到原帳本「有待確認的定期收支」推播，離開、被移除、加入新帳本時推播跟著人走到現在的帳本；登出後這台手機不再收到你的推播，其他裝置不受影響，下次登入開啟首頁會重新註冊。
   技術：`send-recurring-push` 只送給仍是該帳本 `member_a`／`member_b` 的 token（`memberTokens.ts`，需重新部署 Edge Function）；`0087` 讓 `PushTokens` 的 RLS 只接受綁到自己所在帳本的 token、並一次刪除非成員的 token（跑在 0086 之後，與 Edge Function 部署順序無關、互不依賴，無新 GRANT）；`removePartner`／`leaveGroup`／`acceptInvite` 同交易刪除或搬移 token；註冊改用目前帳本而非釘選章節；登出前以 `unregisterThisDevice` 刪除本機 token（逾時 2 秒、失敗不擋登出）。
 
+- **回看過去的時光時，對方是那段時間的伴侶（#1604）**
+  使用者：留下的人回看和前伴侶的舊章節時，紀錄列、旅行、首頁頭像與首頁的「誰付」篩選顯示的是前伴侶（名字與首字，不顯示頭像），不再掛上現在的伴侶；現在單人也照樣看得到對方那一側；舊章節不顯示目前的餘額與待確認卡。
+  技術：layout 以 `getEpochMembers`（現在也回傳名字，唯一的章節成員名字來源）在 MemberContext 加章節身分，`useViewedPartner()` 供 CompactRow／TripDetail／BrandHeader／首頁篩選列／TransactionFeed 使用；`resolveViewedPair` 讓 `/records` 首屏與分頁 action 的「對方」都用章節成員；`viewerIsA` 仍取自目前群組列；釘選時不查餘額與待確認卡。
+
 - **要保人已離開帳本時，保單顯示「前伴侶」（#1486）**
   使用者：保單的要保人不在帳本裡時，保單卡不再顯示對方目前的名字與頭像，改顯示「前伴侶」；既有資料自動套用。
   技術：`lib/insurancePolicyHolder.ts`（#1579 改名為 `lib/insuranceMemberLink.ts`）在 `/assets` 伺服端比對 `Groups` 成員，非成員的名字、頭像、id 不進 client payload；不改資料；en／ja 譯文待確認。

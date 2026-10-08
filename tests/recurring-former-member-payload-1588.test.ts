@@ -225,14 +225,15 @@ it('solo: a rule of D (not a member of the solo group row) is dropped too', asyn
 describe('T4 — B, who was removed, pinned to chapter 1 (A + B); D joined after', () => {
   beforeEach(() => { viewer = EX; epochWindow = CH1; group = DUO })
 
-  it('dashboard: D never reaches B, and nothing is labelled 前伴侶 (formerLabel false)', async () => {
+  it('dashboard: D never reaches B — a pinned dashboard carries no pending cards at all (#1604)', async () => {
+    // Since #1604 a past chapter shows no live pending cards, so the page
+    // passes none (unreachable for B anyway since #1603: a former member's pin
+    // is ignored). The sanitiser's pinned-viewer rules stay covered by the
+    // savings-page case below.
     const { props, income, expense } = await dashboard()
     expect(wire(props)).not.toContain(NEW)
-    expect(byId(income, 'p-ri-new')).toMatchObject({ recipientId: null, recipientIsFormer: true, formerLabel: false })
-    expect(byId(expense, 'p-re-new')).toMatchObject({ proposedPaidBy: null, proposedPaidByIsFormer: true, formerLabel: false })
-    // B still sees themself and A (the chapter's members).
-    expect(byId(income, 'p-ri-ex')).toMatchObject({ recipientId: EX, recipientIsFormer: false })
-    expect(byId(income, 'p-ri-me')).toMatchObject({ recipientId: ME, recipientIsFormer: false })
+    expect(income).toEqual([])
+    expect(expense).toEqual([])
   })
 
   it('savings page: D never reaches B', async () => {
@@ -244,8 +245,10 @@ describe('T4 — B, who was removed, pinned to chapter 1 (A + B); D joined after
 
 it("A pinned to chapter 1 (A + B): money rows still show B (chapter history is out of scope); pending cards don't", async () => {
   viewer = ME; epochWindow = CH1; group = DUO
-  const { income } = await dashboard()
-  expect(byId(income, 'p-ri-ex')).toMatchObject({ recipientId: null, recipientIsFormer: true })
+  const { income, expense } = await dashboard()
+  // #1604 — no pending cards at all in a past chapter (they are today's).
+  expect(income).toEqual([])
+  expect(expense).toEqual([])
   const frag = (await DashboardPage()) as ReactElement<{ children: unknown[] }>
   const kids = (frag.props.children as unknown[]).flat().filter(Boolean) as ReactElement<Record<string, unknown>>[]
   const dash = kids.find((k) => 'pendings' in (k.props ?? {}))!

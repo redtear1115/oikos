@@ -22,6 +22,8 @@ vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
     viewerIsA: true,
     isPast: false,
   }),
+  // #1604 — live chapter: the viewed partner is today's partner.
+  useViewedPartner: () => ({ partner: { id: 'u2', initial: '對', avatarUrl: null }, isSolo: false }),
 }))
 vi.mock('@/app/(dashboard)/_components/AvatarMenuProvider', () => ({ useAvatarMenu: () => ({ open: () => {} }) }))
 vi.mock('@/app/(dashboard)/dashboard/_components/BrandHeaderHint', () => ({ BrandHeaderHint: () => null }))

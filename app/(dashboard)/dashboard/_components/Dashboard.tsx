@@ -7,7 +7,7 @@ import { BrandHeader } from './BrandHeader'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { ContextStrip } from '@/app/(dashboard)/_components/ContextStrip'
 import { SoloMonthHero } from './SoloMonthHero'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useViewedPartner } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
 import { ContinuityRow, type ReviewCellState } from './ContinuityRow'
@@ -113,7 +113,10 @@ export function Dashboard({
   reviewCell,
 }: DashboardProps) {
   const router = useRouter()
-  const { isSolo, isPast, viewerIsA, partner } = useMember()
+  const { isSolo, isPast, viewerIsA } = useMember()
+  // #1604 — the filter row follows the viewed chapter: a stayer who is solo
+  // today still filters the old duo chapter by 「對方」 (the ex).
+  const { partner: viewedPartner, isSolo: viewedIsSolo } = useViewedPartner()
   const t = useTranslations()
 
   useRealtimeEvents((event) => {
@@ -313,7 +316,7 @@ export function Dashboard({
       </div>
       {/* L3 filter row — collapses in solo mode (only one person, no real
           split decisions). See DashboardFilterRow for the toggle details. */}
-      {!isSolo && partner && (
+      {!viewedIsSolo && viewedPartner && (
         <DashboardFilterRow
           payerFilter={payerFilter}
           splitFilter={splitFilter}
@@ -340,15 +343,18 @@ export function Dashboard({
 
           Do NOT "fix" this by falling back to BalanceHero: `getGroupBalance()`
           takes no epoch argument, so it would show the *current* balance
-          inside a frozen chapter. Honest and empty beats wrong. */}
-      {isSolo && mode === 'expense' ? (
-        isPast ? null : (
-          <SoloMonthHero
-            monthKey={expenseMonthKey}
-            total={expenseMonthTotal}
-            count={expenseMonthCount}
-          />
-        )
+          inside a frozen chapter. Honest and empty beats wrong.
+
+          #1604 — the same holds for BalanceHero itself in any pinned chapter,
+          duo or solo: it is today's live balance and pending delta, not the
+          chapter's. So a pinned dashboard has no hero at all, and the page
+          skips those fetches. */}
+      {isPast ? null : isSolo && mode === 'expense' ? (
+        <SoloMonthHero
+          monthKey={expenseMonthKey}
+          total={expenseMonthTotal}
+          count={expenseMonthCount}
+        />
       ) : (
         <BalanceHero
           rawBalance={balance}
@@ -366,7 +372,12 @@ export function Dashboard({
           chapter: that view is a read-only snapshot, and ContextStrip already
           steps aside there for the same reason. */}
       {!isPast && <ContinuityRow review={reviewCell} hasActiveTrip={activeTrips.length > 0} />}
-      {mode === 'expense' && expensePendings.length > 0 && (
+      {/* Pending cards are today's live recurring occurrences, not the
+          chapter's; an old chapter shows none (#1604, after-leaving spec), and
+          confirming one while pinned would hit the past-chapter write block
+          anyway. The page passes empty lists when pinned; the gate here is the
+          component's own rule. */}
+      {!isPast && mode === 'expense' && expensePendings.length > 0 && (
         <div className="px-5">
           <PendingExpenseStack
             pendings={expensePendings}
@@ -396,7 +407,7 @@ export function Dashboard({
           />
         </div>
       )}
-      {mode === 'income' && (
+      {!isPast && mode === 'income' && (
         <div className="px-5">
           <PendingIncomeStack
             pendings={pendings}
