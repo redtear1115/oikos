@@ -110,8 +110,8 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
 
   const inner = (
     <>
-      <CategoryChip categoryId={tx.category} size={32} />
-      <div className="flex-1 min-w-0 text-left">
+      <div className="flex @max-[16em]:row-span-2 @max-[16em]:self-start"><CategoryChip categoryId={tx.category} size={32} /></div>
+      <div className="min-w-0 text-left">
         <div className="text-sm font-medium mb-0.5 flex items-center flex-wrap gap-x-1.5" style={{ color: 'var(--ink)' }}>
           <span className="min-w-0 break-words">{displayLabel}</span>
           {isPending && (
@@ -141,7 +141,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           </div>
         )}
       </div>
-      <div className="text-right shrink-0">
+      <div className="text-right @max-[16em]:col-start-2 @max-[16em]:col-span-2 @max-[16em]:row-start-2 @max-[16em]:mt-1">
         {tx.originalCurrency && tx.originalAmount != null ? (
           // Foreign-currency row: show original amount on top, base equivalent below.
           // `originalCurrency` is free-text from trip-multi-currency (e.g. 'vnd' / 'eur')
@@ -180,7 +180,15 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     </>
   )
 
-  const cls = "w-full flex items-center gap-3 px-3.5 py-3 text-left bg-transparent border-0"
+  // The grid is the em container (#1514), on an inner div — Chromium resolves
+  // em against the wrong font-size when the container is a <button>. `text-base`
+  // gives it a --text-scale-aware font size (rem * scale on iOS, textZoom-scaled
+  // px on Android), so the threshold below means "row width in body-text widths"
+  // on both. Under 16em (≈ >1.4x on a 358px row) the amount drops under the
+  // description instead of squeezing it to ~3 characters per line.
+  // Grid cols = the old flex (auto | 1fr | content-sized).
+  const cls = "block w-full px-3.5 py-3 text-left bg-transparent border-0"
+  const gridCls = "@container text-base grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3"
   // Pending records read as "still in motion" — drop opacity so they recede
   // visually next to settled rows. Badge label still reads at full contrast.
   const style = {
@@ -191,14 +199,14 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   if (onClick) {
     return (
       <button onClick={onClick} className={`${cls} cursor-pointer transition-colors duration-100 hover:bg-[rgba(31,27,22,0.03)]`} style={style}>
-        {inner}
+        <div className={gridCls}>{inner}</div>
       </button>
     )
   }
 
   return (
     <div className={cls} style={style}>
-      {inner}
+      <div className={gridCls}>{inner}</div>
     </div>
   )
 }

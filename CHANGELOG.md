@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **系統文字放到最大時，底部導覽、列表與趨勢圖不再擠壞（#1514）**
+  使用者：iOS 文字大小或 Android 字型比例拉到約 1.6–2 倍時，底部分頁名稱不再被截成「設…」（iOS 最多放大到 1.3 倍，Android 自動縮小）；帳目列的金額改排到說明下方，說明不再被擠成幾個字一行；每日趨勢圖最後的日期不再被切掉。
+  技術：新增 `--text-nav-label`（`--text-scale` 上限 1.3）；分頁與 `CompactRow` 以 em 單位的 container query 切換；趨勢圖日期改 HTML 並首尾貼齊；載入骨架的底部導覽改 `min-height`；DESIGN.md §3 補 `--text-scale` 小節。
+
 - **離開或被移除的成員不再卡在登入頁（#1603）**
   使用者：曾停留在舊帳本某段過去時光的人離開或被移除後，會回到自己目前的帳本（沒有帳本則進入建立流程），不再在登入頁與首頁之間來回；「過去的時光」暫不列出已離開帳本的章節（#1612 會加回唯讀回顧）；登出會清掉停留的章節。
   技術：`resolveViewerEpochContext` 只接受「名列該章節且仍是該群組 member_a／member_b」的 pin，`listEpochsForViewer` 套同一規則；layout 與月回顧的非成員分支改 `notFound()`、測驗頁在過去章節回 404；`signOut` 刪 `futari_past_epoch`。
