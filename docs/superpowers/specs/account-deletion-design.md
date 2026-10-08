@@ -66,7 +66,7 @@ Google 另要求一個免登入、可達的 web 頁描述刪除途徑。現有 `
      - 失效的樣子：沒有任何錯誤；對方打開舊章節，看到的仍是刪除者的真名。
    - 月回顧快照的「最大筆支出」不存名字，只存付款人 id（#1618，migration 0089）；頁面以該章節兩人的章節名字解析，所以刪除後同樣顯示「已離開的夥伴」，刪除流程不需要額外步驟。0089 把既有快照裡的名字全部清成 NULL；從 0089 之前的備份還原時要重跑這一步（[ops-runbook](../ops-runbook.md)「真正還原」第 7 步）。
      - 失效的樣子：沒有任何錯誤；對方打開刪除者付過最大一筆的那個月，看到的仍是真名。
-   - 尚未涵蓋：`leaveGroup` 自動取的帳本名「{displayName} 的家計簿」（`OikosGroups.name`）刪除後仍是真名（#1618 後續，尚未開票）。
+   - 尚未涵蓋：`leaveGroup` 自動取的帳本名「{displayName} 的家計簿」（`OikosGroups.name`）刪除後仍是真名（#1622，v1.7.0）。
    - 未結 balance 在刪除時視為勾消（因不檔 settlement）；recalc 後 solo = 0。
 9. **Web 刪除 URL**：沿用 `/[locale]/privacy`，Play Console deletion URL 指向它；確保其刪除段落與實際 flow 一致（可選加 anchor 利於審核員尋找）。
 
