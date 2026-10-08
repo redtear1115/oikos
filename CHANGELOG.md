@@ -103,8 +103,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   使用者：帳本成員可以複製與重設分享連結、看每個人未認領／已認領／已綁帳號並釋放或移除、改出遊名稱、編輯刪除支出與還款；出遊清單多了「我參與的出遊」。
   技術：共用 `ExpenseSheet`／`SettlementList` 取代 `AddExpenseSheet`，供公開頁沿用；`getOutingDetail` 只多回 `claimedAt` 與 `hasClaimToken` 布林，profile id 不再傳到 client；en／ja 譯文待確認。
 
-- **網路慢時登出最多等 2 秒（#1617）**
-  使用者：在網路很慢或伺服器卡住時點「登出」，最多約 2 秒就會登出並回到首頁；移除這台裝置推播的步驟沒完成也不影響登出。
+- **登出不再被「移除這台裝置的推播」拖住（#1617）**
+  使用者：點「登出」時，移除這台裝置推播的步驟最多只多等約 2 秒；這一步沒完成也照樣登出並回到首頁。
   技術：`signOut(token?)` 在同一個 server action 內先刪本機 push token（取 session 使用者、與查詢一起限時 2 秒、逾時或失敗略過），再登出；移除 `unregisterThisDevice`／`signOutThisDevice`；dashboard layout 只在釘選過去章節時多查一次目前帳本。
 
 ### 技術變更

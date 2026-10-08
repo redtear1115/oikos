@@ -66,8 +66,10 @@ async function deleteThisDevicePushToken(
  * in the queue until the delete finished. Here the whole best-effort block
  * (session lookup + delete) is raced against {@link PUSH_DELETE_TIMEOUT_MS},
  * and a timeout or a throw is swallowed. `lib/db/client.ts` sets no statement
- * timeout, so without the bound a stalled database would keep
- * `supabase.auth.signOut()` from ever running and leave the person signed in.
+ * timeout (the `futari_app` role's server-side 30 s cap, 0072, is the only
+ * one, and a network stall has none), so without the bound a stalled database
+ * would hold `supabase.auth.signOut()` back for 30 s or longer, and a function
+ * timeout in between leaves the person signed in.
  * Failure looks like (if the race or the swallow is removed): tapping 登出
  * hangs on a slow network or stalled database, or does nothing at all when
  * the delete errors.
