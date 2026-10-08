@@ -7,15 +7,19 @@ import { useTranslations } from '@/lib/i18n/client'
 import { unwrapAction } from '@/lib/action-errors'
 import { describeError } from '@/lib/errors'
 import { endOuting } from '@/actions/outing'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   open: boolean
   outingId: string
+  currency: string
+  /** Signed fold the end will write; 0 means nothing folds. */
+  foldPreview: number
   onClose: () => void
   onSaved?: () => void
 }
 
-export function EndOutingSheet({ open, outingId, onClose, onSaved }: Props) {
+export function EndOutingSheet({ open, outingId, currency, foldPreview, onClose, onSaved }: Props) {
   const t = useTranslations()
   const to = t.outing
   const router = useRouter()
@@ -51,6 +55,11 @@ export function EndOutingSheet({ open, outingId, onClose, onSaved }: Props) {
     >
       <div className="px-5 pt-2 pb-4">
         <p className="text-sm leading-relaxed text-ink-2">{to.endConfirmBody}</p>
+        {foldPreview !== 0 && (
+          <p className="text-xs pt-2 text-ink-3">
+            {to.coupleFoldNote.replace('{amount}', formatAmount(Math.abs(foldPreview), currency))}
+          </p>
+        )}
       </div>
     </SheetShell>
   )

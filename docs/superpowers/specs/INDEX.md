@@ -122,7 +122,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
 - [trip-multi-currency](trip-multi-currency-design.md) — 「邊界複雜」：旅行子帳本（TripExpense sandbox）+ 多幣別 record + 心理匯率 snapshot；建立時鎖匯率、結束時 fold 為 2 筆 summary 回主帳本
-- [group-outing](group-outing-design.md) — 出遊：N 人分帳本（類 Splitwise），參與者與 Profile 解耦；平分挑人＋最少筆數轉帳建議；結束時只折夫妻相互欠額回主帳本 balance。v1.6.0 由帳本成員代記（朋友是名字），v1.7.0 開放連結加入與認領，管理者＝開局帳本兩位成員（#1558）；對外與旅行合一個入口（#943，取代 #870）
+- [group-outing](group-outing-design.md) — 出遊：N 人分帳本（類 Splitwise），參與者與 Profile 解耦；平分挑人＋最少筆數轉帳建議；結束時只把夫妻之間那一條建議轉帳折回主帳本 balance。v1.6.0 由帳本成員代記（朋友是名字），v1.7.0 開放連結加入與認領，管理者＝開局帳本兩位成員（#1558）；對外與旅行合一個入口（#943，取代 #870）
 
 ### 體驗
 

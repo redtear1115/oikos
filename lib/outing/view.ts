@@ -1,6 +1,6 @@
 import { computeOutingNets, type OutingExpenseInput, type OutingSettlementInput } from './balance'
 import { minimalTransfers, type Transfer } from './settle'
-import { coupleNetFromOuting } from './foldback'
+import { coupleNetFromTransfers } from './foldback'
 
 export interface OutingViewParticipant {
   id: string
@@ -25,7 +25,7 @@ export interface OutingView {
 
 /**
  * Compose the Phase-1 engine into a render-ready view: per-participant net,
- * minimal-transfer suggestions, and the couple inter-member fold amount.
+ * minimal-transfer suggestions, and the couple fold amount (the member<->member suggested line).
  * Pure — accepts DB-shaped rows (see getOutingDetail), returns derived data.
  */
 export function buildOutingView(input: OutingViewInput): OutingView {
@@ -33,11 +33,6 @@ export function buildOutingView(input: OutingViewInput): OutingView {
   const nets = computeOutingNets(ids, input.expenses, input.settlements)
   const participants = input.participants.map((p) => ({ ...p, net: nets.get(p.id) ?? 0 }))
   const transfers = minimalTransfers(nets)
-  const coupleNet = coupleNetFromOuting(
-    input.memberAParticipantId,
-    input.memberBParticipantId,
-    input.expenses,
-    input.settlements,
-  )
+  const coupleNet = coupleNetFromTransfers(transfers, input.memberAParticipantId, input.memberBParticipantId)
   return { participants, transfers, coupleNet }
 }

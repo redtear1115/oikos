@@ -31,7 +31,7 @@ describe('buildOutingView', () => {
     expect(view.transfers.reduce((s, t) => s + t.amount, 0)).toBe(60)
   })
 
-  it('coupleNet folds only the inter-member portion (friend excluded)', () => {
+  it('coupleNet is the member<->member suggested line (friend excluded)', () => {
     const view = buildOutingView({
       ...base,
       expenses: [{ paidByParticipantId: 'A', amount: 90, shares: [
@@ -41,7 +41,46 @@ describe('buildOutingView', () => {
       ] }],
       settlements: [],
     })
-    expect(view.coupleNet).toBe(30) // only B's share paid by A
+    expect(view.coupleNet).toBe(30) // the B→A line of the suggestions
+  })
+
+  it('coupleNet equals the listed A↔B transfer, and 0 when friends absorb the debt', () => {
+    // A pays 100 for A/F: no B involved, B owes nothing even though the view lists transfers.
+    const none = buildOutingView({
+      ...base,
+      expenses: [{ paidByParticipantId: 'A', amount: 100, shares: [
+        { participantId: 'A', shareAmount: 50 },
+        { participantId: 'F', shareAmount: 50 },
+      ] }],
+      settlements: [],
+    })
+    expect(none.coupleNet).toBe(0)
+
+    // B pays 90 for A/B/F: A→B 30 and F→B 30, the fold is the A→B line, negative.
+    const neg = buildOutingView({
+      ...base,
+      expenses: [{ paidByParticipantId: 'B', amount: 90, shares: [
+        { participantId: 'A', shareAmount: 30 },
+        { participantId: 'B', shareAmount: 30 },
+        { participantId: 'F', shareAmount: 30 },
+      ] }],
+      settlements: [],
+    })
+    expect(neg.transfers).toContainEqual({ from: 'A', to: 'B', amount: 30 })
+    expect(neg.coupleNet).toBe(-30)
+  })
+
+  it('a solo group (member B null) never folds', () => {
+    const view = buildOutingView({
+      ...base,
+      memberBParticipantId: null,
+      expenses: [{ paidByParticipantId: 'A', amount: 90, shares: [
+        { participantId: 'A', shareAmount: 30 },
+        { participantId: 'F', shareAmount: 60 },
+      ] }],
+      settlements: [],
+    })
+    expect(view.coupleNet).toBe(0)
   })
 
   it('preserves participant metadata', () => {

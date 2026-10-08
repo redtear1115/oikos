@@ -17,7 +17,7 @@ import { getTodayYMD } from '@/lib/today-server'
 import { ymdToUTCNoon } from '@/lib/local-date'
 import { splitEqual } from '@/lib/outing/split'
 import { minorToWhole } from '@/lib/currency'
-import { coupleNetFromOuting } from '@/lib/outing/foldback'
+import { foldNetFromRows } from '@/lib/outing/foldback'
 import {
   type OutingActor,
   claimCookieName,
@@ -482,8 +482,6 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
       .select({ id: outingParticipants.id, profileId: outingParticipants.profileId })
       .from(outingParticipants)
       .where(eq(outingParticipants.outingId, ended.id))
-    const pidOf = (profileId: string | null) =>
-      profileId ? participants.find((p) => p.profileId === profileId)?.id ?? null : null
 
     const expenseRows = await tx
       .select({ id: outingExpenses.id, paidBy: outingExpenses.paidByParticipantId, amount: outingExpenses.amount })
@@ -508,16 +506,14 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
       .from(outingSettlements)
       .where(and(eq(outingSettlements.outingId, ended.id), isNull(outingSettlements.deletedAt)))
 
-    const net = coupleNetFromOuting(
-      pidOf(locked.memberA),
-      pidOf(locked.memberB),
-      expenseRows.map((e) => ({
-        paidByParticipantId: e.paidBy,
-        amount: e.amount,
-        shares: shareRows.filter((s) => s.expenseId === e.id),
-      })),
+    const net = foldNetFromRows({
+      participants,
+      memberA: locked.memberA,
+      memberB: locked.memberB,
+      expenseRows,
+      shareRows,
       settlementRows,
-    )
+    })
 
     const fold = foldSettlementFor(net, locked.memberA, locked.memberB)
     if (!fold) return { folded: false }
