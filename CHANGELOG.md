@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **出遊介紹頁 /features/outing（#1633）**
+  使用者：新增公開頁，用動畫示範「丟一個連結、朋友選名字就能記」；旅行、AA 制情境頁、出遊分享頁底部、App 內出遊空狀態各有一個連結進去（4 語，en／ja 待確認）。
+  技術：`/features` 登記為公開前綴；歸因 `from=feature-outing` → `entry_source=feature_outing`，新增 `feature_outing_link_clicked`；範例金額由產品的拆帳函式算出並有單元測試。
 
 ## [1.7.0] - 2026-10-08
 

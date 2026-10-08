@@ -9,6 +9,7 @@ import { BrandBreadcrumb } from '../../_components/BrandBreadcrumb'
 import { UseCaseHero } from '../_components/UseCaseHero'
 import { UseCasePainPoints } from '../_components/UseCasePainPoints'
 import { UseCaseFeatures } from '../_components/UseCaseFeatures'
+import { FeatureLinkRow } from '../_components/FeatureLinkRow'
 import { UseCaseFaq } from '../_components/UseCaseFaq'
 import { UseCaseCta } from '../_components/UseCaseCta'
 import { UseCaseOtherCases } from '../_components/UseCaseOtherCases'
@@ -89,6 +90,20 @@ export default async function UseCasePage({ params }: { params: Params }) {
         featureKeys={def.features}
         features={t.features}
       />
+
+      {def.featureLinks?.includes('outing') && (
+        <section className={s.band} aria-label={dictionaries[locale].featureOuting.crossLink.name}>
+          <ul className={s.rows}>
+            <FeatureLinkRow
+              href={localizedHref('/features/outing', locale)}
+              name={dictionaries[locale].featureOuting.crossLink.name}
+              description={dictionaries[locale].featureOuting.crossLink.description}
+              cta={dictionaries[locale].featureOuting.crossLink.cta}
+              source={useCaseSlug === 'travel' ? 'use_case_travel' : 'use_case_aa_split'}
+            />
+          </ul>
+        </section>
+      )}
 
       <UseCaseCta label={t.ctaLabel} signInHref={signInHref} slug={useCaseSlug} />
 

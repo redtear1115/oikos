@@ -54,6 +54,8 @@ export type EntrySource =
   | 'invite'
   /** #1558: a friend who joined an outing by link, then signed in from it. */
   | 'outing'
+  /** #1633: signed in from the /features/outing page's CTA. */
+  | 'feature_outing'
   | 'direct'
 
 /**
@@ -128,6 +130,7 @@ export function entrySourceFromParam(from: string | null | undefined): EntrySour
   if (from === 'landing') return 'landing'
   if (from === 'invite') return 'invite'
   if (from === 'outing') return 'outing'
+  if (from === FEATURE_OUTING_FROM_PARAM) return 'feature_outing'
   const value = from ?? ''
   return entrySourceForMigrate(value) ?? entrySourceForUseCase(value) ?? 'direct'
 }

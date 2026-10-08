@@ -14,6 +14,7 @@ import { SettleSheet } from '@/app/(dashboard)/outings/[id]/_components/SettleSh
 import { ExpenseSheet } from '@/app/(dashboard)/outings/_components/ExpenseSheet'
 import { SettlementList } from '@/app/(dashboard)/outings/_components/SettlementList'
 import { Card, OutingHeader, SectionTitle } from './OutingPublicChrome'
+import { FeatureOutingLink } from './FeatureOutingLink'
 
 interface Props {
   view: Omit<OutingFullView, 'isAdmin'>
@@ -191,6 +192,8 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
             </a>
           </Card>
         )}
+
+        <FeatureOutingLink />
       </div>
 
       {active && (
