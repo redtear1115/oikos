@@ -7,7 +7,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import type { AddSheetInitial, RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, useViewedPartner } from '@/app/(dashboard)/_components/MemberContext'
 import type { TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { EndTripSheet } from './EndTripSheet'
 
@@ -51,7 +51,11 @@ interface Props {
 export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRatioA, activeTrips, rates }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const { viewer, partner, viewerIsA, isSolo, isPast } = useMember()
+  const { viewer, viewerIsA, isPast } = useMember()
+  // #1604 — the trip's chapter partner when pinned to a past chapter (name +
+  // initial, no avatar; per-side cards stay for a duo chapter even if the
+  // viewer is solo today), today's partner otherwise.
+  const { partner, isSolo } = useViewedPartner()
   const [editOpen, setEditOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)

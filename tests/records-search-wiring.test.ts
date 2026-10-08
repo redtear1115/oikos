@@ -18,6 +18,9 @@ vi.mock('@/lib/db/queries/epoch', () => ({
     window: { startedAt: new Date(0), endedAt: null, epochId: 'e', isPast: false },
   }),
   lockOpenChapterForWrite: vi.fn(),
+  // #1604 — live chapter: the viewed pair is the group row.
+  resolveViewedPair: async (ctx: { group: { memberA: string; memberB: string | null } }) =>
+    ({ memberA: ctx.group.memberA, memberB: ctx.group.memberB }),
 }))
 vi.mock('@/lib/db/queries/transactions', () => ({
   listFeedAllPaged: (...a: unknown[]) => feedAll(...a),

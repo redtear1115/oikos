@@ -405,16 +405,81 @@ export const resolveViewerEpochContext = cache(async (
  * leave, the group row names the stayer and whoever joined next, while the
  * epoch row still names the pair who lived that chapter. Anything rendering a
  * chapter — names, avatars, "whose message" — must read these.
+ *
+ * #1604 — this is also the ONE source of a chapter member's display name.
+ * Every surface that labels a chapter's people (the dashboard layout's chapter
+ * identity, and through it CompactRow / TripDetail / BrandHeader) reads names
+ * from here and never from `Profiles` directly. Today the name is the
+ * person's live profile name (a deleted account's tombstone reads
+ * 「已離開的夥伴」); #1604 part 2 swaps this helper to the name frozen when
+ * the chapter closed, and only this function changes. A name read from
+ * `Profiles` anywhere else would silently keep showing the live name after
+ * that swap. No avatar is returned on purpose: a past chapter shows no avatar
+ * (after-leaving spec,「人：停在當時」).
+ *
+ * Caller contract: this has NO viewer check and returns personal data (names).
+ * Callers must already have established that the viewer may see this chapter
+ * — e.g. the epoch id came from `resolveViewerEpochContext`, which only
+ * accepts a pin for a chapter the viewer is named on, in a group they are
+ * still a member of. Never pass an id taken straight from user input.
+ * `memberAName` / `memberBName` are null when the profile row is missing.
  */
 export async function getEpochMembers(
   epochId: string,
-): Promise<{ memberAId: string; memberBId: string | null } | null> {
+): Promise<{
+  memberAId: string
+  memberBId: string | null
+  memberAName: string | null
+  memberBName: string | null
+} | null> {
   const [row] = await db
     .select({ memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
     .from(groupEpochs)
     .where(eq(groupEpochs.id, epochId))
     .limit(1)
-  return row ?? null
+  if (!row) return null
+
+  const ids = [row.memberAId, row.memberBId].filter((x): x is string => x !== null)
+  const nameRows = await db
+    .select({ id: profiles.id, displayName: profiles.displayName })
+    .from(profiles)
+    .where(inArray(profiles.id, ids))
+  const nameById = new Map(nameRows.map((p) => [p.id, p.displayName]))
+
+  return {
+    memberAId: row.memberAId,
+    memberBId: row.memberBId,
+    memberAName: nameById.get(row.memberAId) ?? null,
+    memberBName: row.memberBId ? (nameById.get(row.memberBId) ?? null) : null,
+  }
+}
+
+/**
+ * #1604 — the pair whose rows the viewed chapter holds, for resolving
+ * 「誰付 = 對方」/ 誰負擔 into a user id (`lib/resolveTxnFilter.ts`).
+ *
+ * The current chapter: the group row, as before. A past chapter: that
+ * chapter's GroupEpochs members, never today's group row — after a leave the
+ * group row names the stayer and the NEXT partner (or nobody), and "the other
+ * person paid" would match the new partner's id (zero rows) or the solo
+ * sentinel. If the chapter row can't be read, the pair is the viewer alone, so
+ * 「對方」 matches nothing (fails closed).
+ *
+ * Every caller of the resolver uses this — the records page's first render and
+ * the pagination actions — so the first page and later pages agree.
+ * Caller contract: as {@link getEpochMembers}; `context` must come from
+ * `resolveViewerEpochContext(viewerId)`.
+ */
+export async function resolveViewedPair(
+  context: ViewerEpochContext,
+  viewerId: string,
+): Promise<{ memberA: string; memberB: string | null }> {
+  if (!context.window.isPast) {
+    return { memberA: context.group.memberA, memberB: context.group.memberB }
+  }
+  const chapter = context.window.epochId ? await getEpochMembers(context.window.epochId) : null
+  if (!chapter) return { memberA: viewerId, memberB: null }
+  return { memberA: chapter.memberAId, memberB: chapter.memberBId }
 }
 
 export interface EpochCloseLock {

@@ -11,7 +11,8 @@ import { PartnerActivityToast } from './_components/PartnerActivityToast'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { getEpochMembers, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { buildChapterIdentity } from '@/lib/chapterIdentity'
 import { hasOpenInvite } from '@/lib/db/queries/invite'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
@@ -82,7 +83,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // revoke (revokeOpenInvites acts on the active group). A pinned past
   // chapter or a duo skips the query.
   const canHoldOpenInvite = !epochWindow.isPast && group.memberB === null && group.memberA === user.id
-  const [profilesRows, t, locale, todayYMD, openInvite] = await Promise.all([
+  const [profilesRows, t, locale, todayYMD, openInvite, chapterMembers] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
@@ -90,6 +91,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     // same calendar day the browser will compute (#1360, lib/today.ts).
     getTodayYMD(),
     canHoldOpenInvite ? hasOpenInvite(group.id) : Promise.resolve(false),
+    // #1604 — who the pinned chapter was between, names included. The epoch
+    // id came from resolveViewerEpochContext, which only accepts a pin for a
+    // chapter the viewer is named on (getEpochMembers' caller contract).
+    epochWindow.isPast && epochWindow.epochId
+      ? getEpochMembers(epochWindow.epochId)
+      : Promise.resolve(null),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
@@ -128,6 +135,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     viewerIsA,
     isSolo: !partnerProfile,
     isPast: epochWindow.isPast,
+    // #1604 — a past chapter is labelled with ITS partner (name + initial, no
+    // avatar), never today's. `partner` / `isSolo` above keep their live
+    // meaning; `viewerIsA` stays on the current group row (see MemberContext).
+    chapter: epochWindow.isPast
+      ? buildChapterIdentity(chapterMembers, user.id, t.common.partner)
+      : null,
     canAccessGuardian: canAccessGuardian(group),
     epochStartedAt: epochWindow.startedAt.toISOString(),
     epochEndedAt: epochWindow.endedAt ? epochWindow.endedAt.toISOString() : null,

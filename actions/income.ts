@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client'
 import { assets, incomeTransactions } from '@/lib/db/schema'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor } from '@/lib/db/queries/incomes'
-import { lockOpenChapterForWrite, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { lockOpenChapterForWrite, resolveViewedPair, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { openChapterCreatedClause } from '@/lib/db/queries/_predicates'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
@@ -33,7 +33,7 @@ async function getViewerReadContext() {
   const context = await resolveViewerEpochContext(user.id)
   if (!context) throw actionError('group_not_found')
 
-  return { user, group: context.group, epochWindow: context.window }
+  return { user, group: context.group, epochWindow: context.window, context }
 }
 
 export const createIncome = action(async (input: CreateIncomeInput): Promise<{ id: string }> => {
@@ -171,10 +171,11 @@ export const loadMoreIncomes = action(async (
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
 ): Promise<PagedIncomeRow[]> => {
-  const { user, group, epochWindow } = await getViewerReadContext()
+  const { user, group, epochWindow, context } = await getViewerReadContext()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
+  // #1604 — 「對方」 is the viewed chapter's partner, as on first render.
   const incomeFilter = filterWire
-    ? resolveIncomeFilter(fromWire(filterWire), user.id, group)
+    ? resolveIncomeFilter(fromWire(filterWire), user.id, await resolveViewedPair(context, user.id))
     : undefined
   const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange, epochWindow)
   return rows.map((r) => ({
