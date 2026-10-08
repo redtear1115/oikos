@@ -72,7 +72,9 @@ export default async function PartnerQuizPage({ params }: PageProps) {
     .where(inArray(profiles.id, memberIds))
 
   const viewerProfile = profileRows.find((p) => p.id === user.id)
-  if (!viewerProfile) redirect('/sign-in')
+  // Not one of the group's members: 404, not /sign-in — a signed-in user
+  // sent to /sign-in bounces back to /dashboard and loops (#1603).
+  if (!viewerProfile) notFound()
   const partnerProfile = profileRows.find((p) => p.id !== user.id)
   if (!partnerProfile) redirect('/dashboard')
 
