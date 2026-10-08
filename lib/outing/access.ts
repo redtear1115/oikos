@@ -116,7 +116,11 @@ async function isPinnedToPast(conn: Conn, userId: string, groupId: string): Prom
     .where(eq(groupEpochs.id, pinId))
     .limit(1)
   // Same defence as resolveViewerEpochContext: a pin the viewer was not on
-  // is ignored rather than trusted.
+  // is ignored rather than trusted. Its second condition (#1603: the viewer
+  // is still member_a / member_b of the pinned group) holds here by
+  // construction — the only caller, resolveActor, reaches this after finding
+  // the viewer on `groupId`'s row, and the pin only counts when it is on that
+  // same group. A former member never gets here: they are not 'member'.
   if (!pinned || (pinned.a !== userId && pinned.b !== userId)) return false
   return pinned.groupId === groupId && pinned.endedAt !== null
 }

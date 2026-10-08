@@ -71,7 +71,7 @@ beforeEach(() => {
   resetDbMocks()
   vi.clearAllMocks()
   h.getCurrentUser.mockResolvedValue(VIEWER)
-  h.resolveViewerEpochContext.mockResolvedValue({ group: GROUP })
+  h.resolveViewerEpochContext.mockResolvedValue({ group: GROUP, window: { isPast: false } })
   h.loadPartnerQuizAnswers.mockResolvedValue([])
 })
 
@@ -140,5 +140,22 @@ describe('partner_quiz_started (#1139)', () => {
     await renderPage()
 
     expect(h.captureServer).toHaveBeenCalledTimes(1)
+  })
+})
+
+// #1603 / F7 — a past chapter is read-only, and the quiz session this page
+// loads (or lazily inserts) is the group's live one, i.e. today's pair's.
+// Before the guard, opening /review/<month>/quiz while pinned to a closed
+// chapter showed — or created — a session for the current pair.
+describe('pinned to a past chapter (#1603)', () => {
+  it('returns 404 without reading or inserting a quiz session', async () => {
+    h.resolveViewerEpochContext.mockResolvedValue({ group: GROUP, window: { isPast: true } })
+    queueDbResult(PROFILE_ROWS)
+
+    await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND')
+
+    expect(h.loadPartnerQuizSessionByGroup).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    expect(h.captureServer).not.toHaveBeenCalled()
   })
 })

@@ -32,6 +32,11 @@ export default async function PartnerQuizPage({ params }: PageProps) {
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
+  // A closed chapter is read-only (#1603 / F7). The quiz session below is the
+  // group's live one — loading it from a past chapter would show, or lazily
+  // INSERT, a session belonging to today's pair. The review page already
+  // hides the quiz entry when pinned; this guards the URL itself.
+  if (context.window.isPast) notFound()
   const { group } = context
 
   // Solo group → soft fallback (spec: solo mode 不渲染整段 quiz).
@@ -67,7 +72,9 @@ export default async function PartnerQuizPage({ params }: PageProps) {
     .where(inArray(profiles.id, memberIds))
 
   const viewerProfile = profileRows.find((p) => p.id === user.id)
-  if (!viewerProfile) redirect('/sign-in')
+  // Not one of the group's members: 404, not /sign-in — a signed-in user
+  // sent to /sign-in bounces back to /dashboard and loops (#1603).
+  if (!viewerProfile) notFound()
   const partnerProfile = profileRows.find((p) => p.id !== user.id)
   if (!partnerProfile) redirect('/dashboard')
 

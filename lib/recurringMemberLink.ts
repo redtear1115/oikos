@@ -21,7 +21,8 @@ import type { RecurringExpenseRuleRow, PendingExpenseRow } from '@/lib/db/querie
  * outside the set is "former" — the id is dropped (null) and the matching
  * `*IsFormer` flag is set. `formerLabel` says whether 「前伴侶」 may be shown
  * (false for a viewer pinned to a chapter of a group they left, where the
- * dropped person may be a stranger who joined later).
+ * dropped person may be a stranger who joined later — unreachable since
+ * #1603, which stops following such pins, until #1612 reopens them).
  *
  * The required flags make the raw query rows unassignable to these views, so
  * passing an unsanitised row to a client component fails `tsc`. Pages read

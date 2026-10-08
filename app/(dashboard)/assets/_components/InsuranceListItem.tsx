@@ -41,7 +41,8 @@ interface InsuranceData {
   /** #1579 — member insured left the ledger: no id/name. */
   insuredIsFormer?: boolean
   /** #1579 — a dropped person may be shown as 「前伴侶」. False for a viewer
-   *  pinned to a chapter of a group they left: the field stays empty. */
+   *  pinned to a chapter of a group they left: the field stays empty
+   *  (unreachable since #1603 until #1612 reopens those chapters). */
   formerLabel?: boolean
   insurer: string | null
   annualPremium: number | null
