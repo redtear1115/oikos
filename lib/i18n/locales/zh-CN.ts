@@ -2105,6 +2105,7 @@ export const zhCN: Translations = {
     card1BodySolo: '这个月你最常花在 {category}，共 {amount}',
     card2Title: '本月最大笔',
     card2Body: '最大一笔：{name} 付的「{description}」，{amount}',
+    card2BodyNoName: '最大一笔：「{description}」，{amount}',
     card3Title: '定期入账事件',
     card3ExpenseTotal: '本月定期支出共 {amount}',
     card3IncomeTotal: '本月定期入账共 {amount}',

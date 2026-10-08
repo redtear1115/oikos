@@ -29,7 +29,7 @@ import { zhTW } from '@/lib/i18n/locales/zh-TW'
 import { zhCN } from '@/lib/i18n/locales/zh-CN'
 import { en } from '@/lib/i18n/locales/en'
 import { ja } from '@/lib/i18n/locales/ja'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
 
 beforeAll(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} })
@@ -53,11 +53,10 @@ const snapshot = {
   id: 's', groupId: 'g1', year: 2026, month: 9, computedAt: new Date(),
   topCategory: 'dining', topCategoryTotal: 12345,
   largestExpenseAmount: 6789, largestExpenseDescription: '晚餐', largestExpenseCategory: 'dining',
-  largestExpensePaidByName: 'Ray',
   recurringEvents: [{ name: '房租', amount: 2000, direction: 'expense', occurredAt: '2026-09-01' }], recurringTotalIncome: 1000, recurringTotalExpense: 2000,
   assetBreakdown: [{ assetName: '小白', total: 4500 }],
   bannerDismissedByMemberAAt: null, bannerDismissedByMemberBAt: null,
-} as unknown as MonthlyReviewSnapshotRow
+} as unknown as ClientReviewSnapshot
 
 describe('recap cards', () => {
   it('TWD unchanged: NT$ <space> digits in the headline and the body', () => {
@@ -65,7 +64,7 @@ describe('recap cards', () => {
     expect(cat.container.textContent).toContain('NT$ 12,345')
     expect(cat.container.textContent).toContain('共 NT$ 12,345')
     cat.unmount()
-    const big = wrap('twd', <CardLargest snapshot={snapshot} />)
+    const big = wrap('twd', <CardLargest snapshot={snapshot} payerName="Ray" />)
     expect(big.container.textContent).toContain('NT$ 6,789')
     expect(big.container.textContent).toContain('「晚餐」，NT$ 6,789')
     big.unmount()
@@ -80,7 +79,7 @@ describe('recap cards', () => {
   it('USD base: $ in headline and body, never NT$', () => {
     for (const ui of [
       <CardCategory key="c" snapshot={snapshot} isSolo={false} />,
-      <CardLargest key="l" snapshot={snapshot} />,
+      <CardLargest key="l" snapshot={snapshot} payerName="Ray" />,
       <CardRecurring key="r" snapshot={snapshot} />,
       <CardAssets key="a" snapshot={snapshot} />,
     ]) {

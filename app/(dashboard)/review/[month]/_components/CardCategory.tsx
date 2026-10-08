@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory } from '@/lib/categories'
-import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
+import type { ClientReviewSnapshot } from '@/lib/db/queries/monthlyReview'
 import { useBaseCurrency } from '@/app/(dashboard)/_components/MemberContext'
 import { CardEmpty, CardShell, formatRecapAmount } from './CardShell'
 
@@ -11,7 +11,7 @@ export function CardCategory({
   snapshot,
   isSolo,
 }: {
-  snapshot: MonthlyReviewSnapshotRow
+  snapshot: ClientReviewSnapshot
   isSolo: boolean
 }) {
   const router = useRouter()

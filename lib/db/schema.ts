@@ -513,8 +513,10 @@ export const pendingExpenseOccurrences = pgTable('PendingExpenseOccurrences', {
 
 // v0.14.0 #44 — Monthly review snapshot. Cron predicts on the 1st 00:05
 // Asia/Taipei for the previous month; values are frozen and not recomputed.
-// All denormalised text columns (paid_by name / asset names) are snapshotted
-// to survive future renames or soft-deletes of the source rows.
+// Asset names are snapshotted to survive renames or soft-deletes of the source
+// rows. The largest expense's payer is stored as an id, never a name (#1618,
+// 0089): the review page resolves it to a name within the viewed chapter, so a
+// deleted account's or a former partner's real name is never kept here.
 export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -530,6 +532,11 @@ export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
   largestExpenseAmount: integer('largest_expense_amount'),
   largestExpenseDescription: text('largest_expense_description'),
   largestExpenseCategory: text('largest_expense_category'),
+  // Payer id, no FK. Resolved to a name only against the viewed chapter's two
+  // members (review/[month]/page.tsx); never sent to the client.
+  largestExpensePaidBy: uuid('largest_expense_paid_by'),
+  // Always NULL since 0089 (#1618): it held the payer's display name, which
+  // outlived account deletion. Never write it; dropped in a later cleanup.
   largestExpensePaidByName: text('largest_expense_paid_by_name'),
 
   // card 3 — recurring events (income + expense), as a frozen list

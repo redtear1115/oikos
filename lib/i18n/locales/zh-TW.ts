@@ -2628,6 +2628,8 @@ export type Translations = {
     card2Title: string
     /** Card 2 body template with `{name}`, `{description}`, `{amount}`. */
     card2Body: string
+    /** #1618 — card 2 body when the payer is unknown in this chapter (no name). */
+    card2BodyNoName: string
     /** Card 3 heading. */
     card3Title: string
     /** Card 3 expense total template with `{amount}`. */
@@ -5296,6 +5298,7 @@ export const zhTW: Translations = {
     card1BodySolo: '這個月你最常花在 {category}，共 {amount}',
     card2Title: '本月最大筆',
     card2Body: '最大一筆：{name} 付的「{description}」，{amount}',
+    card2BodyNoName: '最大一筆：「{description}」，{amount}',
     card3Title: '定期入帳事件',
     card3ExpenseTotal: '本月定期支出共 {amount}',
     card3IncomeTotal: '本月定期進帳共 {amount}',

@@ -22,6 +22,8 @@ import {
   isAfter,
   isMonthInChapter,
   nextMonth,
+  resolveReviewPayerName,
+  toClientReviewSnapshot,
 } from '@/lib/monthlyReview'
 import { ReviewClient } from './_components/ReviewClient'
 
@@ -146,6 +148,13 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     ? quizSession.questionKeys.filter(isPartnerQuizQuestionKey)
     : []
 
+  // #1618 — card 2's payer: the snapshot stores an id; the name comes only from
+  // this chapter's two people (lib/monthlyReview.ts › resolveReviewPayerName),
+  // and the id itself never reaches the client.
+  const payerName = snapshot
+    ? resolveReviewPayerName(snapshot.largestExpensePaidBy, chapter, profileRows)
+    : null
+
   // Snapshot may be missing for the current (still-in-progress) month or for
   // any month that pre-dates the group. Spec: render a friendly "not ready"
   // surface rather than 404, so the editor for next month still works.
@@ -158,7 +167,8 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     <ReviewClient
       reviewedMonth={reviewedMonth}
       editorMonth={editorMonth}
-      snapshot={snapshot}
+      snapshot={snapshot ? toClientReviewSnapshot(snapshot) : null}
+      payerName={payerName}
       pastMessages={pastMessages.map((m) => ({
         id: m.id,
         memberId: m.memberId,

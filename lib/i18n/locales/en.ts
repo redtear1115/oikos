@@ -2121,6 +2121,7 @@ export const en: Translations = {
     card1BodySolo: 'You spent most on {category}: {amount}',
     card2Title: 'Largest expense',
     card2Body: 'Largest: {name} paid for "{description}", {amount}',
+    card2BodyNoName: 'Largest: "{description}", {amount}',
     card3Title: 'Recurring events',
     card3ExpenseTotal: 'Recurring expenses this month: {amount}',
     card3IncomeTotal: 'Recurring income this month: {amount}',
