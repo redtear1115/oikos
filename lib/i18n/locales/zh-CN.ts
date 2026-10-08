@@ -1154,6 +1154,12 @@ export const zhCN: Translations = {
     newLedgerName: '家计簿',
   },
 
+  androidBetaInvite: {
+    heading: 'Android App 正在找测试伙伴',
+    body: '你用 Android 打开 Futari。想先试试 App 版的话，用 Play 商店的 Google 帐号报名，我们会寄测试邀请给你；加入名单后就删除报名资料。',
+    cta: '报名 Android 测试版',
+  },
+
   pastTimes: {
     title: '过去的时光',
     back: '返回',
