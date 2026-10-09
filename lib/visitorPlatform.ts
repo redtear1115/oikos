@@ -45,8 +45,11 @@ export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784?pt=1289769
 // testing rights; nobody copies addresses between a form and Play Console.
 // The group's member list is visible to managers only. The /android-beta
 // privacy line says exactly that (the group owner, us, can see the tester's
-// Google account email) and nothing more; if the group's "who can view
-// members" setting ever widens, that sentence becomes false with no error.
+// Google account email) and that it is used only for test access and
+// test-related notices (owner decision 2026-10-09, #1649: group posts such
+// as "install is open" are allowed). If the group's "who can view members"
+// setting ever widens, or the group is used for anything beyond the test,
+// that sentence becomes false with no error.
 //
 // Join flow: ANDROID_BETA_PATH explains it → ANDROID_TEST_GROUP_URL (step 1)
 // → ANDROID_TEST_OPTIN_URL (step 2, Play's opt-in page, which only works once
