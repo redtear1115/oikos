@@ -46,6 +46,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Android 測試版改成自己加入，App 內多一個回饋入口（#1648）**
   使用者：Android 訪客按「加入 Android 測試版」會到說明頁，兩步（加入群組、打開 Play 測試頁）就能裝；Android App 的設定多一列「給我們回饋」，連到 Play 商店頁留私人回饋。
   技術：新增公開頁 `/android-beta`（noindex、不進 sitemap），測試者名單改為 Google 群組、移除 Google 表單；新增事件 `android_beta_step_clicked`、`tester_feedback_clicked`，與 #1553 一起移除。
+- **多兩個邀請 Android 測試者的入口（#1648）**
+  使用者：用 Android 瀏覽器打開出遊分享頁，底部多一行連到測試說明頁；設定多一列「邀請用 Android 的伴侶或朋友來測試」，點了分享說明頁連結（沒有分享面板就複製）。iOS App 內不顯示這一列。
+  技術：新增事件 `android_beta_outing_link_clicked`、`android_beta_share_clicked`，連結不帶出遊分享 token，與 #1553 一起移除。
 
 ## [1.7.1] - 2026-10-09
 

@@ -14,7 +14,7 @@ updates:
   - v1.6.8: 補「iOS Apple 登入的瀏覽器備援事件與 `id_token_rejected` 細分」這條邊界（#1552）
   - v1.7.0: 補「`invite_revoked` 只在真的讓一條有效連結失效時才發」這條邊界（#1546）
   - v1.7.0: 補「`android_beta_invite_*` 是新測量點、基準從部署日重算」這條邊界（#1553）
-  - v1.7.2: 補「`android_beta_step_clicked`、`tester_feedback_clicked` 是新測量點，`android_beta_invite_clicked` 的語意改變」這條邊界（#1648）
+  - v1.7.2: 補「`android_beta_step_clicked`、`tester_feedback_clicked`、`android_beta_outing_link_clicked`、`android_beta_share_clicked` 是新測量點，`android_beta_invite_clicked` 的語意改變」這條邊界（#1648）
 related_specs: [conversion-analytics, product]
 related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453", "#1552", "#1546", "#1553", "#1648"]
 ---
@@ -104,3 +104,6 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", 
 
 - **`android_beta_step_clicked`（#1648）與 `tester_feedback_clicked` 是新測量點，基準從部署日起算。** `/android-beta` 說明頁有兩顆按鈕，點下去發 `android_beta_step_clicked`，屬性 `step` 是 `join_group`（加入 Google 群組）或 `open_testing`（打開 Play 測試頁）。落地頁的入口沿用既有事件：`landing_cta_clicked`（`target: 'android_beta'`）與 `android_beta_invite_clicked`，不另開新名。`tester_feedback_clicked` 在 Android 殼內「設定 › 給我們回饋」那一列被點時發，沒有屬性，會打開 Play 商店頁。三者都是暫時的，Play 正式版上線後（#1553）一起移除。
   - **失效的樣子**：`android_beta_step_clicked` 只量到「按了按鈕」，量不到有沒有真的加入群組或在 Play 按下「成為測試人員」（都在 Google 那邊）；`join_group` 比 `open_testing` 多是正常的，兩步不必都走完。`tester_feedback_clicked` 為 0 不代表沒有回饋：Play 的私人回饋由 Play 主控台收，不經過我們。把說明頁的步驟點擊拿去除 `landing_cta_clicked` 不是轉換率，一個人可能從卡片、落地頁進來，也可能直接收到連結。
+
+- **`android_beta_outing_link_clicked` 與 `android_beta_share_clicked`（#1648）是兩個招募入口的新測量點，基準從部署日起算。** 前者在出遊分享頁底部那行「Android 正在測試」連結被點時發，沒有屬性，只有 Android 瀏覽器訪客看得到（iPhone、桌面、任何殼內都不顯示）；連結只帶語系路徑，不帶分享 token，事件也不帶任何 URL 內容。後者在「設定」裡「邀請用 Android 的伴侶或朋友來測試」那一列分享成功時發，屬性 `method` 固定為 `share`（系統分享面板，使用者沒取消）或 `copy`（沒有分享面板或分享失敗後改複製連結）；使用者取消分享不發事件，iOS 殼內該列隱藏（Apple 2.3.10）。兩者都是暫時的，與 #1553 一起移除。
+  - **失效的樣子**：`android_beta_share_clicked` 的 `method=copy` 占多數不代表使用者偏好複製，Android 殼的 WebView 沒有 Web Share API，殼內一律走複製。出遊連結點擊數為 0 不代表沒人看到，可能是訪客用的不是 Android 瀏覽器；更糟的是這條連結若被改成帶 `from=` 或沿用分享頁網址，出遊分享 token 會靜默進到 /android-beta 的 referrer 或 PostHog，沒有任何錯誤。這兩個入口帶來的人，在 `/android-beta` 的 `android_beta_step_clicked` 上沒有來源欄位可區分（刻意不加 `from=`），要看成效只能比對事件時間與點擊數。

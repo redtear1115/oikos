@@ -1188,6 +1188,7 @@ export const ja: Translations = {
     privacy: 'グループに参加すると、グループのオーナー（私たち）に Google アカウントのメールアドレスが見えます。テストに参加していただくためと、テストに関するお知らせを送るためだけに使います。テストをやめたいときは、グループから退会してください。',
     closed: '現在、テストの募集は行っていません。まずはウェブ版をお使いください。',
     useWebVersion: 'まずはウェブ版を使う',
+    outingLine: 'Futari の Android アプリはテスト中です。Android をお使いの方は、先に参加できます。',
   },
 
   pastTimes: {
@@ -1468,6 +1469,15 @@ export const ja: Translations = {
   support: {
     buttonText: 'コーヒーを贈る',
     frameTitle: 'Ko-fi サポートウィンドウ',
+  },
+
+  /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
+  androidTesterInvite: {
+    title: 'Android のパートナーや友だちをテストに招待',
+    hint: 'テストページのリンクを共有します。相手がグループに参加すれば、インストールできます',
+    shareTitle: 'Futari Android テスト',
+    shareText: 'Futari の Android アプリはクローズドテスト中です。このページの 2 ステップで、先にインストールして使えます。',
+    copied: 'リンクをコピーしました',
   },
 
   /** Settings row for Android-shell testers (#1648). Removed with #1553. */

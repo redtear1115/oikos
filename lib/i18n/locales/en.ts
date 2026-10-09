@@ -1187,6 +1187,7 @@ export const en: Translations = {
     privacy: 'Once you join, the group owner (that’s us) can see your Google account email. We use it only to give you access to the test and to send test-related notices. If you’d rather stop, just leave the group.',
     closed: 'The test isn’t open to new testers right now. You can use the web version in the meantime.',
     useWebVersion: 'Use the web version',
+    outingLine: 'Futari\'s Android app is in testing. If you\'re on Android, you can join early.',
   },
 
   pastTimes: {
@@ -1467,6 +1468,15 @@ export const en: Translations = {
   support: {
     buttonText: 'Support Futari',
     frameTitle: 'Ko-fi support window',
+  },
+
+  /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
+  androidTesterInvite: {
+    title: 'Invite a partner or friend on Android to test',
+    hint: 'Share the test page link. Once they join the group, they can install the app',
+    shareTitle: 'Futari Android beta',
+    shareText: 'Futari’s Android app is in closed testing. Follow the two steps on this page to install it early.',
+    copied: 'Link copied',
   },
 
   /** Settings row for Android-shell testers (#1648). Removed with #1553. */

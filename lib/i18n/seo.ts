@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from './locales-meta'
 import { localizedHref } from './path'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
 /**
  * Per-page canonical + hreflang language map for phase-1 public pages.

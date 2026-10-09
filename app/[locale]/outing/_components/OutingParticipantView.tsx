@@ -15,6 +15,7 @@ import { ExpenseSheet } from '@/app/(dashboard)/outings/_components/ExpenseSheet
 import { SettlementList } from '@/app/(dashboard)/outings/_components/SettlementList'
 import { Card, OutingHeader, SectionTitle } from './OutingPublicChrome'
 import { FeatureOutingLink } from './FeatureOutingLink'
+import { AndroidBetaOutingLink } from './AndroidBetaOutingLink'
 
 interface Props {
   view: Omit<OutingFullView, 'isAdmin'>
@@ -194,6 +195,7 @@ export function OutingParticipantView({ view, needsBind, signedIn, signInHref }:
         )}
 
         <FeatureOutingLink />
+        <AndroidBetaOutingLink />
       </div>
 
       {active && (

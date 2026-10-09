@@ -14,6 +14,7 @@ import type { OutingSlot } from '@/lib/db/queries/outingPublic'
 import { Field, ChipRow, Chip } from '@/app/(dashboard)/outings/_components/sheetBits'
 import { Card, SectionTitle } from './OutingPublicChrome'
 import { FeatureOutingLink } from './FeatureOutingLink'
+import { AndroidBetaOutingLink } from './AndroidBetaOutingLink'
 
 interface Props {
   shareToken: string
@@ -110,6 +111,7 @@ export function SlotPicker({ shareToken, outingId, locale, active, slots }: Prop
       </Button>
 
       <FeatureOutingLink />
+      <AndroidBetaOutingLink />
     </div>
   )
 }
