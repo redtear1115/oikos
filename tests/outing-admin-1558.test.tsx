@@ -145,7 +145,7 @@ const detail = (over: { status?: 'active' | 'ended' } = {}) => (
   <OutingDetailClient
     outing={{ id: 'o1', name: '九份兩日', currency: 'twd', status: over.status ?? 'active' }}
     view={{ participants: people.map((p) => ({ id: p.id, displayName: p.displayName, net: 0 })), transfers: [], coupleNet: 0 }}
-    coupleNet={0}
+    foldPreview={0}
     expenses={[expense]}
     participants={people}
     settlements={[{ id: 's1', fromParticipantId: 'F', toParticipantId: 'A', amount: 300 }]}

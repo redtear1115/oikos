@@ -40,6 +40,8 @@ const PATHS = [
     priority: 0.7,
     lastModified: useCase.contentUpdatedAt,
   })),
+  // Public outing feature page (#1633). Manual date: bump it when the page copy changes.
+  { path: '/features/outing', changeFrequency: 'monthly' as const, priority: 0.7, lastModified: '2026-10-08' },
   // Legal pages
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },
   { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },

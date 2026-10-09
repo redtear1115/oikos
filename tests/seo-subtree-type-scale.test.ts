@@ -22,7 +22,7 @@ import { join } from 'node:path'
  * rest of the app's type scale.
  */
 
-const ROOTS = ['app/[locale]/use-case', 'app/[locale]/migrate']
+const ROOTS = ['app/[locale]/use-case', 'app/[locale]/migrate', 'app/[locale]/features']
 
 function listTsxFiles(dir: string): string[] {
   const entries = readdirSync(dir)

@@ -45,7 +45,8 @@ interface Props {
   outing: OutingDetailOuting
   /** Nets and transfers only; no profile ids reach the client. */
   view: Omit<OutingView, 'participants'> & { participants: Omit<OutingView['participants'][number], 'profileId'>[] }
-  coupleNet: number
+  /** Signed fold the end would write; 0 unless the outing is active and in the current chapter. */
+  foldPreview: number
   expenses: OutingExpenseWithShares[]
   participants: OutingDetailParticipant[]
   settlements?: SettlementListItem[]
@@ -58,7 +59,7 @@ const DOT_HUES = [
   'var(--asset-color-pet)', 'var(--asset-color-plant)', 'var(--asset-color-insurance)',
 ]
 
-export function OutingDetailClient({ outing, view, coupleNet, expenses, participants, settlements = [] }: Props) {
+export function OutingDetailClient({ outing, view, foldPreview, expenses, participants, settlements = [] }: Props) {
   const t = useTranslations()
   const to = t.outing
   const router = useRouter()
@@ -198,9 +199,9 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
 
         {active && <ShareLinkCard outingId={outing.id} />}
 
-        {coupleNet !== 0 && (
+        {foldPreview !== 0 && (
           <p className="text-xs px-1 text-ink-3">
-            {to.coupleFoldNote.replace('{amount}', formatAmount(Math.abs(coupleNet), outing.currency))}
+            {to.coupleFoldNote.replace('{amount}', formatAmount(Math.abs(foldPreview), outing.currency))}
           </p>
         )}
 
@@ -245,7 +246,7 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
         onClose={close}
         onSaved={refresh}
       />
-      <EndOutingSheet open={sheet === 'end'} outingId={outing.id} onClose={close} onSaved={refresh} />
+      <EndOutingSheet open={sheet === 'end'} outingId={outing.id} currency={outing.currency} foldPreview={foldPreview} onClose={close} onSaved={refresh} />
       <EditTextSheet
         open={sheet === 'rename'}
         title={to.form.nameLabel}

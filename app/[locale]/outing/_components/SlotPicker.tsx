@@ -13,6 +13,7 @@ import { OUTING_PARTICIPANT_NAME_MAX } from '@/lib/outing/validate'
 import type { OutingSlot } from '@/lib/db/queries/outingPublic'
 import { Field, ChipRow, Chip } from '@/app/(dashboard)/outings/_components/sheetBits'
 import { Card, SectionTitle } from './OutingPublicChrome'
+import { FeatureOutingLink } from './FeatureOutingLink'
 
 interface Props {
   shareToken: string
@@ -107,6 +108,8 @@ export function SlotPicker({ shareToken, outingId, locale, active, slots }: Prop
       <Button variant="primary" disabled={!canJoin || pending} onClick={join}>
         {picked === SELF ? c.addSelfSave : c.joinAs.replace('{name}', pickedSlot?.displayName ?? '…')}
       </Button>
+
+      <FeatureOutingLink />
     </div>
   )
 }

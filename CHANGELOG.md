@@ -43,6 +43,34 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.7.1] - 2026-10-09
+
+主題：**出遊．朋友看得懂、帳算得對**——新增出遊介紹頁，讓朋友知道出遊怎麼用；結束出遊寫回兩人帳本的金額改為跟著建議轉帳，寫回後不再重複列出。
+完整 diff：[v1.7.0...v1.7.1](https://github.com/redtear1115/oikos/compare/v1.7.0...v1.7.1)
+
+### 使用者可見變化
+
+- **出遊介紹頁 /features/outing（#1633）**
+  使用者：新增公開頁，用動畫示範「丟一個連結、朋友選名字就能記」；旅行、AA 制情境頁、出遊分享頁底部、App 內出遊空狀態各有一個連結進去。
+  技術：`/features` 登記為公開前綴；歸因 `from=feature-outing` → `entry_source=feature_outing`，新增事件 `feature_outing_link_clicked`；示範金額由產品的拆帳函式算出並有單元測試。
+
+- **出遊結束時，寫回兩人帳本的金額跟建議轉帳一致（#1634）**
+  使用者：結束出遊只把「你們兩人之間」那一條建議轉帳寫回帳本，朋友照建議還清後不會再多出一筆；結束前的確認畫面會先顯示這個金額。
+  技術：`coupleNetFromOuting` 改取 `minimalTransfers` 的 A↔B 那一條，詳情頁與 `endOuting` 共用 `memberPidsOf`（單人帳本不再把朋友當成伴侶）。
+
+- **出遊結束後，已寫回帳本的那一條不再列在建議轉帳（#1635）**
+  使用者：結束出遊後，你們兩人之間已寫進帳本的那一筆不會再顯示在出遊頁與朋友的分享頁，不會付第二次；朋友的轉帳照舊。
+  技術：migration 0091 在 `Outings` 加 `fold_from_participant_id`／`fold_to_participant_id`／`fold_amount`（純 uuid、不加 FK），`endOuting` 在同一個 transaction 寫入；部署前須先對 prod 套用 0091，不回填。
+
+- **出遊介紹頁四語文案審稿套用，日文「帳本」統一叫「家計簿」（#1637 #1641）**
+  使用者：英文修掉會被讀錯的句子；示意圖標籤與 App 一致（「誰付給誰」「已認領」），步驟 1 寫清楚從「旅行」頁的出遊那一列進入；日文介面不再混用「帳簿」「台帳」，旅行頁統一叫「旅行」。
+  技術：介紹頁 en／ja／zh 字串照審稿更新；ja.ts 約 59 行（家計簿 33、旅行 21、旅行用の家計簿 4）；8 個情境／搬家頁的 `contentUpdatedAt` 改為 2026-10-09。
+
+### 技術變更
+
+- Android `versionCode` 105014、`versionName` 1.7.0：封閉測試更新已上傳 Play 送審（#1553）。
+- `docs/app-store-listing.md` 的四語 App Store 關鍵字更新為核准版，四語都不放「預算」（#1555；App Store Connect 跟 iOS 送審一起改）。
+
 ## [1.7.0] - 2026-10-08
 
 主題：**出遊．朋友從連結加入**——分享一條連結，朋友就能加入出遊、認領自己的名字、一起記帳與還款；同時把「有人離開帳本之後」的舊章節、名字、推播與資料保留整理成一致的規則（spec: after-leaving）。
@@ -1752,7 +1780,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/redtear1115/oikos/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/redtear1115/oikos/compare/v1.6.8...v1.7.0
 [1.6.8]: https://github.com/redtear1115/oikos/compare/v1.6.7...v1.6.8
 [1.6.7]: https://github.com/redtear1115/oikos/compare/v1.6.6...v1.6.7

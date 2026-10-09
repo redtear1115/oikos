@@ -56,7 +56,7 @@ describe('outing share pages — response headers', () => {
     expect(x['x-frame-options']).toBe('DENY')
   })
 
-  it.each(['/outings', '/outings/abc', '/en/outings', '/xx/outing/abc', '/', '/zh-TW/sign-in'])(
+  it.each(['/outings', '/outings/abc', '/en/outings', '/xx/outing/abc', '/', '/zh-TW/sign-in', '/features/outing', '/en/features/outing'])(
     '%s is not given the outing headers',
     (p) => {
       expect(headersFor(p)['referrer-policy']).toBeUndefined()
@@ -82,8 +82,25 @@ describe('robots + sitemap', () => {
     expect(allow.some((a) => a.includes('/outing'))).toBe(false)
   })
 
+  // The share routes are /outing/... and /<locale>/outing/...; anchored so the
+  // public feature page /features/outing (#1633) does not trip it. Loosening
+  // this to "any path containing /outing" would let a real share page in
+  // silently, so the anchor must stay at the start (or behind a locale).
   it('the sitemap has no outing page', () => {
-    expect(sitemap().some((e) => /\/outing(\/|$)/.test(new URL(e.url).pathname))).toBe(false)
+    const SHARE_ROUTE = new RegExp(`^(?:/(?:${SUPPORTED_LOCALES.join('|')}))?/outing(?:/|$)`)
+    expect(sitemap().some((e) => SHARE_ROUTE.test(new URL(e.url).pathname))).toBe(false)
+  })
+
+  it('the sitemap lists the feature page for every locale, with x-default', () => {
+    const entries = sitemap().filter((e) => new URL(e.url).pathname.endsWith('/features/outing'))
+    expect(entries.map((e) => new URL(e.url).pathname).sort()).toEqual(
+      ['/features/outing', ...SUPPORTED_LOCALES.filter((l) => l !== 'zh-TW').map((l) => `/${l}/features/outing`)].sort(),
+    )
+    for (const e of entries) {
+      const langs = e.alternates?.languages as Record<string, string>
+      expect(Object.keys(langs).sort()).toEqual([...SUPPORTED_LOCALES, 'x-default'].sort())
+      expect(new URL(langs['x-default']).pathname).toBe('/features/outing')
+    }
   })
 })
 
