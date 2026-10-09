@@ -224,7 +224,7 @@ export const MIGRATE_SOURCES = {
   manebo: {
     slug: 'manebo',
     name: 'Manebo',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     comparison: {
       rows: [
         { feature: { i18n: 'featSharedLedger' },   futari: { label: { i18n: 'verdictDefaultMode' }, tone: 'yes'     }, other: { label: { i18n: 'sharingSetupRequired' },      tone: 'partial' } },
@@ -312,7 +312,7 @@ export const MIGRATE_SOURCES = {
   splitwise: {
     slug: 'splitwise',
     name: 'Splitwise',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     // No screenshotWorkflow: Splitwise exports a spreadsheet per group /
     // friendship (kb.splitwise.com "How can I double check my balances?"),
     // so users arrive holding a real CSV. Headers don't match any dedicated
@@ -330,7 +330,7 @@ export const MIGRATE_SOURCES = {
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     screenshotWorkflow: true,
     comparison: {
       rows: [

@@ -43,6 +43,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **日文的「帳本」統一叫「家計簿」、旅行頁統一叫「旅行」（#1641）；出遊介紹頁步驟 1 寫清楚入口、示意圖標籤對齊 App（#1637）**
+  使用者：日文介面與介紹頁不再混用「帳簿」「台帳」，一律是「家計簿」（旅行用的叫「旅行用の家計簿」），旅行頁的名字統一為「旅行」；出遊介紹頁的步驟 1 說明從「旅行」頁的出遊那一列進入，示意圖的「已認領」標籤跟 App 一致。
+  技術：ja.ts 約 59 行（帳簿／台帳 → 家計簿 33 條、旅 → 旅行 21 條、旅行サブ家計簿 4 處、featureOuting 步驟 1），zh-TW／zh-CN／en 各 2 條；bump 了 useCase 的 newlyweds／travel／monthly-bills／parenting／aa-split 與 migrate 的 manebo／splitwise／suishouji 的 `contentUpdatedAt`（2026-10-09）。
+
 - **出遊介紹頁的英文、日文文案審稿結果套用（#1637）**
   使用者：英文修掉兩處會被讀錯或文法不通的句子，日文的「帳本」統一叫「家計簿」，示意圖上的標籤改成跟 App 一樣；繁中、簡中示意圖的結算標題改成 App 的「誰付給誰」，簡中 FAQ 改用 App 按鈕的「重设链接」。
   技術：只動 `featureOuting`／`seo.featureOuting` 的 23 個字串（en 9、ja 11、zh-CN 2、zh-TW 1）。

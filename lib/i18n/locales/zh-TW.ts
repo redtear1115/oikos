@@ -6959,7 +6959,7 @@ export const zhTW: Translations = {
     howHeading: '從一個連結開始',
     howToStepName: '步驟 {n}',
     steps: [
-      { title: '開一個出遊', body: '在 Futari 的旅行頁開一個出遊，取個名字就好。你和伴侶會自動在裡面。' },
+      { title: '開一個出遊', body: '在 Futari 的「旅行」頁點「出遊」那一列，開一個出遊，取個名字就好。你和伴侶會自動在裡面。' },
       { title: '把連結丟到群組', body: '複製出遊的連結，貼到 LINE 或任何聊天群組。' },
       { title: '朋友選自己的名字', body: '朋友在手機瀏覽器點開連結，選自己的名字，或加上自己。不用下載、不用註冊。' },
       { title: '誰付的都記下來，最後一次算清', body: '每筆選誰付、分給哪些人，系統平分。要結清時，列出誰該轉給誰，最多只要「人數減一」筆。' },
@@ -6969,7 +6969,7 @@ export const zhTW: Translations = {
       nameFieldLabel: '出遊名稱',
       chatMessage: '這次的帳記這裡',
       linkChip: '出遊連結',
-      claimed: '已選',
+      claimed: '已認領',
       expensesTitle: '支出',
       settleTitle: '誰付給誰',
       paidBy: '{name} 付',

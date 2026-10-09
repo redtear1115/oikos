@@ -3672,7 +3672,7 @@ export const zhCN: Translations = {
     howHeading: '从一个链接开始',
     howToStepName: '第 {n} 步',
     steps: [
-      { title: '开一个出游', body: '在 Futari 的旅行页开一个出游，取个名字就行。你和伴侣会自动在里面。' },
+      { title: '开一个出游', body: '在 Futari 的「旅行」页点「出游」那一行，开一个出游，取个名字就行。你和伴侣会自动在里面。' },
       { title: '把链接发到群里', body: '复制出游的链接，粘贴到微信或任何聊天群。' },
       { title: '朋友选自己的名字', body: '朋友在手机浏览器里点开链接，选自己的名字，或者把自己加进去。不用下载、不用注册。' },
       { title: '谁付的都记下来，最后一次算清', body: '每笔选谁付、分给哪些人，系统平均分摊。要结清时，会列出谁该转给谁，最多只要「人数减一」笔。' },
@@ -3682,7 +3682,7 @@ export const zhCN: Translations = {
       nameFieldLabel: '出游名称',
       chatMessage: '这次的账记这里',
       linkChip: '出游链接',
-      claimed: '已选',
+      claimed: '已认领',
       expensesTitle: '支出',
       settleTitle: '谁付给谁',
       paidBy: '{name} 付',

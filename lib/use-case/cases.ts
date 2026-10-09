@@ -35,7 +35,7 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   newlyweds: {
     slug: 'newlyweds',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     features: ['split', 'asset', 'realtime', 'history'],
   },
   'pet-owners': {
@@ -45,7 +45,7 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   travel: {
     slug: 'travel',
-    contentUpdatedAt: '2026-10-08',
+    contentUpdatedAt: '2026-10-09',
     features: ['trip', 'split', 'realtime', 'history'],
     featureLinks: ['outing'],
   },
@@ -56,7 +56,7 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   'monthly-bills': {
     slug: 'monthly-bills',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     features: ['split', 'realtime', 'history', 'encrypt'],
   },
   'big-purchases': {
@@ -71,12 +71,12 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   parenting: {
     slug: 'parenting',
-    contentUpdatedAt: '2026-10-03',
+    contentUpdatedAt: '2026-10-09',
     features: ['asset', 'split', 'realtime', 'history'],
   },
   'aa-split': {
     slug: 'aa-split',
-    contentUpdatedAt: '2026-10-08',
+    contentUpdatedAt: '2026-10-09',
     features: ['split', 'realtime', 'encrypt', 'history'],
     featureLinks: ['outing'],
   },

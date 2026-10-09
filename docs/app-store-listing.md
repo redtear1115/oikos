@@ -30,7 +30,7 @@ last_updated: 2026-09-16
 **App Store 副標**：`伴侶共享記帳與自動分攤`
 **Play 簡短說明**：`專為伴侶設計的雙人共享帳本——一起記錄、自動分攤、清楚結算。`
 **App Store 宣傳文字**：`兩個人，一本帳。一起把日常的每一筆記下來，回頭看會很暖。`
-**App Store 關鍵字**：`記帳,雙人記帳,情侶記帳,夫妻記帳,分攤,AA制,共享帳本,家計簿,結算,預算`
+**App Store 關鍵字**：`情侶記帳,夫妻記帳,共同記帳,家庭記帳,同步,共享帳本,分攤,分帳,AA制,結算,家計簿,伴侶,兩人`（#1555，2026-10-09 擁有者核准；四語都不放「預算」，Futari 沒有預算功能）
 
 **完整說明**：
 ```
@@ -69,7 +69,7 @@ Futari 是專為兩個人設計的共享帳本。
 **App Store 副標**：`伴侣共享记账与自动分摊`
 **Play 簡短說明**：`专为伴侣设计的双人共享账本——一起记录、自动分摊、清楚结算。`
 **App Store 宣傳文字**：`两个人，一本账。一起把日常的每一笔记下来，回头看会很暖。`
-**App Store 關鍵字**：`记账,双人记账,情侣记账,夫妻记账,分摊,AA制,共享账本,家计簿,结算,预算`
+**App Store 關鍵字**：`情侣记账,夫妻记账,共同记账,家庭记账,一起记账,同步,共享账本,情侣账本,小两口,AA制,分账,账单,结算,两人,同居,生活费,旅行记账,聚餐AA`（#1555）
 
 **完整說明**：
 ```
@@ -108,7 +108,7 @@ Futari 是专为两个人设计的共享账本。
 **App Store 副標**：`Money for two, kept together`
 **Play 簡短說明**：`A shared ledger for two — record together, split automatically, settle clearly.`
 **App Store 宣傳文字**：`Two people, one ledger. Note down the everyday together — looking back feels warm.`
-**App Store 關鍵字**：`shared expenses,couples,partner,split bills,joint account,budget,household,settle up,two,ledger`
+**App Store 關鍵字**：`couples,expense,split,bills,joint,household,partner,settle,tracker,married,trip,group,owe`（#1555；名稱與副標已有的 shared、ledger、money、two、together 不重複放）
 
 **完整說明**：
 ```
@@ -147,7 +147,7 @@ Two people, one ledger. Keep the days as light you can look back on.
 **App Store 副標**：`ふたりで、ひとつの家計簿`
 **Play 簡短說明**：`ふたりのための共有家計簿——一緒に記録、自動で割り勘、すっきり精算。`
 **App Store 宣傳文字**：`ふたりで、ひとつの家計簿。毎日のひとつひとつを一緒に。振り返ると、あたたかい。`
-**App Store 關鍵字**：`家計簿,夫婦,カップル,共有,割り勘,精算,予算,二人,お金,記録`
+**App Store 關鍵字**：`夫婦,カップル,共有,割り勘,精算,同棲,二人暮らし,共働き,生活費,新婚,立て替え,折半,同期,パートナー,二人,支出,旅行,グループ,お金,記録`（#1555；名稱已有的 家計簿、ふたり 不重複放）
 
 **完整說明**：
 ```
