@@ -41,6 +41,7 @@ describe('TesterFeedbackRow (#1648)', () => {
     render(<TesterFeedbackRow />)
     const a = screen.getByText('Feedback').closest('a')!
     expect(a.getAttribute('href')).toBe(PLAY)
+    expect(a.getAttribute('target')).toBe('_blank')
     expect(a.getAttribute('rel')).toBe('noopener noreferrer')
     fireEvent.click(a)
     expect(track.mock.calls).toEqual([['tester_feedback_clicked']])
@@ -68,5 +69,11 @@ describe('TesterFeedbackRow (#1648)', () => {
   it('is hidden on desktop', () => {
     const { container } = render(<TesterFeedbackRow />)
     expect(container.innerHTML).toBe('')
+  })
+
+  it('renders nothing before mount, even in the Android shell (SSR and first render agree)', async () => {
+    setNative('android')
+    const { renderToString } = await import('react-dom/server')
+    expect(renderToString(<TesterFeedbackRow />)).toBe('')
   })
 })

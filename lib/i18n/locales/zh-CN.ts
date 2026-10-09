@@ -1166,7 +1166,7 @@ export const zhCN: Translations = {
     title: '加入 Futari 的 Android 测试',
     intro: 'Android App 还在 Google Play 的封闭测试阶段。照下面两步做，就能先装起来用。',
     step1Title: '加入测试群组',
-    step1Body: '用你在 Play 商店登录的 Google 账号，加入“Futari Android 测试”群组。',
+    step1Body: '用你在 Play 商店登录的 Google 账号，加入“Futari Android 測試”群组。',
     step1Cta: '加入群组',
     step2Title: '安装 App',
     step2Body: '加入群组后，打开 Play 的测试页，点“成为测试人员”，再到 Play 商店安装。',

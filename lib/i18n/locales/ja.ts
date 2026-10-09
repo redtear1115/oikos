@@ -1180,7 +1180,7 @@ export const ja: Translations = {
     title: 'Futari の Android テストに参加する',
     intro: 'Android アプリは、いま Google Play のクローズドテスト中です。次の2ステップで、先にインストールして使えます。',
     step1Title: 'テストグループに参加する',
-    step1Body: 'Play ストアでログインしている Google アカウントで、「Futari Android テスト」グループに参加します。',
+    step1Body: 'Play ストアでログインしている Google アカウントで、「Futari Android 測試」グループに参加します。',
     step1Cta: 'グループに参加する',
     step2Title: 'アプリをインストールする',
     step2Body: 'グループに参加したら、Play のテストページを開いて「テスターになる」を押し、Play ストアからインストールします。',

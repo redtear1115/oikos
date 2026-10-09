@@ -1179,7 +1179,7 @@ export const en: Translations = {
     title: 'Join the Futari Android beta',
     intro: 'The Android app is still in closed testing on Google Play. Follow the two steps below to install it early.',
     step1Title: 'Join the test group',
-    step1Body: 'With the Google account you use on Google Play, join the “Futari Android testers” group.',
+    step1Body: 'With the Google account you use on Google Play, join the “Futari Android 測試” group.',
     step1Cta: 'Join the group',
     step2Title: 'Install the app',
     step2Body: 'Once you’re in the group, open the Play testing page, tap “Become a tester”, then install from Google Play.',
