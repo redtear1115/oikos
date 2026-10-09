@@ -32,6 +32,7 @@ vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
 vi.mock('@/lib/i18n/t', () => ({ getTranslations: async () => zhTW }))
 vi.mock('@/app/(dashboard)/settings/_components/QuickAccessRow', () => ({ QuickAccessRow: () => null }))
 vi.mock('@/app/(dashboard)/settings/_components/InstallGuideRow', () => ({ InstallGuideRow: () => null }))
+vi.mock('@/app/(dashboard)/settings/_components/TesterFeedbackRow', () => ({ TesterFeedbackRow: () => null }))
 vi.mock('@/app/(dashboard)/settings/_components/OfflineBrowsingToggle', () => ({ OfflineBrowsingToggle: () => null }))
 vi.mock('@/app/(dashboard)/settings/_components/LogoutButton', () => ({ LogoutButton: () => null }))
 vi.mock('@/app/(dashboard)/settings/_components/DeleteAccountButton', () => ({ DeleteAccountButton: () => null }))

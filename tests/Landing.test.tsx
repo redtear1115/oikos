@@ -29,6 +29,7 @@ const renderLanding = () =>
       t={zhTW.landing}
       signInHref="/zh-TW/sign-in"
       dashboardHref="/dashboard"
+      androidBetaHref="/android-beta"
       checkingLabel={zhTW.signIn.signingIn}
       useCaseHrefs={{
         cohabitation: '/zh-TW/use-case/cohabitation',
@@ -136,6 +137,7 @@ describe('Landing — SSR CTAs work without JS (#1521)', () => {
         t={zhTW.landing}
         signInHref="/zh-TW/sign-in"
         dashboardHref="/dashboard"
+        androidBetaHref="/android-beta"
         checkingLabel={zhTW.signIn.signingIn}
         useCaseHrefs={{ cohabitation: '/a', newlyweds: '/b', petOwners: '/c', hub: '/d' }}
         migrateHrefs={{ honeydue: '/e', spendee: '/f', cwmoney: '/g', hub: '/h' }}
@@ -160,6 +162,7 @@ describe('Landing — SSR CTAs work without JS (#1521)', () => {
       expect(a.innerHTML).not.toMatch(/text-transparent/)
     }
     expect(html).not.toContain('apps.apple.com')
-    expect(html).not.toContain('forms.gle')
+    expect(html).not.toContain('groups.google.com')
+    expect(html).not.toContain('android-beta')
   })
 })

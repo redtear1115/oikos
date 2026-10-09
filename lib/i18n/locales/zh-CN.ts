@@ -94,8 +94,8 @@ export const zhCN: Translations = {
     alreadyHaveAccount: '已有账号 · 登录',
     appStoreCta: '在 App Store 下载',
     appStoreCtaHint: 'iPhone 与 iPad 都能用',
-    androidBetaCta: '报名 Android 测试版',
-    androidBetaCtaHint: '用你在 Play 商店的 Google 账号报名。仅用于寄送测试邀请，加入名单后即删除。',
+    androidBetaCta: '加入 Android 测试版',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 账号加入测试群组，接着就能安装 App。',
     useWebVersion: '先用网页版',
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
@@ -1156,8 +1156,26 @@ export const zhCN: Translations = {
 
   androidBetaInvite: {
     heading: 'Android App 正在找测试伙伴',
-    body: '你用 Android 打开 Futari。想先试试 App 版的话，用 Play 商店的 Google 帐号报名，我们会寄测试邀请给你；加入名单后就删除报名资料。',
-    cta: '报名 Android 测试版',
+    body: '你用 Android 打开 Futari。想先试试 App 版的话，用 Play 商店的 Google 账号加入测试群组，接着就能安装。',
+    cta: '加入 Android 测试版',
+  },
+
+  /** /android-beta self-serve join page (#1648). Temporary, removed with #1553. */
+  androidBeta: {
+    metaTitle: 'Android 测试版',
+    title: '加入 Futari 的 Android 测试',
+    intro: 'Android App 还在 Google Play 的封闭测试阶段。照下面两步做，就能先装起来用。',
+    step1Title: '加入测试群组',
+    step1Body: '用你在 Play 商店登录的 Google 账号，加入「Futari Android 測試」群组。',
+    step1Cta: '加入群组',
+    step2Title: '安装 App',
+    step2Body: '加入群组后，打开 Play 的测试页，点「成为测试人员」，再到 Play 商店安装。',
+    step2Cta: '打开 Play 测试页',
+    askTitle: '测试期间',
+    askBody: '像平常一样用它记账。遇到不顺的地方或有想法，在 App 的「设置 › 给我们反馈」告诉我们。',
+    privacy: '加入群组后，群组所有者（也就是我们）看得到你的 Google 账号的 Email 地址，只用来给你测试资格，和发送测试相关的通知。不想测了，退出群组就好。',
+    closed: '测试名额目前没有开放，可以先用网页版。',
+    useWebVersion: '先用网页版',
   },
 
   pastTimes: {
@@ -1436,6 +1454,12 @@ export const zhCN: Translations = {
   support: {
     buttonText: '请喝杯咖啡',
     frameTitle: 'Ko-fi 支持小窗口',
+  },
+
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  testerFeedback: {
+    title: '给我们反馈',
+    hint: '在 Play 商店留下只有我们看得到的反馈',
   },
 
   currencyPage: {

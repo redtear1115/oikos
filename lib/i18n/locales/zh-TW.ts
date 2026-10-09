@@ -165,13 +165,13 @@ export type Translations = {
      *  sign-in flow, which is wrong once the CTA points at the App Store. */
     appStoreCtaHint: string
     /** Primary-CTA label for an Android browser visitor (#1413): links out to
-     *  the closed-testing signup form (a Google Form — see
-     *  `lib/visitorPlatform.ts#ANDROID_BETA_FORM_URL`). Falls back to the
+     *  the /android-beta join page (#1648; the group flow lives in
+     *  `lib/visitorPlatform.ts#ANDROID_TEST_GROUP_URL`). Falls back to the
      *  default sign-in CTA if that URL is ever emptied. */
     androidBetaCta: string
-    /** Mobile hint under `androidBetaCta` — must say what the form asks for
-     *  and why (issue #1413): the Google account used on Play, used only to
-     *  send the test invite, deleted once added to the closed-testing list. */
+    /** Mobile hint under `androidBetaCta` — must say which Google account to
+     *  use (the one on Play) and what happens next (#1648): join the test
+     *  group, then install. */
     androidBetaCtaHint: string
     /** Secondary link shown instead of `alreadyHaveAccount` when the primary
      *  CTA is `androidBetaCta` (#1413) — that CTA isn't a returning-user
@@ -1551,6 +1551,33 @@ export type Translations = {
     cta: string
   }
 
+  /**
+   * /android-beta self-serve join page (#1648): step 1 joins the Google Group
+   * that is on Play's closed-test tester list, step 2 opens Play's opt-in page.
+   * `privacy` must stay true to the group's real settings (member list visible
+   * to managers only) and to how the group is used (test access + test-related
+   * notices only, #1649) — if either changes, this sentence becomes a false
+   * claim without any code failing. `closed` shows only when the group URL constant
+   * is empty (`lib/visitorPlatform.ts`). Temporary: removed with #1553.
+   */
+  androidBeta: {
+    metaTitle: string
+    title: string
+    intro: string
+    step1Title: string
+    step1Body: string
+    step1Cta: string
+    step2Title: string
+    step2Body: string
+    step2Cta: string
+    /** Points at Settings › `testerFeedback.title`; keep the two labels identical. */
+    askTitle: string
+    askBody: string
+    privacy: string
+    closed: string
+    useWebVersion: string
+  }
+
   pastTimes: {
     title: string
     back: string
@@ -1875,6 +1902,13 @@ export type Translations = {
     buttonText: string
     /** Accessible title for the Ko-fi floating widget iframe (frame-title, #919). */
     frameTitle: string
+  }
+
+  /** Settings row for Android-shell testers (#1648): opens the Play listing,
+   *  where Play's private feedback lives. Temporary, removed with #1553. */
+  testerFeedback: {
+    title: string
+    hint: string
   }
 
   /** /settings/currency page — base currency only since v0.17.4 (#410).
@@ -3380,8 +3414,8 @@ export const zhTW: Translations = {
     alreadyHaveAccount: '已經有帳號 · 登入',
     appStoreCta: '在 App Store 下載',
     appStoreCtaHint: 'iPhone 與 iPad 都能用',
-    androidBetaCta: '報名 Android 測試版',
-    androidBetaCtaHint: '用你在 Play 商店的 Google 帳號報名。只用來寄測試邀請，加入名單後就刪除。',
+    androidBetaCta: '加入 Android 測試版',
+    androidBetaCtaHint: '用你在 Play 商店的 Google 帳號加入測試群組，接著就能安裝 App。',
     useWebVersion: '先用網頁版',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
@@ -4442,8 +4476,25 @@ export const zhTW: Translations = {
 
   androidBetaInvite: {
     heading: 'Android App 正在找測試夥伴',
-    body: '你用 Android 開 Futari。想先試試 App 版的話，用 Play 商店的 Google 帳號報名，我們會寄測試邀請給你；加入名單後就刪除報名資料。',
-    cta: '報名 Android 測試版',
+    body: '你用 Android 開 Futari。想先試試 App 版的話，用 Play 商店的 Google 帳號加入測試群組，接著就能安裝。',
+    cta: '加入 Android 測試版',
+  },
+
+  androidBeta: {
+    metaTitle: 'Android 測試版',
+    title: '加入 Futari 的 Android 測試',
+    intro: 'Android App 還在 Google Play 的封閉測試階段。照下面兩步做，就能先裝起來用。',
+    step1Title: '加入測試群組',
+    step1Body: '用你在 Play 商店登入的 Google 帳號，加入「Futari Android 測試」群組。',
+    step1Cta: '加入群組',
+    step2Title: '安裝 App',
+    step2Body: '加入群組後，打開 Play 的測試頁，按「成為測試人員」，再到 Play 商店安裝。',
+    step2Cta: '打開 Play 測試頁',
+    askTitle: '測試期間',
+    askBody: '像平常一樣用它記帳。遇到不順的地方或有想法，在 App 的「設定 › 給我們回饋」告訴我們。',
+    privacy: '加入群組後，群組擁有者（也就是我們）看得到你的 Google 帳號 email，只用來給你測試資格，和寄測試相關的通知。不想測了，退出群組就好。',
+    closed: '測試名額目前沒有開放，可以先用網頁版。',
+    useWebVersion: '先用網頁版',
   },
 
   pastTimes: {
@@ -4722,6 +4773,11 @@ export const zhTW: Translations = {
   support: {
     buttonText: '請喝杯咖啡',
     frameTitle: 'Ko-fi 支持小視窗',
+  },
+
+  testerFeedback: {
+    title: '給我們回饋',
+    hint: '在 Play 商店留下只有我們看得到的回饋',
   },
 
   currencyPage: {

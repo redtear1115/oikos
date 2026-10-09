@@ -21,6 +21,8 @@ vi.stubGlobal('matchMedia', (query: string) => ({
 }))
 
 import { LandingPrimaryCta } from '@/app/[locale]/_landing/LandingPrimaryCta'
+import { localizedHref } from '@/lib/i18n/path'
+import { ANDROID_BETA_PATH } from '@/lib/visitorPlatform'
 
 const IPHONE_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
@@ -33,14 +35,15 @@ function stubUserAgent(ua: string) {
   vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(ua)
 }
 
-const renderCta = () =>
+const renderCta = (androidBetaHref = '/android-beta') =>
   render(
     <LandingPrimaryCta
       signInHref="/zh-TW/sign-in"
       dashboardHref="/dashboard"
       ctaLocation="hero"
       appStoreLabel="在 App Store 下載"
-      androidBetaLabel="報名 Android 測試版"
+      androidBetaLabel="加入 Android 測試版"
+      androidBetaHref={androidBetaHref}
     >
       開始
     </LandingPrimaryCta>,
@@ -82,7 +85,8 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
         dashboardHref="/dashboard"
         ctaLocation="hero"
         appStoreLabel="在 App Store 下載"
-        androidBetaLabel="報名 Android 測試版"
+        androidBetaLabel="加入 Android 測試版"
+        androidBetaHref="/android-beta"
       >
         開始
       </LandingPrimaryCta>,
@@ -155,13 +159,19 @@ describe('LandingPrimaryCta (#920 Phase 1 client CTA hydration, extended by #141
     )
   })
 
-  it('links to the Android beta signup form for an Android browser visitor', async () => {
+  // The href is built by the caller with localizedHref(ANDROID_BETA_PATH, locale):
+  // a bare /android-beta for a non-default locale would flip the visitor to zh-TW (#1648).
+  it.each([
+    ['zh-TW', '/android-beta'],
+    ['en', '/en/android-beta'],
+  ] as const)('links to the locale-pinned join page, same tab, for an Android browser visitor (%s)', async (locale, href) => {
     getSession.mockResolvedValue({ data: { session: null } })
     stubUserAgent(ANDROID_UA)
-    renderCta()
+    renderCta(localizedHref(ANDROID_BETA_PATH, locale))
     await waitFor(() => {
-      const anchor = screen.getByText('報名 Android 測試版').closest('a')!
-      expect(anchor.getAttribute('href')).toBe('https://forms.gle/MriV1rL3upL4SgVt5')
+      const anchor = screen.getByText('加入 Android 測試版').closest('a')!
+      expect(anchor.getAttribute('href')).toBe(href)
+      expect(anchor).not.toHaveAttribute('target')
     })
     expect(screen.queryByText('開始')).not.toBeInTheDocument()
   })

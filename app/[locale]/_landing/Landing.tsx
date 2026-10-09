@@ -29,6 +29,9 @@ type Props = {
   signInHref: string
   /** 主 CTA 已登入時的目的地（/dashboard）— client-side 才會切過去。 */
   dashboardHref: string
+  /** Android 瀏覽器訪客的主 CTA 目的地：/android-beta，必須帶 locale（#1648）。
+   *  裸 `/android-beta` 對非預設 locale 會被 proxy 改寫成 zh-TW 並覆寫 locale cookie。 */
+  androidBetaHref: string
   /** 殼／PWA 冷啟動確認既有 session 時，等待遮罩上的文字（沿用 signIn.signingIn，#1318）。 */
   checkingLabel: string
   /** Locale-aware /use-case/* hrefs (#851). Three internal links to
@@ -65,7 +68,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
+export function Landing({ t, signInHref, dashboardHref, androidBetaHref, checkingLabel, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       id="main"
@@ -125,6 +128,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
           }}
           appStoreLabel={t.appStoreCta}
           androidBetaLabel={t.androidBetaCta}
+          androidBetaHref={androidBetaHref}
         >
           {t.cta}
         </LandingPrimaryCta>
@@ -223,6 +227,7 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
                 }}
                 appStoreLabel={t.appStoreCta}
                 androidBetaLabel={t.androidBetaCta}
+                androidBetaHref={androidBetaHref}
               >
                 {t.cta}
               </LandingPrimaryCta>
