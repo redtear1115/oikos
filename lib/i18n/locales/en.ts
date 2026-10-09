@@ -1166,7 +1166,6 @@ export const en: Translations = {
   },
 
   androidBetaInvite: {
-    // TODO(i18n): 待確認 (#1648)
     heading: 'The Android app is looking for testers',
     body: 'You’re opening Futari on Android. If you’d like to try the app first, join the test group with the Google account you use on Google Play, then install it.',
     cta: 'Join the Android beta',
@@ -1174,7 +1173,6 @@ export const en: Translations = {
 
   /** /android-beta self-serve join page (#1648). Temporary, removed with #1553. */
   androidBeta: {
-    // TODO(i18n): 待確認 (#1648)
     metaTitle: 'Android beta',
     title: 'Join the Futari Android beta',
     intro: 'The Android app is still in closed testing on Google Play. Follow the two steps below to install it early.',
@@ -1485,7 +1483,6 @@ export const en: Translations = {
 
   /** Settings row for Android-shell testers (#1648). Removed with #1553. */
   testerFeedback: {
-    // TODO(i18n): 待確認 (#1648)
     title: 'Send us feedback',
     hint: 'Leave feedback on Google Play that only we can see',
   },
