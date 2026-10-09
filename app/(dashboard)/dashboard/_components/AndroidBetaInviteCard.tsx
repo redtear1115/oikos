@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { track } from '@/lib/analytics/track'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { DEFAULT_LOCALE, isLocale, localizedHref } from '@/lib/i18n/path'
 import { getPlatform } from '@/lib/install-guide'
 import { detectPlatform } from '@/lib/platform'
-import { ANDROID_BETA_FORM_URL } from '@/lib/visitorPlatform'
+import { ANDROID_BETA_PATH, ANDROID_TEST_GROUP_URL } from '@/lib/visitorPlatform'
 
 /** Global, one-time: the invite is about the device, not about a ledger or chapter. */
 const DISMISS_KEY = 'futari_android_beta_invite_dismissed'
@@ -13,8 +14,9 @@ const DISMISS_KEY = 'futari_android_beta_invite_dismissed'
 /**
  * One-time invite for Android *web* users (browser or installed PWA) to join
  * the Play closed test (#1553: Play wants real testers before production
- * access). Never on iOS, desktop or inside the Capacitor shell: the shell user
- * already has the app, so the invite would be asking for something done.
+ * access); the CTA goes to the self-serve join page (#1648). Never on iOS,
+ * desktop or inside the Capacitor shell: the shell user already has the app,
+ * so the invite would be asking for something done.
  *
  * Hidden on first render and decided in an effect, so server HTML and the
  * first client render agree. A failing `localStorage` (private mode) reads as
@@ -25,10 +27,11 @@ const DISMISS_KEY = 'futari_android_beta_invite_dismissed'
  */
 export function AndroidBetaInviteCard() {
   const t = useTranslations()
+  const rawLocale = useLocale()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    if (!ANDROID_BETA_FORM_URL) return
+    if (!ANDROID_TEST_GROUP_URL) return
     if (getPlatform() !== 'android') return
     if (detectPlatform() === 'android_native') return
     try {
@@ -83,9 +86,10 @@ export function AndroidBetaInviteCard() {
             {t.androidBetaInvite.body}
           </p>
           <a
-            href={ANDROID_BETA_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            // Locale-pinned: a bare /android-beta for en/ja/zh-CN is rewritten to
+            // zh-TW by proxy.ts, which overwrites the locale cookie and silently
+            // switches the whole app to zh-TW. Internal link, same tab.
+            href={localizedHref(ANDROID_BETA_PATH, isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE)}
             onClick={handleCta}
             className="inline-block text-sm mt-2 underline underline-offset-4"
             style={{ color: 'var(--ink)' }}

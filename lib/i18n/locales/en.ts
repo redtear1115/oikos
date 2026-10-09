@@ -96,7 +96,7 @@ export const en: Translations = {
     appStoreCta: 'Get it on the App Store',
     appStoreCtaHint: 'Works on iPhone and iPad',
     androidBetaCta: 'Join the Android beta',
-    androidBetaCtaHint: 'Sign up with the Google account you use on Google Play. It’s only used to send the test invite and is deleted once you’re added.',
+    androidBetaCtaHint: 'Join the test group with the Google account you use on Google Play, then install the app.',
     useWebVersion: 'Use the web version',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
@@ -1166,10 +1166,29 @@ export const en: Translations = {
   },
 
   androidBetaInvite: {
-    // TODO(i18n): 待確認 (#1593)
+    // TODO(i18n): 待確認 (#1648)
     heading: 'The Android app is looking for testers',
-    body: 'You’re opening Futari on Android. If you’d like to try the app first, sign up with the Google account you use on Google Play and we’ll send you a test invite. Your sign-up details are deleted once you’re added to the list.',
+    body: 'You’re opening Futari on Android. If you’d like to try the app first, join the test group with the Google account you use on Google Play, then install it.',
     cta: 'Join the Android beta',
+  },
+
+  /** /android-beta self-serve join page (#1648). Temporary, removed with #1553. */
+  androidBeta: {
+    // TODO(i18n): 待確認 (#1648)
+    metaTitle: 'Android beta',
+    title: 'Join the Futari Android beta',
+    intro: 'The Android app is still in closed testing on Google Play. Follow the two steps below to install it early.',
+    step1Title: 'Join the test group',
+    step1Body: 'With the Google account you use on Google Play, join the “Futari Android testers” group.',
+    step1Cta: 'Join the group',
+    step2Title: 'Install the app',
+    step2Body: 'Once you’re in the group, open the Play testing page, tap “Become a tester”, then install from Google Play.',
+    step2Cta: 'Open the Play testing page',
+    askTitle: 'While you test',
+    askBody: 'Use it for your real records, the way you normally would. If something feels off or you have an idea, tell us in the app under Settings › Send us feedback.',
+    privacy: 'Once you join, the group owner (that’s us) can see your Google account email. We use it only to give you access to the test. If you’d rather stop, just leave the group.',
+    closed: 'The test isn’t open to new testers right now. You can use the web version in the meantime.',
+    useWebVersion: 'Use the web version',
   },
 
   pastTimes: {
@@ -1450,6 +1469,13 @@ export const en: Translations = {
   support: {
     buttonText: 'Support Futari',
     frameTitle: 'Ko-fi support window',
+  },
+
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  testerFeedback: {
+    // TODO(i18n): 待確認 (#1648)
+    title: 'Send us feedback',
+    hint: 'Leave feedback on Google Play that only we can see',
   },
 
   currencyPage: {

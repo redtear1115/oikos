@@ -4,19 +4,22 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 const track = vi.fn()
 vi.mock('@/lib/analytics/track', () => ({ track: (...a: unknown[]) => track(...a) }))
 
+const locale = vi.hoisted(() => ({ value: 'zh-TW' }))
 vi.mock('@/lib/i18n/client', () => ({
+  useLocale: () => locale.value,
   useTranslations: () => ({
     androidBetaInvite: { heading: 'H', body: 'B', cta: 'Join' },
     postLeave: { dismissAria: 'Dismiss' },
   }),
 }))
 
-const FORM = 'https://forms.gle/example'
-const formUrl = { value: FORM }
+const GROUP = 'https://groups.google.com/g/example'
+const groupUrl = { value: GROUP }
 vi.mock('@/lib/visitorPlatform', () => ({
-  get ANDROID_BETA_FORM_URL() {
-    return formUrl.value
+  get ANDROID_TEST_GROUP_URL() {
+    return groupUrl.value
   },
+  ANDROID_BETA_PATH: '/android-beta',
 }))
 
 import { AndroidBetaInviteCard } from '@/app/(dashboard)/dashboard/_components/AndroidBetaInviteCard'
@@ -41,7 +44,8 @@ function setNative(platform: 'android' | 'ios' | null) {
 
 beforeEach(() => {
   track.mockClear()
-  formUrl.value = FORM
+  groupUrl.value = GROUP
+  locale.value = 'zh-TW'
   window.localStorage.clear()
   setUA(ANDROID_UA)
   // jsdom has no matchMedia; a plain browser tab is "not standalone".
@@ -84,8 +88,8 @@ describe('AndroidBetaInviteCard (#1553)', () => {
     expect(track).not.toHaveBeenCalled()
   })
 
-  it('does not render when the form URL is empty', () => {
-    formUrl.value = ''
+  it('does not render when the group URL is empty', () => {
+    groupUrl.value = ''
     const { container } = render(<AndroidBetaInviteCard />)
     expect(container.innerHTML).toBe('')
   })
@@ -105,12 +109,21 @@ describe('AndroidBetaInviteCard (#1553)', () => {
     expect(track.mock.calls).toEqual([['android_beta_invite_shown'], ['android_beta_invite_dismissed']])
   })
 
-  it('CTA links to the form in a new tab, then retires the card', () => {
+  it.each([
+    ['zh-TW', '/android-beta'],
+    ['en', '/en/android-beta'],
+    ['ja', '/ja/android-beta'],
+  ])('CTA links to the locale-pinned join page in the same tab (%s)', (loc, href) => {
+    locale.value = loc
     render(<AndroidBetaInviteCard />)
     const a = screen.getByText('Join').closest('a')!
-    expect(a.getAttribute('href')).toBe(FORM)
-    expect(a.getAttribute('target')).toBe('_blank')
-    expect(a.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(a.getAttribute('href')).toBe(href)
+    expect(a.hasAttribute('target')).toBe(false)
+  })
+
+  it('CTA click retires the card', () => {
+    render(<AndroidBetaInviteCard />)
+    const a = screen.getByText('Join').closest('a')!
     fireEvent.click(a)
     expect(screen.queryByRole('status')).toBeNull()
     expect(window.localStorage.getItem(KEY)).toBe('1')

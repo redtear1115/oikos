@@ -59,12 +59,12 @@ describe('resolveVisitorPlatform (#1413)', () => {
     expect(resolveVisitorPlatform(input({ userAgent: REAL_MAC_UA, maxTouchPoints: 0 }))).toBe('sign_in')
   })
 
-  it('Android Chrome gets the beta signup (shipped form URL)', () => {
+  it('Android Chrome gets the beta signup (shipped group URL)', () => {
     expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA }))).toBe('android_beta')
   })
 
-  it('Android falls back to sign-in when the beta form URL is empty (never a dead link)', () => {
-    expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA, betaFormUrl: '' }))).toBe('sign_in')
+  it('Android falls back to sign-in when the test group URL is empty (never a dead link)', () => {
+    expect(resolveVisitorPlatform(input({ userAgent: ANDROID_UA, testGroupUrl: '' }))).toBe('sign_in')
   })
 
   it('sign-in for desktop / everything else', () => {

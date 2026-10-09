@@ -14,8 +14,9 @@ updates:
   - v1.6.8: 補「iOS Apple 登入的瀏覽器備援事件與 `id_token_rejected` 細分」這條邊界（#1552）
   - v1.7.0: 補「`invite_revoked` 只在真的讓一條有效連結失效時才發」這條邊界（#1546）
   - v1.7.0: 補「`android_beta_invite_*` 是新測量點、基準從部署日重算」這條邊界（#1553）
+  - v1.7.2: 補「`android_beta_step_clicked`、`tester_feedback_clicked` 是新測量點，`android_beta_invite_clicked` 的語意改變」這條邊界（#1648）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453", "#1552", "#1546", "#1553"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", "#1415", "#1453", "#1552", "#1546", "#1553", "#1648"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -99,4 +100,7 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1300", "#1314", 
 新增測量點會製造一個**看起來像成效的斷層**（例：#1027 補上 migrate 頁的 CTA 之後，`landing_cta_clicked` 會跳升，那不是改善，是終於有東西可以量了）。跨部署的前後比較一律無效，基準要從部署日重算。
 
 - **`android_beta_invite_shown` / `_clicked` / `_dismissed`（#1553）是新測量點，基準從部署日起算。** 儀表板的 Android 封閉測試邀請卡（`AndroidBetaInviteCard`）只對 Android 網頁／PWA 使用者顯示（不含 Capacitor 殼、iOS、桌面），每個瀏覽器一次：`shown` 在卡片出現時發一次，`clicked` 與 `dismissed` 互斥（點報名也會關卡、不再發 `dismissed`）。沒有任何屬性，平台維度來自 super-properties。這張卡是暫時的，Play 正式版上線後會移除，事件隨之停發。
-  - **失效的樣子**：`shown` 為 0 不代表沒人用 Android，可能是 localStorage 被擋或使用者早已關過；`shown` 以瀏覽器計、不是以人計，換瀏覽器或清資料會再出現一次。`clicked` 只量到「開啟表單」，量不到有沒有真的填完（表單在 Google 那邊）。要看報名成效，對的分母是 `shown`，不是 dashboard 的 Android 活躍數。
+  - **失效的樣子**：`shown` 為 0 不代表沒人用 Android，可能是 localStorage 被擋或使用者早已關過；`shown` 以瀏覽器計、不是以人計，換瀏覽器或清資料會再出現一次。`clicked` 在 v1.7.2（#1648）前量的是「開啟報名表單」，之後量的是「開啟 /android-beta 說明頁」，兩段不能直接比。要看加入成效，對的分母是 `shown`，不是 dashboard 的 Android 活躍數。
+
+- **`android_beta_step_clicked`（#1648）與 `tester_feedback_clicked` 是新測量點，基準從部署日起算。** `/android-beta` 說明頁有兩顆按鈕，點下去發 `android_beta_step_clicked`，屬性 `step` 是 `join_group`（加入 Google 群組）或 `open_testing`（打開 Play 測試頁）。落地頁的入口沿用既有事件：`landing_cta_clicked`（`target: 'android_beta'`）與 `android_beta_invite_clicked`，不另開新名。`tester_feedback_clicked` 在 Android 殼內「設定 › 給我們回饋」那一列被點時發，沒有屬性，會打開 Play 商店頁。三者都是暫時的，Play 正式版上線後（#1553）一起移除。
+  - **失效的樣子**：`android_beta_step_clicked` 只量到「按了按鈕」，量不到有沒有真的加入群組或在 Play 按下「成為測試人員」（都在 Google 那邊）；`join_group` 比 `open_testing` 多是正常的，兩步不必都走完。`tester_feedback_clicked` 為 0 不代表沒有回饋：Play 的私人回饋由 Play 主控台收，不經過我們。把說明頁的步驟點擊拿去除 `landing_cta_clicked` 不是轉換率，一個人可能從卡片、落地頁進來，也可能直接收到連結。

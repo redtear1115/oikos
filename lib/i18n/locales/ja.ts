@@ -96,8 +96,8 @@ export const ja: Translations = {
     // TODO(i18n): native review pending (#1413) — MT-quality draft.
     appStoreCta: 'App Store でダウンロード',
     appStoreCtaHint: 'iPhone・iPad どちらでも使えます',
-    androidBetaCta: 'Android版テストに申し込む',
-    androidBetaCtaHint: 'Play ストアで使っている Google アカウントで申し込んでください。テスト招待の送付にのみ使い、リストに追加したあとは削除します。',
+    androidBetaCta: 'Android版テストに参加する',
+    androidBetaCtaHint: 'Play ストアで使っている Google アカウントでテストグループに参加すると、そのままアプリをインストールできます。',
     useWebVersion: 'まずはウェブ版を使う',
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
@@ -1167,10 +1167,29 @@ export const ja: Translations = {
   },
 
   androidBetaInvite: {
-    // TODO(i18n): 待確認 (#1593)
+    // TODO(i18n): 待確認 (#1648)
     heading: 'Android アプリのテストに参加しませんか',
-    body: 'Android で Futari を開いていますね。アプリ版を先に試したい方は、Play ストアで使っている Google アカウントで申し込んでください。テスト招待をお送りします。リストに追加したあと、申し込み情報は削除します。',
-    cta: 'Android版テストに申し込む',
+    body: 'Android で Futari を開いていますね。アプリ版を先に試したい方は、Play ストアで使っている Google アカウントでテストグループに参加してください。そのあとインストールできます。',
+    cta: 'Android版テストに参加する',
+  },
+
+  /** /android-beta self-serve join page (#1648). Temporary, removed with #1553. */
+  androidBeta: {
+    // TODO(i18n): 待確認 (#1648)
+    metaTitle: 'Android版テスト',
+    title: 'Futari の Android テストに参加する',
+    intro: 'Android アプリは、いま Google Play のクローズドテスト中です。次の2ステップで、先にインストールして使えます。',
+    step1Title: 'テストグループに参加する',
+    step1Body: 'Play ストアでログインしている Google アカウントで、「Futari Android テスト」グループに参加します。',
+    step1Cta: 'グループに参加する',
+    step2Title: 'アプリをインストールする',
+    step2Body: 'グループに参加したら、Play のテストページを開いて「テスターになる」を押し、Play ストアからインストールします。',
+    step2Cta: 'Play のテストページを開く',
+    askTitle: 'テスト中のお願い',
+    askBody: 'いつもどおり、ふだんの記録に使ってみてください。使いにくいところや気づいたことは、アプリの「設定 › フィードバックを送る」から教えてください。',
+    privacy: 'グループに参加すると、グループのオーナー（私たち）に Google アカウントのメールアドレスが見えます。テストに参加していただくためだけに使います。テストをやめたいときは、グループから退会してください。',
+    closed: '現在、テストの募集は行っていません。まずはウェブ版をお使いください。',
+    useWebVersion: 'まずはウェブ版を使う',
   },
 
   pastTimes: {
@@ -1451,6 +1470,13 @@ export const ja: Translations = {
   support: {
     buttonText: 'コーヒーを贈る',
     frameTitle: 'Ko-fi サポートウィンドウ',
+  },
+
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  testerFeedback: {
+    // TODO(i18n): 待確認 (#1648)
+    title: 'フィードバックを送る',
+    hint: 'Play ストアで、私たちだけに届くフィードバックを残せます',
   },
 
   currencyPage: {

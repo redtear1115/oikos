@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { track } from '@/lib/analytics/track'
 import { useVisitorPlatformTarget } from '@/lib/useVisitorPlatformTarget'
-import { ANDROID_BETA_FORM_URL, APP_STORE_URL } from '@/lib/visitorPlatform'
+import { APP_STORE_URL } from '@/lib/visitorPlatform'
 import { LandingCtaLink } from './LandingCtaLink'
 
 interface Props {
@@ -18,8 +18,10 @@ interface Props {
   children: ReactNode
   /** iPhone/iPad browser label, links out to the App Store (#1413). */
   appStoreLabel: ReactNode
-  /** Android browser label, links out to the beta signup form (#1413). */
+  /** Android browser label, links to the self-serve join page (#1413, #1648). */
   androidBetaLabel: ReactNode
+  /** Locale-pinned href of the /android-beta page (`localizedHref(ANDROID_BETA_PATH, locale)`). */
+  androidBetaHref: string
 }
 
 // The two external variants render a plain <a> (next/link can't point off-site),
@@ -34,7 +36,7 @@ const FOCUS_RING_CLASS = 'outline-none focus-visible:oik-focus-ring'
  *   session (any platform)          → /dashboard
  *   Capacitor shell / installed PWA → sign-in (never App Store — Apple 3.1.1)
  *   iPhone / iPad browser           → App Store
- *   Android browser                 → Android beta signup form
+ *   Android browser                 → /android-beta join page (#1648)
  *   everything else                 → sign-in
  *
  * Platform is runtime-only (see `lib/visitorPlatform.ts`), so
@@ -52,7 +54,7 @@ const FOCUS_RING_CLASS = 'outline-none focus-visible:oik-focus-ring'
  * destination — now degrades safely: sign-in is correct for a shell (Apple
  * 3.1.1 forbids the App Store link there), and the only accepted cost is an
  * iPhone *browser* user who taps before hydration landing on sign-in instead
- * of the App Store (owner decision, 2026-10-03). The App Store / beta-form
+ * of the App Store (owner decision, 2026-10-03). The App Store / beta
  * anchors below are only ever rendered once `target` has resolved, and
  * `resolveVisitorPlatform` never returns `app_store` for a Capacitor shell or
  * standalone PWA, so no shell can reach `APP_STORE_URL`.
@@ -72,6 +74,7 @@ export function LandingPrimaryCta({
   children,
   appStoreLabel,
   androidBetaLabel,
+  androidBetaHref,
 }: Props) {
   const target = useVisitorPlatformTarget()
 
@@ -92,10 +95,11 @@ export function LandingPrimaryCta({
 
   if (target === 'android_beta') {
     return (
+      // Internal link, same tab. The caller pins the locale: a bare /android-beta
+      // for en/ja/zh-CN would be rewritten to zh-TW by proxy.ts and overwrite the
+      // locale cookie, silently switching the visitor's whole app to zh-TW.
       <a
-        href={ANDROID_BETA_FORM_URL}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={androidBetaHref}
         className={`${FOCUS_RING_CLASS} ${className ?? ''}`.trim()}
         style={style}
         onClick={() => track('landing_cta_clicked', { cta_location: ctaLocation, target: 'android_beta' })}

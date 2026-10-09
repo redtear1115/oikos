@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **Android 測試版改成自己加入，App 內多一個回饋入口（#1648）**
+  使用者：Android 訪客按「加入 Android 測試版」會到說明頁，兩步（加入群組、打開 Play 測試頁）就能裝；Android App 的設定多一列「給我們回饋」，連到 Play 商店頁留私人回饋。
+  技術：新增公開頁 `/android-beta`（noindex、不進 sitemap），測試者名單改為 Google 群組、移除 Google 表單；新增事件 `android_beta_step_clicked`、`tester_feedback_clicked`，與 #1553 一起移除。
 
 ## [1.7.1] - 2026-10-09
 

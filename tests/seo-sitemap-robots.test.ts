@@ -83,3 +83,9 @@ describe('robots.txt', () => {
     }
   })
 })
+
+describe('/android-beta (#1648)', () => {
+  it('is not in the sitemap (a temporary tester page, not search content)', () => {
+    expect(sitemap().some((e) => e.url.includes('android-beta'))).toBe(false)
+  })
+})

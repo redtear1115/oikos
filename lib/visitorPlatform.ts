@@ -23,9 +23,9 @@ export interface ResolveVisitorPlatformInput {
   isStandalone: boolean
   /** A local Supabase session already exists. */
   hasSession: boolean
-  /** Android beta signup URL; defaults to {@link ANDROID_BETA_FORM_URL}.
+  /** Closed-test Google Group URL; defaults to {@link ANDROID_TEST_GROUP_URL}.
    *  Injectable so the empty-URL fallback can be tested for real. */
-  betaFormUrl?: string
+  testGroupUrl?: string
 }
 
 // #1413 — region-neutral: Apple redirects `/app/id...` to the visitor's own
@@ -40,16 +40,26 @@ export interface ResolveVisitorPlatformInput {
 // campaign once ≥5 distinct Apple accounts installed through it.
 export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784?pt=128976951&ct=landing&mt=8'
 
-// #1413 — Android closed-testing signup (Google Form). Ray copies replies into
-// the Play Console closed-testing list on a schedule and deletes them from the
-// form afterward — the email address never enters our DB and isn't kept in the
-// form long-term either (see issue #1413 comment).
+// #1648 — Android closed testing is self-serve through a Google Group. Play's
+// tester list contains the group, so joining the group is what grants
+// testing rights; nobody copies addresses between a form and Play Console.
+// The group's member list is visible to managers only, so the email address
+// stays in Google's systems and never enters our DB (the /android-beta page
+// says so; keep that copy in step with the group's real settings).
 //
-// The form collects the respondent's *verified* Google account (sign-in
-// required), which is exactly what the Play tester list needs. If this is ever
-// emptied, `resolveVisitorPlatform` below falls back to 'sign_in' for Android
-// visitors instead of pointing the CTA at a dead link.
-export const ANDROID_BETA_FORM_URL = 'https://forms.gle/MriV1rL3upL4SgVt5'
+// Join flow: ANDROID_BETA_PATH explains it → ANDROID_TEST_GROUP_URL (step 1)
+// → ANDROID_TEST_OPTIN_URL (step 2, Play's opt-in page, which only works once
+// the group is on the tester list).
+//
+// If the group URL is ever emptied, `resolveVisitorPlatform` falls back to
+// 'sign_in' for Android visitors, the dashboard card hides, and the page shows
+// no step buttons, so nothing ever points at a dead link. Failure of that
+// guard looks like: an Android visitor taps the CTA and lands on a page whose
+// only action goes nowhere.
+export const ANDROID_TEST_GROUP_URL = 'https://groups.google.com/g/futari-android-testers'
+export const ANDROID_TEST_OPTIN_URL = 'https://play.google.com/apps/testing/dev.southernlight.futari'
+/** Public page (no locale prefix); always build the href with `localizedHref`. */
+export const ANDROID_BETA_PATH = '/android-beta'
 
 /**
  * Which primary-CTA variant a visitor should see. Precedence:
@@ -59,7 +69,7 @@ export const ANDROID_BETA_FORM_URL = 'https://forms.gle/MriV1rL3upL4SgVt5'
  *      Apple Guideline 3.1.1: no "download the app" link from inside the app)
  *   3. iPhone / iPad browser                   → app_store
  *   4. Android browser                         → android_beta (or sign_in if
- *      the form URL above is still empty)
+ *      the group URL above is still empty)
  *   5. everything else (desktop, etc.)         → sign_in
  */
 export function resolveVisitorPlatform({
@@ -68,7 +78,7 @@ export function resolveVisitorPlatform({
   isCapacitor,
   isStandalone,
   hasSession,
-  betaFormUrl = ANDROID_BETA_FORM_URL,
+  testGroupUrl = ANDROID_TEST_GROUP_URL,
 }: ResolveVisitorPlatformInput): VisitorPlatformTarget {
   if (hasSession) return 'dashboard'
   if (isCapacitor || isStandalone) return 'sign_in'
@@ -80,7 +90,7 @@ export function resolveVisitorPlatform({
   if (isIos) return 'app_store'
 
   if (/android/.test(ua)) {
-    return betaFormUrl ? 'android_beta' : 'sign_in'
+    return testGroupUrl ? 'android_beta' : 'sign_in'
   }
 
   return 'sign_in'
