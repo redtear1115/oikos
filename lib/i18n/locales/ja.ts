@@ -1188,7 +1188,6 @@ export const ja: Translations = {
     privacy: 'グループに参加すると、グループのオーナー（私たち）に Google アカウントのメールアドレスが見えます。テストに参加していただくためと、テストに関するお知らせを送るためだけに使います。テストをやめたいときは、グループから退会してください。',
     closed: '現在、テストの募集は行っていません。まずはウェブ版をお使いください。',
     useWebVersion: 'まずはウェブ版を使う',
-    // TODO(i18n): 待確認 (#1648)
     outingLine: 'Futari の Android アプリはテスト中です。Android をお使いの方は、先に参加できます。',
   },
 
@@ -1474,7 +1473,6 @@ export const ja: Translations = {
 
   /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
   androidTesterInvite: {
-    // TODO(i18n): 待確認 (#1648)
     title: 'Android のパートナーや友だちをテストに招待',
     hint: 'テストページのリンクを共有します。相手がグループに参加すれば、インストールできます',
     shareTitle: 'Futari Android テスト',
