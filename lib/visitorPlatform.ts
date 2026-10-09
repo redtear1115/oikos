@@ -43,9 +43,10 @@ export const APP_STORE_URL = 'https://apps.apple.com/app/id6779264784?pt=1289769
 // #1648 — Android closed testing is self-serve through a Google Group. Play's
 // tester list contains the group, so joining the group is what grants
 // testing rights; nobody copies addresses between a form and Play Console.
-// The group's member list is visible to managers only, so the email address
-// stays in Google's systems and never enters our DB (the /android-beta page
-// says so; keep that copy in step with the group's real settings).
+// The group's member list is visible to managers only. The /android-beta
+// privacy line says exactly that (the group owner, us, can see the tester's
+// Google account email) and nothing more; if the group's "who can view
+// members" setting ever widens, that sentence becomes false with no error.
 //
 // Join flow: ANDROID_BETA_PATH explains it → ANDROID_TEST_GROUP_URL (step 1)
 // → ANDROID_TEST_OPTIN_URL (step 2, Play's opt-in page, which only works once
