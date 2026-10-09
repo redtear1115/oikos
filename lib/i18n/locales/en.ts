@@ -1473,7 +1473,7 @@ export const en: Translations = {
     frameTitle: 'Ko-fi support window',
   },
 
-  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
   androidTesterInvite: {
     // TODO(i18n): 待確認 (#1648)
     title: 'Invite a partner or friend on Android to test',
@@ -1483,6 +1483,7 @@ export const en: Translations = {
     copied: 'Link copied',
   },
 
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
   testerFeedback: {
     // TODO(i18n): 待確認 (#1648)
     title: 'Send us feedback',

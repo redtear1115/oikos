@@ -1474,7 +1474,7 @@ export const ja: Translations = {
     frameTitle: 'Ko-fi サポートウィンドウ',
   },
 
-  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
   androidTesterInvite: {
     // TODO(i18n): 待確認 (#1648)
     title: 'Android を使うパートナーや友だちをテストに招待する',
@@ -1484,6 +1484,7 @@ export const ja: Translations = {
     copied: 'リンクをコピーしました',
   },
 
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
   testerFeedback: {
     // TODO(i18n): 待確認 (#1648)
     title: 'フィードバックを送る',

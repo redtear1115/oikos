@@ -1457,7 +1457,7 @@ export const zhCN: Translations = {
     frameTitle: 'Ko-fi 支持小窗口',
   },
 
-  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
   androidTesterInvite: {
     title: '邀请用 Android 的伴侣或朋友来测试',
     hint: '分享测试页的链接，对方加入群组就能安装',
@@ -1466,6 +1466,7 @@ export const zhCN: Translations = {
     copied: '链接已复制',
   },
 
+  /** Settings row for Android-shell testers (#1648). Removed with #1553. */
   testerFeedback: {
     title: '给我们反馈',
     hint: '在 Play 商店留下只有我们看得到的反馈',
