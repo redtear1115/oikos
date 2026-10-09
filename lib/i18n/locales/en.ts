@@ -1186,7 +1186,7 @@ export const en: Translations = {
     step2Cta: 'Open the Play testing page',
     askTitle: 'While you test',
     askBody: 'Use it for your real records, the way you normally would. If something feels off or you have an idea, tell us in the app under Settings › Send us feedback.',
-    privacy: 'Once you join, the group owner (that’s us) can see your Google account email. We use it only to give you access to the test. If you’d rather stop, just leave the group.',
+    privacy: 'Once you join, the group owner (that’s us) can see your Google account email. We use it only to give you access to the test and to send test-related notices. If you’d rather stop, just leave the group.',
     closed: 'The test isn’t open to new testers right now. You can use the web version in the meantime.',
     useWebVersion: 'Use the web version',
     // TODO(i18n): 待確認 (#1648)

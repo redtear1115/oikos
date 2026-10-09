@@ -1555,8 +1555,9 @@ export type Translations = {
    * /android-beta self-serve join page (#1648): step 1 joins the Google Group
    * that is on Play's closed-test tester list, step 2 opens Play's opt-in page.
    * `privacy` must stay true to the group's real settings (member list visible
-   * to managers only) — if those change, this sentence becomes a false claim
-   * without any code failing. `closed` shows only when the group URL constant
+   * to managers only) and to how the group is used (test access + test-related
+   * notices only, #1649) — if either changes, this sentence becomes a false
+   * claim without any code failing. `closed` shows only when the group URL constant
    * is empty (`lib/visitorPlatform.ts`). Temporary: removed with #1553.
    */
   androidBeta: {
@@ -4503,7 +4504,7 @@ export const zhTW: Translations = {
     step2Cta: '打開 Play 測試頁',
     askTitle: '測試期間',
     askBody: '像平常一樣用它記帳。遇到不順的地方或有想法，在 App 的「設定 › 給我們回饋」告訴我們。',
-    privacy: '加入群組後，群組擁有者（也就是我們）看得到你的 Google 帳號 email，只用來給你測試資格。不想測了，退出群組就好。',
+    privacy: '加入群組後，群組擁有者（也就是我們）看得到你的 Google 帳號 email，只用來給你測試資格，和寄測試相關的通知。不想測了，退出群組就好。',
     closed: '測試名額目前沒有開放，可以先用網頁版。',
     useWebVersion: '先用網頁版',
     outingLine: 'Futari 的 Android App 正在測試，用 Android 的你可以先加入',
