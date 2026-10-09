@@ -1575,6 +1575,8 @@ export type Translations = {
     privacy: string
     closed: string
     useWebVersion: string
+    /** One quiet line on the public outing page, Android browsers only. */
+    outingLine: string
   }
 
   pastTimes: {
@@ -1901,6 +1903,16 @@ export type Translations = {
     buttonText: string
     /** Accessible title for the Ko-fi floating widget iframe (frame-title, #919). */
     frameTitle: string
+  }
+
+  /** Settings row that shares the /android-beta page with an Android tester
+   *  (#1648). Hidden in the iOS shell (Apple 2.3.10). Temporary, removed with #1553. */
+  androidTesterInvite: {
+    title: string
+    hint: string
+    shareTitle: string
+    shareText: string
+    copied: string
   }
 
   /** Settings row for Android-shell testers (#1648): opens the Play listing,
@@ -4494,6 +4506,7 @@ export const zhTW: Translations = {
     privacy: '加入群組後，群組擁有者（也就是我們）看得到你的 Google 帳號 email，只用來給你測試資格。不想測了，退出群組就好。',
     closed: '測試名額目前沒有開放，可以先用網頁版。',
     useWebVersion: '先用網頁版',
+    outingLine: 'Futari 的 Android App 正在測試，用 Android 的你可以先加入',
   },
 
   pastTimes: {
@@ -4772,6 +4785,14 @@ export const zhTW: Translations = {
   support: {
     buttonText: '請喝杯咖啡',
     frameTitle: 'Ko-fi 支持小視窗',
+  },
+
+  androidTesterInvite: {
+    title: '邀請用 Android 的伴侶或朋友來測試',
+    hint: '分享測試頁的連結，對方加入群組就能安裝',
+    shareTitle: 'Futari Android 測試',
+    shareText: 'Futari 的 Android App 正在封閉測試，照這頁的兩步就能先裝起來用。',
+    copied: '連結已複製',
   },
 
   testerFeedback: {

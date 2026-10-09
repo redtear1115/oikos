@@ -1176,6 +1176,7 @@ export const zhCN: Translations = {
     privacy: '加入群组后，群组所有者（也就是我们）看得到你的 Google 账号 email，只用来给你测试资格。不想测了，退出群组就好。',
     closed: '测试名额目前没有开放，可以先用网页版。',
     useWebVersion: '先用网页版',
+    outingLine: 'Futari 的 Android App 正在测试，用 Android 的你可以先加入',
   },
 
   pastTimes: {
@@ -1457,6 +1458,14 @@ export const zhCN: Translations = {
   },
 
   /** Settings row for Android-shell testers (#1648). Removed with #1553. */
+  androidTesterInvite: {
+    title: '邀请用 Android 的伴侣或朋友来测试',
+    hint: '分享测试页的链接，对方加入群组就能安装',
+    shareTitle: 'Futari Android 测试',
+    shareText: 'Futari 的 Android App 正在封闭测试，照这页的两步就能先装起来用。',
+    copied: '链接已复制',
+  },
+
   testerFeedback: {
     title: '给我们反馈',
     hint: '在 Play 商店留下只有我们看得到的反馈',

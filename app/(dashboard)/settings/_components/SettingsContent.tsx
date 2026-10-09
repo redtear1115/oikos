@@ -6,6 +6,7 @@ import { QuickAccessRow } from './QuickAccessRow'
 import { InstallGuideRow } from './InstallGuideRow'
 import { SupportRow } from './SupportRow'
 import { TesterFeedbackRow } from './TesterFeedbackRow'
+import { AndroidTesterInviteRow } from './AndroidTesterInviteRow'
 import { LogoutButton } from './LogoutButton'
 import { DeleteAccountButton } from './DeleteAccountButton'
 
@@ -69,6 +70,7 @@ export async function SettingsContent({
         </div>
         <SupportRow />
         <TesterFeedbackRow />
+        <AndroidTesterInviteRow />
       </Section>
 
       {/* 資料 — recurring rules → past chapters → trips → import → trust info */}
