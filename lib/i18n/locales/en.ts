@@ -1190,7 +1190,7 @@ export const en: Translations = {
     closed: 'The test isn’t open to new testers right now. You can use the web version in the meantime.',
     useWebVersion: 'Use the web version',
     // TODO(i18n): 待確認 (#1648)
-    outingLine: 'Futari’s Android app is in testing. If you use Android, you can join early',
+    outingLine: 'Futari\'s Android app is in testing. If you\'re on Android, you can join early.',
   },
 
   pastTimes: {
@@ -1477,7 +1477,7 @@ export const en: Translations = {
   androidTesterInvite: {
     // TODO(i18n): 待確認 (#1648)
     title: 'Invite a partner or friend on Android to test',
-    hint: 'Share the test page link. Once they join the group, they can install it',
+    hint: 'Share the test page link. Once they join the group, they can install the app',
     shareTitle: 'Futari Android beta',
     shareText: 'Futari’s Android app is in closed testing. Follow the two steps on this page to install it early.',
     copied: 'Link copied',

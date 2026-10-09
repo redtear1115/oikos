@@ -1191,7 +1191,7 @@ export const ja: Translations = {
     closed: '現在、テストの募集は行っていません。まずはウェブ版をお使いください。',
     useWebVersion: 'まずはウェブ版を使う',
     // TODO(i18n): 待確認 (#1648)
-    outingLine: 'Futari の Android アプリはテスト中です。Android をお使いの方は先に参加できます',
+    outingLine: 'Futari の Android アプリはテスト中です。Android をお使いの方は、先に参加できます。',
   },
 
   pastTimes: {
@@ -1477,10 +1477,10 @@ export const ja: Translations = {
   /** Settings row: share the Android test page with a partner or friend; hidden in the iOS app (#1648). Removed with #1553. */
   androidTesterInvite: {
     // TODO(i18n): 待確認 (#1648)
-    title: 'Android を使うパートナーや友だちをテストに招待する',
-    hint: 'テストページのリンクを共有します。グループに参加すれば、インストールできます',
+    title: 'Android のパートナーや友だちをテストに招待',
+    hint: 'テストページのリンクを共有します。相手がグループに参加すれば、インストールできます',
     shareTitle: 'Futari Android テスト',
-    shareText: 'Futari の Android アプリはクローズドテスト中です。このページの2ステップで、先にインストールして使えます。',
+    shareText: 'Futari の Android アプリはクローズドテスト中です。このページの 2 ステップで、先にインストールして使えます。',
     copied: 'リンクをコピーしました',
   },
 
