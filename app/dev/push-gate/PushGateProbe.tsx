@@ -13,15 +13,16 @@ import { clearStoredPushToken, readStoredPushToken } from '@/lib/pushTokenStorag
 
 /**
  * Development-only (#968 S4c). Rendered by app/dev/push-gate/page.tsx, which
- * 404s outside `next dev`. Imports only the push module under test and the
- * token storage it already writes: no server actions, no database client.
+ * 404s outside `next dev` and passes the signed-in user and their active
+ * ledger. Imports only the push module under test and the token storage it
+ * already writes: no server actions, no database client.
  *
  * Runs once per page load. On a denied gate it never touches
  * PushNotifications (that is the E-old evidence: no prompt, no crash, no
  * `register` in logcat), so the `registrationError` listener is only added
  * after `registerPushToken` reports it is registering.
  */
-export function PushGateProbe({ userId, groupId }: { userId: string; groupId: string }) {
+export function PushGateProbe({ userId, groupId }: { userId: string; groupId: string | null }) {
   const started = useRef(false)
   const [platform, setPlatform] = useState<string>('…')
   const [gate, setGate] = useState<FcmShellGate | 'n/a' | null>(null)
@@ -37,6 +38,8 @@ export function PushGateProbe({ userId, groupId }: { userId: string; groupId: st
     const native = Capacitor.isNativePlatform()
     const name = Capacitor.getPlatform()
     setPlatform(`${name}${native ? ' (native)' : ''}`)
+    // Same rule as the dashboard layout: no active ledger, no registration.
+    if (!groupId) return
     // A token left over from an earlier run would look like a fresh success.
     clearStoredPushToken()
 
@@ -75,7 +78,7 @@ export function PushGateProbe({ userId, groupId }: { userId: string; groupId: st
   const rows: [string, string][] = [
     ['platform', platform],
     ['gate', gateText],
-    ['registerPushToken', failure ? `threw: ${failure}` : outcome ?? '…'],
+    ['registerPushToken', !groupId ? 'not run: no active ledger' : failure ? `threw: ${failure}` : outcome ?? '…'],
     ['token', token ?? 'none yet'],
     ['registrationError', nativeError ?? 'none'],
   ]
@@ -92,7 +95,7 @@ export function PushGateProbe({ userId, groupId }: { userId: string; groupId: st
         ))}
       </dl>
       <p className="text-sm text-ink-3 mt-4">
-        userId {userId} · groupId {groupId}
+        signed-in user {userId} · active ledger {groupId ?? 'none'}
       </p>
     </main>
   )

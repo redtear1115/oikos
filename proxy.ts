@@ -182,15 +182,6 @@ export async function proxy(request: NextRequest) {
     // slash is 308'd by Next to the exact path before it gets here, and that
     // path still needs the key.
     || pathname === '/api/shortcut/pending'
-    // #968 S4c: the development-only push-gate probe (app/dev/push-gate) has
-    // to load in an emulator shell nobody signed in to. Development only and
-    // exact match: every production build (Vercel prod and preview, `next
-    // start`) has NODE_ENV=production, so there this line is `false`, the path
-    // stays behind the sign-in redirect, and the page itself 404s anyway.
-    // Failure looks like (if the NODE_ENV condition is dropped): nothing
-    // visible — signed-out visitors get a 404 instead of a 307 for this one
-    // path. Guarded by tests/dev-push-gate-968.test.tsx.
-    || (process.env.NODE_ENV === 'development' && pathname === '/dev/push-gate')
 
   if (isPublic && isOutingPublicPath(pathname)) {
     // #1558: the outing share pages are public but read the session (a
