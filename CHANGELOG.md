@@ -41,7 +41,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **Android App 1.9.0 起可以收到定期收支提醒（#968）**
+  使用者：裝了 1.9.0 以上 Android App 的人，打開後會被問是否允許通知，之後會收到「有待確認的定期收支」；更舊的 Android App 不受影響、不會跳通知權限。
+  技術：`registerPushToken` 在 Android 先讀殼版本（`FCM_MIN_ANDROID_SHELL`，讀不到一律不註冊）再註冊 FCM；登出刪 token 不再限定 APNs，長度上限 4096；新增只在 `next dev` 存在的 `/dev/push-gate` 探測頁。
 
 ## [1.8.0] - 2026-10-19
 

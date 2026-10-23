@@ -95,7 +95,7 @@ afterEach(() => {
 })
 
 describe('signOut(token) deletes this device\'s row first (#1617)', () => {
-  it('with a session, deletes only the session user\'s apns row for that token, then signs out', async () => {
+  it('with a session, deletes only the session user\'s row for that token (any platform, #968), then signs out', async () => {
     const order: string[] = []
     h.where.mockImplementation(async () => { order.push('delete') })
     h.signOut.mockImplementation(async () => { order.push('auth.signOut'); return { error: null } })
@@ -107,10 +107,11 @@ describe('signOut(token) deletes this device\'s row first (#1617)', () => {
     expect(h.where.mock.calls[0][0]).toEqual({
       and: [
         { eq: ['user_id', 'session-user'] },
-        { eq: ['platform', 'apns'] },
         { eq: ['token', 'T1'] },
       ],
     })
+    // #968 — no platform predicate: an FCM token (Android) must match too.
+    expect(JSON.stringify(h.where.mock.calls[0][0])).not.toContain('platform')
     // The delete runs while the session still exists.
     expect(order).toEqual(['delete', 'auth.signOut'])
   })
@@ -123,7 +124,7 @@ describe('signOut(token) deletes this device\'s row first (#1617)', () => {
 
   it.each([
     ['empty', ''],
-    ['over 512 characters', 'x'.repeat(513)],
+    ['over 4096 characters', 'x'.repeat(4097)],
     ['not a string', 42 as unknown as string],
   ])('skips the delete for a token that is %s', async (_label, token) => {
     expectSignedOutAndRedirected(await settle(signOut(token)))
@@ -131,9 +132,20 @@ describe('signOut(token) deletes this device\'s row first (#1617)', () => {
     expect(h.where).not.toHaveBeenCalled()
   })
 
-  it('accepts a token of exactly 512 characters', async () => {
-    expectSignedOutAndRedirected(await settle(signOut('y'.repeat(512))))
+  it.each([
+    ['exactly 4096 characters', 'y'.repeat(4096)],
+    // #968 — FCM registration tokens are ~160–200 chars; 512 was the old cap.
+    ['513 characters (over the old 512 cap)', 'z'.repeat(513)],
+    ['an FCM-shaped token', 'dAbC123:APA91b' + 'x'.repeat(150)],
+  ])('accepts a token of %s and deletes by user + token', async (_label, token) => {
+    expectSignedOutAndRedirected(await settle(signOut(token)))
     expect(h.where).toHaveBeenCalledOnce()
+    expect(h.where.mock.calls[0][0]).toEqual({
+      and: [
+        { eq: ['user_id', 'session-user'] },
+        { eq: ['token', token] },
+      ],
+    })
   })
 
   it('a throwing delete still signs out and redirects (and is reported)', async () => {

@@ -781,7 +781,7 @@ export const monthlyReviewMessages = pgTable('MonthlyReviewMessages', {
   lockedAt: timestamp('locked_at', { withTimezone: true }),
 })
 
-// #1007 — Push device tokens for APNs (iOS) and FCM (Android future).
+// #1007 — Push device tokens for APNs (iOS) and FCM (Android, #968).
 // Upsert on (user_id, platform, token) — same device re-registers silently.
 export const pushTokens = pgTable('PushTokens', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),

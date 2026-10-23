@@ -19,9 +19,10 @@ import { db } from '@/lib/db/client'
 import { pushTokens } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 
-// APNs device tokens are 64 hex chars today; leave room for a longer format
-// without accepting arbitrary payloads.
-const MAX_PUSH_TOKEN_LENGTH = 512
+// This device's push token, APNs or FCM (#968). APNs device tokens are 64 hex
+// chars and FCM registration tokens run to roughly 160–200 today; 4096 leaves
+// room for a longer format without accepting arbitrary payloads.
+const MAX_PUSH_TOKEN_LENGTH = 4096
 /** How long sign-out waits for this device's push-row delete before going ahead. */
 const PUSH_DELETE_TIMEOUT_MS = 2000
 
@@ -39,6 +40,14 @@ const PUSH_DELETE_TIMEOUT_MS = 2000
  * in on the same device keeps theirs and the caller's other devices keep
  * theirs. Runs through the server's Drizzle role on purpose: `authenticated`
  * has no DELETE on PushTokens (0080) and this adds none. No session → no-op.
+ *
+ * #968 — no `platform` predicate: the token may be APNs (iOS) or FCM
+ * (Android), and the client can't be trusted to say which. Matching on
+ * (session user, token) is still scoped to the caller's own rows, and the two
+ * token formats never share a string (APNs is 64 hex chars, FCM is not), so in
+ * practice it removes exactly this device's row. Failure looks like (if a
+ * platform filter comes back): no error, and an Android phone keeps getting
+ * the signed-out person's reminders.
  */
 async function deleteThisDevicePushToken(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -50,15 +59,15 @@ async function deleteThisDevicePushToken(
     .delete(pushTokens)
     .where(and(
       eq(pushTokens.userId, user.id),
-      eq(pushTokens.platform, 'apns'),
       eq(pushTokens.token, token),
     ))
 }
 
 /**
  * Signs out and redirects home. `token` (optional) is this device's stored
- * APNs token (LogoutButton reads it from lib/pushTokenStorage); when it is a
- * 1–512 character string, this device's PushTokens row is deleted first.
+ * push token, APNs or FCM (LogoutButton reads it from lib/pushTokenStorage);
+ * when it is a 1–{@link MAX_PUSH_TOKEN_LENGTH} (4096) character string, this
+ * device's PushTokens row is deleted first.
  *
  * #1617 — the delete lives inside this one action, not in a second action the
  * client awaits first. Next.js runs server actions one at a time per client,

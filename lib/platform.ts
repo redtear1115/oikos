@@ -13,8 +13,9 @@
  *
  * `SignInButton`, `ShellUpdateNotice`, `pushNotifications`, `PushTokenRegistrar`
  * and `shellVersion#isShellPlatform` each ask a *different* question — "is there
- * a bridge at all", "which store's version threshold applies", "is this
- * specifically iOS", "narrow this string to a shell platform". This module
+ * a bridge at all", "which store's version threshold applies", "which push
+ * service does this shell speak, and may it register at all", "narrow this
+ * string to a shell platform". This module
  * answers a fifth one, for analytics, and its five-value enum is a poor
  * control-flow primitive for any of the others. Routing the auth branch or the
  * push gate through it would trade real behavioural risk on two native-contract
