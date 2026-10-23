@@ -1,5 +1,6 @@
 /**
- * This device's APNs token, remembered so sign-out can remove this device's
+ * This device's push token (APNs on iOS, FCM on Android since #968),
+ * remembered so sign-out can remove this device's
  * PushTokens row (#1605 F11). Written by the `registration` listener in
  * lib/pushNotifications.ts, read and cleared by LogoutButton
  * (which hands it to the signOut action, #1617).
@@ -9,7 +10,7 @@
  * (private mode, blocked site data, a WebView that clears it) and none of
  * that may break registration or sign-out. With nothing stored, sign-out
  * simply skips the delete; the row then stays until the device registers
- * again or APNs answers 410 (accepted residual).
+ * again or APNs / FCM reports the token dead (accepted residual).
  */
 export const PUSH_TOKEN_STORAGE_KEY = 'futari_push_token'
 

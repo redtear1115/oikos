@@ -38,6 +38,32 @@ export const MIN_SHELL_VERSION: Record<ShellPlatform, string> = {
   android: '1.5.0',
 }
 
+/**
+ * #968 — the first Android shell that carries Firebase (`google-services.json`),
+ * and therefore the first one where `PushNotifications.register()` is safe.
+ *
+ * Older Android shells (Play 1.7.3, versionCode 105015) already bundle
+ * `@capacitor/push-notifications` and `@capacitor/app`, but without
+ * `google-services.json` calling `register()` crashes the app. So plugin
+ * presence (`Capacitor.isPluginAvailable`) proves nothing; the shell's
+ * `versionName`, read through `App.getInfo().version`, is the only capability
+ * signal we have. `lib/pushNotifications.ts` compares against this value and
+ * fails CLOSED (unparseable / unreadable → no registration), unlike
+ * {@link isShellOutdated} below, which fails open and must not be used here.
+ *
+ * This value MUST equal the `versionName` of the first Firebase-enabled Android
+ * build. `docs/app-store-submission-runbook.md` §E and the `ship-native` skill
+ * hold the same value (they refuse to upload an AAB whose versionName is below
+ * it); change all three together.
+ *
+ * Failure looks like:
+ * - too low → every old Android shell crashes the moment the dashboard opens,
+ *   on every open, with nothing in Sentry (the process dies before reporting);
+ * - too high → new shells silently never register: no permission prompt, no
+ *   PushTokens row, no error, and Android users simply never get reminders.
+ */
+export const FCM_MIN_ANDROID_SHELL = '1.9.0'
+
 /** Narrow an arbitrary `Capacitor.getPlatform()` string to a shell platform. */
 export function isShellPlatform(platform: string): platform is ShellPlatform {
   return platform === 'ios' || platform === 'android'
