@@ -43,6 +43,7 @@ vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
 vi.mock('@/actions/transaction', () => ({
   createTransaction: vi.fn(), editTransaction: vi.fn(), softDeleteTransaction: vi.fn(),
   getDescriptionSuggestions: vi.fn(() => Promise.resolve({ ok: true, data: [] })),
+  getMerchantCategory: vi.fn(() => Promise.resolve({ ok: true, data: null })),
 }))
 vi.mock('@/actions/tripExpense', () => ({ createTripExpense: vi.fn(), editTripExpense: vi.fn(), softDeleteTripExpense: vi.fn() }))
 vi.mock('@/actions/asset', () => ({

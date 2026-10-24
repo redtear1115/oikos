@@ -18,6 +18,7 @@ import {
   editTransaction,
   softDeleteTransaction,
   getDescriptionSuggestions,
+  getMerchantCategory,
 } from '@/actions/transaction'
 import {
   createTripExpense,
@@ -204,6 +205,43 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     return () => { cancelled = true }
   }, [open])
 
+  // #1822 — fetch merchant memory when the sheet opens with a prefilled
+  // description. This covers:
+  //   (a) create mode with prefilledDescription (quick add #1488)
+  //   (b) shortcutPendingId mode where initial.description comes from the
+  //       iOS Shortcut's POST /api/shortcut/pending (even though `initial`
+  //       is set, the category may not be — the Shortcut may only send
+  //       {amount, note}, and the pending row stores what the API returned,
+  //       which may be null if the merchant was never recorded before).
+  // Edit mode (isEdit && !shortcutPendingId) skips this: the category is
+  // already set from the stored transaction. Create-without-prefill also
+  // skips: no merchant to look up.
+  //
+  // When the lookup completes, we call setCategory directly (see below) so
+  // the category picker updates immediately, without forcing a full form
+  // reset (which would wipe any edits the user has already typed).
+  const categorySetByUserRef = useRef(false)
+  useEffect(() => {
+    if (!open) return
+    // Edit mode (excluding pending confirm) already has a category; skip lookup.
+    if (initial && !shortcutPendingId) return
+    const merchant = (initial?.description || prefilledDescription)?.trim()
+    if (!merchant) return
+    let cancelled = false
+    getMerchantCategory(merchant)
+      .then((r) => {
+        if (cancelled) return
+        const remembered = unwrapAction(r)
+        if (remembered && !categorySetByUserRef.current) {
+          // Apply the merchant memory category directly, but only if the user
+          // hasn't manually picked a category yet (tracked by the ref below).
+          setCategory(remembered)
+        }
+      })
+      .catch(() => { /* merchant memory is best-effort; failing it shouldn't surface an error */ })
+    return () => { cancelled = true }
+  }, [open, initial, shortcutPendingId, prefilledDescription])
+
   // Stable trip-id hash for the reset effect's deps. The parent re-creates
   // `activeTrips` on every render (new array reference), which would otherwise
   // re-fire the reset effect mid-edit and wipe the user's typed amount (#386).
@@ -217,6 +255,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
     if (!open) return
+    // Clear the "user manually picked a category" flag on every open.
+    categorySetByUserRef.current = false
     if (initial) {
       setAmount(String(initial.amount))
       setDesc(initial.description)
@@ -256,6 +296,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     } else {
       setAmount(prefilledAmount != null ? String(prefilledAmount) : '')
       setDesc(prefilledDescription ?? '')
+      // #1822 — priority: URL category > default category. Merchant memory is
+      // handled by a separate effect (above) that calls setCategory directly
+      // when the async lookup completes, so it isn't part of this reset.
       setCategory(prefilledCategory ?? 'dining')
       setSplit(isSolo ? 'all_mine' : 'weighted')
       setSplitRatioA(groupDefaultRatioA ?? 50)
@@ -280,6 +323,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     setError('')
   // `activeTrips` is intentionally excluded — its identity changes every parent
   // render but its meaningful state is captured by `activeTripsKey`.
+  // #1822 — `merchantMemoryCategory` is NO LONGER in the deps. The merchant
+  // memory effect applies the category directly via setCategory when the async
+  // lookup completes, so we don't re-run this entire reset when it resolves.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledAmount, prefilledDescription, skipTripAutoDetect, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
 
@@ -676,7 +722,15 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="text-sm tracking-label px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.category}
             </div>
-            <CategoryPicker value={category} onChange={setCategory} />
+            <CategoryPicker
+              value={category}
+              onChange={(c) => {
+                setCategory(c)
+                // Mark that the user manually picked a category, so merchant
+                // memory won't override it if the lookup completes later.
+                categorySetByUserRef.current = true
+              }}
+            />
           </div>
 
           {/* Asset link (visible in both solo and dual mode) */}

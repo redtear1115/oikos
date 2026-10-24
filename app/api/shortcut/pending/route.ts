@@ -64,6 +64,7 @@ import { lockProfileRow } from '@/lib/db/queries/epoch'
 import { isActionError } from '@/lib/action-errors'
 import { hashShortcutKey, isWellFormedShortcutKey } from '@/lib/shortcutKey'
 import { parseQuickAddJson } from '@/lib/quickAdd'
+import { getCategoryForMerchant } from '@/lib/db/queries/merchantMemory'
 
 export const dynamic = 'force-dynamic'
 
@@ -215,6 +216,17 @@ async function writePending(
       .limit(1)
     if (!ledger) return 'no_ledger'
 
+    // #1822 — merchant memory lookup. When a description is present (the iOS
+    // Shortcut may send it as "note"), check if this merchant has been recorded
+    // before and use that category if no explicit category was sent. This lets
+    // Shortcuts that only send {amount, note} auto-fill the category from
+    // household history, same as quick-add #1488. The lookup runs inside the
+    // transaction so it sees the latest committed state.
+    let merchantCategory: string | null = null
+    if (prefill.description?.trim()) {
+      merchantCategory = (await getCategoryForMerchant(ledger.id, prefill.description, tx)) ?? null
+    }
+
     const [{ n: lastHour }] = await tx
       .select({ n: sql<number>`count(*)::int` })
       .from(shortcutPendingExpenses)
@@ -238,7 +250,7 @@ async function writePending(
       userId: key.userId,
       keyId: key.keyId,
       amount: prefill.amount,
-      category: prefill.category ?? null,
+      category: merchantCategory ?? prefill.category ?? null,
       description: prefill.description ?? null,
     })
     await tx

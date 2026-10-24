@@ -17,6 +17,7 @@ import {
   type ResolvedTxnFilter,
   type FeedKind,
 } from '@/lib/db/queries/transactions'
+import { getCategoryForMerchant } from '@/lib/db/queries/merchantMemory'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { listIncomesMonthSummaries } from '@/lib/db/queries/incomes'
 import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
@@ -529,4 +530,25 @@ export const getDescriptionSuggestions = action(async (): Promise<string[]> => {
   if (!group) return []
 
   return listDescriptionSuggestions(group.id, user.id)
+})
+
+/**
+ * #1822 — merchant memory for category suggestions.
+ *
+ * Looks up the most recent transaction with a matching description
+ * (normalized: case-insensitive, NFKC, trimmed) in the viewer's group.
+ * Returns the category from that transaction, or `null` if no match exists.
+ *
+ * Used by quick add (#1488) and pending shortcut cards (#1536) to auto-suggest
+ * a category based on the user's own history with that merchant.
+ */
+export const getMerchantCategory = action(async (merchant: string): Promise<CategoryId | null> => {
+  const { user } = await requireViewer()
+
+  // No group = no history; merchant memory is a UX nicety, not an integrity check.
+  const group = await getActiveGroupForUser(user.id)
+  if (!group) return null
+
+  const category = await getCategoryForMerchant(group.id, merchant)
+  return category ?? null
 })

@@ -51,9 +51,11 @@ describe.each(SUPPORTED_LOCALES)('%s', (locale) => {
     expect(codes).toContain(web)
     // Fill the variable markers the way the Shortcut would.
     const fill = (u: string) => u.replace(`[${t.vars.amount}]`, '120').replace(`[${t.vars.merchant}]`, 'Cafe')
-    expect(parseQuickAddSchemeUrl(fill(app))).toEqual({ amount: 120, category: 'dining', description: 'Cafe' })
+    // #1822 — removed `category` from the examples; merchant memory takes over.
+    // When no category is passed, the parser returns only amount + description.
+    expect(parseQuickAddSchemeUrl(fill(app))).toEqual({ amount: 120, description: 'Cafe' })
     const hash = fill(web).slice(fill(web).indexOf('#'))
-    expect(parseQuickAddHash(hash)).toEqual({ amount: 120, category: 'dining', description: 'Cafe' })
+    expect(parseQuickAddHash(hash)).toEqual({ amount: 120, description: 'Cafe' })
   })
 
   it('lists exactly the categories the parser accepts, with the app\'s own names', async () => {

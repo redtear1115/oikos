@@ -23,6 +23,7 @@ vi.mock('@/actions/transaction', () => ({
   // Never settles: autocomplete data is irrelevant here and a late setState
   // would only add act() noise.
   getDescriptionSuggestions: vi.fn(() => new Promise(() => {})),
+  getMerchantCategory: vi.fn(() => Promise.resolve({ ok: true, data: null })),
 }))
 vi.mock('@/actions/tripExpense', () => ({
   createTripExpense: vi.fn(),

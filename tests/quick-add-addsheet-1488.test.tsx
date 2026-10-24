@@ -27,6 +27,7 @@ vi.mock('@/actions/transaction', () => ({
   editTransaction: vi.fn(),
   softDeleteTransaction: vi.fn(),
   getDescriptionSuggestions: vi.fn(() => Promise.resolve({ ok: true, data: [] })),
+  getMerchantCategory: vi.fn(() => Promise.resolve({ ok: true, data: null })),
 }))
 vi.mock('@/actions/tripExpense', () => ({
   createTripExpense: vi.fn(),
@@ -39,7 +40,7 @@ vi.mock('@/actions/asset', () => ({
   loadAssetsForPicker: vi.fn(() => Promise.resolve([])),
 }))
 
-import { createTransaction, editTransaction } from '@/actions/transaction'
+import { createTransaction, editTransaction, getMerchantCategory } from '@/actions/transaction'
 import { createTripExpense, editTripExpense } from '@/actions/tripExpense'
 import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -58,6 +59,8 @@ beforeEach(() => {
   vi.mocked(createTripExpense).mockReset()
   vi.mocked(editTripExpense).mockReset()
   vi.mocked(editAndConfirmPending).mockReset()
+  vi.mocked(getMerchantCategory).mockReset()
+  vi.mocked(getMerchantCategory).mockResolvedValue({ ok: true, data: null } as never)
 })
 
 // A trip that covers today — the case where create mode would normally auto-tag.
@@ -116,12 +119,31 @@ describe('AddSheet quick-add prefill (#1488)', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled())
   })
 
-  it('control: without skipTripAutoDetect the same sheet files into today’s trip', async () => {
+  it("control: without skipTripAutoDetect the same sheet files into today's trip", async () => {
     vi.mocked(createTripExpense).mockResolvedValue({ ok: true, data: undefined } as never)
     renderPrefilled({ skipTripAutoDetect: false })
-    await waitFor(() => expect((screen.getByLabelText(zhTW.addSheet.amount) as HTMLInputElement).value).toBe('120'))
-    fireEvent.click(screen.getByRole('button', { name: zhTW.common.save }))
+    await waitFor(() => expect((screen.getByLabelText(zhTW.addSheet.amount) as HTMLInputElement).value).toBe("120"))
+    fireEvent.click(screen.getByRole("button", { name: zhTW.common.save }))
     await waitFor(() => expect(createTripExpense).toHaveBeenCalledTimes(1))
     expect(createTransaction).not.toHaveBeenCalled()
+  })
+
+  it('merchant memory overrides URL category: getMerchantCategory("health") beats prefilledCategory="transit" (#1822)', async () => {
+    vi.mocked(getMerchantCategory).mockResolvedValue({ ok: true, data: "health" } as never)
+    const { onClose } = renderPrefilled()
+    await waitFor(() => expect((screen.getByLabelText(zhTW.addSheet.amount) as HTMLInputElement).value).toBe("120"))
+    fireEvent.click(screen.getByRole("button", { name: zhTW.common.save }))
+
+    await waitFor(() => expect(createTransaction).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(createTransaction).mock.calls[0][0]).toMatchObject({
+      amount: 120,
+      description: "LINE Pay 午餐",
+      category: "health",
+      currency: "twd",
+      tripId: null,
+      payerId: "u-1",
+      splitType: "all_mine",
+    })
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
   })
 })
